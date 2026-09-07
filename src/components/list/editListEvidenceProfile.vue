@@ -90,7 +90,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('methodological_limitations')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-methodological_limitations">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('methodological_limitations') }}
@@ -140,7 +140,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('methodological_limitations')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-methodological_limitations">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('methodological_limitations') }}
@@ -168,7 +168,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('coherence')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-coherence">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('coherence') }}
@@ -218,7 +218,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('coherence')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-coherence">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('coherence') }}
@@ -246,7 +246,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('adequacy')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-adequacy">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('adequacy') }}
@@ -296,7 +296,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('adequacy')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-adequacy">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('adequacy') }}
@@ -324,7 +324,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('relevance')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-relevance">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('relevance') }}
@@ -374,7 +374,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('relevance')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-relevance">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('relevance') }}
@@ -402,7 +402,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('cerqual')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-cerqual">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('cerqual') }}
@@ -435,7 +435,7 @@
                  Verificado en navegador; ver ViewTable.vue. -->
             <small
               v-if="isSectionDisabled('cerqual')"
-              class="text-warning d-block mb-2"
+              class="lock-notice d-block mb-2"
               data-testid="ep-locked-cerqual">
               <font-awesome-icon icon="user"></font-awesome-icon>
               {{ sectionLockedByName('cerqual') }}

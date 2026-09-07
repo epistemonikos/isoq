@@ -60,6 +60,12 @@
   --red-btn-bg:     #dc3545;
   --red-btn-hover:  #c82333;
   --red-btn-shadow: rgba(220, 53, 69, 0.5);
+
+  /* Avisos de "lo está editando X". Bootstrap `text-warning` es #ffc107, que sobre
+     fondo claro da ~1.6:1 de contraste: el aviso desaparecía justo cuando importa.
+     Este ámbar oscuro es el mismo que Bootstrap usa para el TEXTO de sus alertas de
+     advertencia (#856404), que sí está pensado para leerse sobre fondo claro. */
+  --lock-notice-color: #856404;
 }
 
 html,
@@ -288,6 +294,9 @@ body {
 
 html[data-theme="dark"] {
   --camelot-label-color: #e0e0e0;
+
+  /* Sobre fondo oscuro el ámbar claro es el que se lee; el oscuro se hunde. */
+  --lock-notice-color: #ffc107;
 
   --blue-primary:     #5ba3d0;
   --blue-hover:       #4a8fc4;
@@ -708,4 +717,13 @@ html[data-theme="dark"] {
       background-color: rgba(255, 255, 255, 0.10);
     }
   }
+}
+
+/* Aviso de concurrencia: "lo está editando X", "está evaluando Coherence".
+   Reemplaza a `text-warning`, que sólo funcionaba en el tema oscuro. Vive acá y no en
+   cada componente porque lo usan el listado de hallazgos, la tabla del evidence
+   profile, las cajas de criterios y las filas de las tablas de estudios: un color de
+   estado que difiera entre superficies se lee como cosas distintas. */
+.lock-notice {
+  color: var(--lock-notice-color);
 }

@@ -1,4 +1,6 @@
 import {
+  SECTION_LABEL_KEYS,
+  findingLockDetailsOf,
   EVIDENCE_PROFILE_SECTIONS,
   sectionOfType,
   sectionLockBaseOf,
@@ -95,6 +97,120 @@ describe('evidenceProfileLockKeys', () => {
       // que allá — enumerar acá haría que los dos repos discrepasen justo en el caso
       // que nadie prueba.
       expect(sectionLockBaseOf('f1::ep::seccion_nueva')).toBe('f1')
+    })
+  })
+
+  describe('SECTION_LABEL_KEYS', () => {
+    it('nombra las cinco secciones con las claves i18n que la app ya usa', () => {
+      // El mapa estaba escrito a mano en `editStageTwo` y en `evidenceProfileFields`.
+      // Ojo con `cerqual`: su etiqueta NO es `worksheet.cerqual` (no existe) sino
+      // `soqf_table.print_confidence`, que es la que usa la cabecera de la tabla.
+      expect(SECTION_LABEL_KEYS).toEqual({
+        methodological_limitations: 'worksheet.methodological_limitations',
+        coherence: 'worksheet.coherence',
+        adequacy: 'worksheet.adequacy',
+        relevance: 'worksheet.relevance',
+        cerqual: 'soqf_table.print_confidence'
+      })
+    })
+
+    it('cubre exactamente las secciones enumeradas', () => {
+      expect(Object.keys(SECTION_LABEL_KEYS).sort())
+        .toEqual([...EVIDENCE_PROFILE_SECTIONS].sort())
+    })
+  })
+
+  describe('findingLockDetailsOf', () => {
+    it('una sección: quién y cuál', () => {
+      const d = findingLockDetailsOf([lock('f1::ep::coherence', 'Ana')], FID, 'Yo')
+      expect(d).toEqual([{ section: 'coherence', holder: 'Ana' }])
+    })
+
+    it('el documento entero: sin sección, porque no es una', () => {
+      // `section: null` es la señal de que el bloqueo es del hallazgo completo —
+      // alguien editando su nombre o sus referencias, no una evaluación.
+      const d = findingLockDetailsOf([lock(FID, 'Ana')], FID, 'Yo')
+      expect(d).toEqual([{ section: null, holder: 'Ana' }])
+    })
+
+    it('varias personas: una entrada por cada una', () => {
+      const d = findingLockDetailsOf([
+        lock('f1::ep::coherence', 'Beto'),
+        lock('f1::ep::adequacy', 'Carla'),
+        lock('f1::ep::relevance', 'Diego')
+      ], FID, 'Yo')
+      expect(d).toHaveLength(3)
+      expect(d.map(x => x.holder)).toEqual(['Beto', 'Carla', 'Diego'])
+    })
+
+    // ── Determinismo ────────────────────────────────────────────────────
+    // El bug que esto arregla: `GET /refs` no garantiza orden, y un `.find()` sobre
+    // el listado nombraba a una persona distinta según cómo llegaran los locks. Dos
+    // personas mirando la misma fila veían nombres distintos, y el cartel podía
+    // cambiar de nombre entre dos sondeos sin que nada hubiera cambiado.
+    it('el MISMO conjunto en otro orden da el MISMO resultado', () => {
+      const locks = [
+        lock('f1::ep::methodological_limitations', 'Ana'),
+        lock('f1::ep::coherence', 'Beto'),
+        lock('f1::ep::adequacy', 'Carla'),
+        lock('f1::ep::relevance', 'Diego')
+      ]
+      const alDerecho = findingLockDetailsOf(locks, FID, 'Yo')
+      const alRevés = findingLockDetailsOf([...locks].reverse(), FID, 'Yo')
+      expect(alRevés).toEqual(alDerecho)
+    })
+
+    it('ordena por nombre de persona', () => {
+      const d = findingLockDetailsOf([
+        lock('f1::ep::coherence', 'Diego'),
+        lock('f1::ep::adequacy', 'Ana')
+      ], FID, 'Yo')
+      expect(d.map(x => x.holder)).toEqual(['Ana', 'Diego'])
+    })
+
+    it('la misma persona en dos secciones aparece dos veces, en orden canónico', () => {
+      // Ocurre de verdad: el modal sostiene la dimensión y `cerqual` a la vez.
+      const d = findingLockDetailsOf([
+        lock('f1::ep::cerqual', 'Ana'),
+        lock('f1::ep::coherence', 'Ana')
+      ], FID, 'Yo')
+      expect(d.map(x => x.section)).toEqual(['coherence', 'cerqual'])
+    })
+
+    it('el documento entero gana sobre las secciones y colapsa el listado', () => {
+      // Es estrictamente más amplio: quien lo tiene excluye a todos, así que
+      // enumerar secciones al lado sería ruido contradictorio.
+      const d = findingLockDetailsOf([
+        lock('f1::ep::coherence', 'Beto'),
+        lock(FID, 'Ana')
+      ], FID, 'Yo')
+      expect(d).toEqual([{ section: null, holder: 'Ana' }])
+    })
+
+    it('descarta los locks propios y los sin nombre', () => {
+      const d = findingLockDetailsOf([
+        lock('f1::ep::coherence', 'Yo'),
+        { ref_id: 'f1::ep::adequacy', user_name: null },
+        lock('f1::ep::relevance', 'Ana')
+      ], FID, 'Yo')
+      expect(d).toEqual([{ section: 'relevance', holder: 'Ana' }])
+    })
+
+    it('ignora otras entidades y otros ejes del keyspace', () => {
+      const d = findingLockDetailsOf([
+        lock('otro::ep::coherence', 'Ana'),
+        lock('f1::s0::o0', 'Beto'),
+        lock('f1::fields', 'Carla'),
+        lock('f1::ep::seccion_nueva', 'Diego')
+      ], FID, 'Yo')
+      expect(d).toEqual([])
+    })
+
+    it('entradas degeneradas dan lista vacía, no excepción', () => {
+      expect(findingLockDetailsOf([], FID, 'Yo')).toEqual([])
+      expect(findingLockDetailsOf(undefined, FID, 'Yo')).toEqual([])
+      expect(findingLockDetailsOf([lock('f1::ep::coherence', 'Ana')], undefined, 'Yo')).toEqual([])
+      expect(findingLockDetailsOf([null, {}], FID, 'Yo')).toEqual([])
     })
   })
 

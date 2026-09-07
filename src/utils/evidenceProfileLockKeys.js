@@ -29,6 +29,26 @@ export const EVIDENCE_PROFILE_SECTIONS = [
 ]
 
 /**
+ * Sección -> clave i18n de su nombre visible.
+ *
+ * Este mapa estaba escrito a mano en `editStageTwo` y otra vez en
+ * `evidenceProfileFields`. Vive acá porque ahora lo necesita también el listado de
+ * hallazgos, para decir QUÉ está evaluando cada persona en vez de un genérico
+ * «siendo editado».
+ *
+ * Es dato, no traducción: guarda la clave y deja el `$t` al componente. Y ojo con
+ * `cerqual`, que es la excepción del conjunto: su etiqueta no es `worksheet.cerqual`
+ * —esa clave no existe— sino la de la cabecera de la tabla.
+ */
+export const SECTION_LABEL_KEYS = {
+  methodological_limitations: 'worksheet.methodological_limitations',
+  coherence: 'worksheet.coherence',
+  adequacy: 'worksheet.adequacy',
+  relevance: 'worksheet.relevance',
+  cerqual: 'soqf_table.print_confidence'
+}
+
+/**
  * `'methodological-limitations'` -> `'methodological_limitations'`.
  *
  * La tabla del evidence profile pasa el tipo con GUIÓN a `editStageTwo`, que lo
@@ -190,4 +210,49 @@ export function blockedSectionsOf (foreignLocks, findingId, myUserName) {
   })
 
   return blocked
+}
+
+/**
+ * Quién tiene tomado qué de este hallazgo, para el listado que pinta por finding.
+ *
+ * Devuelve `[{ section, holder }]`. Un `section` en `null` significa que el bloqueo es
+ * del **documento entero** —alguien editando el nombre o las referencias, no una
+ * evaluación— y en ese caso la lista trae una sola entrada: ese lock es estrictamente
+ * más amplio, así que quien lo sostiene excluye a todos y enumerar secciones al lado
+ * sería ruido contradictorio.
+ *
+ * **El orden es parte del contrato, no cosmética.** `GET /refs` no garantiza orden, y
+ * la versión anterior resolvía el titular con un `.find()`: con varias personas
+ * evaluando secciones distintas, el cartel nombraba a una u otra según cómo llegaran
+ * los locks. Dos personas mirando la misma fila veían nombres distintos, y el nombre
+ * podía cambiar entre dos sondeos sin que nada hubiera cambiado. Ordenar por persona
+ * —y por el orden canónico de sección como desempate, para quien sostiene dos— lo hace
+ * estable.
+ *
+ * Sólo enumera las cinco secciones conocidas, por el mismo motivo que
+ * `blockedSectionsOf`: una clave `::ep::` que este cliente no reconoce no se puede
+ * etiquetar, y el servidor la autoriza a convivir con las demás. Que igual ocupe el
+ * hallazgo lo dice `lockKeyBelongsTo`, que es la otra pregunta.
+ */
+export function findingLockDetailsOf (foreignLocks, findingId, myUserName) {
+  if (!findingId || !Array.isArray(foreignLocks)) return []
+
+  const ajenos = foreignLocks.filter((lock) => {
+    const holder = lock && lock.user_name
+    return Boolean(lock && lock.ref_id) && Boolean(holder) && holder !== myUserName
+  })
+
+  const documento = ajenos.find(lock => lock.ref_id === findingId)
+  if (documento) return [{ section: null, holder: documento.user_name }]
+
+  return ajenos
+    .map((lock) => {
+      const parsed = parseSectionLockKey(lock.ref_id)
+      if (!parsed || parsed.findingId !== findingId) return null
+      if (!EVIDENCE_PROFILE_SECTIONS.includes(parsed.section)) return null
+      return { section: parsed.section, holder: lock.user_name }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.holder.localeCompare(b.holder) ||
+      EVIDENCE_PROFILE_SECTIONS.indexOf(a.section) - EVIDENCE_PROFILE_SECTIONS.indexOf(b.section))
 }

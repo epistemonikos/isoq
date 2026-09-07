@@ -14,7 +14,7 @@
         v-model="local_data"></b-form-textarea>
       <small
         v-if="blockedBy"
-        class="text-warning d-block">
+        class="lock-notice d-block">
         {{ $t('lock.ref_locked_by', { user: blockedBy }) }}
       </small>
     </b-form-group>
