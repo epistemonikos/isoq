@@ -70,68 +70,68 @@
       <!-- Step One: FA 1-4 -->
       <template v-slot:cell(fa1)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 0, data.item)]" :style="getCircleStyle(0, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 0, data.item)"></div>
+          <assessment-circle :stage="0" :option-index="0" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(0, 0, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa2)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 1, data.item)]" :style="getCircleStyle(0, 1, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 1, data.item)"></div>
+          <assessment-circle :stage="0" :option-index="1" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(0, 1, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa3)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 2, data.item)]" :style="getCircleStyle(0, 2, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 2, data.item)"></div>
+          <assessment-circle :stage="0" :option-index="2" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(0, 2, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa4)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 3, data.item)]" :style="getCircleStyle(0, 3, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 3, data.item)"></div>
+          <assessment-circle :stage="0" :option-index="3" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(0, 3, data.item)" />
         </div>
       </template>
 
       <!-- Step Two: FA 5-8 -->
       <template v-slot:cell(fa5)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 0, data.item)]" :style="getCircleStyle(1, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 0, data.item)"></div>
+          <assessment-circle :stage="1" :option-index="0" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(1, 0, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa6)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 1, data.item)]" :style="getCircleStyle(1, 1, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 1, data.item)"></div>
+          <assessment-circle :stage="1" :option-index="1" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(1, 1, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa7)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 2, data.item)]" :style="getCircleStyle(1, 2, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 2, data.item)"></div>
+          <assessment-circle :stage="1" :option-index="2" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(1, 2, data.item)" />
         </div>
       </template>
       <template v-slot:cell(fa8)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 3, data.item)]" :style="getCircleStyle(1, 3, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 3, data.item)"></div>
+          <assessment-circle :stage="1" :option-index="3" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(1, 3, data.item)" />
         </div>
       </template>
 
       <!-- Step Three: FA 9 -->
       <template v-slot:cell(fa9)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(2, 0, data.item)]" :style="getCircleStyle(2, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(2, 0, data.item)"></div>
+          <assessment-circle :stage="2" :option-index="0" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(2, 0, data.item)" />
         </div>
       </template>
 
       <!-- Step Four: OA -->
       <template v-slot:cell(oa)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]" :style="getCircleStyle(3, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(3, 0, data.item)"></div>
+          <assessment-circle :stage="3" :option-index="0" :item="data.item"
+            :responses="responses" :tooltip="getCircleTooltip(3, 0, data.item)" />
         </div>
       </template>
 
@@ -226,7 +226,7 @@
 <script>
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faChevronUp, faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons'
-import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import {
   ASSESSMENT_CELLS,
   ASSESSMENT_POSITION_KEYS,
@@ -240,7 +240,7 @@ const GROUP_END_CELLS = ['fa4', 'fa8', 'fa9', 'oa']
 
 export default {
   name: 'CamelotAssessmentSummaryTable',
-  mixins: [camelotCircleMixin],
+  components: { AssessmentCircle },
   props: {
     assessments: {
       type: Object,

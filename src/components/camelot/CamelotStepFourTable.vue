@@ -27,26 +27,26 @@
     <!-- FA 1-4 + Edit -->
     <template v-slot:cell(fa1)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(0, 0, data.item)]"
-          :style="getCircleStyle(0, 0, data.item)" @click="openModal(0, data, 0, 'FA1')"></div>
+        <assessment-circle :stage="0" :option-index="0" :item="data.item"
+          :responses="responses" clickable @click="openModal(0, data, 0, 'FA1')" />
       </div>
     </template>
     <template v-slot:cell(fa2)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(0, 1, data.item)]"
-          :style="getCircleStyle(0, 1, data.item)" @click="openModal(0, data, 1, 'FA2')"></div>
+        <assessment-circle :stage="0" :option-index="1" :item="data.item"
+          :responses="responses" clickable @click="openModal(0, data, 1, 'FA2')" />
       </div>
     </template>
     <template v-slot:cell(fa3)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(0, 2, data.item)]"
-          :style="getCircleStyle(0, 2, data.item)" @click="openModal(0, data, 2, 'FA3')"></div>
+        <assessment-circle :stage="0" :option-index="2" :item="data.item"
+          :responses="responses" clickable @click="openModal(0, data, 2, 'FA3')" />
       </div>
     </template>
     <template v-slot:cell(fa4)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(0, 3, data.item)]"
-          :style="getCircleStyle(0, 3, data.item)" @click="openModal(0, data, 3, 'FA4')"></div>
+        <assessment-circle :stage="0" :option-index="3" :item="data.item"
+          :responses="responses" clickable @click="openModal(0, data, 3, 'FA4')" />
       </div>
     </template>
     <template v-slot:cell(edit1)="data">
@@ -64,26 +64,26 @@
     <!-- FA 5-8 + Edit -->
     <template v-slot:cell(fa5)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(1, 0, data.item)]"
-          :style="getCircleStyle(1, 0, data.item)" @click="openModal(1, data, 0, 'FA5')"></div>
+        <assessment-circle :stage="1" :option-index="0" :item="data.item"
+          :responses="responses" clickable @click="openModal(1, data, 0, 'FA5')" />
       </div>
     </template>
     <template v-slot:cell(fa6)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(1, 1, data.item)]"
-          :style="getCircleStyle(1, 1, data.item)" @click="openModal(1, data, 1, 'FA6')"></div>
+        <assessment-circle :stage="1" :option-index="1" :item="data.item"
+          :responses="responses" clickable @click="openModal(1, data, 1, 'FA6')" />
       </div>
     </template>
     <template v-slot:cell(fa7)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(1, 2, data.item)]"
-          :style="getCircleStyle(1, 2, data.item)" @click="openModal(1, data, 2, 'FA7')"></div>
+        <assessment-circle :stage="1" :option-index="2" :item="data.item"
+          :responses="responses" clickable @click="openModal(1, data, 2, 'FA7')" />
       </div>
     </template>
     <template v-slot:cell(fa8)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(1, 3, data.item)]"
-          :style="getCircleStyle(1, 3, data.item)" @click="openModal(1, data, 3, 'FA8')"></div>
+        <assessment-circle :stage="1" :option-index="3" :item="data.item"
+          :responses="responses" clickable @click="openModal(1, data, 3, 'FA8')" />
       </div>
     </template>
     <template v-slot:cell(edit2)="data">
@@ -101,8 +101,8 @@
     <!-- FA 9 + Edit -->
     <template v-slot:cell(fa9)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(2, 0, data.item)]"
-          :style="getCircleStyle(2, 0, data.item)" @click="openModal(2, data, 0, 'FA9')"></div>
+        <assessment-circle :stage="2" :option-index="0" :item="data.item"
+          :responses="responses" clickable @click="openModal(2, data, 0, 'FA9')" />
       </div>
     </template>
     <template v-slot:cell(edit3)="data">
@@ -120,8 +120,8 @@
     <!-- OA + Edit -->
     <template v-slot:cell(oa)="data">
       <div class="d-flex justify-content-center">
-        <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(3, 0, data.item)]"
-          :style="getCircleStyle(3, 0, data.item)" @click="openModal(3, data, 0)"></div>
+        <assessment-circle :stage="3" :option-index="0" :item="data.item"
+          :responses="responses" clickable @click="openModal(3, data, 0)" />
       </div>
     </template>
     <template v-slot:cell(edit4)="data">
@@ -139,12 +139,13 @@
 </template>
 
 <script>
-import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 
 export default {
   name: 'CamelotStepFourTable',
-  mixins: [camelotCircleMixin, refLockStateMixin],
+  components: { AssessmentCircle },
+  mixins: [refLockStateMixin],
   props: {
     fields: { type: Array, required: true },
     items: { type: Array, required: true },

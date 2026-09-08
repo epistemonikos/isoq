@@ -31,6 +31,12 @@
             <div class="assessment-circle circle-filled mr-2" :style="{ backgroundColor: response.color }"></div>
             <span class="small">{{ response.text }}</span>
           </div>
+          <div class="d-flex align-items-end mb-2">
+            <div class="assessment-circle circle-incomplete mr-2 d-inline-flex align-items-center justify-content-center">
+              <font-awesome-icon icon="exclamation" class="circle-warning-icon" />
+            </div>
+            <span class="small">{{ $t('camelot.step_four.legend.missing_explanation') }}</span>
+          </div>
           <div class="d-flex align-items-end mb-0">
             <div class="assessment-circle circle-not-completed mr-2" style="border-color: #B3B3B3;"></div>
             <span class="small">{{ $t('camelot.step_four.legend.not_completed') }}</span>
@@ -54,6 +60,12 @@
           <div v-for="response in responses" :key="response.value" class="d-flex align-items-center mb-2">
             <div class="assessment-circle circle-filled mr-2" :style="{ backgroundColor: response.color, width: '16px', height: '16px' }"></div>
             <span class="small font-weight-bold">{{ response.text }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <div class="assessment-circle circle-incomplete mr-2 d-inline-flex align-items-center justify-content-center" style="width: 16px; height: 16px;">
+              <font-awesome-icon icon="exclamation" class="circle-warning-icon" />
+            </div>
+            <span class="small font-weight-bold">{{ $t('camelot.step_four.legend.missing_explanation') }}</span>
           </div>
           <div class="d-flex align-items-center">
             <div class="assessment-circle circle-not-completed mr-2" style="border-color: #B3B3B3; width: '16px'; height: '16px'"></div>
@@ -114,6 +126,21 @@ export default {
   }
 
   .legend-box {
+    .circle-incomplete {
+      // Legend swatch only — the grid draws this through AssessmentCircle, which
+      // takes fill and ink from the assessment colour. #6C757D is a neutral stand-in
+      // for "any colour"; white is what contrastOn() returns for it, so the swatch
+      // matches the real thing and carries its own ground in both themes.
+      border: 2px dashed #FFFFFF;
+      background-color: #6C757D;
+      color: #FFFFFF;
+    }
+
+    .circle-warning-icon {
+      font-size: 10px;
+      line-height: 1;
+    }
+
     .assessment-circle {
       flex-shrink: 0;
     }

@@ -289,7 +289,7 @@ describe('StepFour.vue — el aviso de explicación cubre el cambio de pestaña'
 describe('StepFour.vue — el aviso cubre el cambio de etapa', () => {
   it('frena goToStage cuando hay una celda incompleta en la etapa actual', async () => {
     wrapper = await opened(createWrapper())
-    markIncomplete(wrapper, 0, 3)
+    markIncomplete(wrapper, 0, 0)
 
     wrapper.vm.goToStage(1)
 
@@ -299,7 +299,7 @@ describe('StepFour.vue — el aviso cubre el cambio de etapa', () => {
 
   it('"más tarde" completa el cambio de etapa', async () => {
     wrapper = await opened(createWrapper())
-    markIncomplete(wrapper, 0, 3)
+    markIncomplete(wrapper, 0, 0)
     wrapper.vm.goToStage(1)
 
     wrapper.vm.explanationGuardDoItLater()
@@ -316,6 +316,15 @@ describe('StepFour.vue — el aviso cubre el cambio de etapa', () => {
     expect(wrapper.vm.modal.stage).toBe(2)
     expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalledWith('explanation-guard-modal')
   })
+  it('el cambio de etapa sólo pregunta por la pestaña visible', async () => {
+    wrapper = await opened(createWrapper(), 0, 0)
+    markIncomplete(wrapper, 0, 2)
+
+    wrapper.vm.goToStage(1)
+
+    expect(wrapper.vm.modal.stage).toBe(1)
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalledWith('explanation-guard-modal')
+  })
 
   // Las etapas 2 y 3 no tienen pestañas: su única salida es la etapa o el cierre.
   it('vale igual en una etapa sin pestañas', async () => {
@@ -327,12 +336,26 @@ describe('StepFour.vue — el aviso cubre el cambio de etapa', () => {
     expect(wrapper.vm.$bvModal.show).toHaveBeenCalledWith('explanation-guard-modal')
     expect(wrapper.vm.$bvModal.hide).not.toHaveBeenCalledWith('modal-1')
   })
+  /**
+   * Las etapas 2 y 3 montan su formulario con la meta fija en 0, pero `modal.tab` conserva lo
+   * que le pasaron a `openModal`. Si la celda visible se leyera de la pestaña, acá se buscaría
+   * la clave `3-2` —que no existe— y el OA dejaría de avisar para siempre.
+   */
+  it('en una etapa sin pestañas la celda visible es la 0, no la que diga modal.tab', async () => {
+    wrapper = await opened(createWrapper(), 3, 2)
+    markIncomplete(wrapper, 3, 0)
+
+    wrapper.vm.requestModalClose()
+
+    expect(wrapper.vm.modal.tab).toBe(2)
+    expect(wrapper.vm.$bvModal.show).toHaveBeenCalledWith('explanation-guard-modal')
+  })
 })
 
 describe('StepFour.vue — el aviso cubre el cierre del modal', () => {
   it('frena el cierre pedido por la persona cuando hay una celda incompleta', async () => {
     wrapper = await opened(createWrapper())
-    markIncomplete(wrapper, 0, 1)
+    markIncomplete(wrapper, 0, 0)
 
     wrapper.vm.requestModalClose()
 
@@ -342,7 +365,7 @@ describe('StepFour.vue — el aviso cubre el cierre del modal', () => {
 
   it('"más tarde" cierra el modal', async () => {
     wrapper = await opened(createWrapper())
-    markIncomplete(wrapper, 0, 1)
+    markIncomplete(wrapper, 0, 0)
     wrapper.vm.requestModalClose()
 
     wrapper.vm.explanationGuardDoItLater()
@@ -352,7 +375,7 @@ describe('StepFour.vue — el aviso cubre el cierre del modal', () => {
 
   it('la X de la cabecera pasa por el mismo aviso', async () => {
     wrapper = await opened(createWrapper())
-    markIncomplete(wrapper, 0, 1)
+    markIncomplete(wrapper, 0, 0)
 
     const evt = { trigger: 'headerclose', preventDefault: jest.fn() }
     wrapper.vm.onAssessmentModalHide(evt)
@@ -367,6 +390,27 @@ describe('StepFour.vue — el aviso cubre el cierre del modal', () => {
     wrapper.vm.requestModalClose()
 
     expect(wrapper.vm.$bvModal.hide).toHaveBeenCalledWith('modal-1')
+  })
+  // El caso reportado: la pestaña visible está completa y otra del mismo grupo no. El aviso
+  // habla de lo que la persona tiene delante, así que acá no corresponde.
+  it('el cierre no pregunta por una pestaña incompleta que no es la visible', async () => {
+    wrapper = await opened(createWrapper(), 0, 0)
+    markIncomplete(wrapper, 0, 2)
+
+    wrapper.vm.requestModalClose()
+
+    expect(wrapper.vm.$bvModal.hide).toHaveBeenCalledWith('modal-1')
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalledWith('explanation-guard-modal')
+  })
+
+  it('la X tampoco pregunta por una pestaña que no es la visible', async () => {
+    wrapper = await opened(createWrapper(), 0, 0)
+    markIncomplete(wrapper, 0, 2)
+
+    const evt = { trigger: 'headerclose', preventDefault: jest.fn() }
+    wrapper.vm.onAssessmentModalHide(evt)
+
+    expect(evt.preventDefault).not.toHaveBeenCalled()
   })
 
   /**

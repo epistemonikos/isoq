@@ -34,8 +34,8 @@
              ASSESSMENT_CELLS, the same source endpoint D addresses. -->
         <template v-for="cell in assessmentCells" v-slot:[`cell(${cell.key})`]="data">
           <div class="d-flex justify-content-center" :key="cell.key">
-            <div :class="['assessment-circle', getCircleClass(cell.stage, cell.option, data.item)]"
-              :style="getCircleStyle(cell.stage, cell.option, data.item)"></div>
+            <assessment-circle :stage="cell.stage" :option-index="cell.option" :item="data.item"
+              :responses="responses" />
           </div>
         </template>
       </b-table>
@@ -44,13 +44,13 @@
 </template>
 
 <script>
-import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import Commons from '@/utils/commons'
 import { ASSESSMENT_CELLS } from '@/utils/camelotAssessmentKeys'
 
 export default {
   name: 'CamelotAssessmentsTablePreview',
-  mixins: [camelotCircleMixin],
+  components: { AssessmentCircle },
   props: {
     methodologicalTableRefs: {
       type: Object,

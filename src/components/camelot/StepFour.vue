@@ -681,6 +681,25 @@ export default {
         .filter(meta => !this.isCellReadOnly(this.modal.stage, meta))
         .sort((a, b) => a - b)
     },
+    /**
+     * La celda que la persona tiene delante. Es el alcance de todas las salidas: el aviso
+     * habla de lo que se está mirando, no del grupo entero.
+     *
+     * Sólo las etapas 0 y 1 tienen pestañas. Las 2 y 3 montan su único formulario con
+     * `:selectedMeta="0"` fijo, y ahí `modal.tab` puede traer un valor viejo: `openModal` lo
+     * asigna crudo del argumento que le pasa la grilla y el watcher de `modal.stage` sólo
+     * resetea `selectedMeta`. Devolver `modal.tab` a secas hace que en el OA se busque una
+     * clave como `3-2`, que nunca existe, y el aviso desaparece justo donde no hay pestañas
+     * de las que hablar. El corte por etapa es el mismo que usan el template y
+     * `explanationGuardDoItNow`.
+     */
+    activeMeta () {
+      return this.modal.stage < 2 ? this.modal.tab : 0
+    },
+    /** ¿La celda visible es la que frena una salida? */
+    activeCellIsIncomplete () {
+      return this.incompleteMetasInStage.includes(this.activeMeta)
+    },
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
@@ -725,13 +744,13 @@ export default {
      * incompleta, la acción se guarda y se muestra el aviso en vez de ejecutarla; sólo
      * "más tarde" la libera.
      *
-     * `metas` acota la pregunta: al cambiar de pestaña sólo importa la que se abandona,
-     * mientras que al cambiar de etapa o cerrar importan todas las de la etapa.
+     * `metas` acota la pregunta y no tiene default a propósito: hoy TODAS las salidas
+     * preguntan sólo por la celda visible —reclamar por una pestaña completa, porque otra
+     * del grupo no lo está, es un aviso sobre algo que no está en pantalla—. Un alcance
+     * ancho se pide explícitamente pasando `this.incompleteMetasInStage`.
      */
-    guardExplanation (action, metas = null) {
-      const blocking = metas === null
-        ? this.incompleteMetasInStage
-        : metas.filter(meta => this.incompleteMetasInStage.includes(meta))
+    guardExplanation (action, metas) {
+      const blocking = metas.filter(meta => this.incompleteMetasInStage.includes(meta))
       if (!blocking.length) {
         action()
         return
@@ -827,7 +846,7 @@ export default {
       this.guardExplanation(() => {
         this.bypassCloseGuard = true
         this.$bvModal.hide('modal-1')
-      })
+      }, [this.activeMeta])
     },
     /**
      * Salida por la X de la cabecera. El filtro por `trigger` no es cosmético: los cierres
@@ -839,7 +858,7 @@ export default {
     onAssessmentModalHide (bvEvt) {
       if (this.bypassCloseGuard) return
       if (!bvEvt || bvEvt.trigger !== 'headerclose') return
-      if (!this.incompleteMetasInStage.length) return
+      if (!this.activeCellIsIncomplete) return
       bvEvt.preventDefault()
       this.requestModalClose()
     },
@@ -1385,14 +1404,14 @@ export default {
       this.conflictRefId = ''
       this.conflictSource = 'live'
     },
-    /** Salida por etapa. Acá importan TODAS las celdas de la etapa, no sólo la visible. */
+    /** Salida por etapa. Como el cierre, sólo pregunta por la celda visible. */
     goToStage (stage) {
       this.guardExplanation(() => {
         this.bypassTabGuard = false
         this.modal.stage = stage
         this.modal.tab = 0
         this.selectedMeta = 0
-      })
+      }, [this.activeMeta])
     },
     getStageTitle (stage) {
       const stages = [
@@ -1682,6 +1701,23 @@ export default {
 .circle-not-completed {
   border: 2px dashed #B3B3B3;
   background-color: transparent;
+}
+
+// Assessed, but the explanation is still missing. Used by the legend dropdown;
+// the grid draws it through the AssessmentCircle component.
+.circle-incomplete {
+  // Legend swatch only — the grid draws this through AssessmentCircle, which
+  // takes fill and ink from the assessment colour. #6C757D is a neutral stand-in
+  // for "any colour"; white is what contrastOn() returns for it, so the swatch
+  // matches the real thing and carries its own ground in both themes.
+  border: 2px dashed #FFFFFF;
+  background-color: #6C757D;
+  color: #FFFFFF;
+}
+
+.circle-warning-icon {
+  font-size: 10px;
+  line-height: 1;
 }
 
 .camelot-modal-header {

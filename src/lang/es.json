@@ -1365,7 +1365,8 @@
         "show": "Mostrar leyenda de colores",
         "hide": "Ocultar leyenda de colores",
         "title": "Leyenda de colores",
-        "not_completed": "Evaluación no completada"
+        "not_completed": "Evaluación no completada",
+        "missing_explanation": "Evaluación sin explicación"
       },
       "assess_button": "Evaluar",
       "not_assigned": "No asignado",
