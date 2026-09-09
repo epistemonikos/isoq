@@ -141,6 +141,7 @@
 <script>
 import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { isLeafComplete } from '@/utils/camelotAssessmentKeys'
 
 export default {
   name: 'CamelotStepFourTable',
@@ -157,14 +158,16 @@ export default {
     // isRefLocked / refLockedByName come from refLockStateMixin: a study can be
     // blocked by a lock on the study itself OR on any of its cells, and only
     // the mixin knows how to tell those apart from our own locks.
+    /**
+     * ¿Este grupo de celdas está terminado? Es lo que certifica el ✓ verde de la
+     * columna, y ese sello dice "acá no queda nada por hacer".
+     */
     isGroupComplete (stage, optionCount, item) {
-      if (!item || !item.stages || !item.stages[stage]) return false
-      const options = item.stages[stage].options
-      if (!options) return false
-      for (let i = 0; i < optionCount; i++) {
-        if (!options[i] || options[i].option === null) return false
-      }
-      return true
+      // `isLeafComplete` es el criterio único —juicio Y explicación— y ya absorbe
+      // las guardas: item nulo, `stages`/`options` ausentes, hoja inexistente y el
+      // `text` que los documentos legados nunca escribieron.
+      return Array.from({ length: optionCount }, (_, i) => i)
+        .every(option => isLeafComplete(item, stage, option))
     },
     openModal (stage, data, tab = 0, faLabel = null) {
       // Guard every edit path (the 4 edit buttons AND the FA circles funnel through

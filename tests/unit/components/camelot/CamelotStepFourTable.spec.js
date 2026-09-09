@@ -5,16 +5,25 @@ import BootstrapVue from 'bootstrap-vue'
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 
+// Una celda se escribe como 'A' (juicio sin explicar) o como ['A', 'porque X']
+// (juicio explicado). La forma corta existe porque la mitad de los casos de acá
+// son justamente celdas a medias.
+const makeLeaf = (o) => Array.isArray(o)
+  ? { option: o[0], text: o[1] }
+  : { option: o, text: '' }
+
 const makeItem = ({ s0 = [null, null, null, null], s1 = [null, null, null, null], s2 = [null], s3 = [null] } = {}) => ({
   ref_id: 'ref1',
   authors: 'Author 2024',
   stages: [
-    { options: s0.map(o => ({ option: o, text: '' })) },
-    { options: s1.map(o => ({ option: o, text: '' })) },
-    { options: s2.map(o => ({ option: o, text: '' })) },
-    { options: s3.map(o => ({ option: o, text: '' })) }
+    { options: s0.map(makeLeaf) },
+    { options: s1.map(makeLeaf) },
+    { options: s2.map(makeLeaf) },
+    { options: s3.map(makeLeaf) }
   ]
 })
+
+const EXPLAINED = (letters) => letters.map(l => [l, `explicación de ${l}`])
 
 describe('CamelotStepFourTable.vue', () => {
   let wrapper
@@ -101,28 +110,33 @@ describe('CamelotStepFourTable.vue', () => {
     })
   })
 
+  // Un grupo "completo" es lo que la grilla certifica con el ✓ verde, y ese sello
+  // dice que no queda nada por hacer en ese grupo. Un juicio sin explicación SÍ deja
+  // algo por hacer: la explicación es lo que sostiene el juicio en el documento
+  // final. El criterio es el único que hay — `isLeafComplete` — y no una variante
+  // más floja para esta vista.
   describe('isGroupComplete', () => {
     it('returns false when item has no stages', () => {
       expect(wrapper.vm.isGroupComplete(0, 4, {})).toBe(false)
     })
 
     it('returns false when group is partially complete (FA1-FA4)', () => {
-      const item = makeItem({ s0: ['A', 'B', null, null] })
+      const item = makeItem({ s0: EXPLAINED(['A', 'B']).concat([null, null]) })
       expect(wrapper.vm.isGroupComplete(0, 4, item)).toBe(false)
     })
 
-    it('returns true when all 4 options are set (FA1-FA4)', () => {
-      const item = makeItem({ s0: ['A', 'B', 'C', 'D'] })
+    it('returns true when all 4 FA are judged AND explained (FA1-FA4)', () => {
+      const item = makeItem({ s0: EXPLAINED(['A', 'B', 'C', 'D']) })
       expect(wrapper.vm.isGroupComplete(0, 4, item)).toBe(true)
     })
 
     it('returns false when group is partially complete (FA5-FA8)', () => {
-      const item = makeItem({ s1: ['A', null, 'C', null] })
+      const item = makeItem({ s1: [['A', 'x'], null, ['C', 'x'], null] })
       expect(wrapper.vm.isGroupComplete(1, 4, item)).toBe(false)
     })
 
-    it('returns true when all 4 options are set (FA5-FA8)', () => {
-      const item = makeItem({ s1: ['A', 'B', 'C', 'E'] })
+    it('returns true when all 4 FA are judged AND explained (FA5-FA8)', () => {
+      const item = makeItem({ s1: EXPLAINED(['A', 'B', 'C', 'E']) })
       expect(wrapper.vm.isGroupComplete(1, 4, item)).toBe(true)
     })
 
@@ -131,8 +145,8 @@ describe('CamelotStepFourTable.vue', () => {
       expect(wrapper.vm.isGroupComplete(2, 1, item)).toBe(false)
     })
 
-    it('returns true when FA9 is set', () => {
-      const item = makeItem({ s2: ['B'] })
+    it('returns true when FA9 is judged AND explained', () => {
+      const item = makeItem({ s2: [['B', 'porque sí']] })
       expect(wrapper.vm.isGroupComplete(2, 1, item)).toBe(true)
     })
 
@@ -141,9 +155,42 @@ describe('CamelotStepFourTable.vue', () => {
       expect(wrapper.vm.isGroupComplete(3, 1, item)).toBe(false)
     })
 
-    it('returns true when OA is set', () => {
-      const item = makeItem({ s3: ['A'] })
+    it('returns true when OA is judged AND explained', () => {
+      const item = makeItem({ s3: [['A', 'porque sí']] })
       expect(wrapper.vm.isGroupComplete(3, 1, item)).toBe(true)
+    })
+
+    describe('la explicación es parte del criterio', () => {
+      it('returns false cuando los 4 FA tienen juicio pero a uno le falta la explicación', () => {
+        const item = makeItem({ s0: EXPLAINED(['A', 'B', 'C']).concat(['D']) })
+        expect(wrapper.vm.isGroupComplete(0, 4, item)).toBe(false)
+      })
+
+      it('returns false cuando ninguno de los 4 FA tiene explicación', () => {
+        const item = makeItem({ s0: ['A', 'B', 'C', 'D'] })
+        expect(wrapper.vm.isGroupComplete(0, 4, item)).toBe(false)
+      })
+
+      it('returns false cuando la explicación es sólo espacios en blanco', () => {
+        const item = makeItem({ s0: EXPLAINED(['A', 'B', 'C']).concat([['D', '   \n  ']]) })
+        expect(wrapper.vm.isGroupComplete(0, 4, item)).toBe(false)
+      })
+
+      it('returns false para FA9 juzgado sin explicar', () => {
+        expect(wrapper.vm.isGroupComplete(2, 1, makeItem({ s2: ['B'] }))).toBe(false)
+      })
+
+      it('returns false para la OA juzgada sin explicar', () => {
+        expect(wrapper.vm.isGroupComplete(3, 1, makeItem({ s3: ['A'] }))).toBe(false)
+      })
+
+      // Documentos viejos que nunca escribieron `text`: no hay campo que mirar,
+      // y eso no puede leerse como "explicado".
+      it('returns false cuando la hoja legada no trae el campo text', () => {
+        const item = makeItem({ s2: ['B'] })
+        delete item.stages[2].options[0].text
+        expect(wrapper.vm.isGroupComplete(2, 1, item)).toBe(false)
+      })
     })
   })
 
@@ -208,6 +255,44 @@ describe('CamelotStepFourTable.vue', () => {
       const grid = mountGrid([makeItem({ s0: ['A', null, null, null] })])
       grid.find('.assessment-circle.circle-incomplete').trigger('click')
       expect(grid.emitted('open-modal')).toBeTruthy()
+    })
+  })
+
+  // CLAUDE.md: si el dato termina en pantalla, la afirmación va sobre el DOM.
+  // El ✓ es lo que el revisor mira para saber si le queda trabajo en ese grupo.
+  describe('✓ del grupo — se dibuja sólo con las explicaciones puestas', () => {
+    function mountGridWithEdit (items) {
+      return mount(CamelotStepFourTable, {
+        localVue,
+        propsData: {
+          ...propsData,
+          fields: [...propsData.fields, { key: 'edit1', label: '' }],
+          items,
+          canEdit: true
+        },
+        mocks: { $t: (msg) => msg },
+        stubs: { 'font-awesome-icon': { props: ['icon'], template: '<i class="fa-stub" :data-icon="icon"></i>' } }
+      })
+    }
+
+    const ticks = (grid) => grid.findAll('.fa-stub').wrappers
+      .filter(w => w.attributes('data-icon') === 'check')
+
+    it('NO dibuja el ✓ cuando los 4 FA están juzgados pero sin explicación', () => {
+      const grid = mountGridWithEdit([makeItem({ s0: ['A', 'B', 'C', 'D'] })])
+      expect(ticks(grid)).toHaveLength(0)
+    })
+
+    it('NO dibuja el ✓ cuando falta la explicación de uno solo', () => {
+      const grid = mountGridWithEdit([
+        makeItem({ s0: EXPLAINED(['A', 'B', 'C']).concat(['D']) })
+      ])
+      expect(ticks(grid)).toHaveLength(0)
+    })
+
+    it('dibuja el ✓ cuando los 4 FA están juzgados y explicados', () => {
+      const grid = mountGridWithEdit([makeItem({ s0: EXPLAINED(['A', 'B', 'C', 'D']) })])
+      expect(ticks(grid)).toHaveLength(1)
     })
   })
 })
