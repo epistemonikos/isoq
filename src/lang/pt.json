@@ -5,6 +5,7 @@
     "click": "Clique",
     "here": "aqui",
     "warning": "Aviso",
+    "ok": "OK",
     "continue_question": "Deseja continuar?",
     "because": "porque",
     "regarding": "em relação a",
@@ -1349,6 +1350,10 @@
       "loading": "Carregando dados...",
       "no_records": "Nenhum registro disponível",
       "no_explanation": "Explicação não adicionada",
+      "oa_reminder": {
+        "title": "Lembrete",
+        "body": "Como você alterou uma avaliação de adequação que pode afetar sua avaliação geral, recomendamos revisar a avaliação geral deste estudo."
+      },
       "how_to_read": {
         "title": "Como ler esta tabela",
         "section_1": "1. O que esta tabela mostra",

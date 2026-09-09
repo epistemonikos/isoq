@@ -810,4 +810,185 @@ describe('AssessmentForm.vue', () => {
       newWrapper.destroy()
     })
   })
+
+  /**
+   * El recordatorio de la OA cuelga de esto. El formulario NO decide si hay que avisar
+   * —eso mira la OA, que él no conoce—: sólo reporta el hecho de que un guardado manual
+   * cambió el juicio. La regla vive en StepFour, igual que con `incomplete-change`.
+   */
+  describe("option-saved — 'este guardado manual cambió el nivel'", () => {
+    const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+    // Datos propios: `performSave` hace Object.assign sobre el item que recibe por prop,
+    // así que un objeto compartido entre tests arrastra el nivel del test anterior.
+    //
+    // Y la celda se siembra ANTES de montar. Tocarla después es mutar la prop, y el
+    // watcher `deep` de `assessments` rehidrata `selected` en el nextTick siguiente:
+    // el `setData` del test quedaba pisado y todo parecía "sin cambios".
+    const mountWith = (leaf = null, overrides = {}) => {
+      const stages = fullStages()
+      const stage = overrides.modalStage || 0
+      const meta = overrides.selectedMeta || 0
+      if (leaf) Object.assign(stages[stage].options[meta], leaf)
+      return mount(AssessmentForm, {
+        localVue,
+        propsData: {
+          selectedMeta: 0,
+          modalStage: 0,
+          modalIndex: 0,
+          refId: 'ref1',
+          assessments: {
+            id: 'assess1',
+            items: [{ ref_id: 'ref1', authors: 'A 2024', stages }]
+          },
+          ...overrides
+        },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify },
+        stubs: {
+          'b-card': true, 'b-form-group': true, 'b-form-radio-group': true,
+          'b-form-radio': true, 'b-form-textarea': true, 'b-button': true, 'b-modal': true
+        }
+      })
+    }
+
+    it('emits the position when a manual save changes the level', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith({ option: 'A', text: 'Ya explicado' })
+      await wrapper.setData({ selected: 'D' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toEqual([[{ stage: 0, meta: 0 }]])
+      wrapper.destroy()
+    })
+
+    it('emits when the level goes from unassessed to a judgement', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith()
+      await wrapper.setData({ selected: 'B', text1: 'Porque X' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toHaveLength(1)
+      wrapper.destroy()
+    })
+
+    it('stays quiet when only the explanation was rewritten', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith({ option: 'C', text: 'Vieja' })
+      await wrapper.setData({ text1: 'Nueva redacción' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    it('stays quiet when only the notes changed', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith({ option: 'C', text: 'Porque X', notes: '' })
+      await wrapper.setData({ notes: 'una nota' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    // El auto-guardado corre mientras la persona todavía está eligiendo: el cartel se le
+    // plantaría encima sin que haya pedido nada.
+    it('stays quiet on the debounced auto-save', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith()
+      await wrapper.setData({ selected: 'D', text1: 'Porque X' })
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    it('reports the position it actually saved, not stage 0 / meta 0', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith(null, { modalStage: 1, selectedMeta: 2 })
+      await wrapper.setData({ selected: 'A', text1: 'Porque X' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toEqual([[{ stage: 1, meta: 2 }]])
+      wrapper.destroy()
+    })
+
+    // La rama de creación no pasa por el PATCH; el cálculo tiene que ir antes de la
+    // bifurcación o este camino queda mudo.
+    it('emits on the branch that creates the document', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const wrapper = mountWith(null, {
+        assessments: { items: [{ ref_id: 'ref1', authors: 'A 2024', stages: fullStages() }] }
+      })
+      await wrapper.setData({ selected: 'A', text1: 'Porque X' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(Api.post).toHaveBeenCalled()
+      expect(wrapper.emitted('option-saved')).toHaveLength(1)
+      wrapper.destroy()
+    })
+
+
+    /**
+     * MEDIDO EN NAVEGADOR, y ningún test lo atrapaba: entre elegir el nivel y llegar al
+     * botón Save pasan más de los 1,5 s del debounce, así que el auto-guardado escribe
+     * primero. Si la referencia para "cambió" es el valor almacenado, para cuando la
+     * persona aprieta Save ya coincide con lo elegido y el aviso no sale NUNCA en el
+     * flujo real. La referencia tiene que ser el valor con el que se abrió la celda.
+     */
+    it('still emits when the auto-save already persisted the level', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith({ option: 'A', text: 'Ya explicado' })
+      await wrapper.setData({ selected: 'D' })
+
+      await wrapper.vm.performSave(true)   // el debounce gana la carrera
+      await flushPromises()
+      await wrapper.vm.performSave(false)  // y recién ahí la persona aprieta Save
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toHaveLength(1)
+      wrapper.destroy()
+    })
+
+    // Y el segundo Save seguido no vuelve a contar: el manual sí mueve la referencia.
+    it('does not emit twice for the same level on two manual saves', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const wrapper = mountWith({ option: 'A', text: 'Ya explicado' })
+      await wrapper.setData({ selected: 'D' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toHaveLength(1)
+      wrapper.destroy()
+    })
+
+    it('does not emit when the save was rejected', async () => {
+      Api.patch.mockRejectedValue(new Error('network error'))
+      const wrapper = mountWith()
+      await wrapper.setData({ selected: 'A', text1: 'Porque X' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(wrapper.emitted('option-saved')).toBeUndefined()
+      wrapper.destroy()
+    })
+  })
 })

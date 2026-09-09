@@ -5,6 +5,7 @@
     "click": "Click",
     "here": "here",
     "warning": "Warning",
+    "ok": "OK",
     "continue_question": "Do you wish to continue?",
     "because": "because",
     "regarding": "regarding",
@@ -1349,6 +1350,10 @@
       "loading": "Loading data...",
       "no_records": "No records available",
       "no_explanation": "Explanation not yet added",
+      "oa_reminder": {
+        "title": "Reminder",
+        "body": "Since you have changed a fit assessment that may affect your overall assessment, we recommend you review your overall assessment for this study."
+      },
       "how_to_read": {
         "title": "How to read this table",
         "section_1": "1. What this table shows",

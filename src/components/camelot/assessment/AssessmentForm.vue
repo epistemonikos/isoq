@@ -124,6 +124,15 @@ export default {
       selected: null,
       text1: '',
       notes: '',
+      /**
+       * El nivel con el que se ABRIÓ esta celda. Es la referencia para decidir si un
+       * guardado manual cambió el juicio, y a propósito NO es el valor almacenado:
+       * entre elegir el nivel y llegar al botón Save pasan más de los 1,5 s del
+       * debounce, así que el auto-guardado escribe primero y el almacenado ya coincide
+       * con lo elegido. Medido en navegador. Sólo la mueven la hidratación de la celda
+       * y el propio guardado manual.
+       */
+      baselineOption: null,
       isSaving: false,
       autoSaveStatus: null,
       options: [
@@ -315,6 +324,7 @@ export default {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
         this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
+        this.baselineOption = this.selected
       }
     },
     selectedMeta (newValue) {
@@ -324,6 +334,7 @@ export default {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
         this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
+        this.baselineOption = this.selected
       }
     },
     modalIndex (newValue) {
@@ -333,8 +344,14 @@ export default {
         this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
         this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
         this.notes = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].notes || ''
+        this.baselineOption = this.selected
       }
     },
+    /**
+     * Rehidrata desde el documento recargado. NO toca `baselineOption`: este watcher
+     * corre después de CADA guardado (el éxito dispara un refetch en el padre), así que
+     * mover ahí la referencia la dejaría siempre igual a lo elegido.
+     */
     assessments: {
       handler (newValue) {
         if (newValue.items.length) {
@@ -360,6 +377,7 @@ export default {
       this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
       this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
       this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
+      this.baselineOption = this.selected
     }
     this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
   },
@@ -477,6 +495,19 @@ export default {
         // returns: StepFour merges items across SEVERAL isoqf_assessments
         // documents, and a single doc would not reproduce that merge.
         this.$emit('getAssessments')
+        // The judgement moved, and the person asked for it — the overall assessment
+        // that took this cell into account may have gone stale. This component does not
+        // know whether it did: it reports the fact and StepFour applies the rule, the
+        // same split as `incomplete-change`. Auto-saves stay quiet on purpose; they fire
+        // while the person is still choosing.
+        if (!silent) {
+          if (optionChanged) {
+            this.$emit('option-saved', { stage: this.modalStage, meta: this.selectedMeta })
+          }
+          // Guardar a mano fija el nuevo punto de referencia. El auto-guardado no: es
+          // justamente el que no debe consumir el aviso.
+          this.baselineOption = this.selected
+        }
         this.isSaving = false
         if (silent) {
           this.autoSaveStatus = 'saved'
@@ -512,6 +543,7 @@ export default {
         currentItem.stages[this.modalStage].options
         ? currentItem.stages[this.modalStage].options[this.selectedMeta]
         : null
+      const optionChanged = this.baselineOption !== this.selected
       if (localLeaf) Object.assign(localLeaf, leaf)
 
       if (!this.assessments.id) {

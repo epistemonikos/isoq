@@ -120,6 +120,7 @@
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
                             :locked-by-user="cellLockedBy(modal.stage, dIndex)"
                             @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                            @option-saved="onAssessmentOptionSaved"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
@@ -171,7 +172,7 @@
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
                     :locked-by-user="cellLockedBy(2, 0)"
                     @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
-                    @getAssessments="getAssessments"></assessmentForm>
+                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
             </div>
@@ -252,7 +253,7 @@
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
                     :locked-by-user="cellLockedBy(3, 0)"
                     @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
-                    @getAssessments="getAssessments"></assessmentForm>
+                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
             </div>
@@ -303,6 +304,17 @@
       </b-container>
     </b-modal>
 
+    <!--
+      La OA se emite "tomando en consideración" los nueve FA. Cambiar uno después la deja
+      apoyada en una premisa vencida, y nada en la pantalla lo delata: la celda de la OA
+      sigue verde. El cartel no bloquea nada — el FA ya se guardó — porque quien decide si
+      la conclusión global sigue en pie es la persona, no nosotros.
+    -->
+    <b-modal id="oa-reminder-modal" :title="$t('camelot.step_four.oa_reminder.title')"
+      ok-only :ok-title="$t('common.ok')" data-testid="oa-reminder-modal">
+      <p class="mb-0">{{ $t('camelot.step_four.oa_reminder.body') }}</p>
+    </b-modal>
+
     <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
       <div class="px-4 py-3" v-html="helpContent[modal.stage]">
       </div>
@@ -327,7 +339,9 @@ import {
   ASSESSMENT_CELLS,
   baseRefOf,
   emptyAssessmentItem,
+  isLeafComplete,
   leafLockKey,
+  OVERALL_ASSESSMENT,
   leafPositionOf
 } from '@/utils/camelotAssessmentKeys'
 import Commons from '../../utils/commons.js'
@@ -419,6 +433,9 @@ export default {
       assessments: {
         items: []
       },
+      // Una sola vez por estudio abierto. Un booleano y no un Set por ref_id: hay un solo
+      // estudio abierto a la vez, y `openModal` es el punto por el que pasa cada cambio.
+      oaReminderShown: false,
       activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
       refLocksTimer: null,
       isRefReadOnly: false, // lock state for the study currently open in the modal
@@ -740,6 +757,29 @@ export default {
     }
   },
   methods: {
+    /**
+     * Un AssessmentForm reporta que un guardado MANUAL cambió el nivel A-E de su celda.
+     * El FA ya está escrito y no se toca: acá sólo se decide si hay que recordarle a la
+     * persona que su overall assessment quedó apoyada en una premisa que cambió.
+     *
+     * La decisión vive acá y no en el formulario por dos razones. La OA es otra celda, que
+     * el formulario del FA no conoce; y hay hasta seis instancias vivas a la vez detrás de
+     * `b-tabs`, así que un cartel decidido abajo tendría seis dueños. Mismo reparto que
+     * `incomplete-change`: el hijo reporta el hecho, el padre aplica la regla.
+     */
+    onAssessmentOptionSaved ({ stage }) {
+      // Guardar la OA no es motivo para pedir que se revise la OA.
+      if (stage === OVERALL_ASSESSMENT.stage) return
+      // Una vez por apertura del modal. Quien repasa los nueve FA de corrido no necesita
+      // nueve carteles: el segundo ya no se lee, y el primero deja de leerse por asociación.
+      if (this.oaReminderShown) return
+      const item = this.assessments.items ? this.assessments.items[this.modal.index] : null
+      // Sin OA emitida no hay nada que haya quedado desactualizado. `isLeafComplete` exige
+      // explicación además del juicio: una OA a medias todavía se está escribiendo.
+      if (!isLeafComplete(item, OVERALL_ASSESSMENT.stage, OVERALL_ASSESSMENT.option)) return
+      this.oaReminderShown = true
+      this.$bvModal.show('oa-reminder-modal')
+    },
     /** Un AssessmentForm reporta si su celda quedó con un juicio sin explicar. */
     onCellIncompleteChange ({ stage, meta, incomplete }) {
       const key = `${stage}-${meta}`
@@ -1202,6 +1242,7 @@ export default {
       this.pendingFocusId = null
       this.bypassTabGuard = false
       this.bypassCloseGuard = false
+      this.oaReminderShown = false
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).

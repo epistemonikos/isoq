@@ -1,8 +1,4 @@
-// An assessment is only complete once it carries an explanation. Whitespace is
-// not an explanation.
-function hasExplanation (text) {
-  return typeof text === 'string' && text.trim() !== ''
-}
+import { leafOf, isLeafComplete } from '@/utils/camelotAssessmentKeys'
 
 const FALLBACK_COLOR = '#B3B3B3'
 const ON_DARK = '#FFFFFF'
@@ -32,7 +28,7 @@ export default {
     getCircleClass (stage, optionIndex, item) {
       const cell = this.getCircleCell(stage, optionIndex, item)
       if (!cell || cell.option === null) return 'circle-not-completed'
-      return hasExplanation(cell.text) ? 'circle-filled' : 'circle-incomplete'
+      return isLeafComplete(item, stage, optionIndex) ? 'circle-filled' : 'circle-incomplete'
     },
     getCircleStyle (stage, optionIndex, item) {
       const cell = this.getCircleCell(stage, optionIndex, item)
@@ -43,7 +39,7 @@ export default {
 
       // Missing explanation: keep the fill — the colour is what the grid reads
       // at a glance — and add a dashed ring plus a legible exclamation mark.
-      if (!hasExplanation(cell.text)) {
+      if (!isLeafComplete(item, stage, optionIndex)) {
         const ink = contrastOn(color)
         return { backgroundColor: color, borderColor: ink, color: ink }
       }
@@ -51,11 +47,10 @@ export default {
     },
     isMissingExplanation (stage, optionIndex, item) {
       const cell = this.getCircleCell(stage, optionIndex, item)
-      return !!cell && cell.option !== null && !hasExplanation(cell.text)
+      return !!cell && cell.option !== null && !isLeafComplete(item, stage, optionIndex)
     },
     getCircleCell (stage, optionIndex, item) {
-      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options) return null
-      return item.stages[stage].options[optionIndex] || null
+      return leafOf(item, stage, optionIndex)
     }
   }
 }

@@ -10,7 +10,10 @@ import {
   ASSESSMENT_POSITION_KEYS,
   positionKeyOf,
   emptyAssessmentItem,
-  leafPositionOf
+  leafPositionOf,
+  leafOf,
+  isLeafComplete,
+  OVERALL_ASSESSMENT
 } from '@/utils/camelotAssessmentKeys'
 
 describe('camelotAssessmentKeys — the FA/OA grid', () => {
@@ -207,5 +210,69 @@ describe('camelotAssessmentKeys — emptyAssessmentItem', () => {
 
     expect(item.stages[0].options[1].option).toBeNull()
     expect(item.stages[1].options[0].option).toBeNull()
+  })
+})
+
+// El criterio "esta celda está terminada" estaba escrito dos veces —en
+// camelotCircleMixin y en AssessmentForm.explanationState— y el recordatorio de la OA
+// iba a ser la tercera. Vive acá porque acá vive el direccionamiento de las celdas.
+describe('camelotAssessmentKeys — isLeafComplete', () => {
+  const itemWith = (option, text) => ({
+    stages: [{ options: [{ option, text }] }]
+  })
+
+  it('is complete with a judgement and an explanation', () => {
+    expect(isLeafComplete(itemWith('A', 'Porque X'), 0, 0)).toBe(true)
+  })
+
+  it('is not complete without a judgement, however long the text', () => {
+    expect(isLeafComplete(itemWith(null, 'Porque X'), 0, 0)).toBe(false)
+  })
+
+  it('is not complete with an empty explanation', () => {
+    expect(isLeafComplete(itemWith('A', ''), 0, 0)).toBe(false)
+  })
+
+  // Whitespace is not an explanation: the textarea makes it far too easy to leave.
+  it('does not accept whitespace as an explanation', () => {
+    expect(isLeafComplete(itemWith('A', '  \n\t '), 0, 0)).toBe(false)
+  })
+
+  // Legacy documents were seeded with {option, text} only, and some rows reached
+  // the client without `text` at all.
+  it('does not accept a missing or non-string explanation', () => {
+    expect(isLeafComplete(itemWith('A', undefined), 0, 0)).toBe(false)
+    expect(isLeafComplete(itemWith('A', 42), 0, 0)).toBe(false)
+  })
+
+  it('is not complete when the cell is not there to read', () => {
+    expect(isLeafComplete(null, 3, 0)).toBe(false)
+    expect(isLeafComplete({}, 3, 0)).toBe(false)
+    expect(isLeafComplete(itemWith('A', 'Porque X'), 3, 0)).toBe(false)
+    expect(isLeafComplete(itemWith('A', 'Porque X'), 0, 7)).toBe(false)
+  })
+})
+
+describe('camelotAssessmentKeys — leafOf', () => {
+  it('reads the leaf at a position', () => {
+    const item = emptyAssessmentItem('R1')
+    item.stages[3].options[0].option = 'C'
+
+    expect(leafOf(item, 3, 0)).toEqual({ option: 'C', text: '', notes: '' })
+  })
+
+  it('returns null instead of throwing on a half-loaded item', () => {
+    expect(leafOf(null, 0, 0)).toBeNull()
+    expect(leafOf({ stages: [] }, 0, 0)).toBeNull()
+    expect(leafOf(emptyAssessmentItem('R1'), 2, 3)).toBeNull()
+  })
+})
+
+describe('camelotAssessmentKeys — OVERALL_ASSESSMENT', () => {
+  // Derivada, no escrita: un literal 3 repartido por los componentes es la clase de dato
+  // que sobrevive a que la grilla cambie de forma.
+  it('is the position of the OA cell in the grid', () => {
+    expect(OVERALL_ASSESSMENT).toEqual({ stage: 3, option: 0 })
+    expect(OVERALL_ASSESSMENT).toEqual(stageOptionOf('oa'))
   })
 })

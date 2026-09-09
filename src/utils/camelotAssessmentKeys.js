@@ -48,6 +48,13 @@ export function stageOptionOf (cellKey) {
   return cell ? { stage: cell.stage, option: cell.option } : null
 }
 
+/**
+ * Where the overall assessment lives. Derived from the grid rather than written as a
+ * literal 3: a bare `stage === 3` scattered across components is exactly what survives
+ * the grid changing shape.
+ */
+export const OVERALL_ASSESSMENT = stageOptionOf('oa')
+
 export function cellKeyOf (stage, option) {
   const cell = ASSESSMENT_CELLS.find(c => c.stage === stage && c.option === option)
   return cell ? cell.key : null
@@ -130,4 +137,26 @@ export function emptyAssessmentItem (refId, authors = '') {
       }))
     }))
   }
+}
+
+/** The leaf at a position, or null when the item hasn't loaded that far. */
+export function leafOf (item, stage, option) {
+  if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options) return null
+  return item.stages[stage].options[option] || null
+}
+
+/**
+ * "This cell is finished": a judgement AND an explanation that holds it up.
+ * Whitespace is not an explanation, and neither is a `text` that legacy
+ * documents never wrote.
+ *
+ * One home for the criterion. It was already spelled out in camelotCircleMixin
+ * and in AssessmentForm.explanationState; the OA reminder would have been the
+ * third copy, and the grid's own check (`option !== null`) is a fourth, looser
+ * one that answers a different question.
+ */
+export function isLeafComplete (item, stage, option) {
+  const leaf = leafOf(item, stage, option)
+  if (!leaf || leaf.option === null || leaf.option === undefined) return false
+  return typeof leaf.text === 'string' && leaf.text.trim() !== ''
 }

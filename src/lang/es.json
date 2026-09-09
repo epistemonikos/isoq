@@ -5,6 +5,7 @@
     "click": "Haga clic",
     "here": "aquí",
     "warning": "Advertencia",
+    "ok": "OK",
     "continue_question": "¿Desea continuar?",
     "because": "porque",
     "regarding": "con respecto a",
@@ -1349,6 +1350,10 @@
       "loading": "Cargando datos...",
       "no_records": "No hay registros disponibles",
       "no_explanation": "Explicación no agregada",
+      "oa_reminder": {
+        "title": "Recordatorio",
+        "body": "Dado que ha cambiado una evaluación de ajuste que puede afectar su evaluación general, le recomendamos revisar la evaluación general de este estudio."
+      },
       "how_to_read": {
         "title": "Cómo leer esta tabla",
         "section_1": "1. Qué muestra esta tabla",
