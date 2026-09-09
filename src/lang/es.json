@@ -1354,6 +1354,9 @@
         "title": "Recordatorio",
         "body": "Dado que ha cambiado una evaluación de ajuste que puede afectar su evaluación general, le recomendamos revisar la evaluación general de este estudio."
       },
+      "oa_gate": {
+        "blocked": "Complete las nueve evaluaciones de ajuste (FA1-FA9) antes de realizar la evaluación general: cada una requiere un juicio y una explicación escrita."
+      },
       "how_to_read": {
         "title": "Cómo leer esta tabla",
         "section_1": "1. Qué muestra esta tabla",

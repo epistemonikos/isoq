@@ -51,12 +51,22 @@
     </template>
     <template v-slot:cell(edit1)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn"
-          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
-          {{ $t('common.edit') }}
-          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
-          <font-awesome-icon v-else icon="edit" class="ml-1" />
-        </b-button>
+        <!-- El aviso viaja en el <span>, no en el botón: bootstrap-vue no monta tooltips
+             sobre botones `disabled` porque el navegador no despacha eventos de mouse
+             sobre ellos (verificado en navegador; ver editListEvidenceProfile.vue:88).
+             El wrapper sí los recibe, siempre que el botón apagado no se quede con el
+             hit-target — de ahí el `pointer-events`, patrón oficial de Bootstrap. Hasta
+             ahora el tooltip del lock estaba puesto donde nunca podía dispararse. -->
+        <span v-if="canEdit" class="d-inline-block" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          <b-button size="sm" variant="outline-primary" class="edit-btn"
+            :disabled="isRefLocked(data.item.ref_id)"
+            :style="isRefLocked(data.item.ref_id) ? { pointerEvents: 'none' } : null"
+            @click="openModal(0, data)">
+            {{ $t('common.edit') }}
+            <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
+          </b-button>
+        </span>
         <font-awesome-icon v-if="isGroupComplete(0, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
@@ -88,12 +98,22 @@
     </template>
     <template v-slot:cell(edit2)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn"
-          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
-          {{ $t('common.edit') }}
-          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
-          <font-awesome-icon v-else icon="edit" class="ml-1" />
-        </b-button>
+        <!-- El aviso viaja en el <span>, no en el botón: bootstrap-vue no monta tooltips
+             sobre botones `disabled` porque el navegador no despacha eventos de mouse
+             sobre ellos (verificado en navegador; ver editListEvidenceProfile.vue:88).
+             El wrapper sí los recibe, siempre que el botón apagado no se quede con el
+             hit-target — de ahí el `pointer-events`, patrón oficial de Bootstrap. Hasta
+             ahora el tooltip del lock estaba puesto donde nunca podía dispararse. -->
+        <span v-if="canEdit" class="d-inline-block" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          <b-button size="sm" variant="outline-primary" class="edit-btn"
+            :disabled="isRefLocked(data.item.ref_id)"
+            :style="isRefLocked(data.item.ref_id) ? { pointerEvents: 'none' } : null"
+            @click="openModal(1, data)">
+            {{ $t('common.edit') }}
+            <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
+          </b-button>
+        </span>
         <font-awesome-icon v-if="isGroupComplete(1, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
@@ -107,12 +127,22 @@
     </template>
     <template v-slot:cell(edit3)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn"
-          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
-          {{ $t('common.edit') }}
-          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
-          <font-awesome-icon v-else icon="edit" class="ml-1" />
-        </b-button>
+        <!-- El aviso viaja en el <span>, no en el botón: bootstrap-vue no monta tooltips
+             sobre botones `disabled` porque el navegador no despacha eventos de mouse
+             sobre ellos (verificado en navegador; ver editListEvidenceProfile.vue:88).
+             El wrapper sí los recibe, siempre que el botón apagado no se quede con el
+             hit-target — de ahí el `pointer-events`, patrón oficial de Bootstrap. Hasta
+             ahora el tooltip del lock estaba puesto donde nunca podía dispararse. -->
+        <span v-if="canEdit" class="d-inline-block" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          <b-button size="sm" variant="outline-primary" class="edit-btn"
+            :disabled="isRefLocked(data.item.ref_id)"
+            :style="isRefLocked(data.item.ref_id) ? { pointerEvents: 'none' } : null"
+            @click="openModal(2, data)">
+            {{ $t('common.edit') }}
+            <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
+          </b-button>
+        </span>
         <font-awesome-icon v-if="isGroupComplete(2, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
@@ -121,17 +151,29 @@
     <template v-slot:cell(oa)="data">
       <div class="d-flex justify-content-center">
         <assessment-circle :stage="3" :option-index="0" :item="data.item"
-          :responses="responses" clickable @click="openModal(3, data, 0)" />
+          :responses="responses" :clickable="!isOaBlocked(data.item)"
+          :tooltip="isOaBlocked(data.item) ? $t('camelot.step_four.oa_gate.blocked') : ''"
+          @click="openModal(3, data, 0)" />
       </div>
     </template>
     <template v-slot:cell(edit4)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn"
-          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
-          {{ $t('common.edit') }}
-          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
-          <font-awesome-icon v-else icon="edit" class="ml-1" />
-        </b-button>
+        <!-- El aviso viaja en el <span>, no en el botón: bootstrap-vue no monta tooltips
+             sobre botones `disabled` porque el navegador no despacha eventos de mouse
+             sobre ellos (verificado en navegador; ver editListEvidenceProfile.vue:88).
+             El wrapper sí los recibe, siempre que el botón apagado no se quede con el
+             hit-target — de ahí el `pointer-events`, patrón oficial de Bootstrap. Hasta
+             ahora el tooltip del lock estaba puesto donde nunca podía dispararse. -->
+        <span v-if="canEdit" class="d-inline-block" v-b-tooltip.hover :title="oaEditNotice(data.item)">
+          <b-button size="sm" variant="outline-primary" class="edit-btn"
+            :disabled="isOaEditDisabled(data.item)"
+            :style="isOaEditDisabled(data.item) ? { pointerEvents: 'none' } : null"
+            @click="openModal(3, data)">
+            {{ $t('common.edit') }}
+            <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
+          </b-button>
+        </span>
         <font-awesome-icon v-if="isGroupComplete(3, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
@@ -141,7 +183,7 @@
 <script>
 import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
-import { isLeafComplete } from '@/utils/camelotAssessmentKeys'
+import { isLeafComplete, isOverallAssessmentBlocked, OVERALL_ASSESSMENT } from '@/utils/camelotAssessmentKeys'
 
 export default {
   name: 'CamelotStepFourTable',
@@ -169,12 +211,38 @@ export default {
       return Array.from({ length: optionCount }, (_, i) => i)
         .every(option => isLeafComplete(item, stage, option))
     },
+    /**
+     * ¿La OA de este estudio está cerrada porque a los nueve FA les falta algo?
+     *
+     * `canEdit` entra acá y no en el util: sin permiso de escritura no hay editor que
+     * proteger, y el círculo es la única puerta que tiene un lector al resumen de los
+     * nueve FA que arma la etapa 3 — el botón ni siquiera se le dibuja.
+     */
+    isOaBlocked (item) {
+      return this.canEdit && isOverallAssessmentBlocked(item)
+    },
+    isOaEditDisabled (item) {
+      return this.isRefLocked(item.ref_id) || this.isOaBlocked(item)
+    },
+    /**
+     * Un solo aviso por vez. El lock manda: si otro tiene el estudio, la persona no
+     * puede hacer nada al respecto, y contarle además qué le falta a los FA sería
+     * pedirle que resuelva lo que no depende de ella.
+     */
+    oaEditNotice (item) {
+      if (this.isRefLocked(item.ref_id)) return this.refLockedByName(item.ref_id)
+      return this.isOaBlocked(item) ? this.$t('camelot.step_four.oa_gate.blocked') : ''
+    },
     openModal (stage, data, tab = 0, faLabel = null) {
       // Guard every edit path (the 4 edit buttons AND the FA circles funnel through
       // here): don't open a study that lacks a ref_id or is locked by another user.
       if (!Object.prototype.hasOwnProperty.call(data.item, 'ref_id') || this.isRefLocked(data.item.ref_id)) {
         return
       }
+      // El botón apagado y el círculo sin `clickable` son la señal; esto es el cierre.
+      // Las dos puertas a la OA pasan por acá, así que la regla se aplica una sola vez
+      // y no depende de que el `disabled` de la plantilla esté bien puesto.
+      if (stage === OVERALL_ASSESSMENT.stage && this.isOaBlocked(data.item)) return
       this.$emit('open-modal', { stage, data, tab, faLabel })
     }
   }

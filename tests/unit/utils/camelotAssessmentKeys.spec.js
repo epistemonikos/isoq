@@ -13,6 +13,8 @@ import {
   leafPositionOf,
   leafOf,
   isLeafComplete,
+  areFitAssessmentsComplete,
+  isOverallAssessmentBlocked,
   OVERALL_ASSESSMENT
 } from '@/utils/camelotAssessmentKeys'
 
@@ -274,5 +276,110 @@ describe('camelotAssessmentKeys — OVERALL_ASSESSMENT', () => {
   it('is the position of the OA cell in the grid', () => {
     expect(OVERALL_ASSESSMENT).toEqual({ stage: 3, option: 0 })
     expect(OVERALL_ASSESSMENT).toEqual(stageOptionOf('oa'))
+  })
+})
+
+
+/**
+ * La overall assessment se emite «tomando en consideración» los nueve fit assessments.
+ * Estos dos predicados son los que deciden si el editor de la OA se puede abrir; viven
+ * en el util y no en los componentes porque hay tres puertas al mismo editor, y una
+ * regla contestada por separado en cada una es una que deja entrar donde otra frenó.
+ */
+
+const FIT_ASSESSMENTS = ASSESSMENT_CELLS.filter(cell => cell.key !== 'oa')
+
+/** Un estudio con las celdas que diga `only` juzgadas Y explicadas. */
+function study (only = () => true) {
+  const item = emptyAssessmentItem('R1', 'Autor 2020')
+  ASSESSMENT_CELLS.filter(only).forEach(({ stage, option }) => {
+    item.stages[stage].options[option] = { option: 'B', text: 'porque X', notes: '' }
+  })
+  return item
+}
+
+const isFa = cell => cell.key !== 'oa'
+
+describe('camelotAssessmentKeys — areFitAssessmentsComplete', () => {
+  it('es verdadero con los nueve FA juzgados y explicados, aunque la OA esté vacía', () => {
+    expect(areFitAssessmentsComplete(study(isFa))).toBe(true)
+  })
+
+  // Uno por cada FA ausente: si el hueco cayera siempre en el mismo lado de la grilla,
+  // un predicado que mirara sólo una etapa pasaría igual.
+  it.each(FIT_ASSESSMENTS.map(cell => [cell.key, cell]))(
+    'es falso cuando falta %s y los otros ocho están',
+    (_key, missing) => {
+      const item = study(cell => isFa(cell) && cell.key !== missing.key)
+      expect(areFitAssessmentsComplete(item)).toBe(false)
+    }
+  )
+
+  it('es falso con los nueve juzgados pero sin explicación', () => {
+    const item = emptyAssessmentItem('R1', 'Autor 2020')
+    FIT_ASSESSMENTS.forEach(({ stage, option }) => {
+      item.stages[stage].options[option].option = 'B'
+    })
+    expect(areFitAssessmentsComplete(item)).toBe(false)
+  })
+
+  it('es falso cuando una explicación es sólo espacios en blanco', () => {
+    const item = study(isFa)
+    item.stages[1].options[0].text = '  \n\t '
+    expect(areFitAssessmentsComplete(item)).toBe(false)
+  })
+
+  // Documentos viejos que nunca escribieron `text`: no hay campo que mirar.
+  it('es falso cuando una hoja legada no trae el campo text', () => {
+    const item = study(isFa)
+    delete item.stages[2].options[0].text
+    expect(areFitAssessmentsComplete(item)).toBe(false)
+  })
+
+  it.each([[null], [undefined], [{}], [{ stages: [] }]])(
+    'es falso y no lanza con un ítem que no cargó (%p)',
+    (item) => {
+      expect(areFitAssessmentsComplete(item)).toBe(false)
+    }
+  )
+})
+
+describe('camelotAssessmentKeys — isOverallAssessmentBlocked', () => {
+  const oaOf = item => item.stages[OVERALL_ASSESSMENT.stage].options[OVERALL_ASSESSMENT.option]
+
+  it('bloquea un estudio vacío', () => {
+    expect(isOverallAssessmentBlocked(emptyAssessmentItem('R1', 'A'))).toBe(true)
+  })
+
+  it('bloquea con ocho de los nueve FA listos', () => {
+    const item = study(cell => isFa(cell) && cell.key !== 'fa9')
+    expect(isOverallAssessmentBlocked(item)).toBe(true)
+  })
+
+  it('abre con los nueve FA listos y la OA todavía vacía', () => {
+    expect(isOverallAssessmentBlocked(study(isFa))).toBe(false)
+  })
+
+  // El gate ordena el trabajo; no encierra un dato que alguien ya escribió.
+  it('abre una OA ya emitida aunque no haya un solo FA hecho', () => {
+    const item = emptyAssessmentItem('R1', 'A')
+    Object.assign(oaOf(item), { option: 'C', text: 'ya la escribí' })
+    expect(isOverallAssessmentBlocked(item)).toBe(false)
+  })
+
+  /**
+   * El caso del encierro. Elegir el nivel de la OA y salir con «hacerlo más tarde» deja
+   * esta hoja persistida por el autoguardado. Bloquearla sería reclamar la explicación
+   * cerrando la única puerta para escribirla: la celda diría «Explicación no agregada»
+   * y no dejaría entrar a agregarla.
+   */
+  it('abre una OA con juicio y SIN explicación, con los FA incompletos', () => {
+    const item = emptyAssessmentItem('R1', 'A')
+    oaOf(item).option = 'C'
+    expect(isOverallAssessmentBlocked(item)).toBe(false)
+  })
+
+  it('bloquea cuando el ítem todavía no cargó', () => {
+    expect(isOverallAssessmentBlocked(null)).toBe(true)
   })
 })

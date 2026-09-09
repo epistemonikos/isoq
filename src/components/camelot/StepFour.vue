@@ -259,7 +259,14 @@
           </div>
           <div v-else></div>
 
-          <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link">
+          <!-- La tercera puerta a la OA: desde FA 9 se llega en un click, sin pasar por
+               la grilla. Queda visible pero inerte — sacarlo dejaría la etapa 2 sin salida
+               aparente y sin ningún lugar donde contar qué falta. Es un `div`, así que el
+               tooltip se monta sin el wrapper que necesitan los botones `disabled`. -->
+          <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link"
+            :class="{ 'nav-footer-link-blocked': nextStageBlocked }"
+            v-b-tooltip.hover :title="nextStageBlocked ? $t('camelot.step_four.oa_gate.blocked') : ''"
+            data-testid="footer-next-stage">
             {{ getStageTitle(modal.stage + 1) }} &gt;
           </div>
           <div v-else @click="requestModalClose" class="nav-footer-link">
@@ -331,6 +338,7 @@ import {
   baseRefOf,
   emptyAssessmentItem,
   isLeafComplete,
+  isOverallAssessmentBlocked,
   leafLockKey,
   OVERALL_ASSESSMENT,
   leafPositionOf
@@ -726,6 +734,22 @@ export default {
           .map(([key, holder]) => [leafPositionOf(key), holder])
           .filter(([position]) => position)
       )
+    },
+    /** El estudio que el modal tiene abierto, o null si todavía no cargó. */
+    openStudy () {
+      const items = this.assessments.items
+      return (items && items[this.modal.index]) || null
+    },
+    /**
+     * Misma regla y mismo util que la grilla. Si cada puerta se contestara sola, una te
+     * dejaría entrar donde la otra te frenó.
+     */
+    overallAssessmentBlocked () {
+      return this.canEdit && isOverallAssessmentBlocked(this.openStudy)
+    },
+    /** Lo que el link del pie necesita saber: sólo desde FA 9 el siguiente paso es la OA. */
+    nextStageBlocked () {
+      return this.modal.stage + 1 === OVERALL_ASSESSMENT.stage && this.overallAssessmentBlocked
     }
   },
   watch: {
@@ -1454,6 +1478,10 @@ export default {
     },
     /** Salida por etapa. Como el cierre, sólo pregunta por la celda visible. */
     goToStage (stage) {
+      // El corte va ANTES de `guardExplanation`: una navegación bloqueada que se encole
+      // en `pendingNavigation` la ejecuta igual el botón «más tarde» del aviso de
+      // explicación, y el gate se saltearía por la puerta de al lado.
+      if (stage === OVERALL_ASSESSMENT.stage && this.overallAssessmentBlocked) return
       this.guardExplanation(() => {
         this.bypassTabGuard = false
         this.modal.stage = stage
@@ -1791,10 +1819,26 @@ export default {
     text-decoration: none !important;
     transition: color 0.2s;
 
-    &:hover {
+    // El realce del hover es de los links que llevan a algún lado. Excluir al bloqueado
+    // acá evita tener que repetir su color —que el tema oscuro reescribe— en un override.
+    &:not(.nav-footer-link-blocked):hover {
       color: #1065AB;
       text-decoration: none !important;
     }
+  }
+
+  /**
+   * Visible pero inerte. El link sigue diciendo a dónde llevaría; el tooltip, por qué
+   * todavía no lleva.
+   *
+   * Apagado con `opacity` y no con un color: el tema oscuro reescribe el color de
+   * `.nav-footer-link` y un valor fijo acá quedaba idéntico al del link activo — el
+   * bloqueado sólo se distinguía por el cursor. Medido en navegador; jsdom no carga
+   * este SCSS ni conoce los temas, así que ningún test lo habría atrapado.
+   */
+  .nav-footer-link-blocked {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 }
 

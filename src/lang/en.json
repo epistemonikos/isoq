@@ -1354,6 +1354,9 @@
         "title": "Reminder",
         "body": "Since you have changed a fit assessment that may affect your overall assessment, we recommend you review your overall assessment for this study."
       },
+      "oa_gate": {
+        "blocked": "Complete all nine fit assessments (FA1-FA9) before making the overall assessment: each one requires a judgement and a written explanation."
+      },
       "how_to_read": {
         "title": "How to read this table",
         "section_1": "1. What this table shows",

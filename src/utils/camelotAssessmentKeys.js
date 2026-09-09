@@ -160,3 +160,31 @@ export function isLeafComplete (item, stage, option) {
   if (!leaf || leaf.option === null || leaf.option === undefined) return false
   return typeof leaf.text === 'string' && leaf.text.trim() !== ''
 }
+
+/**
+ * Los nueve fit assessments terminados: juicio Y explicación en cada uno. La OA se
+ * descuenta por POSICIÓN, no con un `stage !== 3` escrito a mano — ese literal es
+ * justo lo que esta grilla existe para no tener repartido por los componentes.
+ */
+export function areFitAssessmentsComplete (item) {
+  return ASSESSMENT_CELLS
+    .filter(cell => !(cell.stage === OVERALL_ASSESSMENT.stage && cell.option === OVERALL_ASSESSMENT.option))
+    .every(cell => isLeafComplete(item, cell.stage, cell.option))
+}
+
+/**
+ * ¿El editor de la overall assessment tiene que quedarse cerrado? La OA se emite
+ * «tomando en consideración» los nueve FA: abrirla antes es pedir una conclusión sobre
+ * premisas que todavía no están escritas.
+ *
+ * La excepción mira si la OA fue TOCADA, no si está completa, y esa diferencia es la
+ * mitad de la regla. Una OA con juicio y sin explicación es un estado alcanzable —
+ * elegir el nivel y salir con «hacerlo más tarde», que el autoguardado ya persistió—,
+ * y bloquearla sería reclamar la explicación cerrando la única puerta para escribirla.
+ * El gate ordena el trabajo; no encierra un dato que alguien ya escribió.
+ */
+export function isOverallAssessmentBlocked (item) {
+  const overall = leafOf(item, OVERALL_ASSESSMENT.stage, OVERALL_ASSESSMENT.option)
+  if (overall && overall.option !== null && overall.option !== undefined) return false
+  return !areFitAssessmentsComplete(item)
+}

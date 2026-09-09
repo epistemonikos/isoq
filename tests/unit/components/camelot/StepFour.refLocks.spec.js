@@ -2,6 +2,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import StepFour from '@/components/camelot/StepFour.vue'
 import BootstrapVue from 'bootstrap-vue'
 import LockService from '@/services/lockService'
+import { ASSESSMENT_CELLS, emptyAssessmentItem } from '@/utils/camelotAssessmentKeys'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -193,9 +194,17 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     wrapper.destroy()
   })
 
+  // La etapa 3 tiene una precondición desde que existe el gate de la OA: los nueve FA
+  // completos. El estudio se arma acá para que este test siga hablando de locks y no
+  // termine midiendo el gate sin querer.
   it('al cambiar de etapa toma la hoja de la etapa nueva', async () => {
+    const item = emptyAssessmentItem('ref1', 'A')
+    ASSESSMENT_CELLS.filter(cell => cell.key !== 'oa').forEach(({ stage, option }) => {
+      item.stages[stage].options[option] = { option: 'B', text: 'porque X', notes: '' }
+    })
     const wrapper = createWrapper()
     await flushPromises()
+    wrapper.setData({ assessments: { id: 'a1', items: [item] } })
     wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
     await flushPromises()
     LockService.acquireRef.mockClear()

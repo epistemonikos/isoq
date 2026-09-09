@@ -295,4 +295,140 @@ describe('CamelotStepFourTable.vue', () => {
       expect(ticks(grid)).toHaveLength(1)
     })
   })
+
+  /**
+   * La OA se emite «tomando en consideración» los nueve FA. Hasta que estén los nueve
+   * —juicio Y explicación— su editor no se abre, y las dos puertas de esta grilla (el
+   * botón y el círculo) tienen que decir lo mismo.
+   */
+  describe('el editor de la OA se abre recién con los nueve FA', () => {
+    const NINE = {
+      s0: EXPLAINED(['A', 'B', 'C', 'D']),
+      s1: EXPLAINED(['A', 'B', 'C', 'D']),
+      s2: EXPLAINED(['B'])
+    }
+    const GATE = 'camelot.step_four.oa_gate.blocked'
+
+    /** Los nueve FA listos salvo FA9, que queda sin explicación. */
+    const eightOfNine = () => makeItem({ ...NINE, s2: ['B'] })
+
+    function mountGrid (items, overrides = {}) {
+      return mount(CamelotStepFourTable, {
+        localVue,
+        propsData: {
+          ...propsData,
+          fields: [
+            { key: 'authors', label: 'Fit assessments' },
+            { key: 'fa1', label: 'FA 1' },
+            { key: 'edit1', label: '' },
+            { key: 'oa', label: 'OA' },
+            { key: 'edit4', label: '' }
+          ],
+          items,
+          canEdit: true,
+          ...overrides
+        },
+        mocks: { $t: (msg) => msg },
+        stubs: { 'font-awesome-icon': true }
+      })
+    }
+
+    const oaButtonWrapper = grid => grid.findAll('td').at(4).find('span.d-inline-block')
+    const oaButton = grid => grid.findAll('td').at(4).find('.edit-btn')
+    const faButton = grid => grid.findAll('td').at(2).find('.edit-btn')
+    const oaCircle = grid => grid.findAll('td').at(3).find('.assessment-circle')
+
+    it('apaga el botón y explica qué falta cuando no hay ningún FA', () => {
+      const grid = mountGrid([makeItem()])
+      expect(oaButton(grid).attributes('disabled')).toBeTruthy()
+      expect(oaButtonWrapper(grid).attributes('title')).toBe(GATE)
+    })
+
+    it('sigue apagado con ocho de los nueve FA listos', () => {
+      const grid = mountGrid([eightOfNine()])
+      expect(oaButton(grid).attributes('disabled')).toBeTruthy()
+    })
+
+    it('enciende el botón, sin aviso, con los nueve FA listos', () => {
+      const grid = mountGrid([makeItem(NINE)])
+      expect(oaButton(grid).attributes('disabled')).toBeFalsy()
+      expect(oaButtonWrapper(grid).attributes('title')).toBe('')
+    })
+
+    it('deja entrar a una OA ya emitida aunque falten FA', () => {
+      const grid = mountGrid([makeItem({ s3: ['C'] })])
+      expect(oaButton(grid).attributes('disabled')).toBeFalsy()
+    })
+
+    it('no toca los botones de los FA en una fila con la OA bloqueada', () => {
+      const grid = mountGrid([makeItem()])
+      expect(faButton(grid).attributes('disabled')).toBeFalsy()
+    })
+
+    it('deja el círculo de la OA inerte y con el aviso', () => {
+      const grid = mountGrid([makeItem()])
+      expect(oaCircle(grid).classes()).not.toContain('is-clickable')
+      expect(oaCircle(grid).attributes('title')).toBe(GATE)
+    })
+
+    it('devuelve el clic al círculo de la OA con los nueve FA listos', () => {
+      const grid = mountGrid([makeItem(NINE)])
+      expect(oaCircle(grid).classes()).toContain('is-clickable')
+    })
+
+    // La puerta única: el `disabled` es la señal, esto es el cierre.
+    it('NO emite open-modal para la OA mientras falten FA', () => {
+      const grid = mountGrid([makeItem()])
+      grid.vm.openModal(3, { index: 0, item: makeItem() })
+      expect(grid.emitted('open-modal')).toBeFalsy()
+    })
+
+    it('emite open-modal para la OA con los nueve FA listos', () => {
+      const item = makeItem(NINE)
+      const grid = mountGrid([item])
+      grid.vm.openModal(3, { index: 0, item })
+      expect(grid.emitted('open-modal')).toBeTruthy()
+    })
+
+    it('emite open-modal para los FA aunque la OA esté bloqueada', () => {
+      const item = makeItem()
+      const grid = mountGrid([item])
+      grid.vm.openModal(0, { index: 0, item })
+      expect(grid.emitted('open-modal')).toBeTruthy()
+    })
+
+    it('ignora el clic real sobre el círculo de la OA bloqueada', () => {
+      const grid = mountGrid([makeItem()])
+      oaCircle(grid).trigger('click')
+      expect(grid.emitted('open-modal')).toBeFalsy()
+    })
+
+    // Dos motivos para el mismo botón apagado: el que le importa a la persona es que
+    // otro lo tiene, porque ese no depende de ella.
+    it('el lock ajeno le gana al aviso del gate', () => {
+      const grid = mountGrid([makeItem()], {
+        activeRefLocks: [{ ref_id: 'ref1', user_name: 'Ana' }]
+      })
+      expect(oaButtonWrapper(grid).attributes('title')).toBe('lock.ref_locked_by')
+    })
+
+    /**
+     * Sin permiso de escritura no hay editor que proteger, y la etapa 3 es además la
+     * única vista consolidada de los nueve FA. El círculo es la única puerta que le
+     * queda a un lector: el botón ni siquiera se dibuja.
+     */
+    describe('el lector (canEdit=false) no queda afuera', () => {
+      it('conserva el círculo clickeable con los FA incompletos', () => {
+        const grid = mountGrid([makeItem()], { canEdit: false })
+        expect(oaCircle(grid).classes()).toContain('is-clickable')
+      })
+
+      it('deja pasar open-modal de la OA', () => {
+        const item = makeItem()
+        const grid = mountGrid([item], { canEdit: false })
+        grid.vm.openModal(3, { index: 0, item })
+        expect(grid.emitted('open-modal')).toBeTruthy()
+      })
+    })
+  })
 })

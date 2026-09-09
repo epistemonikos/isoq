@@ -1354,6 +1354,9 @@
         "title": "Lembrete",
         "body": "Como você alterou uma avaliação de adequação que pode afetar sua avaliação geral, recomendamos revisar a avaliação geral deste estudo."
       },
+      "oa_gate": {
+        "blocked": "Conclua as nove avaliações de ajuste (FA1-FA9) antes de fazer a avaliação geral: cada uma exige um julgamento e uma explicação escrita."
+      },
       "how_to_read": {
         "title": "Como ler esta tabela",
         "section_1": "1. O que esta tabela mostra",
