@@ -1209,11 +1209,11 @@
         "examples": "<b>Study 1</b><br><b>Extracted data:</b><br>The aim of the research project is to explore the difficulties encountered by social workers when assisting adult individuals without homes. To fulfill this purpose, the following goals were set: <ul><li>To outline policy and laws related to homelessness in a context of a country in the Southern Hemisphere and to characterize homelessness on a worldwide scale.</li><li>To detail the assistance offered and obstacles encountered by social workers engaging with adult individuals lacking homes, supported by the ecological viewpoint.</li><li>To concretely examine the hurdles social workers encounter in providing services to adult individuals without homes.</li><li>To offer conclusions and suggestions derived from the research findings.</li></ul><br><b>Comments:</b><br>Adequate description of aims and objectives."
       },
       "stakeholders": {
-        "title": "Stakeholders",
-        "definition": "Anyone with an interest (financial or otherwise) in the findings of the research study. Stakeholders are not the same as participants in this context. Stakeholders include patient and public participants.",
-        "what_to_do": "Extract relevant data for the review question from the primary study related to any, some or all of (but not limited to) the following: <ul><li>Whether and how stakeholders were involved in the design, planning, conduct, analysis or interpretation of the study findings</li><li>The type of stakeholders or stakeholder groups (including funders), how they were recruited/selected, who they represent, their relationship to the research question and whether their conflicts of interest have been considered (if relevant).</li><li>How the study was funded and the role of the funding</li></ul><p>Paraphrase or copy and paste the data relevant to this domain into the “Extracted Data” box and note concerns and where important information is missing in the “Comments” box.</p><p>When possible, note where there are important problems with the description, for example if key stakeholders groups have been overlooked or if there was no involvement of any kind with important stakeholders.</p><p>*The term “stakeholders” may be not appropriate in all contexts</p>",
-        "tips": "<ul><li>It is not always appropriate or necessary for stakeholders to be involved in the design or conduct of a study. This can depend on the review question, but stakeholder involvement is generally considered to have positive impacts on making the review more relevant.</li><li>This information may be found in the Introduction, Methods, Discussion, Declarations or Acknowledgements sections of the study report.</li><li>Note that stakeholder involvement is a relatively new practice and/or evolving in some disciplines and unlikely to be present in some studies.</li></ul>",
-        "examples": "<b>Study 1</b><br><b>Extracted data:</b><br>This study received funding from a central grant by the National Institute of Mental Health to the Center for Clinical and Behavioral Research on [Disease] at a noted Psychiatric Institute and a renowned University (nr. XXX); Lead Researcher, Ph.D.) and through an educational grant from the National Institute of Mental Health (nr.YYY, Behavioral Sciences Study on [Disease]; Lead Researcher, Ph.D.) The content herein is entirely attributed to the authors and may not reflect the official stance of the NIMH or the NIH.<br><b>Comments:</b><br>No information on stakeholder involvement. Funders were not involved in research. Stakeholders input on the interview guide could have been helpful.<br><br><b>Study 2</b><br><b>Extracted data:</b><br>Stakeholders representing patient groups were involved in the recruitment of participants, the development of the interview guide and the data collection.<br><b>Comments:</b><br>Stakeholders involved, but their conflicts of interest not discussed. Also not discussed whether stakeholders had the skills/training to undertake data collection or their relationship to the participants."
+        "title": "Interest holders",
+        "definition": "Anyone with an interest (financial or otherwise) in the findings of the research study. Interest holders are not the same as participants in this context. Interest holders include patient and public participants.",
+        "what_to_do": "Extract relevant data for the review question from the primary study related to any, some or all of (but not limited to) the following: <ul><li>Whether and how interest holders were involved in the design, planning, conduct, analysis or interpretation of the study findings</li><li>The type of interest holders or interest holder groups (including funders), how they were recruited/selected, who they represent, their relationship to the research question and whether their conflicts of interest have been considered (if relevant).</li><li>How the study was funded and the role of the funding</li></ul><p>Paraphrase or copy and paste the data relevant to this domain into the “Extracted Data” box and note concerns and where important information is missing in the “Comments” box.</p><p>When possible, note where there are important problems with the description, for example if key interest holders groups have been overlooked or if there was no involvement of any kind with important interest holders.</p><p>*The term “interest holders” may be not appropriate in all contexts</p>",
+        "tips": "<ul><li>It is not always appropriate or necessary for interest holders to be involved in the design or conduct of a study. This can depend on the review question, but interest holder involvement is generally considered to have positive impacts on making the review more relevant.</li><li>This information may be found in the Introduction, Methods, Discussion, Declarations or Acknowledgements sections of the study report.</li><li>Note that interest holder involvement is a relatively new practice and/or evolving in some disciplines and unlikely to be present in some studies.</li></ul>",
+        "examples": "<b>Study 1</b><br><b>Extracted data:</b><br>This study received funding from a central grant by the National Institute of Mental Health to the Center for Clinical and Behavioral Research on [Disease] at a noted Psychiatric Institute and a renowned University (nr. XXX); Lead Researcher, Ph.D.) and through an educational grant from the National Institute of Mental Health (nr.YYY, Behavioral Sciences Study on [Disease]; Lead Researcher, Ph.D.) The content herein is entirely attributed to the authors and may not reflect the official stance of the NIMH or the NIH.<br><b>Comments:</b><br>No information on interest holder involvement. Funders were not involved in research. Interest holders input on the interview guide could have been helpful.<br><br><b>Study 2</b><br><b>Extracted data:</b><br>Interest holders representing patient groups were involved in the recruitment of participants, the development of the interview guide and the data collection.<br><b>Comments:</b><br>Interest holders involved, but their conflicts of interest not discussed. Also not discussed whether interest holders had the skills/training to undertake data collection or their relationship to the participants."
       },
       "researchers": {
         "title": "Researchers",
@@ -1389,18 +1389,18 @@
         "fit_between_conduct_meta": "Fit between Research conduct domains and each Meta domain",
         "fit_between_design_conduct": "Fit between Research design domains and Research conduct domains",
         "fa1": "Fit between research design domains and Meta domain Research aim & question(s)",
-        "fa2": "Fit between Research design domains and Meta domain Stakeholders",
+        "fa2": "Fit between Research design domains and Meta domain Interest holders",
         "fa3": "Fit between Research design domains and Meta domain Researchers",
         "fa4": "Fit between Research design domains and Meta domain Context",
         "fa5": "Fit between Research conduct domains and Meta domain Research aim & question(s)",
-        "fa6": "Fit between Research conduct domains and Meta domain Stakeholders",
+        "fa6": "Fit between Research conduct domains and Meta domain Interest holders",
         "fa7": "Fit between Research conduct domains and Meta domain Researchers",
         "fa8": "Fit between Research conduct domains and Meta domain Context",
         "fa9": "Fit between Research design domains and Research conduct domains"
       },
       "meta_items": {
         "research": "Research aim & question(s)",
-        "stakeholders": "Stakeholders",
+        "stakeholders": "Interest holders",
         "researchers": "Researchers",
         "context": "Context"
       },
@@ -1430,7 +1430,7 @@
         "oa_label": "OA",
         "overall": "Overall assessment",
         "research": "Research aim & question(s)",
-        "stakeholders": "Stakeholders",
+        "stakeholders": "Interest holders",
         "researchers": "Researchers",
         "context": "Context",
         "researchers_domain": "Researchers domain"
@@ -1439,7 +1439,7 @@
         "extracted_data": "Extracted data",
         "concerns": "Comments",
         "meta_domain_1": "Research aim & question(s)",
-        "meta_domain_2": "Stakeholders",
+        "meta_domain_2": "Interest holders",
         "meta_domain_3": "Researchers",
         "meta_domain_4": "Context",
         "research_design_1": "Research strategy",
@@ -1453,11 +1453,11 @@
       },
       "camelot_assessment_summary_table": {
         "meta_domain_1": "FA1. Fit between the <b>Research design domains</b> and the Meta domain <b>Research aim & question(s)</b>",
-        "meta_domain_2": "FA2. Fit between the <b>Research design domains</b> and the Meta domain <b>Stakeholders</b>",
+        "meta_domain_2": "FA2. Fit between the <b>Research design domains</b> and the Meta domain <b>Interest holders</b>",
         "meta_domain_3": "FA3. Fit between the <b>Research design domains</b> and the Meta domain <b>Researchers</b>",
         "meta_domain_4": "FA4. Fit between the <b>Research design domains</b> and the Meta domain <b>Context</b>",
         "meta_domain_5": "FA5. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Research aim & question(s)</b>",
-        "meta_domain_6": "FA6. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Stakeholders</b>",
+        "meta_domain_6": "FA6. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Interest holders</b>",
         "meta_domain_7": "FA7. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Researchers</b>",
         "meta_domain_8": "FA8. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Context</b>",
         "meta_domain_9": "FA9. Fit between the <b>Research design domains</b> and the <b>Research conduct domains</b>",
@@ -1467,10 +1467,10 @@
         "filter_by_this": "Filter by this assessment"
       },
       "help_modal": {
-        "0": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Meta domains (FA1-FA4). In the first column you will see the data you extracted for each Research design domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
-        "1": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research conduct domains and the four Meta domains (FA5-FA8). In the first column you will see the data you extracted for each Research conduct domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
-        "2": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Research conduct domains (FA9). In the first two columns you will see the data you extracted for each domain and any comments you made.  In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
-        "3": "It is here that you make an overall assessment (OA) of concerns, taking into consideration concerns identified in all of the nine fit assessments (FA1-FA9). In the first three columns are your nine fit assessments. In the final column is where you make an overall assessment of concerns regarding the fit between CAMELOT domains.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context."
+        "0": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Meta domains (FA1-FA4). In the first column you will see the data you extracted for each Research design domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context.",
+        "1": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research conduct domains and the four Meta domains (FA5-FA8). In the first column you will see the data you extracted for each Research conduct domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context.",
+        "2": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Research conduct domains (FA9). In the first two columns you will see the data you extracted for each domain and any comments you made.  In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context.",
+        "3": "It is here that you make an overall assessment (OA) of concerns, taking into consideration concerns identified in all of the nine fit assessments (FA1-FA9). In the first three columns are your nine fit assessments. In the final column is where you make an overall assessment of concerns regarding the fit between CAMELOT domains.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context."
       },
       "fit_assessments": "Fit assessments"
     },
@@ -1496,11 +1496,11 @@
       },
       "prompts": {
         "meta_research_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Research aim & question(s)</b>?",
-        "meta_stakeholders_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Stakeholders</b>?",
+        "meta_stakeholders_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Interest holders</b>?",
         "meta_researchers_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Researchers</b>?",
         "meta_context_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Context</b>?",
         "meta_research_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Research aim & question(s)</b>?",
-        "meta_stakeholders_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Stakeholders</b>?",
+        "meta_stakeholders_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Interest holders</b>?",
         "meta_researchers_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Researchers</b>?",
         "meta_context_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Context</b>?",
         "design_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the <b>Research conduct domains</b>?",
@@ -1508,11 +1508,11 @@
       },
       "descriptions": {
         "meta_research_vs_design": "Meta domain <b>Research aim & question(s)</b> against <b>Research design domains</b>",
-        "meta_stakeholders_vs_design": "Meta domain <b>Stakeholders</b> against <b>Research design domains</b>",
+        "meta_stakeholders_vs_design": "Meta domain <b>Interest holders</b> against <b>Research design domains</b>",
         "meta_researchers_vs_design": "Meta domain <b>Researchers</b> against <b>Research design domains</b>",
         "meta_context_vs_design": "Meta domain <b>Context</b> against <b>Research design domains</b>",
         "meta_research_vs_conduct": "Meta domain <b>Research aim & question(s)</b> against <b>Research conduct domains</b>",
-        "meta_stakeholders_vs_conduct": "Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>",
+        "meta_stakeholders_vs_conduct": "Meta domain <b>Interest holders</b> against <b>Research conduct domains</b>",
         "meta_researchers_vs_conduct": "Meta domain <b>Researchers</b> against <b>Research conduct domains</b>",
         "meta_context_vs_conduct": "Meta domain <b>Context</b> against <b>Research conduct domains</b>",
         "design_vs_conduct": "<b>Research design domains</b> against <b>Research conduct domains</b>"
@@ -1525,7 +1525,7 @@
         "research_design": "Research design domains",
         "research_conduct": "Research conduct domains",
         "research": "Research aim & question(s)",
-        "stakeholders": "Stakeholders",
+        "stakeholders": "Interest holders",
         "researchers": "Researchers",
         "context": "Context",
         "researchers_domain": "Researchers domain"
@@ -1550,11 +1550,11 @@
       },
       "tooltips": {
         "fa1": "FA 1: Fit assessment between Meta domain <b>Research aim & question(s)</b> and Research design domains",
-        "fa2": "FA 2: Fit assessment between Meta domain Stakeholders and Research design domains",
+        "fa2": "FA 2: Fit assessment between Meta domain Interest holders and Research design domains",
         "fa3": "FA 3: Fit assessment between Meta domain Researchers and Research design domains",
         "fa4": "FA 4: Fit assessment between Meta domain Context and Research design domains",
         "fa5": "FA 5: Fit assessment between Meta domain Research aim & question(s) and Research conduct domains",
-        "fa6": "FA 6: Fit assessment between Meta domain Stakeholders and Research conduct domains",
+        "fa6": "FA 6: Fit assessment between Meta domain Interest holders and Research conduct domains",
         "fa7": "FA 7: Fit assessment between Meta domain Researchers and Research conduct domains",
         "fa8": "FA 8: Fit assessment between Meta domain Context and Research conduct domains",
         "fa9": "FA 9: Fit assessment between Research design domains and Research conduct domains",
