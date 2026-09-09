@@ -84,21 +84,12 @@
                       class="border p-2" style="border-color: #848E98 !important;">
                       <template #title>
                         <div class="d-flex align-items-center justify-content-center">
-                          <div v-if="!isTabCompleted(modal.stage, dIndex)" class="assessment-circle mr-2" :style="{
-                            width: '20px',
-                            height: '20px',
-                            border: '2.5px dashed ' + (modal.tab === dIndex ? '#ffffff' : (isDarkMode ? '#888888' : '#212529')) + ' !important',
-                            background: 'transparent',
-                            borderRadius: '50%',
-                            display: 'inline-block'
-                          }"></div>
-                          <div v-else class="assessment-circle mr-2" :style="{
-                            width: '20px',
-                            height: '20px',
-                            backgroundColor: getTabColor(modal.stage, dIndex),
-                            borderRadius: '50%',
-                            display: 'inline-block'
-                          }"></div>
+                          <!-- El mismo círculo de tres estados que la grilla, y por el mismo
+                               criterio: un juicio sin explicación no está terminado, pero
+                               conserva su color porque el nivel ya se eligió. -->
+                          <assessment-circle class="mr-2" :stage="modal.stage" :option-index="dIndex"
+                            :item="assessments.items && assessments.items[modal.index]"
+                            :responses="ui.responses" />
                           {{ domain.label }}
                         </div>
                       </template>
@@ -350,6 +341,7 @@ import Responses from './Responses.vue'
 import CamelotAssessmentCard from './CamelotAssessmentCard.vue'
 import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
+import AssessmentCircle from './AssessmentCircle.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
@@ -381,6 +373,7 @@ export default {
     CamelotAssessmentCard,
     CamelotStepFourTable,
     CamelotStepFourHeader,
+    AssessmentCircle,
     RefLockConflictModal,
     InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
@@ -575,16 +568,10 @@ export default {
       editValueExtracted: '',
       editValueComments: '',
       isSavingField: false,
-      showLegend: false,
-      isDarkMode: document.documentElement.getAttribute('data-theme') === 'dark'
+      showLegend: false
     }
   },
   mounted () {
-    this._themeObserver = new MutationObserver(() => {
-      this.isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark'
-    })
-    this._themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-
     // Polling de locks activos por estudio (colaboración simultánea)
     this.startRefLocksPolling()
     // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
@@ -595,7 +582,6 @@ export default {
     window.addEventListener('ref-lock-lost', this.handleRefLockLost)
   },
   beforeDestroy () {
-    this._themeObserver.disconnect()
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
@@ -1625,26 +1611,6 @@ export default {
     },
     onAutoSaveField (newValue) {
       this.saveField(newValue, true)
-    },
-    getTabColor (stage, dIndex) {
-      if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
-      const currentItem = this.assessments.items[this.modal.index]
-      if (!currentItem.stages || !currentItem.stages[stage]) return null
-      if (!currentItem.stages[stage].options || !currentItem.stages[stage].options[dIndex]) return null
-      const option = currentItem.stages[stage].options[dIndex].option
-      if (!option) return null
-      const response = this.ui.responses.find(r => r.value === option)
-      return response ? response.color : null
-    },
-    isTabCompleted (stage, tabIndex) {
-      if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
-
-      const currentItem = this.assessments.items[this.modal.index]
-      if (!currentItem.stages || !currentItem.stages[stage]) return false
-      if (!currentItem.stages[stage].options || !currentItem.stages[stage].options[tabIndex]) return false
-
-      const option = currentItem.stages[stage].options[tabIndex].option
-      return option !== null
     }
   }
 }
