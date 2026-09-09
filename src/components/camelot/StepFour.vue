@@ -284,6 +284,7 @@
       para esa advertencia; el texto tiene que ser el mismo porque la decisión es la misma.
     -->
     <b-modal id="explanation-guard-modal" :title="$t('common.warning')" :hide-footer="true"
+      :return-focus="explanationGuardReturnFocus"
       data-testid="explanation-guard-modal" @hidden="onExplanationGuardHidden">
       <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
       <b-container>
@@ -700,6 +701,15 @@ export default {
     activeCellIsIncomplete () {
       return this.incompleteMetasInStage.includes(this.activeMeta)
     },
+    /**
+     * A quién le devuelve el foco el aviso al cerrarse, como el selector CSS que espera
+     * bootstrap-vue. Su prop `return-focus` GANA sobre el elemento que capturó al abrirse
+     * (`returnFocusTo()`, modal.js), así que pedírselo es más barato que pelearle: lo aplica
+     * en su `onAfterLeave`, el único momento en que ya nadie va a pisar el cursor.
+     */
+    explanationGuardReturnFocus () {
+      return this.pendingFocusId ? `#${this.pendingFocusId}` : null
+    },
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
@@ -757,6 +767,9 @@ export default {
       }
       this.pendingNavigation = action
       this.explanationGuardFocusMeta = blocking[0]
+      // Sin esto el aviso arrancaría con el destino de foco del ciclo anterior, que ya no
+      // tiene por qué ser la celda de la que estamos hablando ahora.
+      this.pendingFocusId = null
       this.$bvModal.show('explanation-guard-modal')
     },
     /** Se queda donde está y deja el cursor en la explicación que falta. */
@@ -798,16 +811,24 @@ export default {
       }
       window.requestAnimationFrame(tick)
     },
-    /** Intenta una vez. Devuelve si ya no queda nada pendiente. */
+    /**
+     * Intenta una vez. Devuelve si el cursor YA está donde debe, que es cuándo el bucle de
+     * reintento puede parar — y no cuándo olvidar el destino, que son dos cosas distintas.
+     *
+     * Mezclarlas en una sola variable era el bug: el destino se borraba en el primer
+     * aterrizaje, bootstrap-vue devolvía el foco al botón después (su `returnFocusTo()`
+     * corre en `onAfterLeave`, más tarde que la ventana de 500 ms), y el respaldo del
+     * `hidden` se encontraba sin nada que reaplicar. Medido en navegador, con los tests de
+     * este archivo en verde. El destino lo limpian los resets: "más tarde", el cierre del
+     * modal y la apertura del propio aviso.
+     */
     applyPendingExplanationFocus () {
       const id = this.pendingFocusId
       if (!id) return true
       const el = document.getElementById(id)
       if (!el) return false
       el.focus()
-      if (document.activeElement !== el) return false
-      this.pendingFocusId = null
-      return true
+      return document.activeElement === el
     },
     /** El disparo normal: el aviso terminó de cerrarse y ya devolvió el foco. */
     onExplanationGuardHidden () {

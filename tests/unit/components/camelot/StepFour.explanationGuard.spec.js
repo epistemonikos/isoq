@@ -202,7 +202,8 @@ describe('StepFour.vue — el aviso de explicación cubre el cambio de pestaña'
     wrapper.vm.onExplanationGuardHidden()
 
     expect(document.activeElement).toBe(el)
-    expect(wrapper.vm.pendingFocusId).toBe(null)
+    // El destino NO se olvida al aterrizar: ver el respaldo, más abajo.
+    expect(wrapper.vm.pendingFocusId).toBe('assessment-explanation-0-0')
     document.body.removeChild(el)
   })
 
@@ -231,9 +232,10 @@ describe('StepFour.vue — el aviso de explicación cubre el cambio de pestaña'
     frames.shift()()
 
     expect(document.activeElement).toBe(el)
-    expect(wrapper.vm.pendingFocusId).toBe(null)
-    // Cede: nada más que reintentar.
+    // Cede el bucle, pero sin olvidar el destino: son dos cosas distintas y mezclarlas
+    // en una sola variable es lo que dejaba el respaldo sin nada que reaplicar.
     expect(frames.length).toBe(0)
+    expect(wrapper.vm.pendingFocusId).toBe('assessment-explanation-0-0')
 
     document.body.removeChild(el)
     raf.mockRestore()
@@ -255,6 +257,71 @@ describe('StepFour.vue — el aviso de explicación cubre el cambio de pestaña'
 
     expect(focus).not.toHaveBeenCalled()
     document.getElementById.mockRestore()
+  })
+
+  /**
+   * Medido en navegador: el foco aterriza en la caja y bootstrap-vue lo DEVUELVE al botón
+   * después, porque `returnFocusTo()` corre en su `onAfterLeave` —más tarde que la ventana
+   * de reintento—. El respaldo del `hidden` sólo puede repararlo si el destino sigue
+   * anotado; olvidarlo al primer aterrizaje dejaba el respaldo inerte y el cursor terminaba
+   * fuera de la caja, con estos tests en verde.
+   */
+  it('el respaldo vuelve a poner el foco si algo lo robó después de aterrizar', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    wrapper.vm.onActivateTab(1, 0, tabEvent())
+
+    const el = document.createElement('textarea')
+    el.id = 'assessment-explanation-0-0'
+    document.body.appendChild(el)
+    const thief = document.createElement('button')
+    document.body.appendChild(thief)
+
+    wrapper.vm.explanationGuardDoItNow()
+    wrapper.vm.applyPendingExplanationFocus()
+    expect(document.activeElement).toBe(el)
+
+    thief.focus()
+    wrapper.vm.onExplanationGuardHidden()
+
+    expect(document.activeElement).toBe(el)
+
+    document.body.removeChild(el)
+    document.body.removeChild(thief)
+  })
+
+  /**
+   * Y la vía que no depende de reintentos: bootstrap-vue acepta a quién devolverle el foco,
+   * y su prop GANA sobre el elemento que capturó al abrirse (`returnFocusTo`, modal.js). Se
+   * lo pedimos en vez de pelearle: así el destino correcto lo pone él, en el único momento
+   * en que ya nadie lo va a pisar.
+   */
+  it('el aviso le pide a bootstrap-vue que devuelva el foco a la caja, no al botón', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    wrapper.vm.onActivateTab(1, 0, tabEvent())
+
+    expect(wrapper.vm.explanationGuardReturnFocus).toBe(null)
+
+    wrapper.vm.explanationGuardDoItNow()
+
+    expect(wrapper.vm.explanationGuardReturnFocus).toBe('#assessment-explanation-0-0')
+
+    // Y que el template se lo pase de verdad: un computed correcto que nadie consume no
+    // mueve el cursor. Ojo, el stub serializa la prop en minúsculas y sin guión.
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="explanation-guard-modal"]').attributes('returnfocus'))
+      .toBe('#assessment-explanation-0-0')
+  })
+
+  it('"más tarde" no le pide ningún destino de foco', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    wrapper.vm.onActivateTab(1, 0, tabEvent())
+
+    wrapper.vm.explanationGuardDoItLater()
+
+    expect(wrapper.vm.explanationGuardReturnFocus).toBe(null)
   })
 
   // El id del textarea estaba repetido en las cuatro instancias, así que "hacerlo ahora"
