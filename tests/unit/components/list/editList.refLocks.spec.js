@@ -140,16 +140,30 @@ describe('editList.vue — sondeo de ref-locks', () => {
     wrapper.destroy()
   })
 
+  // 5 s, no los 15 s de las demás superficies: acá dos personas evalúan dimensiones
+  // distintas del mismo hallazgo y el aviso decide cuál abre cada una.
   it('el sondeo periódico corre al ritmo acordado', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ list: { id: 'list1', project_id: 'proj1' } })
+    LockService.fetchRefLocks.mockClear()
+    jest.advanceTimersByTime(5000)
+    await flushMicrotasks()
+    expect(LockService.fetchRefLocks).toHaveBeenCalledTimes(1)
+    jest.advanceTimersByTime(5000)
+    await flushMicrotasks()
+    expect(LockService.fetchRefLocks).toHaveBeenCalledTimes(2)
+    wrapper.destroy()
+  })
+
+  it('no se queda en los 15 s de las otras vistas', async () => {
+    // Afirmación sobre el ritmo REAL y no sobre la constante: un cambio en el valor que
+    // no llegara al `setInterval` pasaría igual el test de arriba.
     const wrapper = createWrapper()
     await wrapper.setData({ list: { id: 'list1', project_id: 'proj1' } })
     LockService.fetchRefLocks.mockClear()
     jest.advanceTimersByTime(15000)
     await flushMicrotasks()
-    expect(LockService.fetchRefLocks).toHaveBeenCalledTimes(1)
-    jest.advanceTimersByTime(15000)
-    await flushMicrotasks()
-    expect(LockService.fetchRefLocks).toHaveBeenCalledTimes(2)
+    expect(LockService.fetchRefLocks.mock.calls.length).toBeGreaterThan(1)
     wrapper.destroy()
   })
 

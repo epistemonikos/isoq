@@ -130,9 +130,18 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
-// Mismo valor y mismo nombre que en las otras superficies que pintan candados
-// (`InclusionExclusionCriteria.vue`, `viewProject.vue`, `StepThree/StepFour`).
-const REF_LOCKS_POLL_INTERVAL = 15000
+// Más corto que los 15 s de las otras superficies que pintan candados
+// (`InclusionExclusionCriteria.vue`, `viewProject.vue`, `StepThree/StepFour`), y a
+// propósito: ésta es la única donde dos personas trabajan sobre el MISMO hallazgo,
+// dimensión por dimensión, así que el aviso de «alguien está evaluando esto» es lo que
+// decide si la otra abre esa sección o la de al lado. Con 15 s la decisión se tomaba
+// sobre información vieja.
+//
+// El costo es un GET /refs cada 5 s por persona con la worksheet abierta: un `find` por
+// `project_id`, que es el prefijo del índice `uniq_project_ref`. No confundir con
+// `HEARBEAT_INTERVAL` (`lockService.js`), que NO se toca — ése es un contrato con el TTL
+// del servidor.
+const REF_LOCKS_POLL_INTERVAL = 5000
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
