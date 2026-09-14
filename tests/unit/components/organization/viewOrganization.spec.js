@@ -393,4 +393,90 @@ describe('viewOrganization.vue', () => {
       expect(duplicates[0].user_can).toBe(1) // write takes precedence
     })
   })
+
+  describe('Boton "Add new project"', () => {
+    // Regresion d9164805: el boton quedo dentro de la fila del buscador, que se
+    // renderiza solo con projects.length > 10. Un usuario nuevo (0 proyectos) se
+    // quedaba sin ninguna forma de crear su primer proyecto.
+    const mountWith = ({ orgInRoute = 'org-123', online = true } = {}) => {
+      router.push(`/workspace/${orgInRoute}`).catch(() => {})
+      return mount(ViewOrganization, {
+        localVue,
+        store,
+        router,
+        mocks,
+        mixins: [{ computed: { isOnline () { return online } } }]
+      })
+    }
+
+    it('se muestra con 0 proyectos (el caso que rompio)', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+      const w = mountWith()
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      expect(w.vm.projects).toHaveLength(0)
+      expect(w.find('#btn-new-project').exists()).toBe(true)
+    })
+
+    it('se muestra con 11 proyectos (el camino que si funcionaba)', async () => {
+      Api.get.mockResolvedValue({ data: createProjects(11) })
+      const w = mountWith()
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      expect(w.find('#btn-new-project').exists()).toBe(true)
+      expect(w.find('#filterInput').exists()).toBe(true)
+    })
+
+    it('no se muestra si la ruta no es la organizacion personal del usuario', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+      const w = mountWith({ orgInRoute: 'otra-org' })
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      expect(w.find('#btn-new-project').exists()).toBe(false)
+    })
+
+    it('queda deshabilitado sin conexion, pero sigue visible', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+      const w = mountWith({ online: false })
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      const btn = w.find('#btn-new-project')
+      expect(btn.exists()).toBe(true)
+      expect(btn.attributes('disabled')).toBeTruthy()
+    })
+
+    it('no se muestra si el usuario no tiene personal_organization todavia', async () => {
+      // Sesion a medio cargar o cache offline vieja: sin ese id el POST saldria sin
+      // organization. Ademas cubre el falso positivo de undefined === undefined,
+      // porque la ruta se empuja sin param.
+      const storeSinOrg = new Vuex.Store({
+        state: { user: { id: 'user-1' }, isOnline: true }
+      })
+      Api.get.mockResolvedValue({ data: [] })
+      router.push('/workspace/').catch(() => {})
+      const w = mount(ViewOrganization, {
+        localVue,
+        store: storeSinOrg,
+        router,
+        mocks,
+        mixins: [{ computed: { isOnline () { return true } } }]
+      })
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      expect(w.vm.canCreateProject).toBe(false)
+      expect(w.find('#btn-new-project').exists()).toBe(false)
+    })
+
+    it('abre el modal de proyecto nuevo al hacer clic', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+      const w = mountWith()
+      await w.vm.getProjects()
+      await localVue.nextTick()
+      const show = jest.fn()
+      w.vm.$refs.projectFormModal.show = show
+      await w.find('#btn-new-project').trigger('click')
+      expect(show).toHaveBeenCalled()
+      expect(w.vm.canEditProject).toBe(true)
+    })
+  })
 })

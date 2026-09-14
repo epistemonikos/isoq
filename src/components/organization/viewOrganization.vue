@@ -8,17 +8,10 @@
     <b-container fluid>
       <div class="my-4">
         <h3>{{ $t("menu.projects") }}</h3>
-        <!-- <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
-          <b-col cols="12" class="text-right">
-            <b-button v-b-tooltip.hover
-              :title="(isOnline) ? $t('project.create_new_isoq') : $t('offline.action_disabled')" variant="success"
-              :disabled="!isOnline" @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
-          </b-col>
-        </b-row> -->
-        <b-row class="mt-3" v-if="projects.length > 10">
+        <b-row class="mt-3">
           <b-col class="w-100 d-flex justify-content-end">
             <b-row align-h="end">
-              <b-col cols="7">
+              <b-col cols="7" v-if="projects.length > 10">
                 <b-form-group>
                   <b-input-group>
                     <b-form-input v-model="searchQuery" type="search" id="filterInput"
@@ -29,8 +22,8 @@
                   </b-input-group>
                 </b-form-group>
               </b-col>
-              <b-col>
-                <b-button v-b-tooltip.hover
+              <b-col cols="auto" v-if="canCreateProject">
+                <b-button id="btn-new-project" v-b-tooltip.hover
                   :title="(isOnline) ? $t('project.create_new_isoq') : $t('offline.action_disabled')" variant="success"
                   :disabled="!isOnline" @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
               </b-col>
@@ -240,6 +233,18 @@ export default {
     }
   },
   computed: {
+    // La UI solo sabe crear proyectos en el workspace personal: organizationForm
+    // fija data.organization = user.personal_organization para todo proyecto nuevo.
+    // No entra allow_to_write aca: ese booleano es por proyecto, y al crear todavia
+    // no hay proyecto contra el cual evaluarlo.
+    canCreateProject () {
+      const personalOrg = this.$store.state.user.personal_organization
+      // Sin org personal (sesion a medio cargar, cache offline vieja) no se ofrece
+      // crear: sin ese id el POST saldria sin organization y el backend lo rechaza.
+      // El guard tambien evita el falso positivo de undefined === undefined.
+      if (!personalOrg) return false
+      return personalOrg === this.$route.params.id
+    },
     filteredProjects () {
       if (!this.searchQuery) return this.projects
       const query = this.searchQuery.toLowerCase()
