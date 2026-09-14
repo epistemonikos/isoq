@@ -64,15 +64,14 @@
             :fields="[{key: 'username', label: $t('common.username')}, {key: 'first_name', label: $t('common.first_name')}, {key: 'last_name', label: $t('common.last_name')}, {key: 'user_can', label: $t('common.user_can')}, {key: 'actions', label: $t('common.actions')}]"
             :items="usersAllowed">
             <template v-slot:cell(username)="data">
-              <!-- Estado: ACTIVO (normal) -->
-              <span v-if="data.item.state === 'active'">
+              <!-- El nombre se dibuja SIEMPRE; sólo el inactivo se tacha. Con una rama
+                   por estado ('active' / 'inactive' y nada más) cualquier otro valor
+                   dejaba la celda vacía, sin nombre ni email. -->
+              <span
+                :class="{ 'text-muted': data.item.state === 'inactive' }"
+                :style="data.item.state === 'inactive' ? { textDecoration: 'line-through' } : null">
                 {{ data.item.username || data.item.email }}
-              </span>
-              <!-- Estado: INACTIVO (tachado) -->
-              <span v-else-if="data.item.state === 'inactive'" class="text-muted"
-                :style="{ textDecoration: 'line-through' }">
-                {{ data.item.username || data.item.email }}
-                <span style="font-size: 0.9em;">*</span>
+                <span v-if="data.item.state === 'inactive'" style="font-size: 0.9em;">*</span>
               </span>
             </template>
             <template v-slot:cell(actions)="data">

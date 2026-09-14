@@ -149,6 +149,7 @@ import ShareProjectModal from './modals/ShareProjectModal'
 import CloneProjectModal from './modals/CloneProjectModal'
 import LeaveProjectModal from './modals/LeaveProjectModal'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import { deriveUserState } from '@/utils/userState'
 
 export default {
   name: 'viewOrganization',
@@ -490,7 +491,7 @@ export default {
           if (!userMap.has(user.id)) {
             user.user_can = 0
             user.project_id = _project.id
-            user.state = user.active ? 'active' : 'inactive'
+            user.state = deriveUserState(user)
             userMap.set(user.id, user)
           }
         }
@@ -503,7 +504,7 @@ export default {
             if (_user) {
               _user.user_can = 0
               _user.project_id = _project.id
-              _user.state = _user.active ? 'active' : 'inactive'
+              _user.state = deriveUserState(_user)
               userMap.set(_user.id, _user)
             }
           }))
@@ -519,7 +520,7 @@ export default {
           if (user.id === currentUserId) continue
           user.user_can = 1
           user.project_id = _project.id
-          user.state = user.active ? 'active' : 'inactive'
+          user.state = deriveUserState(user)
           userMap.set(user.id, user) // Sobrescribe can_read si existe
         }
       } else if (hasFallback(_project.can_write_users) && _project.can_write && Array.isArray(_project.can_write) && _project.can_write.length > 0) {
@@ -531,7 +532,7 @@ export default {
             if (_user) {
               _user.user_can = 1
               _user.project_id = _project.id
-              _user.state = _user.active ? 'active' : 'inactive'
+              _user.state = deriveUserState(_user)
               userMap.set(_user.id, _user) // Sobrescribe can_read si existe
             }
           }))

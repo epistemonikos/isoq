@@ -311,6 +311,28 @@ describe('viewOrganization.vue', () => {
       }
     })
 
+    // El campo `active` NO viaja en /api/getProjects ni /api/isoqf_projects/<id>: esos
+    // dos endpoints proyectan el selector crudo de Mongo, que no puede devolver un campo
+    // ausente del documento. Medido el 2026-09-14: 1747 de 1749 usuarios sin el campo y
+    // cero con `active: False`. Un chequeo truthy los tachaba a todos y les deshabilitaba
+    // el select de permisos. Los fixtures de arriba traen `status` y ningún `active`:
+    // reproducían el bug y la suite pasaba verde.
+    it('deriva state=active para usuarios sin el campo `active`', () => {
+      wrapper.vm.usersCanList('proj-123')
+      wrapper.vm.users_allowed.forEach(user => {
+        expect(user.state).toBe('active')
+      })
+    })
+
+    it('deriva state=inactive sólo con `active: false` explícito', () => {
+      wrapper.vm.buffer_project.can_write_users[0].active = false
+      wrapper.vm.buffer_project.can_read_users[0].active = true
+      wrapper.vm.usersCanList('proj-123')
+      expect(wrapper.vm.users_allowed.find(u => u.id === 'alice_id').state).toBe('inactive')
+      expect(wrapper.vm.users_allowed.find(u => u.id === 'charlie_id').state).toBe('active')
+      expect(wrapper.vm.users_allowed.find(u => u.id === 'bob_id').state).toBe('active')
+    })
+
     it('populates usersAllowed from can_read_users and can_write_users without N+1 requests', () => {
       wrapper.vm.usersCanList('proj-123')
       expect(wrapper.vm.users_allowed).toHaveLength(3)
