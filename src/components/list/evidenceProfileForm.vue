@@ -874,6 +874,11 @@ export default {
       // guardado de una dimensión puede tener que escribir también `cerqual`, y ahí se
       // sostienen dos a la vez — el camino feliz, no un accidente.
       lockedSectionRefs: [],
+      // Sección con la que la tabla abrió ESTA sesión del modal, recibida como
+      // argumento de `openModalEvidenceProfie`. Existe porque `modalData` llega un tick
+      // tarde (sube al abuelo y vuelve como prop) y el `@show` es síncrono: sin esto el
+      // lock que se pide es el de la apertura anterior.
+      openedSection: null,
       modalOpen: false,
       // True when a `hidden` from a previous modal session is still on its way.
       staleHiddenPending: false,
@@ -1064,7 +1069,14 @@ export default {
     /** Clave de la sección que este modal está mostrando, o null. */
     currentSectionKey: function () {
       const findingId = this.findings && this.findings.id
-      return sectionLockKey(findingId, this.modalData && this.modalData.type)
+      // `openedSection` manda: es lo que la persona acaba de clickear y el único valor
+      // confiable en el instante del `acquire`. `modalData.type` queda de red para
+      // cualquier camino que abra el modal sin pasar la sección (hoy no hay ninguno,
+      // pero una clave `null` no da error: se va sin pedir NINGÚN lock, que es
+      // precisamente el fallo mudo que esto arregla). El orden es seguro porque
+      // `onModalHidden` limpia `openedSection`, así que la red nunca puede quedar tapada
+      // por el valor de una sesión anterior.
+      return sectionLockKey(findingId, this.openedSection || (this.modalData && this.modalData.type))
     },
     // Mirrors StepFour.vue's acquireStudyLock: asked for on open, so the rejection
     // reaches the user before they fill the form instead of on save.
@@ -1141,6 +1153,9 @@ export default {
         return
       }
       this.modalOpen = false
+      // Se limpia acá y no en el `show`: el fallback de `currentSectionKey` sólo es
+      // correcto si esta variable no sobrevive a la sesión que la puso.
+      this.openedSection = null
       this.releaseFindingLock()
       // An inline row editor left open when the modal closes must not leak its lock.
       this.releaseRowLock()
@@ -1424,7 +1439,10 @@ export default {
           })
       }
     },
-    openModalEvidenceProfie: function () {
+    openModalEvidenceProfie: function (section = null) {
+      // Se guarda ANTES del `show()`: ese `show()` emite `@show` síncrono y `onModalShow`
+      // ya necesita saber qué sección bloquear.
+      this.openedSection = section
       this.showPanel = true
       this.$refs['modal-evidence-profile-form']?.show()
     },

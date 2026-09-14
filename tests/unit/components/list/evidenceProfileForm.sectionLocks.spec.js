@@ -116,6 +116,51 @@ describe('evidenceProfileForm — lock por sección', () => {
       wrapper.destroy()
     })
 
+    // `modalData` sube al abuelo (`editList`) y vuelve como prop, o sea un tick tarde,
+    // mientras que el `@show` de bootstrap-vue se emite síncrono dentro de `show()`.
+    // Cuando la tabla abre el modal, entonces, el prop todavía trae la sección de la
+    // apertura ANTERIOR — y en la primera, ninguna. La sección viaja por eso como
+    // argumento de `openModalEvidenceProfie`.
+    it('bloquea la sección con la que la tabla abrió, no la que el prop trae atrasada', async () => {
+      const { wrapper } = createWrapper({ modalData: makeModalData({ type: 'coherence' }) })
+      wrapper.vm.openModalEvidenceProfie('adequacy')
+      wrapper.vm.onModalShow()
+      await flushPromises()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', K('adequacy'))
+      expect(LockService.acquireRef).not.toHaveBeenCalledWith('proj1', K('coherence'))
+      wrapper.destroy()
+    })
+
+    it('sin sección en el prop, la del argumento igual toma su lock', async () => {
+      // El caso de la PRIMERA apertura: el buffer inicial de `editList` trae las cinco
+      // secciones vacías y ningún `type`, así que antes no se pedía lock ninguno y nadie
+      // veía que esa persona estaba trabajando ahí.
+      const { wrapper } = createWrapper({ modalData: makeModalData({ type: undefined }) })
+      wrapper.vm.openModalEvidenceProfie('methodological-limitations')
+      wrapper.vm.onModalShow()
+      await flushPromises()
+      expect(LockService.acquireRef)
+        .toHaveBeenCalledWith('proj1', K('methodological_limitations'))
+      wrapper.destroy()
+    })
+
+    it('la sección de una sesión cerrada no se arrastra a la siguiente', async () => {
+      // La red de `modalData.type` sólo es correcta si `openedSection` no sobrevive al
+      // cierre: si sobreviviera, el desfase volvería invertido.
+      const { wrapper } = createWrapper({ modalData: makeModalData({ type: 'relevance' }) })
+      wrapper.vm.openModalEvidenceProfie('adequacy')
+      wrapper.vm.onModalShow()
+      await flushPromises()
+      wrapper.vm.onModalHidden()
+      LockService.acquireRef.mockClear()
+
+      wrapper.vm.onModalShow()
+      await flushPromises()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', K('relevance'))
+      expect(LockService.acquireRef).not.toHaveBeenCalledWith('proj1', K('adequacy'))
+      wrapper.destroy()
+    })
+
     it('NO toma el lock de cerqual al abrir una dimensión, aunque cerqual esté seteado', async () => {
       // Tomarlo al abrir es lo que anula la feature: quien abre coherence se lleva
       // cerqual, y quien abre adequacy queda en solo lectura. O sea, lo de siempre.

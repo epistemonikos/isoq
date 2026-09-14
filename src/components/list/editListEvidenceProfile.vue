@@ -1012,7 +1012,13 @@ export default {
       data.title = titles[type]
       const theData = JSON.parse(JSON.stringify(data))
       this.$emit('modalDataChanged', theData)
-      this.$refs.evidenceProfileForm.openModalEvidenceProfie()
+      // La sección va COMO ARGUMENTO, no sólo dentro de `modalData`: ese objeto sube a
+      // `editList` y vuelve como prop, y un prop se propaga recién en el siguiente tick,
+      // mientras que el `@show` de bootstrap-vue se emite síncrono dentro de `show()`.
+      // El modal leía entonces el `type` de la apertura ANTERIOR y pedía el lock de esa
+      // sección —ninguno la primera vez, porque el buffer inicial no trae `type`—, así
+      // que los demás veían el aviso en la dimensión equivocada.
+      this.$refs.evidenceProfileForm.openModalEvidenceProfie(type)
     },
     getList: function (status = false) {
       this.$emit('update-list-data', status)
