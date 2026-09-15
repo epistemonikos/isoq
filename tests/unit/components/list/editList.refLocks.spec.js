@@ -14,6 +14,9 @@ jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
   release: jest.fn(),
   releaseRef: jest.fn(),
+  // El registro de locks que sostiene ESTA pestaña. Lo lee `refLockStateMixin` para
+  // descartarlos del sondeo; sin él el mock no representa al servicio real.
+  refLocks: new Map(),
   fetchRefLocks: jest.fn().mockResolvedValue([])
 }))
 
@@ -218,6 +221,143 @@ describe('editList.vue — sondeo de ref-locks', () => {
     const wrapper = createWrapper()
     await wrapper.setData({ list: { id: 'list1', project_id: 'proj1' }, activeRefLocks: locks })
     expect(wrapper.find('.ep-table-stub').props('activeRefLocks')).toEqual(locks)
+    wrapper.destroy()
+  })
+})
+
+// ── Refresco al liberarse un lock ajeno ──────────────────────────────────────
+// El sondeo de candados y la carga de datos eran dos canales que nunca se hablaron:
+// cuando otra persona terminaba de evaluar una dimensión, acá se borraba el cartel y se
+// habilitaba el botón, pero la celda seguía diciendo «Assessment not completed». El
+// instante en que un lock ajeno desaparece ES la señal de que hay algo nuevo que leer.
+describe('editList.vue — refresco al liberarse un lock ajeno', () => {
+  const HOJA = {
+    id: 'list1',
+    project_id: 'proj1',
+    references: ['R1', 'R2']
+  }
+
+  // La aserción va sobre `getList`: es el camino de recarga que el propio guardado ya
+  // usa (`@update-list-data`). El spy se pone sobre la INSTANCIA y no sobre el stub de
+  // `createWrapper`, porque Vue guarda los métodos ya enlazados (`bind`) y el jest.fn
+  // original queda envuelto: `wrapper.vm.getList` no es el mock.
+  const montar = async () => {
+    const wrapper = createWrapper()
+    const getList = jest.spyOn(wrapper.vm, 'getList')
+    wrapper.vm.$_getListSpy = getList
+    await wrapper.setData({
+      list: HOJA,
+      findings: { id: 'f1' },
+      characteristics_studies: { id: 'charsDoc', fields: [], items: [] },
+      meth_assessments: { id: 'methDoc', fields: [], items: [] }
+    })
+    return wrapper
+  }
+
+  const recargas = wrapper => wrapper.vm.$_getListSpy
+
+  const sondearCon = async (wrapper, locks) => {
+    LockService.fetchRefLocks.mockResolvedValueOnce(locks)
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushMicrotasks()
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks = new Map()
+    jest.useFakeTimers()
+  })
+  afterEach(() => jest.useRealTimers())
+
+  it('el primer sondeo sólo siembra la instantánea: no recarga', async () => {
+    // Sin esto, entrar a una hoja que ya tiene candados ajenos dispararía una recarga
+    // redundante encima del getList que acaba de traer los datos.
+    const wrapper = await montar()
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Ana' }])
+    expect(recargas(wrapper)).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('recarga cuando se libera la sección que otra persona estaba evaluando', async () => {
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('recarga aunque en el mismo ciclo otra persona tome otra sección', async () => {
+    // El total de candados no cambia, pero sí hay algo nuevo que mostrar.
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::adequacy', user_name: 'Beto' }])
+    expect(recargas(wrapper)).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('recarga cuando se libera la fila de datos extraídos de una referencia de la hoja', async () => {
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'R2', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('recarga cuando se liberan las columnas de una tabla de la hoja', async () => {
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'charsDoc::fields', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('NO recarga por un candado que se libera en otro hallazgo del proyecto', async () => {
+    // El sondeo trae los locks de TODO el proyecto. Una hoja abierta no tiene nada que
+    // repintar porque alguien suelte una sección de otro hallazgo.
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'f9::ep::coherence', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('NO recarga cuando sólo se TOMAN candados nuevos', async () => {
+    const wrapper = await montar()
+    await sondearCon(wrapper, [])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Ana' }])
+    expect(recargas(wrapper)).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('NO recarga por el candado que sostiene esta misma pestaña', async () => {
+    // Al guardar, el propio modal ya dispara `@update-list-data` -> getList. Sin este
+    // descarte, cerrar el modal sumaría una segunda recarga completa por cada sección.
+    const wrapper = await montar()
+    LockService.refLocks.set('f1::ep::coherence', 'proj1')
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Yo' }])
+    LockService.refLocks.delete('f1::ep::coherence')
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('una liberación provoca UNA sola recarga, no una por sondeo', async () => {
+    // getList() termina llamando a fetchAndUpdateRefLocks(): si la instantánea no se
+    // actualizara antes de disparar la recarga, esto sería un bucle cada 5 s.
+    const wrapper = await montar()
+    await sondearCon(wrapper, [{ ref_id: 'f1::ep::coherence', user_name: 'Ana' }])
+    recargas(wrapper).mockClear()
+    await sondearCon(wrapper, [])
+    await sondearCon(wrapper, [])
+    expect(recargas(wrapper)).toHaveBeenCalledTimes(1)
     wrapper.destroy()
   })
 })

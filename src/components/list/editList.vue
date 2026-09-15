@@ -128,6 +128,8 @@ import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 // Más corto que los 15 s de las otras superficies que pintan candados
@@ -158,7 +160,11 @@ export default {
     'table-meth-assessments': editListMethAssessments,
     'table-extracted-data': editListExtractedData
   },
-  mixins: [camelotMixin, preserveScrollMixin],
+  // `refLockStateMixin` aporta `foreignRefLocks`: el sondeo trae también los candados
+  // que sostiene ESTA pestaña, y un release propio no es novedad —al guardar, el modal
+  // ya dispara `@update-list-data`—. Sin el descarte, cerrar cada sección sumaría una
+  // segunda recarga completa de la hoja.
+  mixins: [camelotMixin, preserveScrollMixin, refLockStateMixin],
   data () {
     return {
       licenseUrl: require('../../assets/by-88x31.png'),
@@ -349,6 +355,26 @@ export default {
     // El sondeo de locks es asíncrono: sin esta bandera, una respuesta que llega
     // después de salir de la vista escribe en un componente ya destruido.
     this.$_alive = true
+    // Instantánea de los candados ajenos de esta hoja en el sondeo anterior. `null` es
+    // «todavía no sé», que no es lo mismo que «no había ninguno»: el primer sondeo sólo
+    // siembra. Mismo criterio que `knownLastUpdate` en `projectFreshnessMixin`.
+    this.$_worksheetLockKeys = null
+  },
+  computed: {
+    // Todo documento cuyo candado afecta a lo que esta hoja PINTA: el hallazgo (de él
+    // cuelgan sus cinco secciones del evidence profile y su `/identity`), sus
+    // referencias (de ellas cuelgan las filas de datos extraídos, de características y
+    // de assessments) y los documentos de esas dos tablas (de ellos cuelgan las
+    // columnas). `worksheetLockKeys` filtra por base, así que un eje nuevo no obliga a
+    // tocar esta lista — sólo a agregar el documento del que cuelgue.
+    worksheetLockBases () {
+      return [
+        this.findings && this.findings.id,
+        this.characteristics_studies && this.characteristics_studies.id,
+        this.meth_assessments && this.meth_assessments.id,
+        ...(this.list && this.list.references ? this.list.references : [])
+      ]
+    }
   },
   mounted () {
     this.updateTranslations()
@@ -590,6 +616,36 @@ export default {
           this.activeRefLocks = locks || []
         })
         .catch(() => {})
+        // Fuera del `.catch` a propósito. Ese catch existe para que un fallo de RED del
+        // sondeo no tumbe la cadena de getList(); la decisión de recargar, en cambio, es
+        // cómputo local y puro, y dejarla adentro hacía que cualquier error suyo muriera
+        // en silencio —el modo de falla que este repo ya vio cinco veces, siempre un dato
+        // que llegaba y se perdía en el camino—. Que corra también tras un sondeo fallido
+        // no molesta: ahí `activeRefLocks` no cambió, así que no detecta liberación alguna.
+        .then(() => {
+          if (this.$_alive) this.refreshIfSomebodyReleased()
+        })
+    },
+    /**
+     * Cuando otra persona SUELTA un candado de esta hoja, recarga los datos.
+     *
+     * El sondeo de candados y la carga de datos eran dos canales que nunca se hablaron:
+     * los candados se refrescan cada 5 s, los datos una sola vez al entrar. Así que
+     * cuando alguien terminaba de evaluar una dimensión, acá se borraba el cartel y se
+     * habilitaba el botón —eso ya andaba— pero la celda seguía diciendo «Assessment not
+     * completed» con la opción y la explicación de la otra persona invisibles. El
+     * instante en que un candado ajeno desaparece ES la señal de que hay algo nuevo que
+     * leer.
+     *
+     * La instantánea se actualiza ANTES de disparar la recarga y no después: `getList()`
+     * termina llamando a `fetchAndUpdateRefLocks()`, así que compararlo contra la
+     * instantánea vieja volvería a ver la misma liberación y recargaría para siempre.
+     */
+    refreshIfSomebodyReleased: function () {
+      const current = worksheetLockKeys(this.foreignRefLocks, this.worksheetLockBases)
+      const released = releasedKeys(this.$_worksheetLockKeys, current)
+      this.$_worksheetLockKeys = current
+      if (released.length) this.getList()
     },
     startRefLocksPolling: function () {
       this.stopRefLocksPolling()

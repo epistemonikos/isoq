@@ -30,6 +30,11 @@ jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
   release: jest.fn(),
   releaseRef: jest.fn(),
+  // El registro de candados que sostiene ESTA pestaña. Lo lee `refLockStateMixin` para
+  // descartarlos del sondeo, así que su ausencia no rompe ningún test —muere en una
+  // promesa rechazada sin manejar— pero deja el refresco al liberarse un candado sin
+  // ejercitar. Declararlo es lo que hace que el mock represente al servicio real.
+  refLocks: new Map(),
   // getList() cierra sondeando los ref-locks. El mock lo declara para que el spec
   // represente al componente real; que su ausencia ya NO rompa el scroll lo
   // garantiza el `.catch` de fetchAndUpdateRefLocks, no este mock.
