@@ -256,3 +256,52 @@ describe('columnService — ensureTableDocument con filas sembradas', () => {
     expect(Api.post).not.toHaveBeenCalled()
   })
 })
+
+// Las 24 claves CAMELOT son fijas —no se crean ni se borran— pero tienen que existir en
+// `fields`: es lo único de lo que la tabla del Paso 3 deriva sus columnas, y `order` sólo
+// puede mencionar claves que el documento conozca.
+//
+// Nacían fuera: el documento se creaba con `ref_id` y `authors` solamente, así que crear la
+// primera columna de un proyecto nuevo hacía desaparecer las 12 columnas CAMELOT — en la
+// pantalla y en la base.
+describe('columnService — ensureTableDocument con catálogo CAMELOT', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const CATALOGO = [
+    { key: 'research_extractedData', label: 'Extracted data' },
+    { key: 'research_comments', label: 'Comments' }
+  ]
+
+  it('siembra el catálogo detrás de los campos de sistema', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1', { fields: CATALOGO })
+
+    const enviados = Api.post.mock.calls[0][1].fields
+    expect(enviados.map(f => f.key)).toEqual([
+      'ref_id', 'authors', 'research_extractedData', 'research_comments'
+    ])
+    // El catálogo viaja con sus labels ya traducidos, tal cual los da el mixin.
+    expect(enviados.slice(2)).toEqual(CATALOGO)
+  })
+
+  it('sin catálogo nace igual que siempre', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1', { fields: [] })
+
+    expect(Api.post.mock.calls[0][1].fields.map(f => f.key)).toEqual(['ref_id', 'authors'])
+  })
+
+  // Sembrar sobre un documento que ya existe sobrescribiría columnas de otra persona.
+  it('no siembra nada cuando el documento ya existe', async () => {
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'viejo' }] })
+
+    const id = await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1', { fields: CATALOGO })
+
+    expect(id).toBe('viejo')
+    expect(Api.post).not.toHaveBeenCalled()
+  })
+})

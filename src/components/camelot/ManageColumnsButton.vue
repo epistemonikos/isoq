@@ -109,8 +109,12 @@ export default {
     async resolveDocumentId () {
       if (this.documentId) return this.documentId
 
+      // El catálogo CAMELOT viaja en el nacimiento: son 24 claves fijas que nadie va a
+      // crear después con `addColumn`, pero sin las cuales la tabla no dibuja las 12
+      // columnas CAMELOT y `order` no las puede mencionar.
       const id = await columnService.ensureTableDocument(
-        COLLECTION, this.$route.params.org_id, this.$route.params.id
+        COLLECTION, this.$route.params.org_id, this.$route.params.id,
+        { fields: (this.camelot && this.camelot.fields) || [] }
       )
       if (id) this.resolvedDocumentId = id
       return id
@@ -221,8 +225,10 @@ export default {
      * separaría el par.
      */
     orderFromDefinitions () {
+      // `virtual` = repuesta por el cliente y ausente de la base. Mencionarla en `order`
+      // es un 400 del backend por clave desconocida, así que no cuenta como guardada.
       const stored = new Set([
-        ...(this.charsData.fields || []).map(field => field.key),
+        ...(this.charsData.fields || []).filter(field => !field.virtual).map(field => field.key),
         ...this.createdKeys
       ])
       const order = []

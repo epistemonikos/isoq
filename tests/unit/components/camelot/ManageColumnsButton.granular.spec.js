@@ -362,8 +362,9 @@ describe('ManageColumnsButton — cuando el documento de la tabla no existe', ()
   it('lo resuelve antes de crear la columna', async () => {
     await wrapper.vm.onFieldCommitted({ id: 'f1', label: 'Primera' })
 
+    // El cuarto argumento es el catálogo CAMELOT a sembrar; este wrapper no trae `camelot`.
     expect(columnService.ensureTableDocument)
-      .toHaveBeenCalledWith('isoqf_characteristics', 'org1', 'proj1')
+      .toHaveBeenCalledWith('isoqf_characteristics', 'org1', 'proj1', { fields: [] })
     expect(columnService.addColumn)
       .toHaveBeenCalledWith('isoqf_characteristics', 'char_creado', 'Primera')
   })

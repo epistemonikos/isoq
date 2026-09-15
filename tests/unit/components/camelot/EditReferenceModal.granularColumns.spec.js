@@ -327,6 +327,33 @@ describe('EditReferenceModal — el alta de columna sale del PATCH del ítem', (
     const [, body] = Api.post.mock.calls[0]
     expect(body).toHaveProperty('fields')
   })
+
+  // Es el único camino que todavía manda `fields`, así que es el único por el que la marca
+  // de cliente de las claves CAMELOT repuestas podría llegar a la base. Persistida,
+  // invierte su significado: una columna guardada se leería como no guardada y quedaría
+  // fuera de todo reorden, sin error y sin rastro.
+  it('no persiste la marca `virtual` de las claves CAMELOT repuestas', async () => {
+    wrapper = createWrapper({
+      ...CHARS_DATA,
+      id: null,
+      fields: [
+        ...CHARS_DATA.fields,
+        { key: 'context_extractedData', label: 'CAMELOT', virtual: true },
+        { key: 'context_comments', label: 'Comentarios', virtual: true }
+      ]
+    })
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const [, body] = Api.post.mock.calls[0]
+    expect(body.fields.some(f => 'virtual' in f)).toBe(false)
+    // Y las claves siguen viajando: limpiar la marca no puede perder la columna.
+    expect(body.fields.map(f => f.key)).toEqual(
+      expect.arrayContaining(['context_extractedData', 'context_comments'])
+    )
+  })
 })
 
 // El otro campo que el PATCH por ítem tiene que llevar, y por el motivo contrario a `fields`:

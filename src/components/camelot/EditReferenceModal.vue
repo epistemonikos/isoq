@@ -136,6 +136,7 @@ import { conflictComparison } from '@/utils/versionConflict'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import { copyItemMetadata } from '@/utils/itemMetadata'
+import { withoutVirtualMark } from '@/utils/camelotFields'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
@@ -811,7 +812,10 @@ export default {
           organization: this.$route.params.org_id || '',
           project_id: this.$route.params.id || '',
           items: [item],
-          fields: mergedFields
+          // Sin `withoutVirtualMark` se persistiría la marca de cliente de las claves
+          // CAMELOT repuestas, y al releer el documento esas columnas quedarían fuera de
+          // todo reorden: guardadas, pero marcadas como si no lo estuvieran.
+          fields: withoutVirtualMark(mergedFields)
         })
 
       return apiCall

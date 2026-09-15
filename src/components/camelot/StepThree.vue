@@ -11,7 +11,7 @@
       <!-- Action buttons toolbar -->
       <div class="mb-3 d-flex justify-content-end">
         <ManageColumnsButton :chars-data="charsData" :camelot="camelot" :visible-column-keys.sync="visibleColumnKeys"
-          :can-edit="canEdit" @saved="charsData = $event"
+          :can-edit="canEdit" @saved="applyServerChars($event)"
           @opened="columnsModalOpen = true" @closed="onColumnsModalClosed" />
         <ToggleConcernsButton class="ml-2" v-model="showComments" :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys" :camelot="camelot" />
@@ -133,6 +133,7 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import { withCamelotFields } from '@/utils/camelotFields'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
@@ -322,6 +323,10 @@ export default {
         return authorsA.localeCompare(authorsB)
       })
     },
+    /** Catálogo fijo de dominios CAMELOT; vacío si el mixin no lo provee. */
+    camelotCatalog () {
+      return this.camelot && Array.isArray(this.camelot.fields) ? this.camelot.fields : []
+    },
     availableTableFields () {
       // Base fields (authors)
       const baseFields = this.fields.filter(f => f.key === 'authors')
@@ -460,10 +465,27 @@ export default {
     },
     handleReferenceSaved (updatedData) {
       if (updatedData && updatedData.items) {
-        this.$set(this, 'charsData', updatedData)
+        this.applyServerChars(updatedData)
       } else {
-        this.$set(this, 'charsData', { ...this.charsData, ...updatedData })
+        this.applyServerChars({ ...this.charsData, ...updatedData })
       }
+    },
+    /**
+     * Única puerta de entrada de un `charsData` que viene del servidor.
+     *
+     * El documento no persiste las 24 claves CAMELOT si nació antes de que
+     * `ensureTableDocument` las sembrara, y la tabla deriva sus columnas SÓLO de
+     * `charsData.fields`: sin reconciliar, cualquiera de estas asignaciones borra de la
+     * pantalla las 12 columnas CAMELOT. Pasó con el alta de columna, que reemplaza
+     * `charsData` con la respuesta del servidor en el acto.
+     */
+    applyServerChars (data) {
+      if (!data) return
+
+      this.$set(this, 'charsData', {
+        ...data,
+        fields: withCamelotFields(data.fields, this.camelotCatalog)
+      })
       this.$forceUpdate()
     },
     /**
@@ -500,9 +522,7 @@ export default {
           if (response.data && response.data.length > 0) {
             // Save received data
             const serverData = response.data[0] || { fields: [], items: [] }
-            if (!serverData.fields || serverData.fields.length === 0) {
-              serverData.fields = this.camelot && this.camelot.fields ? [...this.camelot.fields] : []
-            }
+            serverData.fields = withCamelotFields(serverData.fields, this.camelotCatalog)
 
             // Standardize authors to be strings instead of arrays for backward compatibility and consistency
             if (serverData.items && Array.isArray(serverData.items)) {
@@ -519,7 +539,7 @@ export default {
           } else {
             // If there's no data, initialize with empty structure and default Camelot fields if available
             this.charsData = {
-              fields: this.camelot && this.camelot.fields ? [...this.camelot.fields] : [],
+              fields: withCamelotFields([], this.camelotCatalog),
               items: [],
               organization: this.$route.params.org_id,
               project_id: this.$route.params.id
@@ -556,8 +576,7 @@ export default {
     // Escuchar actualizaciones globales para sincronizar datos entre pestañas
     this.$root.$on('characteristics-updated', (updatedData) => {
       if (updatedData) {
-        this.charsData = updatedData
-        this.$forceUpdate()
+        this.applyServerChars(updatedData)
       }
     })
   },

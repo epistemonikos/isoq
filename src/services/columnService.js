@@ -88,13 +88,20 @@ export async function ensureTableDocument (collection, organization, projectId, 
 
   // La creación es la única ruta donde el cliente manda `fields` completo: el documento no
   // existe, así que no hay copia obsoleta posible ni columnas de otra persona que perder.
-  // Sólo los de sistema; las columnas llegan después, de a una.
+  // Los de sistema, más el catálogo fijo que le corresponda a la tabla; las columnas de
+  // usuario llegan después, de a una.
+  //
+  // `options.fields` es el catálogo CAMELOT y NO son columnas de usuario: son 24 claves que
+  // no se crean ni se borran, pero que tienen que existir en `fields` o la tabla del Paso 3
+  // no las dibuja y `order` no las puede mencionar. Nacer sin ellas era hacer desaparecer
+  // las 12 columnas CAMELOT al crear la primera columna propia.
   const body = {
     organization,
     project_id: projectId,
     fields: [
       { key: 'ref_id', label: i18n.t('table_headers.reference_id') },
-      { key: 'authors', label: i18n.t('table_headers.author_year') }
+      { key: 'authors', label: i18n.t('table_headers.author_year') },
+      ...(options.fields || [])
     ]
   }
   // En no-CAMELOT `<b-table>` lee `items` de la base, así que la tabla tiene que nacer con
