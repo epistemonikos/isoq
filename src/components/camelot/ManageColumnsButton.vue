@@ -84,7 +84,12 @@ export default {
       // Claves creadas en esta sesión: ya existen en el servidor, pero el documento
       // recargado puede no haber llegado todavía al padre, así que `charsData.fields`
       // no alcanza para saber qué es mencionable en `order`.
-      createdKeys: []
+      createdKeys: [],
+      // `fields` del último documento que devolvió el servidor. El prop `charsData` llega
+      // un tick tarde —el padre lo asigna síncrono, Vue lo propaga después— y en el
+      // proyecto nuevo esa diferencia es el documento entero: al abrir el modal no existía
+      // y las 24 claves CAMELOT venían repuestas y marcadas.
+      serverFields: null
     }
   },
   beforeDestroy () {
@@ -168,10 +173,16 @@ export default {
           this.createdKeys.push(key)
           this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, key])
           this.emitSaved(response)
-          // El servidor la agrega al final, pero el modal la muestra donde el usuario la
-          // puso (arriba). Sin esto, la tabla la ubicaría en un lugar distinto del que
-          // acaba de ver.
+          // El servidor la agrega al final (`$push`) y el modal la muestra arriba, que es
+          // donde el usuario la creó. Esa discrepancia se corrige EN EL ACTO y no al
+          // cerrar: entre medio están las 24 claves CAMELOT sembradas, así que diferirlo
+          // deja la columna recién creada al fondo de la tabla mientras el modal sigue
+          // abierto — y si el cierre no llega a disparar el flush, también en la base.
+          //
+          // El arrastre sí se sigue acumulando hasta el cierre: es conmutativo y no tiene
+          // ninguna discrepancia que corregir.
           this.pendingOrder = true
+          await this.flushPendingOrder()
         }
       } catch (error) {
         console.error('Error saving column:', error)
@@ -227,8 +238,9 @@ export default {
     orderFromDefinitions () {
       // `virtual` = repuesta por el cliente y ausente de la base. Mencionarla en `order`
       // es un 400 del backend por clave desconocida, así que no cuenta como guardada.
+      const known = this.serverFields || this.charsData.fields || []
       const stored = new Set([
-        ...(this.charsData.fields || []).filter(field => !field.virtual).map(field => field.key),
+        ...known.filter(field => !field.virtual).map(field => field.key),
         ...this.createdKeys
       ])
       const order = []
@@ -299,6 +311,9 @@ export default {
       if (!data) return
 
       const payload = data.$set || data
+      // Lo que el servidor tiene guardado AHORA: es la única fuente fiable de qué claves
+      // puede mencionar `order`, y llega acá antes que al prop.
+      if (Array.isArray(payload.fields)) this.serverFields = payload.fields
       this.$emit('saved', {
         ...payload,
         id: data.id || this.charsData.id,
@@ -368,6 +383,7 @@ export default {
     resetColumnsModal () {
       this.columnDefinitions = []
       this.isSavingColumns = false
+      this.serverFields = null
     }
   }
 }

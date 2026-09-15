@@ -285,3 +285,165 @@ describe('ManageColumnsButton — orden intercalado de CAMELOT y columnas propia
     expect(order).not.toContain('authors')
   })
 })
+
+// El alta persiste el orden EN EL ACTO, sin esperar a que se cierre el modal.
+//
+// El servidor agrega la columna al final (`$push`) y el modal la muestra arriba, que es
+// donde el usuario la creó. Diferir el reorden al cierre era gratis cuando el documento
+// tenía dos campos; con las 24 claves CAMELOT sembradas, la columna nueva aparece detrás
+// de todas ellas hasta que el modal se cierra — y si el cierre no llega a disparar el
+// flush, queda al final tambien en la base.
+//
+// El reorden por arrastre sigue acumulándose hasta el cierre: ése sí es conmutativo y no
+// tiene ninguna discrepancia que corregir.
+describe('ManageColumnsButton — la columna nueva queda al inicio sin cerrar el modal', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const DOC_SEMBRADO = {
+    id: 'char1',
+    fields: [
+      { key: 'ref_id', label: 'ID' },
+      { key: 'authors', label: 'Authors' },
+      { key: 'research_extractedData', label: 'Extracted data' },
+      { key: 'research_comments', label: 'Comments' }
+    ]
+  }
+
+  function wrapperSembrado () {
+    return shallowMount(ManageColumnsButton, {
+      propsData: {
+        charsData: DOC_SEMBRADO,
+        camelot: { fields: [], categories: [] },
+        visibleColumnKeys: [],
+        canEdit: true
+      },
+      mocks: {
+        $t: key => key,
+        $route: { params: { org_id: 'org1', id: 'proj1' } },
+        $bvModal: { show: jest.fn(), hide: jest.fn(), msgBoxConfirm: jest.fn(() => Promise.resolve(true)) },
+        $bvToast: { toast: jest.fn() }
+      },
+      stubs: { 'b-button': true, 'b-modal': true, 'font-awesome-icon': true, 'CustomFieldsManager': true }
+    })
+  }
+
+  it('manda el orden con la columna nueva primera, en el mismo guardado', async () => {
+    const wrapper = wrapperSembrado()
+    wrapper.vm.openColumnsModal()
+    // El hijo la inserta arriba, que es donde el usuario la ve.
+    wrapper.vm.columnDefinitions.unshift({ id: 'f-nueva', label: 'País' })
+
+    await wrapper.vm.onFieldCommitted(wrapper.vm.columnDefinitions[0])
+    await flushPromises()
+
+    expect(columnService.reorderColumns).toHaveBeenCalledWith(
+      'isoqf_characteristics', 'char1',
+      ['column_nueva', 'research_extractedData', 'research_comments']
+    )
+  })
+
+  it('no deja orden pendiente para el cierre', async () => {
+    const wrapper = wrapperSembrado()
+    wrapper.vm.openColumnsModal()
+    wrapper.vm.columnDefinitions.unshift({ id: 'f-nueva', label: 'País' })
+
+    await wrapper.vm.onFieldCommitted(wrapper.vm.columnDefinitions[0])
+    await flushPromises()
+    columnService.reorderColumns.mockClear()
+
+    await wrapper.vm.onModalHidden()
+
+    expect(columnService.reorderColumns).not.toHaveBeenCalled()
+  })
+
+  // Renombrar no mueve nada: pedir un reorden ahí sería un request al pedo.
+  it('el renombrado no dispara ningún reorden', async () => {
+    const wrapper = wrapperSembrado()
+    wrapper.vm.openColumnsModal()
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro nombre' })
+    await flushPromises()
+
+    expect(columnService.renameColumn).toHaveBeenCalled()
+    expect(columnService.reorderColumns).not.toHaveBeenCalled()
+  })
+
+  // El arrastre sigue difiriéndose: es conmutativo y así el cierre lo manda una sola vez.
+  it('el arrastre se sigue acumulando hasta el cierre', async () => {
+    const wrapper = wrapperSembrado()
+    wrapper.vm.openColumnsModal()
+
+    wrapper.vm.onOrderChanged()
+
+    expect(columnService.reorderColumns).not.toHaveBeenCalled()
+    expect(wrapper.vm.pendingOrder).toBe(true)
+  })
+})
+
+// El orden se deriva del documento que ACABA de devolver el servidor, no del prop.
+//
+// En un proyecto nuevo el documento no existe cuando se abre el modal, así que `charsData`
+// trae las 24 claves CAMELOT repuestas y marcadas. El alta las crea de verdad —el POST las
+// siembra— y la respuesta trae el documento completo, pero el prop del hijo todavía no
+// cambió: el padre lo asigna de forma síncrona y Vue lo propaga recién en el tick
+// siguiente.
+//
+// Leyendo el prop, `order` salía con una sola clave (la recién creada) y el backend la
+// dejaba en el slot que ya ocupaba: el último. La columna quedaba al final de la tabla,
+// que es justo lo que el reorden venía a evitar.
+describe('ManageColumnsButton — el orden usa el documento fresco, no el prop', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  // Lo que ve el hijo al abrir el modal: nada guardado, las CAMELOT repuestas.
+  const SIN_DOCUMENTO = {
+    fields: [
+      { key: 'research_extractedData', label: 'Extracted data', virtual: true },
+      { key: 'research_comments', label: 'Comments', virtual: true }
+    ]
+  }
+
+  // Lo que devuelve el alta: el documento ya creado, con el catálogo sembrado.
+  const DOCUMENTO_CREADO = {
+    data: {
+      id: 'char_creado',
+      fields: [
+        { key: 'ref_id', label: 'ID' },
+        { key: 'authors', label: 'Authors' },
+        { key: 'research_extractedData', label: 'Extracted data' },
+        { key: 'research_comments', label: 'Comments' },
+        { key: 'column_nueva', label: 'País' }
+      ]
+    }
+  }
+
+  it('mete las claves CAMELOT que el alta acaba de sembrar', async () => {
+    columnService.addColumn.mockResolvedValueOnce({ key: 'column_nueva', response: DOCUMENTO_CREADO })
+    const wrapper = shallowMount(ManageColumnsButton, {
+      propsData: {
+        charsData: SIN_DOCUMENTO,
+        camelot: { fields: [], categories: [] },
+        visibleColumnKeys: [],
+        canEdit: true
+      },
+      mocks: {
+        $t: key => key,
+        $route: { params: { org_id: 'org1', id: 'proj1' } },
+        $bvModal: { show: jest.fn(), hide: jest.fn(), msgBoxConfirm: jest.fn(() => Promise.resolve(true)) },
+        $bvToast: { toast: jest.fn() }
+      },
+      stubs: { 'b-button': true, 'b-modal': true, 'font-awesome-icon': true, 'CustomFieldsManager': true }
+    })
+    wrapper.vm.openColumnsModal()
+    wrapper.vm.columnDefinitions.unshift({ id: 'f-nueva', label: 'País' })
+
+    await wrapper.vm.onFieldCommitted(wrapper.vm.columnDefinitions[0])
+    await flushPromises()
+
+    // Con el prop desactualizado esto salía como ['column_nueva'] a secas, y el backend
+    // la dejaba donde ya estaba.
+    expect(columnService.reorderColumns).toHaveBeenCalledWith(
+      'isoqf_characteristics', 'char_creado',
+      ['column_nueva', 'research_extractedData', 'research_comments']
+    )
+  })
+})
