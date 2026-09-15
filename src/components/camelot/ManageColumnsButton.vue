@@ -268,8 +268,24 @@ export default {
       this.resetColumnsModal()
       this.$emit('closed')
     },
+    /**
+     * Saca del modal la fila que el usuario acaba de borrar.
+     *
+     * Ojo con la identidad: las definiciones que arma `openColumnsModal()` NO tienen `id`
+     * —la identidad de una columna guardada es su `key`—, y el `field` que llega acá es la
+     * copia del hijo, con un `id` sintético que el padre nunca vio. Una columna recién
+     * agregada es el caso inverso: llega por v-model con `id` y todavía sin `key`.
+     */
     dropLocalColumn (field) {
-      this.columnDefinitions = this.columnDefinitions.filter(col => col.id !== field.id)
+      // La `key` manda cuando está: es la identidad del servidor y la única que el padre
+      // comparte con el hijo. El `id` queda de respaldo para la columna nueva que todavía
+      // no tiene `key`, y exige que exista de verdad — si no, dos filas nuevas sin guardar
+      // (ambas con `key` y `id` en undefined) se borrarían juntas.
+      const isTarget = field.key
+        ? col => col.key === field.key
+        : col => !!field.id && col.id === field.id
+
+      this.columnDefinitions = this.columnDefinitions.filter(col => !isTarget(col))
     },
     /** Cada respuesta trae el documento completo recargado, que es lo que el padre pinta. */
     emitSaved (response) {
