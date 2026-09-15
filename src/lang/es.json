@@ -1336,7 +1336,7 @@
         "move_instruction": "Usa el botón \"Mover\" para reorganizar los campos",
         "title_label": "Columna",
         "move_button": "Mover",
-        "content_label": "Contenido",
+        "extracted_data_label": "Datos extraídos",
         "field_title_placeholder": "Nombre de la columna",
         "field_content_placeholder": "Contenido de la columna",
         "camelot_fields_title": "Campos Camelot",

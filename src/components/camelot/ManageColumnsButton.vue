@@ -346,7 +346,7 @@ export default {
           if (isCamelot) {
             const commentsKey = field.key.replace('_extractedData', '_comments')
             categoryLabel = field.label
-            extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
+            extractedDataLabel = this.$t('camelot.step_three.modal.extracted_data_label')
             commentsLabel = this.$t('camelot.step_three.concerns_label') || 'Comments'
 
             if (this.camelot && this.camelot.categories) {

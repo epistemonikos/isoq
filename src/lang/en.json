@@ -1336,7 +1336,7 @@
         "move_instruction": "Use the \"Move\" button to rearrange the fields",
         "title_label": "Column",
         "move_button": "Move",
-        "content_label": "Content",
+        "extracted_data_label": "Extracted data",
         "field_title_placeholder": "Column name",
         "field_content_placeholder": "Column content",
         "camelot_fields_title": "Camelot fields",

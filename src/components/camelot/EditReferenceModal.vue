@@ -87,7 +87,7 @@
               :move-button-text="$t('camelot.step_three.modal.move_button')"
               :delete-button-text="$t('camelot.step_three.delete_button')"
               :label-text="$t('camelot.step_three.modal.title_label')"
-              :content-label-text="$t('camelot.step_three.modal.content_label')"
+              :content-label-text="$t('camelot.step_three.modal.extracted_data_label')"
               :placeholder-label="$t('camelot.step_three.modal.field_title_placeholder')"
               :placeholder-value="$t('camelot.step_three.modal.field_content_placeholder')" id-prefix="custom-field-" />
           </div>
@@ -533,7 +533,7 @@ export default {
           customFieldObj.commentsValue = (itemValues && itemValues[commentsKey]) || ''
 
           let categoryLabel = field.label
-          let extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
+          let extractedDataLabel = this.$t('camelot.step_three.modal.extracted_data_label')
           let commentsLabel = this.$t('camelot.step_three.concerns_label') || 'Comments'
 
           if (this.camelot && this.camelot.categories) {
