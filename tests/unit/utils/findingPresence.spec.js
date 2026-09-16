@@ -3,7 +3,7 @@
 // La presencia es un superconjunto de los locks: quien abre un editor sigue estando
 // adentro, pero ya tiene un mensaje más informativo ("está evaluando Coherence").
 // Nombrarlo dos veces con dos textos distintos es peor que no nombrarlo.
-import { presentReviewersOf } from '@/utils/findingPresence'
+import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
 
 const PRESENT = [
   { finding_id: 'f1', user_id: 'u-ana', user_name: 'Ana Soto' },
@@ -69,5 +69,35 @@ describe('presentReviewersOf', () => {
     expect(presentReviewersOf(null, null, 'f1', 'u-yo')).toEqual([])
     expect(presentReviewersOf(PRESENT, [], null, 'u-yo')).toEqual([])
     expect(presentReviewersOf([null, undefined], [], 'f1', 'u-yo')).toEqual([])
+  })
+})
+
+// El conector («y» / «and» / «e») no es el mismo string en las tres traducciones, así
+// que unirlo acá en vez de con un `join(' y ')` en cada componente es lo que evita que
+// un idioma cuya puntuación de listas difiera obligue a tocar dos copias.
+describe('joinReviewerNames', () => {
+  it('sin nombres devuelve vacío', () => {
+    expect(joinReviewerNames([], ' y ')).toBe('')
+  })
+
+  it('un nombre se devuelve tal cual, sin conector', () => {
+    expect(joinReviewerNames(['Ana Soto'], ' y ')).toBe('Ana Soto')
+  })
+
+  it('dos nombres van unidos sólo por el conector', () => {
+    expect(joinReviewerNames(['Ana Soto', 'Luis Paz'], 'y'))
+      .toBe('Ana Soto y Luis Paz')
+  })
+
+  it('tres o más van con comas y el conector antes del último', () => {
+    expect(joinReviewerNames(['Ana Soto', 'Luis Paz', 'Mara Ruiz'], 'y'))
+      .toBe('Ana Soto, Luis Paz y Mara Ruiz')
+  })
+
+  it('usa el conector que le pasan, no uno propio', () => {
+    // Nunca "y" hardcodeado: si el conector viene en inglés, el resultado tiene que
+    // quedar en inglés.
+    expect(joinReviewerNames(['Ana Soto', 'Luis Paz'], 'and'))
+      .toBe('Ana Soto and Luis Paz')
   })
 })

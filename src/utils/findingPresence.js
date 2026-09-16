@@ -62,3 +62,28 @@ export function presentReviewersOf (present, foreignLocks, findingId, myUserId) 
 
   return nombres.sort((a, b) => a.localeCompare(b))
 }
+
+/**
+ * Une los nombres en una sola línea: uno solo tal cual, dos o más como
+ * «A, B <connector> C».
+ *
+ * El conector NO es el mismo string en las tres traducciones («y» / «and» / «e»),
+ * así que un `join(' y ')` escrito en un componente sería español a mano metido en
+ * las traducciones en y pt. Por eso el conector ya viene traducido como parámetro
+ * — este módulo no importa `$t`, ese es el patrón de `SECTION_LABEL_KEYS` en
+ * `evidenceProfileLockKeys.js`: los datos viven acá, la traducción la hace quien
+ * llama.
+ *
+ * Vive junto a `presentReviewersOf` porque siempre se usan en pareja, y porque dos
+ * superficies (la fila del listado y el modal abierto de `ViewTable.vue`) ya
+ * tenían esta misma cuenta escrita dos veces antes de moverla acá.
+ *
+ * @param {string[]} nombres
+ * @param {string} connector ya traducido (`presence.and`)
+ * @returns {string}
+ */
+export function joinReviewerNames (nombres, connector) {
+  if (!nombres || !nombres.length) return ''
+  if (nombres.length === 1) return nombres[0]
+  return `${nombres.slice(0, -1).join(', ')} ${connector} ${nombres[nombres.length - 1]}`
+}

@@ -137,7 +137,7 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
-import { presentReviewersOf } from '@/utils/findingPresence'
+import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 // Más corto que los 15 s de las otras superficies que pintan candados
@@ -389,15 +389,19 @@ export default {
       return (this.$store && this.$store.state && this.$store.state.user &&
         this.$store.state.user.id) || null
     },
-    /** Los OTROS que están en este hallazgo. Informa, no bloquea nada. */
+    /**
+     * Los OTROS que están en este hallazgo. Informa, no bloquea nada.
+     *
+     * El join de los nombres es `joinReviewerNames` (`@/utils/findingPresence`): ya
+     * lo pedían las dos superficies de `ViewTable.vue` (fila y modal), y una tercera
+     * copia escrita a mano acá era la primera oportunidad de que se desincronizaran.
+     */
     presenceNotice: function () {
       const nombres = presentReviewersOf(
         this.activePresence, this.foreignRefLocks,
         this.findings && this.findings.id, this.currentUserId)
       if (!nombres.length) return ''
-      const users = nombres.length === 1
-        ? nombres[0]
-        : `${nombres.slice(0, -1).join(', ')} ${this.$t('presence.and')} ${nombres[nombres.length - 1]}`
+      const users = joinReviewerNames(nombres, this.$t('presence.and'))
       return this.$t(
         nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
         { users })

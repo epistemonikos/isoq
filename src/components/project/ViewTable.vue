@@ -306,7 +306,7 @@ import PresenceService from '@/services/presenceService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
 import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
-import { presentReviewersOf } from '@/utils/findingPresence'
+import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
 
 export default {
   name: 'ViewTable',
@@ -794,15 +794,15 @@ export default {
       return this.joinPresentReviewers(nombres)
     },
     /**
-     * Un nombre, dos si son «X y Z», o «X, Y y Z» con el resto separado por comas.
-     * Compartido por `presenceNotice` (fila) y `modalPresenceNotice` (modal abierto):
-     * ya estuvo duplicado una vez y el conector es i18n, no un `join(' y ')` a mano.
+     * La frase completa: junta los nombres (`joinReviewerNames`, en
+     * `findingPresence.js` — ya la pedían `presenceNotice` acá y `editList.vue`) y
+     * elige singular/plural. Ese pedazo sí es de este componente: el singular y el
+     * plural son dos claves `$t` distintas, no algo que la utilidad pueda decidir
+     * sin importar i18n.
      */
     joinPresentReviewers: function (nombres) {
       if (!nombres.length) return ''
-      const users = nombres.length === 1
-        ? nombres[0]
-        : `${nombres.slice(0, -1).join(', ')} ${this.$t('presence.and')} ${nombres[nombres.length - 1]}`
+      const users = joinReviewerNames(nombres, this.$t('presence.and'))
       return this.$t(
         nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
         { users })
