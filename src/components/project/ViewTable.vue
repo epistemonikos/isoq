@@ -191,6 +191,10 @@
       <b-alert v-if="isFindingReadOnly" show variant="warning" class="read-only-notice">
         {{ readOnlyNotice }}
       </b-alert>
+      <b-alert v-if="modalPresenceNotice" show variant="info" data-testid="modal-presence">
+        <font-awesome-icon icon="user"></font-awesome-icon>
+        {{ modalPresenceNotice }}
+      </b-alert>
       <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="finding-name">
         <template slot="description">
           {{ $t('common.click') || 'Click' }}
@@ -225,6 +229,10 @@
       <b-alert v-if="isFindingReadOnly" show variant="warning" class="read-only-notice">
         {{ readOnlyNotice }}
       </b-alert>
+      <b-alert v-if="modalPresenceNotice" show variant="info" data-testid="modal-presence">
+        <font-awesome-icon icon="user"></font-awesome-icon>
+        {{ modalPresenceNotice }}
+      </b-alert>
       <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
         {{ $t('soqf_table.delete_warning_revert') }}
       </p>
@@ -243,6 +251,10 @@
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
+      <b-alert v-if="modalPresenceNotice" show variant="info" data-testid="modal-presence">
+        <font-awesome-icon icon="user"></font-awesome-icon>
+        {{ modalPresenceNotice }}
+      </b-alert>
       <b-alert v-if="isFindingReadOnly" show variant="warning" class="read-only-notice">
         {{ readOnlyNotice }}
       </b-alert>
@@ -290,6 +302,7 @@
 import Api from '@/utils/Api'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
+import PresenceService from '@/services/presenceService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
 import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
@@ -414,7 +427,14 @@ export default {
       // Ids de los modales abiertos ahora mismo. El padre corre un sondeo de frescura y
       // necesita saber si un refresco le arrancaría el borrador a alguien; como los
       // modales viven acá, se lo contamos por evento.
-      openModals: []
+      openModals: [],
+      // Presencia pedida al ABRIR un modal, no la del sondeo. El sondeo corre cada
+      // 15 s y abrir el modal de borrado es el momento de mayor riesgo: es la única
+      // de las tres acciones que no se deshace.
+      freshPresence: [],
+      // De qué hallazgo es `freshPresence`. Sin esto, el modal siguiente abriría
+      // mostrando a quien estaba en el anterior.
+      freshPresenceFindingId: null
     }
   },
   props: {
@@ -533,6 +553,14 @@ export default {
       return this.findingLockedBy
         ? this.$t('lock.ref_locked_by', { user: this.findingLockedBy })
         : this.$t('lock.ref_locked_by_no_user')
+    },
+    /** El mismo texto de la fila, sobre la consulta fresca del modal abierto. */
+    modalPresenceNotice: function () {
+      if (!this.freshPresenceFindingId) return ''
+      const nombres = presentReviewersOf(
+        this.freshPresence, this.foreignLocks(), this.freshPresenceFindingId,
+        this.currentUserId)
+      return this.joinPresentReviewers(nombres)
     }
   },
   mounted: function () {
@@ -569,11 +597,13 @@ export default {
       this.$emit('editor-open', this.openModals.length > 0)
     },
     onEditFindingNameHidden: function () {
+      this.clearFreshPresence()
       this.findingNameDirty = false
       this.noteModalHidden('edit-finding-name')
       this.releaseFindingLock()
     },
     onRemoveFindingHidden: function () {
+      this.clearFreshPresence()
       this.noteModalHidden('remove-finding')
       this.releaseFindingLock()
     },
@@ -761,6 +791,14 @@ export default {
       const nombres = presentReviewersOf(
         this.presence, this.foreignLocks(), this.findingIdOf(listId),
         this.currentUserId)
+      return this.joinPresentReviewers(nombres)
+    },
+    /**
+     * Un nombre, dos si son «X y Z», o «X, Y y Z» con el resto separado por comas.
+     * Compartido por `presenceNotice` (fila) y `modalPresenceNotice` (modal abierto):
+     * ya estuvo duplicado una vez y el conector es i18n, no un `join(' y ')` a mano.
+     */
+    joinPresentReviewers: function (nombres) {
       if (!nombres.length) return ''
       const users = nombres.length === 1
         ? nombres[0]
@@ -768,6 +806,19 @@ export default {
       return this.$t(
         nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
         { users })
+    },
+    /** Pide presencia al abrir un modal. No bloquea la apertura si falla. */
+    refreshPresenceFor: async function (findingId) {
+      this.freshPresenceFindingId = findingId || null
+      if (!findingId) {
+        this.freshPresence = []
+        return
+      }
+      this.freshPresence = await PresenceService.fetch(this.$route.params.id)
+    },
+    clearFreshPresence: function () {
+      this.freshPresence = []
+      this.freshPresenceFindingId = null
     },
     /** ¿Hay que grisar los botones de esta fila? */
     isFindingLocked: function (listId) {
@@ -829,6 +880,7 @@ export default {
       const findingId = await this.resolveFindingId(data.item.id)
       this.editFindingName.finding_id = findingId
       await this.acquireFindingLock(findingId)
+      await this.refreshPresenceFor(findingId)
       this.$refs['edit-finding-name'].show()
     },
     removeModalFinding: function (data) {
@@ -843,6 +895,7 @@ export default {
           // Borrar un finding que otra persona está evaluando es el peor de los tres
           // casos, así que también pasa por el lock.
           await this.acquireFindingLock(this.findingIdOf(data.item.id) || this.editFindingName.id)
+          await this.refreshPresenceFor(this.findingIdOf(data.item.id) || this.editFindingName.id)
 
           let cnt = 0
           for (const el of this.lists) {
@@ -886,6 +939,7 @@ export default {
               this.showBanner = true
             }
             await this.acquireFindingLock(this.finding.id)
+            await this.refreshPresenceFor(this.finding.id)
             this.$refs['modal-references-list'].show()
           }
         })
@@ -1003,6 +1057,7 @@ export default {
     },
 
     handleReferencesModalHidden: function () {
+      this.clearFreshPresence()
       this.noteModalHidden('modal-references-list')
       // Only clean up if not pending save from warning dialog
       if (!this.pendingSaveReferences) {

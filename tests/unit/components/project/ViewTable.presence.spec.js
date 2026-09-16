@@ -4,6 +4,7 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import BootstrapVue from 'bootstrap-vue'
 import ViewTable from '@/components/project/ViewTable.vue'
+import PresenceService from '@/services/presenceService'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [{ id: 'finding1' }] }),
@@ -18,6 +19,8 @@ jest.mock('@/services/lockService', () => ({
 jest.mock('@/services/presenceService', () => ({
   fetch: jest.fn().mockResolvedValue([])
 }))
+
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -42,7 +45,7 @@ const $t = (key, params) => {
 // son props REQUERIDAS del componente (Task 9 usará `project.private` en el modal de
 // borrado, que también monta con este mismo build()).
 function build (presence, refLocks = []) {
-  return mount(ViewTable, {
+  const wrapper = mount(ViewTable, {
     localVue,
     propsData: {
       lists: LISTS,
@@ -66,6 +69,13 @@ function build (presence, refLocks = []) {
     },
     stubs: { videoHelp: true, 'b-tooltip': true, 'font-awesome-icon': true, 'b-modal': true }
   })
+  // El stub automático de b-modal no reimplementa `show`/`hide` (sólo conserva props):
+  // Task 9 llama a los abridores de verdad, así que sin esto `.show()` explota dentro
+  // del modal. Mismo parche que usa ViewTable.refLocks.spec.js.
+  wrapper.vm.$refs['edit-finding-name'] = { show: jest.fn(), hide: jest.fn() }
+  wrapper.vm.$refs['remove-finding'] = { show: jest.fn(), hide: jest.fn() }
+  wrapper.vm.$refs['modal-references-list'] = { show: jest.fn(), hide: jest.fn() }
+  return wrapper
 }
 
 describe('ViewTable — presencia', () => {
@@ -125,5 +135,66 @@ describe('ViewTable — presencia', () => {
 
     expect(wrapper.find('[data-testid="finding-presence"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="finding-locked"]').exists()).toBe(true)
+  })
+})
+
+describe('ViewTable — presencia en los modales', () => {
+  beforeEach(() => {
+    PresenceService.fetch.mockResolvedValue([
+      { finding_id: 'finding1', user_id: 'u-ana', user_name: 'Ana Soto' }
+    ])
+  })
+
+  it('abrir el modal de borrado pide presencia FRESCA, sin esperar el sondeo', async () => {
+    // El sondeo corre cada 15 s; borrar es la única acción irreversible de las tres.
+    const wrapper = build([])
+
+    await wrapper.vm.removeModalFinding({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    expect(PresenceService.fetch).toHaveBeenCalledWith('p1')
+    expect(wrapper.vm.modalPresenceNotice).toContain('Ana Soto')
+  })
+
+  it('el aviso se DIBUJA dentro del modal de borrado', async () => {
+    const wrapper = build([])
+
+    await wrapper.vm.removeModalFinding({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    const aviso = wrapper.find('[data-testid="modal-presence"]')
+    expect(aviso.exists()).toBe(true)
+    expect(aviso.text()).toContain('Ana Soto está revisando este hallazgo')
+  })
+
+  it('abrir el modal de nombre también consulta', async () => {
+    const wrapper = build([])
+
+    await wrapper.vm.editModalFindingName({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    expect(PresenceService.fetch).toHaveBeenCalledWith('p1')
+  })
+
+  it('cerrar el modal limpia la presencia fresca', async () => {
+    // Si no, el próximo modal abre mostrando a quien estaba en el hallazgo anterior.
+    const wrapper = build([])
+    await wrapper.vm.removeModalFinding({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    wrapper.vm.onRemoveFindingHidden()
+
+    expect(wrapper.vm.freshPresence).toEqual([])
+    expect(wrapper.vm.modalPresenceNotice).toBe('')
+  })
+
+  it('sin nadie adentro el modal no muestra el aviso', async () => {
+    PresenceService.fetch.mockResolvedValue([])
+    const wrapper = build([])
+
+    await wrapper.vm.removeModalFinding({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="modal-presence"]').exists()).toBe(false)
   })
 })
