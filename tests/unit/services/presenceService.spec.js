@@ -1,8 +1,16 @@
 // El servicio de presencia. Vive aparte de lockService a propósito: aquél gestiona
 // exclusión mutua y puede negar; éste por contrato no puede negar nada.
+//
+// El flag hay que guardarlo y restaurarlo: jest no resetea process.env entre
+// specs corridos en el mismo worker, así que setearlo sin restaurar se lo deja
+// encendido a cualquier spec que corra después y lo lea sin override propio
+// (mismo hazard que documenta tests/unit/constants/gdpr.spec.js). Va suelto,
+// antes del import, porque el servicio lee el flag al construirse el singleton.
+const originalEnableConcurrencyControl = process.env.ENABLE_CONCURRENCY_CONTROL
 process.env.ENABLE_CONCURRENCY_CONTROL = 'on'
 
 import axios from 'axios'
+import { store } from '@/store'
 import PresenceService from '@/services/presenceService'
 
 jest.mock('axios', () => ({ post: jest.fn(), delete: jest.fn(), get: jest.fn() }))
@@ -20,11 +28,20 @@ describe('presenceService', () => {
     axios.get.mockClear()
     PresenceService.projectId = null
     PresenceService.findingId = null
+    store.state.isOnline = true
   })
 
   afterEach(async () => {
     await PresenceService.leave()
     jest.useRealTimers()
+  })
+
+  afterAll(() => {
+    if (originalEnableConcurrencyControl === undefined) {
+      delete process.env.ENABLE_CONCURRENCY_CONTROL
+    } else {
+      process.env.ENABLE_CONCURRENCY_CONTROL = originalEnableConcurrencyControl
+    }
   })
 
   it('entrar marca presencia en ese hallazgo', async () => {
@@ -102,5 +119,18 @@ describe('presenceService', () => {
     axios.post.mockRejectedValue(new Error('network'))
 
     await expect(PresenceService.enter('p1', 'f1')).resolves.toBeUndefined()
+  })
+
+  it('sin conexión, ping() no manda nada ni lo encola', async () => {
+    // A diferencia de las mutaciones de negocio (que Api SÍ encola para el
+    // reconecte), una presencia es una afirmación sobre el presente: replicarla
+    // al volver la conexión diría que alguien sigue donde ya no está. No hay
+    // cola que inspeccionar acá — la ausencia de llamada a axios.post ES la
+    // prueba de que no se encoló nada.
+    store.state.isOnline = false
+
+    await PresenceService.enter('p1', 'f1')
+
+    expect(axios.post).not.toHaveBeenCalled()
   })
 })
