@@ -44,6 +44,69 @@ describe('presenceService', () => {
     }
   })
 
+  describe('cierre de sesión en otra pestaña', () => {
+    // Sin esto el barrido del servidor queda deshecho por el propio cliente: el
+    // logout de la pestaña A borra todas las filas del usuario, y 30 s después la
+    // pestaña B —que sigue abierta en la worksheet— las recrea con su ping, ahora
+    // a nombre de una sesión cerrada. Mismo gesto que lockService (lockService.js:38).
+    const logout = (key) => window.dispatchEvent(
+      new StorageEvent('storage', { key, newValue: null }))
+
+    it('detiene el ping cuando desaparece el token', async () => {
+      await PresenceService.enter('p1', 'f1')
+      axios.post.mockClear()
+
+      logout('l_s')
+      jest.advanceTimersByTime(90000)
+
+      expect(axios.post).not.toHaveBeenCalled()
+    })
+
+    it('suelta la marca cuando desaparece el token', async () => {
+      await PresenceService.enter('p1', 'f1')
+      axios.delete.mockClear()
+
+      logout('l_s')
+      await Promise.resolve()
+
+      expect(axios.delete).toHaveBeenCalledWith(
+        '/api/presence/p1/f1', { headers: { Authorization: 'Bearer t' } })
+    })
+
+    it('también reacciona a user-data, la otra clave de sesión', async () => {
+      await PresenceService.enter('p1', 'f1')
+      axios.post.mockClear()
+
+      logout('user-data')
+      jest.advanceTimersByTime(90000)
+
+      expect(axios.post).not.toHaveBeenCalled()
+    })
+
+    it('un cambio de OTRA clave de localStorage no suelta nada', async () => {
+      // El evento `storage` llega por cualquier clave que cambie en otra pestaña.
+      await PresenceService.enter('p1', 'f1')
+      axios.post.mockClear()
+
+      logout('cualquier-otra-cosa')
+      jest.advanceTimersByTime(30000)
+
+      expect(axios.post).toHaveBeenCalledTimes(1)
+    })
+
+    it('un valor NUEVO en l_s no es un logout: es un login', async () => {
+      // Sólo la DESAPARICIÓN del token cuenta. Un token nuevo (re-login en otra
+      // pestaña) no debe tirar abajo la presencia de ésta.
+      await PresenceService.enter('p1', 'f1')
+      axios.post.mockClear()
+
+      window.dispatchEvent(new StorageEvent('storage', { key: 'l_s', newValue: 'token-nuevo' }))
+      jest.advanceTimersByTime(30000)
+
+      expect(axios.post).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('entrar marca presencia en ese hallazgo', async () => {
     await PresenceService.enter('p1', 'f1')
 
