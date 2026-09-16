@@ -32,6 +32,20 @@ class PresenceService {
       // Cerrar la pestaña no dispara `beforeDestroy`. Es best-effort, igual que el
       // release de los locks: el TTL del servidor es la red de abajo.
       window.addEventListener('pagehide', () => { this.leave() })
+
+      // Cierre de sesión en OTRA pestaña. El servidor barre `finding_presence` en
+      // el logout, pero ese barrido lo deshace el propio cliente si esta pestaña
+      // sigue latiendo: 30 s después recrea la marca, ahora a nombre de una sesión
+      // cerrada. Las dos mitades hacen falta, y ésta es la que cierra el ciclo.
+      //
+      // Mismas dos claves y misma condición que `lockService` (ver su listener):
+      // sólo la DESAPARICIÓN del valor es un logout — un valor nuevo es un login en
+      // otra pestaña, y ése no debe tirar abajo la presencia de ésta.
+      window.addEventListener('storage', (event) => {
+        if ((event.key === 'l_s' || event.key === 'user-data') && !event.newValue) {
+          this.leave()
+        }
+      })
     }
     if (typeof document !== 'undefined' && document.addEventListener) {
       // Chrome ralentiza `setInterval` en pestañas ocultas hasta un disparo por
