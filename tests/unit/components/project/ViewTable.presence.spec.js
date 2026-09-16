@@ -200,3 +200,41 @@ describe('ViewTable — presencia en los modales', () => {
     expect(wrapper.find('[data-testid="modal-presence"]').exists()).toBe(false)
   })
 })
+
+describe('ViewTable — la presencia NUNCA retrasa la apertura de un modal', () => {
+  // Este es el punto de F1: un GET de presencia colgado (ni resuelto ni rechazado,
+  // no hay timeout de axios en el repo) no debe poder dejar cerrado un modal de
+  // renombrar / referencias / BORRAR. Si algún día vuelve un `await` delante de
+  // `refreshPresenceFor`, este test se cuelga y falla por timeout.
+  beforeEach(() => {
+    PresenceService.fetch.mockReturnValue(new Promise(() => {}))
+  })
+
+  it('el modal de nombre se abre igual', async () => {
+    const wrapper = build([])
+
+    await wrapper.vm.editModalFindingName({ index: 0, item: LISTS[0] })
+
+    expect(wrapper.vm.$refs['edit-finding-name'].show).toHaveBeenCalled()
+  })
+
+  it('el modal de referencias se abre igual', async () => {
+    // openModalReferences no es async: resuelve el Api.get con un .then, así que
+    // lo que hay que drenar es esa cadena, no una promesa devuelta por el método.
+    const wrapper = build([])
+
+    wrapper.vm.openModalReferences({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    expect(wrapper.vm.$refs['modal-references-list'].show).toHaveBeenCalled()
+  })
+
+  it('el modal de borrado se abre igual', async () => {
+    const wrapper = build([])
+
+    wrapper.vm.removeModalFinding({ index: 0, item: LISTS[0] })
+    await flushPromises()
+
+    expect(wrapper.vm.$refs['remove-finding'].show).toHaveBeenCalled()
+  })
+})

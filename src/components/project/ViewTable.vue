@@ -251,12 +251,12 @@
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
+      <b-alert v-if="isFindingReadOnly" show variant="warning" class="read-only-notice">
+        {{ readOnlyNotice }}
+      </b-alert>
       <b-alert v-if="modalPresenceNotice" show variant="info" data-testid="modal-presence">
         <font-awesome-icon icon="user"></font-awesome-icon>
         {{ modalPresenceNotice }}
-      </b-alert>
-      <b-alert v-if="isFindingReadOnly" show variant="warning" class="read-only-notice">
-        {{ readOnlyNotice }}
       </b-alert>
       <template v-if="references.length">
         <div class="mt-2">
@@ -306,7 +306,7 @@ import PresenceService from '@/services/presenceService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
 import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
-import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
+import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
 
 export default {
   name: 'ViewTable',
@@ -560,7 +560,7 @@ export default {
       const nombres = presentReviewersOf(
         this.freshPresence, this.foreignLocks(), this.freshPresenceFindingId,
         this.currentUserId)
-      return this.joinPresentReviewers(nombres)
+      return presenceNoticeText(nombres, this.$t.bind(this))
     }
   },
   mounted: function () {
@@ -791,21 +791,7 @@ export default {
       const nombres = presentReviewersOf(
         this.presence, this.foreignLocks(), this.findingIdOf(listId),
         this.currentUserId)
-      return this.joinPresentReviewers(nombres)
-    },
-    /**
-     * La frase completa: junta los nombres (`joinReviewerNames`, en
-     * `findingPresence.js` — ya la pedían `presenceNotice` acá y `editList.vue`) y
-     * elige singular/plural. Ese pedazo sí es de este componente: el singular y el
-     * plural son dos claves `$t` distintas, no algo que la utilidad pueda decidir
-     * sin importar i18n.
-     */
-    joinPresentReviewers: function (nombres) {
-      if (!nombres.length) return ''
-      const users = joinReviewerNames(nombres, this.$t('presence.and'))
-      return this.$t(
-        nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
-        { users })
+      return presenceNoticeText(nombres, this.$t.bind(this))
     },
     /** Pide presencia al abrir un modal. No bloquea la apertura si falla. */
     refreshPresenceFor: async function (findingId) {
@@ -880,7 +866,9 @@ export default {
       const findingId = await this.resolveFindingId(data.item.id)
       this.editFindingName.finding_id = findingId
       await this.acquireFindingLock(findingId)
-      await this.refreshPresenceFor(findingId)
+      // Sin `await`: la presencia informa y no debe poder retrasar la apertura del
+      // modal. `freshPresence` es reactivo y el aviso aparece solo cuando llega.
+      this.refreshPresenceFor(findingId)
       this.$refs['edit-finding-name'].show()
     },
     removeModalFinding: function (data) {
@@ -894,8 +882,10 @@ export default {
           this.editFindingName = { ...response.data[0] }
           // Borrar un finding que otra persona está evaluando es el peor de los tres
           // casos, así que también pasa por el lock.
-          await this.acquireFindingLock(this.findingIdOf(data.item.id) || this.editFindingName.id)
-          await this.refreshPresenceFor(this.findingIdOf(data.item.id) || this.editFindingName.id)
+          const findingId = this.findingIdOf(data.item.id) || this.editFindingName.id
+          await this.acquireFindingLock(findingId)
+          // Sin `await`: ver el comentario de `editModalFindingName`.
+          this.refreshPresenceFor(findingId)
 
           let cnt = 0
           for (const el of this.lists) {
@@ -939,7 +929,8 @@ export default {
               this.showBanner = true
             }
             await this.acquireFindingLock(this.finding.id)
-            await this.refreshPresenceFor(this.finding.id)
+            // Sin `await`: ver el comentario de `editModalFindingName`.
+            this.refreshPresenceFor(this.finding.id)
             this.$refs['modal-references-list'].show()
           }
         })
