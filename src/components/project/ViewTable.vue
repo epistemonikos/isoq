@@ -76,6 +76,14 @@
               </b-button>
             </b-col>
           </b-row>
+          <!-- Informa sin bloquear: mismo tratamiento visual que el aviso de lock
+               porque la gente lo lee en el mismo barrido, pero ningún botón lo
+               consulta. Va primero porque es el caso más frecuente. -->
+          <small v-if="presenceNotice(data.item.id)" class="presence-notice d-block mb-2"
+            data-testid="finding-presence">
+            <font-awesome-icon icon="user"></font-awesome-icon>
+            {{ presenceNotice(data.item.id) }}
+          </small>
           <!-- El nombre de quien edita va VISIBLE, no en un tooltip: bootstrap-vue no monta
                su tooltip sobre un botón `disabled` (el navegador no emite eventos de mouse
                ahí), así que sólo quedaba el title nativo — lento y ausente con teclado.
@@ -285,6 +293,7 @@ import LockService from '@/services/lockService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
 import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
+import { presentReviewersOf } from '@/utils/findingPresence'
 
 export default {
   name: 'ViewTable',
@@ -489,6 +498,11 @@ export default {
     refLocks: {
       type: Array,
       default: () => []
+    },
+    // Último sondeo de presencia del proyecto, que corre en el padre.
+    presence: {
+      type: Array,
+      default: () => []
     }
   },
   computed: {
@@ -502,6 +516,11 @@ export default {
     },
     currentUserName: function () {
       return userDisplayName(this.$store && this.$store.state && this.$store.state.user)
+    },
+    /** La identidad se compara por id: los homónimos son reales. */
+    currentUserId: function () {
+      return (this.$store && this.$store.state && this.$store.state.user &&
+        this.$store.state.user.id) || null
     },
     /** Texto del cartel de solo lectura dentro de un modal abierto. */
     readOnlyNotice: function () {
@@ -727,6 +746,28 @@ export default {
           }
           : { key: 'finding-locked', text: this.$t('lock.ref_locked_by', { user: holder }) }
       ))
+    },
+    /**
+     * Quiénes están dentro de este hallazgo sin estar editando nada.
+     *
+     * Informa, no bloquea: devuelve texto y ningún botón lo consulta. Es toda la
+     * diferencia con `findingLockNotices`, que sí gobierna el `disabled`.
+     *
+     * Una sola línea con los nombres unidos, y el conector sale de i18n: «y», «and»
+     * y «e» no son el mismo string, así que un `join(' y ')` en el componente sería
+     * español escrito a mano en las tres traducciones.
+     */
+    presenceNotice: function (listId) {
+      const nombres = presentReviewersOf(
+        this.presence, this.foreignLocks(), this.findingIdOf(listId),
+        this.currentUserId)
+      if (!nombres.length) return ''
+      const users = nombres.length === 1
+        ? nombres[0]
+        : `${nombres.slice(0, -1).join(', ')} ${this.$t('presence.and')} ${nombres[nombres.length - 1]}`
+      return this.$t(
+        nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
+        { users })
     },
     /** ¿Hay que grisar los botones de esta fila? */
     isFindingLocked: function (listId) {
