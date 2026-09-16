@@ -6,7 +6,20 @@
         <strong>{{ getText() }}</strong>
       </div>
     </div>
-    <p>{{ text }}</p>
+    <div v-else class="d-flex flex-row justify-content-start align-items-center">
+      <div class="assessment-circle circle-not-completed"></div>
+      <div class="ml-2 text-muted">{{ $t('camelot.step_four.legend.not_completed') }}</div>
+    </div>
+    <p :class="{ 'text-danger': !text }">
+      <strong>{{ $t('camelot.responses.explanation') }}:</strong>
+      <template v-if="text">
+        {{ text }}
+      </template>
+      <template v-else>
+        <font-awesome-icon :icon="['fas', 'exclamation-circle']" />
+        {{ $t('camelot.step_four.no_explanation') }}
+      </template>
+    </p>
   </div>
 </template>
 
@@ -37,97 +50,97 @@ export default {
       options: [
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           }
         ],
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           }
         ],
         [
           {
-            text: '<b>Research design domains</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.design_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-              { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-              { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-              { text: 'Serious concerns', value: 'D', color: '#B31529' },
-              { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+              { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+              { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
             ]
           }
         ]
@@ -156,5 +169,17 @@ export default {
 .circle {
   width: 20px;
   height: 20px;
+}
+
+.assessment-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.circle-not-completed {
+  border: 2px dashed #B3B3B3;
+  background-color: transparent;
 }
 </style>

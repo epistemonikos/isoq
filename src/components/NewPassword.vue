@@ -8,11 +8,18 @@
               dismissible
               @dismissed="cleanVars"
               :variant="classBanner"
-              :show="showBanner">
+              :show="showBanner && classBanner !== 'success'">
               {{ msgBanner }}
             </b-alert>
+            <b-alert
+              variant="success"
+              :show="showBanner && classBanner === 'success'">
+              {{ $t('account.password_changed') }}
+              — <router-link :to="{ name: 'Login' }">{{ $t('common.login') }}</router-link>
+              <span class="ml-2 text-muted">{{ $t('account.redirect_countdown', { seconds: countdown }) }}</span>
+            </b-alert>
             <b-form-group
-              label="Password"
+              :label="$t('common.password')"
               label-for="password">
               <b-form-input
                 id="password"
@@ -20,21 +27,22 @@
                 v-model="password"></b-form-input>
             </b-form-group>
             <b-form-group
-              label="Repeat password"
+              :label="$t('account.repeat_password_label')"
               label-for="repassword"
-              :state="state"
+              :state="inputState"
               :valid-feedback="validMatch"
               :invalid-feedback="invalidMatch">
               <b-form-input
                 id="repassword"
                 type="password"
                 v-model="repassword"
-                :state="state"></b-form-input>
+                :state="inputState"
+                @blur="touched = true"></b-form-input>
             </b-form-group>
             <b-button
               variant="success"
               :disabled="!state"
-              @click="changePassword">Change</b-button>
+              @click="changePassword">{{ $t('common.change') }}</b-button>
           </b-form>
         </b-col>
       </b-row>
@@ -43,7 +51,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   data () {
@@ -53,28 +61,35 @@ export default {
       classBanner: '',
       password: '',
       repassword: '',
-      msgPassword: ''
+      msgPassword: '',
+      touched: false,
+      countdown: 5,
+      redirectTimer: null
     }
   },
   computed: {
     state () {
-      if (this.password === this.repassword && this.password !== '' && this.password.length > 7) {
-        return true
-      }
-      return false
+      return this.password !== '' && this.password.length > 7 && this.password === this.repassword
+    },
+    inputState () {
+      if (!this.touched) return null
+      return this.state
     },
     invalidMatch () {
       if (this.password.length > 7) {
         return ''
       } else if (this.password !== this.repassword) {
-        return 'Password mismatch'
+        return this.$t('account.password_mismatch')
       } else {
-        return 'Enter a password with at least 8 characters'
+        return this.$t('account.password_min_chars')
       }
     },
     validMatch () {
-      return this.state ? 'Match' : ''
+      return this.state ? this.$t('common.match') : ''
     }
+  },
+  beforeDestroy () {
+    if (this.redirectTimer) clearInterval(this.redirectTimer)
   },
   methods: {
     changePassword: function () {
@@ -83,30 +98,48 @@ export default {
         username: this.$route.params.username,
         password: this.password
       }
-      axios.post('/auth/new_password', params)
+      Api.post('/auth/new_password', params)
         .then((response) => {
           const data = response.data
           if (data.status === 'password_changed') {
             this.showBanner = true
-            this.msgBanner = 'Password has been changed. Please login with your new password.'
             this.classBanner = 'success'
+            this.countdown = 5
+            this.redirectTimer = setInterval(() => {
+              this.countdown--
+              if (this.countdown <= 0) {
+                clearInterval(this.redirectTimer)
+                this.$router.push({ name: 'Login' })
+              }
+            }, 1000)
+          } else if (data.status === 'password_compromised') {
+            this.showBanner = true
+            this.msgBanner = this.$t('account.password_compromised')
+            this.classBanner = 'danger'
           } else {
             this.showBanner = true
-            this.msgBanner = 'Invalid username or Token'
+            this.msgBanner = this.$t('account.invalid_token')
             this.classBanner = 'warning'
           }
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     },
     cleanVars: function () {
+      if (this.classBanner === 'success') return
+      if (this.redirectTimer) {
+        clearInterval(this.redirectTimer)
+        this.redirectTimer = null
+      }
       this.showBanner = false
       this.msgBanner = ''
       this.classBanner = ''
       this.password = ''
       this.repassword = ''
       this.msgPassword = ''
+      this.touched = false
+      this.countdown = 5
     }
   }
 }

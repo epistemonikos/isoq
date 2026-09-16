@@ -1,580 +1,366 @@
 <template>
-  <div>
-    <b-table
-      :fields="ui.fields"
-      :items="assessments.items">
-      <template
-        v-slot:cell(authors)="data">
-        {{ data.item.authors }}
-      </template>
-      <template
-        v-slot:cell(stepOne)="data">
-          <div>
-            <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(0, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(0, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-      </template>
-      <template
-        v-slot:cell(stepTwo)="data">
-          <div>
-            <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(1, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(1, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-      </template>
-      <template
-        v-slot:cell(stepThree)="data">
-          <div>
-            <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(2, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(2, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-        </template>
-        <template
-          v-slot:cell(stepFour)="data">
-            <div>
-              <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-              <div v-if="getStepSummary(3, data.index)" class="mt-2">
-                <small class="text-muted">
-                  <div v-for="(value, key) in getStepSummary(3, data.index)" :key="key">
-                    <strong>{{ key }}:</strong>
-                    <span :style="{ color: value.color }">{{ value.text }}</span>
-                  </div>
-                </small>
-              </div>
-              <div v-else class="mt-2">
-                <small class="text-muted">Not assigned</small>
-              </div>
-            </div>
-        </template>
-    </b-table>
+  <div class="step-four-container">
+    <b-alert show variant="info" v-if="isLoading">
+      {{ $t('camelot.step_four.loading') }}
+    </b-alert>
+    <div v-else>
+      <camelot-step-four-header :responses="ui.responses" :export-fields="exportFields" :export-items="exportItems" />
 
-    <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
+      <camelot-step-four-table :fields="ui.fields" :items="tableItems" :responses="ui.responses"
+        :active-ref-locks="activeRefLocks" :can-edit="canEdit" @open-modal="onOpenModal" />
+    </div>
+
+    <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
+      footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc
+      @hide="onAssessmentModalHide" @hidden="onAssessmentModalClosed">
+      <template #modal-title>
+        <div class="modal-title-container">
+          <div class="modal-breadcrumb">
+            {{ $t('camelot.step_four.breadcrumb_main') }} &gt;
+            {{ $t('camelot.step_four.breadcrumb_sub') }} &gt;
+            <span class="text-white">{{ ui.authors }}</span>
+          </div>
+          <div class="modal-main-title mt-1 d-flex align-items-center">
+            {{ modalSubtitle }}
+            <font-awesome-icon icon="info-circle" class="ml-2 cursor-pointer" style="font-size: 1.2rem;"
+              v-b-toggle.sidebar-section-help />
+          </div>
+        </div>
+      </template>
+
       <b-row>
-        <b-col cols="12" class="modal-body">
-          <b-tabs nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
-            <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center modal-author"><b>{{ ui.authors }}</b></li>
-            </template>
-            <b-tab title-item-class="align-self-center" :title-link-class="modal.stage === 0 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Meta domains and <br/>Research design
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Meta domains and Research design</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="4">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Meta domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-aa', 0)">1 - Research</h4>
-                    </div>
-                    <b-collapse id="accordion-aa" visible accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[0]['research_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ab', 1)">2 - Stakeholders</h4>
-                    </div>
-                    <b-collapse id="accordion-ab" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ac', 2)">3 - Researchers</h4>
-                    </div>
-                    <b-collapse id="accordion-ac" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[2]['researchers_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ad', 3)">4 - Context</h4>
-                    </div>
-                    <b-collapse id="accordion-ad" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[3]['context_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Research design domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ae>1 - Research strategy</h4>
-                    </div>
-                    <b-collapse id="accordion-ae" visible accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[0]['strategy_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-af>2 - Ethical considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-af" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[1]['ethical_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ag>3 - Equity, diversity & inclusion considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-ag" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[2]['equity_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ah>4 - Theory</h4>
-                    </div>
-                    <b-collapse id="accordion-ah" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[3]['theory_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-              </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 1 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Meta domains and <br/>Research conduct
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Meta domains and Research conduct</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="4">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Meta domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ba', 0)">1 - Research</h4>
-                    </div>
-                    <b-collapse id="accordion-ba" visible accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[0]['research_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bb', 1)">2 - Stakeholders</h4>
-                    </div>
-                    <b-collapse id="accordion-bb" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bc', 2)">3 - Researchers</h4>
-                    </div>
-                    <b-collapse id="accordion-bc" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[2]['researchers_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bd', 3)">4 - Context</h4>
-                    </div>
-                    <b-collapse id="accordion-bd" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[3]['context_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Research conduct domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-be>1 - Participant recruitment & selection</h4>
-                    </div>
-                    <b-collapse id="accordion-be" visible accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[0]['participant_concerns'] }}
-                    </b-collapse>
+        <b-col cols="12" class="camelot-modal-body">
+          <InactivityWarning
+            :visible="inactivityWarning"
+            :seconds-left="inactivitySecondsLeft"
+            @keep-working="keepWorkingOnInactivity" />
+          <!--
+            Un solo aviso para los campos del estudio, y no uno por tarjeta: son ocho y
+            dirían todos lo mismo. Sin esto los campos se cerraban en silencio — la
+            tarjeta sólo esconde su botón Edit, así que la persona no tenía forma de
+            saber que había alguien del otro lado.
+          -->
+          <b-alert v-if="studyFieldsBlocked" show variant="warning" class="mb-3"
+            data-testid="study-fields-readonly-notice">
+            <font-awesome-icon icon="lock" class="mr-1" />
+            {{ studyFieldsBlockedBy
+              ? $t('lock.study_fields_locked_by', { user: studyFieldsBlockedBy })
+              : $t('lock.study_fields_locked_no_user') }}
+          </b-alert>
+          <template v-if="modal.stage < 2">
+            <b-row>
+              <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
+              <b-col cols="4" class="modal-column-scroll">
+                <div class="column-header mb-3">
+                  <h3>{{ modal.stage === 0 ? $t('camelot.step_four.sections.research_design') :
+                    $t('camelot.step_four.sections.research_conduct') }}</h3>
+                </div>
+                <div>
+                  <camelot-assessment-card v-for="(item, iIndex) in (modal.stage === 0 ? meta[1] : meta[2]).items"
+                    :key="iIndex" :meta-index="modal.stage === 0 ? 1 : 2" :item-index="iIndex"
+                    :label="getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex)"
+                    :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
+                    :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
+                    :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
+                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId"
+                    @start-editing="onStartEditing"
+                    @cancel-editing="onCancelEditing" @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
+                </div>
+              </b-col>
 
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bf>2 - Data collection</h4>
-                    </div>
-                    <b-collapse id="accordion-bf" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[1]['data_concerns'] }}
-                    </b-collapse>
+              <!-- Columna 2: Navigation and Dynamic content -->
+              <b-col cols="8">
+                <div id="navegacion">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
+                  </div>
+                  <!-- `activate-tab` es cancelable: es el único punto donde se puede frenar
+                       el cambio de pestaña antes de que ocurra. Al cancelarlo, bootstrap-vue
+                       revierte el v-model por su cuenta. -->
+                  <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs nav-fill" align="right"
+                    @input="selectedMeta = $event" @activate-tab="onActivateTab">
+                    <b-tab v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex"
+                      :title-link-class="modal.tab === dIndex ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']"
+                      class="border p-2" style="border-color: #848E98 !important;">
+                      <template #title>
+                        <div class="d-flex align-items-center justify-content-center">
+                          <!-- El mismo círculo de tres estados que la grilla, y por el mismo
+                               criterio: un juicio sin explicación no está terminado, pero
+                               conserva su color porque el nivel ya se eligió. -->
+                          <assessment-circle class="mr-2" :stage="modal.stage" :option-index="dIndex"
+                            :item="assessments.items && assessments.items[modal.index]"
+                            :responses="ui.responses" />
+                          {{ domain.label }}
+                        </div>
+                      </template>
+                      <b-row class="mt-1">
+                        <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
+                        <b-col cols="6" class="modal-column-scroll 00000">
+                          <camelot-assessment-card :meta-index="0" :item-index="dIndex" :label="domain.label"
+                            :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
+                            :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
+                            :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
+                            :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                            @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
+                        </b-col>
 
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bg>3 - Analysis and interpretation</h4>
-                    </div>
-                    <b-collapse id="accordion-bg" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[2]['analysis_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bh>4 - Presentation of findings</h4>
-                    </div>
-                    <b-collapse id="accordion-bh" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[3]['presentation_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-              </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 2 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Research design and <br/>Research conduct
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Research design and Research conduct</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="4">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Research design domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ca>1 - Research strategy</h4>
-                    </div>
-                    <b-collapse id="accordion-ca" visible accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[0]['strategy_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cb>2 - Ethical considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-cb" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[1]['ethical_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cc>3 - Equity, diversity & inclusion considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-cc" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[2]['equity_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cd>4 - Theory</h4>
-                    </div>
-                    <b-collapse id="accordion-cd" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[3]['theory_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <div>
-                      <h3>Research conduct domains</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ce>1 - Participant recruitment & selection</h4>
-                      </div>
-                      <b-collapse id="accordion-ce" visible accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[0]['participant_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cf>2 - Data collection</h4>
-                      </div>
-                      <b-collapse id="accordion-cf" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[1]['data_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cg>3 - Analysis and interpretation</h4>
-                      </div>
-                      <b-collapse id="accordion-cg" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[2]['analysis_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ch>4 - Presentation of findings</h4>
-                      </div>
-                      <b-collapse id="accordion-ch" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[3]['presentation_concerns'] }}
-                      </b-collapse>
-                    </div>
-                  </div>
-                </b-col>
-              </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 3 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']" title-item-class="align-self-end">
-              <template #title>
-                Overall assessment
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Overall assessment</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="3">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="3">
-                  <div>
-                    <h3>Fit between Research design and each Meta domain</h3>
-                  </div>
-                  <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-da>1 - Research</h4>
-                      </div>
-                      <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[0].options[0].option"
-                            :text="assessments.items[modal.index].stages[0].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-db>2 - Stakeholders</h4>
-                      </div>
-                      <b-collapse id="accordion-db" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="1"
-                            :option="assessments.items[modal.index].stages[0].options[1].option"
-                            :text="assessments.items[modal.index].stages[0].options[1].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dc>3 - Researchers</h4>
-                      </div>
-                      <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="2"
-                            :option="assessments.items[modal.index].stages[0].options[2].option"
-                            :text="assessments.items[modal.index].stages[0].options[2].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dd>4 - Context</h4>
-                      </div>
-                      <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="3"
-                            :option="assessments.items[modal.index].stages[0].options[3].option"
-                            :text="assessments.items[modal.index].stages[0].options[3].text"></responses>
-                        </template>
-                      </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="3">
-                  <div>
-                    <div>
-                      <h3>Fit between Research conduct and each Meta domain</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-de>Research strategy</h4>
-                      </div>
-                      <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[1].options[0].option"
-                            :text="assessments.items[modal.index].stages[1].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-df>Ethical considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-df" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="1"
-                            :option="assessments.items[modal.index].stages[1].options[1].option"
-                            :text="assessments.items[modal.index].stages[1].options[1].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dg>Equity, diversity & inclusion  considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="2"
-                            :option="assessments.items[modal.index].stages[1].options[2].option"
-                            :text="assessments.items[modal.index].stages[1].options[2].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dh>Theory</h4>
-                      </div>
-                      <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="3"
-                            :option="assessments.items[modal.index].stages[1].options[3].option"
-                            :text="assessments.items[modal.index].stages[1].options[3].text"></responses>
-                        </template>
-                      </b-collapse>
-                    </div>
-                  </div>
-                </b-col>
-                <b-col cols="3">
-                  <div>
-                    <div>
-                      <h3>Fit between Research design and Research conduct domains</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-di>Fit assessment</h4>
-                      </div>
-                      <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="2"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[2].options[0].option"
-                            :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                    </div>
+                        <!-- Columna 2.2: Assessment Evaluation -->
+                        <b-col cols="6">
+                          <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
+                            :refId="refId" :modalIndex="modal.index"
+                            :is-read-only="isCellReadOnly(modal.stage, dIndex)"
+                            :locked-by-user="cellLockedBy(modal.stage, dIndex)"
+                            @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                            @option-saved="onAssessmentOptionSaved"
+                            @getAssessments="getAssessments"></assessmentForm>
+                        </b-col>
+                      </b-row>
+                    </b-tab>
+                  </b-tabs>
+                </div>
+              </b-col>
+            </b-row>
+          </template>
 
+          <template v-else-if="modal.stage === 2">
+            <div>
+              <b-row>
+                <!-- Columna 1: Research Design -->
+                <b-col cols="4" class="modal-column-scroll">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
+                  </div>
+                  <div>
+                    <camelot-assessment-card v-for="(item, iIndex) in meta[1].items" :key="iIndex" :meta-index="1"
+                      :item-index="iIndex" :label="getMetaItemLabel(1, iIndex)"
+                      :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
+                      :concerns="meta[1].values[iIndex][item + 'comments']"
+                      :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
+
+                <!-- Columna 2: Research Conduct -->
+                <b-col cols="4" class="modal-column-scroll">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
+                  </div>
+                  <div>
+                    <camelot-assessment-card v-for="(item, iIndex) in meta[2].items" :key="iIndex" :meta-index="2"
+                      :item-index="iIndex" :label="getMetaItemLabel(2, iIndex)"
+                      :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
+                      :concerns="meta[2].values[iIndex][item + 'comments']"
+                      :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
+                  </div>
+                </b-col>
+
+                <!-- Columna 3: Assessment Evaluation -->
+                <b-col cols="4">
+                  <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
+                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
+                    :locked-by-user="cellLockedBy(2, 0)"
+                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
+                </b-col>
               </b-row>
-            </b-tab>
-          </b-tabs>
+            </div>
+          </template>
+
+          <template v-else-if="modal.stage === 3">
+            <div class="mt-4">
+              <b-row class="mt-4">
+                <!-- Columna 1: Fit Design vs Meta Resumen -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <!-- <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
+                  </div> -->
+                  <div>
+                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
+                      header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 1">{{
+                            $t('camelot.step_four.sections.fa' + (dIndex + 1)) }}</b-tooltip>
+                        </div>
+                      </template>
+                      <div class="field-section" v-if="assessments.items.length">
+                        <responses :stage="0" :index="dIndex"
+                          :option="assessments.items[modal.index].stages[0].options[dIndex].option"
+                          :text="assessments.items[modal.index].stages[0].options[dIndex].text"></responses>
+                      </div>
+                    </b-card>
+                  </div>
+                </b-col>
+
+                <!-- Columna 2: Fit Conduct vs Meta Resumen -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <!-- <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
+                  </div> -->
+                  <div>
+                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
+                      header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 5">{{
+                            $t('camelot.step_four.sections.fa' + (dIndex + 5)) }}</b-tooltip>
+                        </div>
+                      </template>
+                      <div class="field-section" v-if="assessments.items.length">
+                        <responses :stage="1" :index="dIndex"
+                          :option="assessments.items[modal.index].stages[1].options[dIndex].option"
+                          :text="assessments.items[modal.index].stages[1].options[dIndex].text"></responses>
+                      </div>
+                    </b-card>
+                  </div>
+                </b-col>
+
+                <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <b-card class="mb-3 item-card" header-tag="header">
+                    <template #header>
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 id="fa9" class="mb-0">FA9</h4>
+                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
+                          }}</b-tooltip>
+                      </div>
+                    </template>
+                    <div class="p-1">
+                      <responses v-if="assessments.items.length" :stage="2" :index="0"
+                        :option="assessments.items[modal.index].stages[2].options[0].option"
+                        :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                    </div>
+                  </b-card>
+                </b-col>
+
+                <!-- Columna 4: Evaluación de ajuste final -->
+                <b-col cols="3" class="">
+                  <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
+                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
+                    :locked-by-user="cellLockedBy(3, 0)"
+                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
+                </b-col>
+              </b-row>
+            </div>
+          </template>
         </b-col>
       </b-row>
+
+      <template #modal-footer>
+        <div class="w-100 d-flex justify-content-between align-items-end px-3">
+          <div v-if="modal.stage > 0" @click="goToStage(modal.stage - 1)" class="nav-footer-link">
+            &lt; {{ getStageTitle(modal.stage - 1) }}
+          </div>
+          <div v-else></div>
+
+          <!-- La tercera puerta a la OA: desde FA 9 se llega en un click, sin pasar por
+               la grilla. Queda visible pero inerte — sacarlo dejaría la etapa 2 sin salida
+               aparente y sin ningún lugar donde contar qué falta. Es un `div`, así que el
+               tooltip se monta sin el wrapper que necesitan los botones `disabled`. -->
+          <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link"
+            :class="{ 'nav-footer-link-blocked': nextStageBlocked }"
+            v-b-tooltip.hover :title="nextStageBlocked ? $t('camelot.step_four.oa_gate.blocked') : ''"
+            data-testid="footer-next-stage">
+            {{ getStageTitle(modal.stage + 1) }} &gt;
+          </div>
+          <div v-else @click="requestModalClose" class="nav-footer-link">
+            {{ $t('common.close') }}
+          </div>
+        </div>
+      </template>
     </b-modal>
+
+    <!--
+      El mismo cartel que el botón *Save* levanta desde el formulario, pero acá arriba: quien
+      decide si la pestaña cambia, si la etapa cambia o si el modal se cierra es este
+      componente, y las tres salidas esquivaban el aviso. Reusa las claves i18n que ya existen
+      para esa advertencia; el texto tiene que ser el mismo porque la decisión es la misma.
+    -->
+    <b-modal id="explanation-guard-modal" :title="$t('common.warning')" :hide-footer="true"
+      :return-focus="explanationGuardReturnFocus"
+      data-testid="explanation-guard-modal" @hidden="onExplanationGuardHidden">
+      <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
+      <b-container>
+        <b-row align-h="between">
+          <b-col cols="4">
+            <b-button block @click="explanationGuardDoItNow">
+              {{ $t('worksheet.actions.do_it_now') }}
+            </b-button>
+          </b-col>
+          <b-col cols="4">
+            <b-button block @click="explanationGuardDoItLater">
+              {{ $t('worksheet.actions.do_it_later') }}
+            </b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
+
+    <!--
+      La OA se emite "tomando en consideración" los nueve FA. Cambiar uno después la deja
+      apoyada en una premisa vencida, y nada en la pantalla lo delata: la celda de la OA
+      sigue verde. El cartel no bloquea nada — el FA ya se guardó — porque quien decide si
+      la conclusión global sigue en pie es la persona, no nosotros.
+    -->
+    <b-modal id="oa-reminder-modal" :title="$t('camelot.step_four.oa_reminder.title')"
+      ok-only :ok-title="$t('common.ok')" data-testid="oa-reminder-modal">
+      <p class="mb-0">{{ $t('camelot.step_four.oa_reminder.body') }}</p>
+    </b-modal>
+
+    <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
+      <div class="px-4 py-3" v-html="helpContent[modal.stage]">
+      </div>
+    </b-sidebar>
+
+    <RefLockConflictModal
+      ref="conflictModal"
+      :locked-by="conflictLockedBy"
+      :failed-data="conflictData || {}"
+      :ref-id="conflictRefId"
+      :source="conflictSource"
+      @closed="clearConflict"
+    />
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
+import { isLockRejection } from '@/utils/lockErrors'
+import {
+  ASSESSMENT_CELLS,
+  baseRefOf,
+  emptyAssessmentItem,
+  isLeafComplete,
+  isOverallAssessmentBlocked,
+  leafLockKey,
+  OVERALL_ASSESSMENT,
+  leafPositionOf
+} from '@/utils/camelotAssessmentKeys'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
 import Responses from './Responses.vue'
+import CamelotAssessmentCard from './CamelotAssessmentCard.vue'
+import CamelotStepFourTable from './CamelotStepFourTable.vue'
+import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
+import AssessmentCircle from './AssessmentCircle.vue'
+import RefLockConflictModal from './RefLockConflictModal.vue'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import { requestPendingEditsFlush } from '@/mixins/pendingEditsMixin'
+import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'StepFour',
+  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin],
   props: {
     type: {
       type: String,
@@ -583,189 +369,395 @@ export default {
     references: {
       type: Array,
       required: true
+    },
+    canEdit: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
-    AssessmentForm, Responses
+    AssessmentForm,
+    Responses,
+    CamelotAssessmentCard,
+    CamelotStepFourTable,
+    CamelotStepFourHeader,
+    AssessmentCircle,
+    RefLockConflictModal,
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
   data () {
+    const headerClass = 'header-second-row'
+    const overallHeaderClass = 'header-overall-row'
+
     return {
-      // Define any local data properties here if needed
+      isLoading: false,
       ui: {
         fields: [
-          { key: 'authors', label: 'Study' },
-          { key: 'stepOne', label: 'Fit between Meta domains and Research design' },
-          { key: 'stepTwo', label: 'Fit between Meta domains and Research conduct' },
-          { key: 'stepThree', label: 'Fit between Research design and Research conduct' },
-          { key: 'stepFour', label: 'Overall assessment' }
+          { key: 'authors', label: this.$t('camelot.step_four.fit_assessments'), thClass: headerClass, tdClass: 'border-right' },
+          // Group 1
+          { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa3', label: 'FA 3', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa4', label: 'FA 4', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit1', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 2
+          { key: 'fa5', label: 'FA 5', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa6', label: 'FA 6', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa7', label: 'FA 7', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa8', label: 'FA 8', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit2', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 3
+          { key: 'fa9', label: 'FA 9', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit3', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 4 (OA)
+          { key: 'oa', label: 'OA', thClass: overallHeaderClass, tdClass: 'assessment-col' },
+          { key: 'edit4', label: '', thClass: overallHeaderClass }
         ],
         authors: '',
+        domainTabs: [
+          { key: 'research', label: this.$t('camelot.step_four.meta_items.research') },
+          { key: 'stakeholders', label: this.$t('camelot.step_four.meta_items.stakeholders') },
+          { key: 'researchers', label: this.$t('camelot.step_four.meta_items.researchers') },
+          { key: 'context', label: this.$t('camelot.step_four.meta_items.context') }
+        ],
         responses: [
-          { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-          { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-          { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-          { text: 'Serious concerns', value: 'D', color: '#B31529' },
-          { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+          { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+          { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+          { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+          { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+          { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
         ]
       },
-      characteristics: [],
+      characteristics: {
+        items: []
+      },
       assessments: {
-        items: [
-          {
-            ref_id: null,
-            stages: [
-              {
-                key: 0,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 1,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 2,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 3,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        items: []
       },
+      // Una sola vez por estudio abierto. Un booleano y no un Set por ref_id: hay un solo
+      // estudio abierto a la vez, y `openModal` es el punto por el que pasa cada cambio.
+      oaReminderShown: false,
+      activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
+      refLocksTimer: null,
+      isRefReadOnly: false, // lock state for the study currently open in the modal
+      // Study fields (isoqf_characteristics, endpoint B) are governed apart from the
+      // cells: their lock is the bare study, which clashes with ANY cell of it. So a
+      // single cell held by someone else closes the fields without closing the other
+      // nine cells.
+      studyFieldsReadOnly: false,
+      studyFieldsLockedBy: null,
+      holdsStudyLock: false,
+      refLockedBy: null,
+      isModalOpen: false,
+      // Cells whose lock we asked for and did not get, as 'stage-option' keys.
+      // Kept apart from the ones the /refs poll reports so a poll never erases
+      // a refusal we just received.
+      // Posición 'stage-option' -> quién la tiene. Es un Map y no un array de
+      // posiciones porque el nombre del titular es justamente lo que hay que mostrar:
+      // un cartel que dice "solo lectura" sin decir quién está del otro lado no le
+      // sirve a nadie para coordinarse. Se reemplaza entero en cada cambio (Vue 2 no
+      // observa el interior de un Map).
+      deniedCellHolders: new Map(),
+      // "Lo tuve y lo perdí" no es lo mismo que "nunca lo tomé". El sondeo sólo ve los
+      // locks AJENOS, así que un lock propio que caducó (pestaña throttleada, sin que
+      // nadie lo tomara) deja el listado vacío y devolvería los campos como editables —
+      // hasta que el 409 `lock_not_held` lo desmienta, porque el backend exige tenencia,
+      // no sólo ausencia de otro. Este flag sobrevive al recálculo del sondeo.
+      studyLockLost: false,
+      // Celdas con un juicio elegido y sin explicación, como claves 'stage-meta'. El dato
+      // lo empujan los AssessmentForm por evento: viven detrás de `b-tabs` + `v-for` dentro
+      // de un `v-if` por etapa, donde `$refs` no llega (ver `pendingEditsMixin`).
+      incompleteCells: {},
+      // La salida que el aviso dejó en suspenso, a ejecutar si eligen "más tarde".
+      pendingNavigation: null,
+      // La celda a la que lleva "hacerlo ahora", y el textarea que hay que enfocar una vez
+      // que el aviso terminó de cerrarse.
+      explanationGuardFocusMeta: null,
+      pendingFocusId: null,
+      // Exenciones de un solo uso: la navegación que el propio aviso autoriza vuelve a
+      // disparar el evento que se interceptó, y sin esto el guard se frenaría a sí mismo.
+      bypassTabGuard: false,
+      bypassCloseGuard: false,
+      // Ver el comentario gemelo en EditReferenceModal: el 409 de un guardado en vuelo
+      // llega después del cierre, cuando refId ya no sirve para reconocerlo.
+      pendingConflictRefId: '',
+      // "Cerrá el modal pero NO sueltes los locks": lo usa el caso de la otra pestaña de
+      // la misma persona. Sin esto, el @hidden llama a onAssessmentModalClosed y le saca
+      // el estudio a quien está escribiendo del otro lado.
+      skipReleaseOnClose: false,
+      conflictData: null,
+      conflictLockedBy: '',
+      conflictRefId: '',
+      // Decides the modal's wording: a live 409 must not be explained as an offline sync.
+      conflictSource: 'live',
       selected: null,
       text1: '',
       modal: {
         stage: 0,
-        index: 0
+        index: 0,
+        tab: 0,
+        faLabel: null
       },
       meta: [
         {
-          name: 'Meta Domains',
+          name: this.$t('camelot.step_four.sections.meta_domains'),
           items: ['research_', 'stakeholders_', 'researchers_', 'context_'],
           values: [
             {
               research_extractedData: '',
-              research_concerns: ''
+              research_comments: ''
             },
             {
               stakeholders_extractedData: '',
-              stakeholders_concerns: ''
+              stakeholders_comments: ''
             },
             {
               researchers_extractedData: '',
-              researchers_concerns: ''
+              researchers_comments: ''
             },
             {
               context_extractedData: '',
-              context_concerns: ''
+              context_comments: ''
             }
           ]
         },
         {
-          name: 'Research design domains',
+          name: this.$t('camelot.step_four.sections.research_design'),
           items: ['strategy_', 'ethical_', 'equity_', 'theory_'],
           values: [
             {
               strategy_extractedData: '',
-              strategy_concerns: ''
+              strategy_comments: ''
             },
             {
               ethical_extractedData: '',
-              ethical_concerns: ''
+              ethical_comments: ''
             },
             {
               equity_extractedData: '',
-              equity_concerns: ''
+              equity_comments: ''
             },
             {
               theory_extractedData: '',
-              theory_concerns: ''
+              theory_comments: ''
             }
           ]
         },
         {
-          name: 'Research conduct',
+          name: this.$t('camelot.step_four.sections.research_conduct'),
           items: ['participant_', 'data_', 'analysis_', 'presentation_'],
           values: [
             {
               participant_extractedData: '',
-              participant_concerns: ''
+              participant_comments: ''
             },
             {
               data_extractedData: '',
-              data_concerns: ''
+              data_comments: ''
             },
             {
               analysis_extractedData: '',
-              analysis_concerns: ''
+              analysis_comments: ''
             },
             {
               presentation_extractedData: '',
-              presentation_concerns: ''
+              presentation_comments: ''
             }
           ]
         }
       ],
       selectedMeta: 0,
-      refId: null
+      refId: null,
+      editingField: {
+        metaIndex: null,
+        itemIndex: null,
+        type: null
+      },
+      editValueExtracted: '',
+      editValueComments: '',
+      isSavingField: false,
+      showLegend: false
+    }
+  },
+  mounted () {
+    // Polling de locks activos por estudio (colaboración simultánea)
+    this.startRefLocksPolling()
+    // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
+    window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    // Without this the open modal only learned the lock was gone when a save came
+    // back 409 — the user kept filling in an assessment that could no longer be saved.
+    window.addEventListener('ref-lock-lost', this.handleRefLockLost)
+  },
+  beforeDestroy () {
+    this.stopRefLocksPolling()
+    window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    window.removeEventListener('ref-lock-lost', this.handleRefLockLost)
+    LockService.releaseRef()
+  },
+  computed: {
+    helpContent () {
+      return {
+        0: this.$t('camelot.step_four.help_modal.0'),
+        1: this.$t('camelot.step_four.help_modal.1'),
+        2: this.$t('camelot.step_four.help_modal.2'),
+        3: this.$t('camelot.step_four.help_modal.3')
+      }
+    },
+    exportFields () {
+      return [
+        { key: 'authors', label: 'Author(s), Year' },
+        ...ASSESSMENT_CELLS.map(cell => ({ key: cell.key, label: cell.key.toUpperCase() }))
+      ]
+    },
+    exportItems () {
+      return this.tableItems.map(item => {
+        const getVal = (stageIdx, optIdx) => {
+          if (!item.stages || !item.stages[stageIdx] || !item.stages[stageIdx].options[optIdx]) return ''
+          const opt = item.stages[stageIdx].options[optIdx]
+          if (!opt.option && !opt.text) return ''
+          let result = ''
+          if (opt.option) {
+            const response = this.ui.responses.find(r => r.value === opt.option)
+            result += response ? response.text : opt.option
+          }
+          if (opt.text) {
+            result += (result ? ', explanation: ' : 'explanation: ') + opt.text
+          }
+          return result
+        }
+
+        return ASSESSMENT_CELLS.reduce(
+          (row, cell) => ({ ...row, [cell.key]: getVal(cell.stage, cell.option) }),
+          { authors: item.authors }
+        )
+      })
+    },
+    tableItems () {
+      if (!this.assessments.items) return []
+      return this.assessments.items.map(item => {
+        const ref = this.references.find(r => String(r.id) === String(item.ref_id))
+        if (ref) {
+          return {
+            ...ref,
+            ...item,
+            // Force re-formatting authors for consistency with Step 3 and the fix
+            authors: Commons.parseReference(ref, true, false)
+          }
+        }
+        return item
+      })
+    },
+    modalSubtitle () {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      const title = this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
+      return this.modal.faLabel ? `${this.modal.faLabel} ${title}` : title
+    },
+    // The cell the modal currently has open, as its composite lock key.
+    activeLeafRef () {
+      return leafLockKey(this.refId, this.modal.stage, this.selectedMeta)
+    },
+    /**
+     * Los campos del estudio (endpoint B, que reescribe el ítem COMPLETO) están cerrados
+     * si el estudio entero es de solo lectura O si alguien tiene una de sus celdas.
+     * Deliberadamente NO se toca `isCellReadOnly`: una celda ajena cierra estos campos
+     * pero deja las otras nueve celdas editables, que es la granularidad que el endpoint
+     * D vino a habilitar. Fusionar los dos conceptos reintroduce el bloqueo que se sacó.
+     */
+    studyFieldsBlocked () {
+      return this.isRefReadOnly || this.studyFieldsReadOnly
+    },
+    /** Quién cierra los campos del estudio, para poder nombrarlo en el aviso. */
+    studyFieldsBlockedBy () {
+      return this.studyFieldsLockedBy || this.refLockedBy || null
+    },
+    /**
+     * Las celdas de la etapa abierta que frenan una salida. Se derivan de las claves que
+     * los formularios montados reportaron —los de otras etapas se dieron de baja al
+     * destruirse—, así que no hay que saber cuántas pestañas tiene cada etapa.
+     *
+     * Las celdas en solo lectura quedan fuera a propósito: exigir una explicación que la
+     * persona no puede escribir sería un callejón sin salida.
+     */
+    incompleteMetasInStage () {
+      const prefix = `${this.modal.stage}-`
+      return Object.keys(this.incompleteCells)
+        .filter(key => key.startsWith(prefix) && this.incompleteCells[key])
+        .map(key => Number(key.slice(prefix.length)))
+        .filter(meta => !this.isCellReadOnly(this.modal.stage, meta))
+        .sort((a, b) => a - b)
+    },
+    /**
+     * La celda que la persona tiene delante. Es el alcance de todas las salidas: el aviso
+     * habla de lo que se está mirando, no del grupo entero.
+     *
+     * Sólo las etapas 0 y 1 tienen pestañas. Las 2 y 3 montan su único formulario con
+     * `:selectedMeta="0"` fijo, y ahí `modal.tab` puede traer un valor viejo: `openModal` lo
+     * asigna crudo del argumento que le pasa la grilla y el watcher de `modal.stage` sólo
+     * resetea `selectedMeta`. Devolver `modal.tab` a secas hace que en el OA se busque una
+     * clave como `3-2`, que nunca existe, y el aviso desaparece justo donde no hay pestañas
+     * de las que hablar. El corte por etapa es el mismo que usan el template y
+     * `explanationGuardDoItNow`.
+     */
+    activeMeta () {
+      return this.modal.stage < 2 ? this.modal.tab : 0
+    },
+    /** ¿La celda visible es la que frena una salida? */
+    activeCellIsIncomplete () {
+      return this.incompleteMetasInStage.includes(this.activeMeta)
+    },
+    /**
+     * A quién le devuelve el foco el aviso al cerrarse, como el selector CSS que espera
+     * bootstrap-vue. Su prop `return-focus` GANA sobre el elemento que capturó al abrirse
+     * (`returnFocusTo()`, modal.js), así que pedírselo es más barato que pelearle: lo aplica
+     * en su `onAfterLeave`, el único momento en que ya nadie va a pisar el cursor.
+     */
+    explanationGuardReturnFocus () {
+      return this.pendingFocusId ? `#${this.pendingFocusId}` : null
+    },
+    // Cells of the open study that the /refs poll shows held by someone else.
+    // Disabling them up front is the whole point of the listing: the user finds
+    // out before typing, not when the save is rejected.
+    pollBlockedCellHolders () {
+      if (!this.isModalOpen || !this.refId) return new Map()
+      const { lockedLeaves } = this.studyLockStateOf(this.refId)
+      // lockedLeaves ya viene como clave-de-hoja -> titular; sólo hay que traducir la
+      // clave a la posición con la que el template indexa las celdas.
+      return new Map(
+        [...lockedLeaves.entries()]
+          .map(([key, holder]) => [leafPositionOf(key), holder])
+          .filter(([position]) => position)
+      )
+    },
+    /** El estudio que el modal tiene abierto, o null si todavía no cargó. */
+    openStudy () {
+      const items = this.assessments.items
+      return (items && items[this.modal.index]) || null
+    },
+    /**
+     * Misma regla y mismo util que la grilla. Si cada puerta se contestara sola, una te
+     * dejaría entrar donde la otra te frenó.
+     */
+    overallAssessmentBlocked () {
+      return this.canEdit && isOverallAssessmentBlocked(this.openStudy)
+    },
+    /** Lo que el link del pie necesita saber: sólo desde FA 9 el siguiente paso es la OA. */
+    nextStageBlocked () {
+      return this.modal.stage + 1 === OVERALL_ASSESSMENT.stage && this.overallAssessmentBlocked
     }
   },
   watch: {
-    // Watch for changes in props or data if needed
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
     },
-    assessments: {
-      handler (newVal) {
-        this.isCompleted()
-      },
-      deep: true
+    activeLeafRef (newKey, oldKey) {
+      this.syncLeafLock(newKey, oldKey)
     },
     references: {
       handler (newVal) {
@@ -774,72 +766,414 @@ export default {
       immediate: true
     }
   },
-  computed: {
-    // Define any computed properties here if needed
-  },
-  mounted () {
-    // Fetch data when the component is mounted
-    this.getAssessments()
-  },
   methods: {
-    // Define any methods here if needed
+    /**
+     * Un AssessmentForm reporta que un guardado MANUAL cambió el nivel A-E de su celda.
+     * El FA ya está escrito y no se toca: acá sólo se decide si hay que recordarle a la
+     * persona que su overall assessment quedó apoyada en una premisa que cambió.
+     *
+     * La decisión vive acá y no en el formulario por dos razones. La OA es otra celda, que
+     * el formulario del FA no conoce; y hay hasta seis instancias vivas a la vez detrás de
+     * `b-tabs`, así que un cartel decidido abajo tendría seis dueños. Mismo reparto que
+     * `incomplete-change`: el hijo reporta el hecho, el padre aplica la regla.
+     */
+    onAssessmentOptionSaved ({ stage }) {
+      // Guardar la OA no es motivo para pedir que se revise la OA.
+      if (stage === OVERALL_ASSESSMENT.stage) return
+      // Una vez por apertura del modal. Quien repasa los nueve FA de corrido no necesita
+      // nueve carteles: el segundo ya no se lee, y el primero deja de leerse por asociación.
+      if (this.oaReminderShown) return
+      const item = this.assessments.items ? this.assessments.items[this.modal.index] : null
+      // Sin OA emitida no hay nada que haya quedado desactualizado. `isLeafComplete` exige
+      // explicación además del juicio: una OA a medias todavía se está escribiendo.
+      if (!isLeafComplete(item, OVERALL_ASSESSMENT.stage, OVERALL_ASSESSMENT.option)) return
+      this.oaReminderShown = true
+      this.$bvModal.show('oa-reminder-modal')
+    },
+    /** Un AssessmentForm reporta si su celda quedó con un juicio sin explicar. */
+    onCellIncompleteChange ({ stage, meta, incomplete }) {
+      const key = `${stage}-${meta}`
+      if (incomplete) {
+        this.$set(this.incompleteCells, key, true)
+      } else {
+        this.$delete(this.incompleteCells, key)
+      }
+    },
+    /**
+     * Puerta única de las salidas del formulario. Si alguna de las celdas indicadas quedó
+     * incompleta, la acción se guarda y se muestra el aviso en vez de ejecutarla; sólo
+     * "más tarde" la libera.
+     *
+     * `metas` acota la pregunta y no tiene default a propósito: hoy TODAS las salidas
+     * preguntan sólo por la celda visible —reclamar por una pestaña completa, porque otra
+     * del grupo no lo está, es un aviso sobre algo que no está en pantalla—. Un alcance
+     * ancho se pide explícitamente pasando `this.incompleteMetasInStage`.
+     */
+    guardExplanation (action, metas) {
+      const blocking = metas.filter(meta => this.incompleteMetasInStage.includes(meta))
+      if (!blocking.length) {
+        action()
+        return
+      }
+      this.pendingNavigation = action
+      this.explanationGuardFocusMeta = blocking[0]
+      // Sin esto el aviso arrancaría con el destino de foco del ciclo anterior, que ya no
+      // tiene por qué ser la celda de la que estamos hablando ahora.
+      this.pendingFocusId = null
+      this.$bvModal.show('explanation-guard-modal')
+    },
+    /** Se queda donde está y deja el cursor en la explicación que falta. */
+    explanationGuardDoItNow () {
+      this.pendingNavigation = null
+      const meta = this.explanationGuardFocusMeta
+      this.explanationGuardFocusMeta = null
+      if (meta !== null) {
+        if (this.modal.stage < 2 && this.modal.tab !== meta) {
+          this.bypassTabGuard = true
+          this.modal.tab = meta
+          this.selectedMeta = meta
+        }
+        this.pendingFocusId = `assessment-explanation-${this.modal.stage}-${meta}`
+      }
+      this.$bvModal.hide('explanation-guard-modal')
+      this.scheduleExplanationFocus()
+    },
+    /**
+     * Insiste con el foco durante ~500 ms de frames, y no lo aplica una sola vez.
+     *
+     * Dos motivos independientes. Bootstrap-vue DEVUELVE el foco al cerrar el aviso, así
+     * que un `focus()` temprano queda pisado un instante después —medido en navegador: el
+     * cursor terminaba dentro del cartel ya cerrado, con el test de unidad en verde porque
+     * comprobaba la llamada y no dónde aterrizaba—. Y `hidden`, el evento que sí ocurre
+     * después de esa devolución, cuelga de `transitionend`, que esta base de código ya
+     * tiene documentado como poco confiable (ver `onInactivityExpired`): apostarle el
+     * único intento dejaría a "hacerlo ahora" sin efecto visible.
+     *
+     * Cede en cuanto el cursor llegó. Mismo patrón de reintento que `holdScrollPosition`.
+     */
+    scheduleExplanationFocus () {
+      if (typeof window === 'undefined' || !window.requestAnimationFrame) return
+      const deadline = Date.now() + 500
+      const tick = () => {
+        if (!this.applyPendingExplanationFocus() && Date.now() < deadline) {
+          window.requestAnimationFrame(tick)
+        }
+      }
+      window.requestAnimationFrame(tick)
+    },
+    /**
+     * Intenta una vez. Devuelve si el cursor YA está donde debe, que es cuándo el bucle de
+     * reintento puede parar — y no cuándo olvidar el destino, que son dos cosas distintas.
+     *
+     * Mezclarlas en una sola variable era el bug: el destino se borraba en el primer
+     * aterrizaje, bootstrap-vue devolvía el foco al botón después (su `returnFocusTo()`
+     * corre en `onAfterLeave`, más tarde que la ventana de 500 ms), y el respaldo del
+     * `hidden` se encontraba sin nada que reaplicar. Medido en navegador, con los tests de
+     * este archivo en verde. El destino lo limpian los resets: "más tarde", el cierre del
+     * modal y la apertura del propio aviso.
+     */
+    applyPendingExplanationFocus () {
+      const id = this.pendingFocusId
+      if (!id) return true
+      const el = document.getElementById(id)
+      if (!el) return false
+      el.focus()
+      return document.activeElement === el
+    },
+    /** El disparo normal: el aviso terminó de cerrarse y ya devolvió el foco. */
+    onExplanationGuardHidden () {
+      this.applyPendingExplanationFocus()
+    },
+    /**
+     * Libera la salida. El flush no es decorativo: el debounce de 1,5 s del formulario no
+     * sobrevive a un cambio de etapa ni al cierre, así que lo tipeado en el último segundo
+     * y medio se perdería justo en el camino que la persona eligió para irse.
+     */
+    explanationGuardDoItLater () {
+      this.$bvModal.hide('explanation-guard-modal')
+      const action = this.pendingNavigation
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
+      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      if (action) action()
+    },
+    /** Salida por pestaña. Sólo pregunta por la pestaña que se abandona. */
+    onActivateTab (newIndex, prevIndex, bvEvt) {
+      if (this.bypassTabGuard) {
+        this.bypassTabGuard = false
+        return
+      }
+      if (!this.incompleteMetasInStage.includes(prevIndex)) return
+      bvEvt.preventDefault()
+      this.guardExplanation(() => {
+        this.bypassTabGuard = true
+        this.modal.tab = newIndex
+        this.selectedMeta = newIndex
+      }, [prevIndex])
+    },
+    /** Salida por cierre pedido explícitamente: el link del pie y el Cancel del formulario. */
+    requestModalClose () {
+      this.guardExplanation(() => {
+        this.bypassCloseGuard = true
+        this.$bvModal.hide('modal-1')
+      }, [this.activeMeta])
+    },
+    /**
+     * Salida por la X de la cabecera. El filtro por `trigger` no es cosmético: los cierres
+     * PROGRAMÁTICOS —inactividad, pérdida de lock, la misma persona editando en otra
+     * pestaña— existen para SOLTAR los locks, y frenarlos dejaría el lock vivo del lado del
+     * servidor. Un arreglo de interfaz no puede costar eso, así que sólo se intercepta lo
+     * que inició una persona sobre este modal.
+     */
+    onAssessmentModalHide (bvEvt) {
+      if (this.bypassCloseGuard) return
+      if (!bvEvt || bvEvt.trigger !== 'headerclose') return
+      if (!this.activeCellIsIncomplete) return
+      bvEvt.preventDefault()
+      this.requestModalClose()
+    },
+    // True when THIS cell is off limits: either the whole study is read-only, or
+    // another user holds this particular leaf.
+    isCellReadOnly (stage, option) {
+      if (this.isRefReadOnly) return true
+      const position = `${stage}-${option}`
+      return this.pollBlockedCellHolders.has(position) ||
+        this.deniedCellHolders.has(position)
+    },
+    /**
+     * Quién tiene ESTA celda. El rechazo en vivo va primero: el sondeo tarda hasta 15 s,
+     * así que el camino real —hacer clic en una celda y recibir el 409— tendría que
+     * esperar ese ciclo entero para poder nombrar a nadie. El titular del estudio queda
+     * de último recurso: sólo aplica si nadie tiene la celda en particular.
+     */
+    cellLockedBy (stage, option) {
+      const position = `${stage}-${option}`
+      return this.deniedCellHolders.get(position) ||
+        this.pollBlockedCellHolders.get(position) ||
+        this.refLockedBy ||
+        null
+    },
+    /**
+     * Moves the leaf lock as the modal walks from cell to cell. The bare study
+     * lock stays put: it is what authorizes the Step 3 fields in the same modal.
+     */
+    async syncLeafLock (newKey, oldKey) {
+      if (oldKey) await LockService.releaseRef(oldKey)
+      if (!newKey || !this.isModalOpen || !this.canEdit) return
+
+      const result = await LockService.acquireRef(this.$route.params.id, newKey)
+      if (result.success) {
+        this.markCellDenied(this.modal.stage, this.selectedMeta, false)
+        return
+      }
+      this.onLeafLockDenied(result)
+    },
+    /** Adds or clears the read-only mark on one cell, remembering who holds it. */
+    markCellDenied (stage, option, denied = true, holder = null) {
+      const position = `${stage}-${option}`
+      const next = new Map(this.deniedCellHolders)
+      if (denied) next.set(position, holder)
+      else next.delete(position)
+      this.deniedCellHolders = next
+    },
+    /**
+     * The cell the user just moved to could not be locked. Note that a 409 here
+     * can also mean somebody holds the WHOLE study (the backend rejects the two
+     * granularities against each other), so `result.lockedBy` is the only
+     * reliable detail — the reason does not distinguish the two cases.
+     *
+     * @param {{ lockedBy?: string, permissionDenied?: boolean }} result
+     */
+    onLeafLockDenied (result) {
+      if (result.permissionDenied) {
+        // Not a conflict: this user's can_write was revoked, so nothing in the
+        // study is editable — the same conclusion acquireStudyLock reaches.
+        this.isRefReadOnly = true
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.permissions_revoked'))
+        }
+        return
+      }
+
+      const holder = result.lockedBy || null
+      this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder)
+      if (this.$notify) {
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
+      }
+    },
+    async fetchAndUpdateRefLocks () {
+      const locks = await LockService.fetchRefLocks(this.$route.params.id)
+      this.activeRefLocks = locks
+      // El caso real es que alguien tome una celda DESPUÉS de que abrimos: sin esto,
+      // studyFieldsReadOnly conserva la foto del instante de apertura y los campos del
+      // estudio se siguen ofreciendo editables hasta que un 409 lo desmienta.
+      if (this.isModalOpen) {
+        this.refreshStudyFieldsLockState(this.refId)
+        this.detectImpossibleLockState()
+      }
+      // Same 15s tick, one more question: did anybody else change this project?
+      this.checkProjectFreshness()
+    },
+    /**
+     * Detecta un estado que el backend no debería permitir: que otra persona tenga este
+     * estudio al mismo tiempo que nosotros.
+     *
+     * Es alcanzable y está medido: `find_conflicting_holder` corre ANTES del upsert
+     * atómico y fuera de él, así que dos usuarios que piden granularidades distintas del
+     * mismo estudio a la vez —`R1` y `R1::s1::o2`— pasan los dos, porque el índice único
+     * es `(project_id, ref_id)` y esas claves son distintas. Probado insertando ambos en
+     * Mongo: entran.
+     *
+     * No se puede cerrar desde acá; el arreglo real es del backend (meter la detección
+     * dentro de la operación atómica). Lo que sí se puede es no dejar que las dos personas
+     * sigan escribiendo: el sondeo lo descubre en ≤15 s y ahí degradamos a solo lectura.
+     */
+    detectImpossibleLockState () {
+      if (!this.refId || !LockService.refLocked) return
+      const state = this.studyLockStateOf(this.refId)
+      const holder = state.wholeStudyBlockedBy ||
+        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      if (!holder) return
+      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio.
+      this.isRefReadOnly = true
+      this.refLockedBy = holder
+      this.studyFieldsReadOnly = true
+      this.studyFieldsLockedBy = holder
+      if (this.$notify) {
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
+      }
+    },
+    /** What a refresh means here: the grid plus the study fields it shows. */
+    applyProjectRefresh: function () {
+      this.getAssessments()
+      this.getCharacteristics()
+    },
+    /** A reload while the modal is open would discard what the user is writing. */
+    hasOpenEditor: function () {
+      return this.isModalOpen
+    },
+    startRefLocksPolling () {
+      this.fetchAndUpdateRefLocks()
+      this.refLocksTimer = setInterval(() => this.fetchAndUpdateRefLocks(), 15000)
+    },
+    stopRefLocksPolling () {
+      if (this.refLocksTimer) clearInterval(this.refLocksTimer)
+      this.refLocksTimer = null
+    },
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
     },
+    getMetaItemLabel (metaIndex, itemIndex) {
+      if (metaIndex === 0) {
+        const keys = ['research', 'stakeholders', 'researchers', 'context']
+        return this.$t(`camelot.step_four.meta_items.${keys[itemIndex]}`)
+      } else if (metaIndex === 1) {
+        const keys = ['strategy', 'ethical', 'equity', 'theory']
+        return this.$t(`camelot.step_four.design_items.${keys[itemIndex]}`)
+      } else if (metaIndex === 2) {
+        const keys = ['participant', 'data', 'analysis', 'presentation']
+        return this.$t(`camelot.step_four.conduct_items.${keys[itemIndex]}`)
+      }
+      return ''
+    },
     getAssessments: function () {
+      if (!this.references.length) return
+      // `isLoading` esconde la tabla ENTERA detrás de una alerta de una línea: el
+      // documento se acorta y el navegador clampea al usuario al nuevo máximo. Hay que
+      // sostener la posición antes de encenderlo, no después. Punto único: por acá pasan
+      // el guardado de una celda, el cierre del modal y la recarga.
+      this.holdScrollPosition()
+      this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_assessments', { params })
+      Api.get('/isoqf_assessments', params)
         .then(response => {
           if (response.data.length) {
-            this.assessments = {...response.data[0]}
-            // Ordenar los items por autores alfabéticamente
-            if (this.assessments.items && this.assessments.items.length > 0) {
+            // Build a set of current reference IDs for fast lookup
+            const currentRefIds = new Set(this.references.map(r => String(r.id)))
+
+            // Count non-null votes in an item (used to prefer items with real data)
+            const countVotes = it => (it.stages || []).reduce(
+              (n, s) => n + (s.options || []).filter(o => o.option !== null).length, 0
+            )
+
+            // Collect items from ALL assessment documents, keeping only active references.
+            // When the same ref_id appears in multiple documents, prefer the one with more votes.
+            const itemsByRefId = new Map()
+            for (const doc of response.data) {
+              for (const item of (doc.items || [])) {
+                const key = String(item.ref_id)
+                if (!currentRefIds.has(key)) continue
+                const existing = itemsByRefId.get(key)
+                if (!existing || countVotes(item) > countVotes(existing)) {
+                  itemsByRefId.set(key, item)
+                }
+              }
+            }
+
+            // Use the document with the most matching items as the primary (its id is used for PATCH saves)
+            let primaryDoc = response.data[0]
+            let maxMatches = 0
+            for (const doc of response.data) {
+              const matches = (doc.items || []).filter(it => currentRefIds.has(String(it.ref_id))).length
+              if (matches > maxMatches) {
+                maxMatches = matches
+                primaryDoc = doc
+              }
+            }
+
+            this.assessments = {
+              ...primaryDoc,
+              items: JSON.parse(JSON.stringify(Array.from(itemsByRefId.values())))
+            }
+
+            // Sync references: add items for refs not yet in the assessment
+            this.references.forEach(ref => {
+              const exists = this.assessments.items.find(item => String(item.ref_id) === String(ref.id))
+              if (!exists) {
+                this.assessments.items.push(
+                  emptyAssessmentItem(ref.id, this.getReferenceData(ref))
+                )
+              }
+            })
+
+            if (this.assessments.items.length > 0) {
+              this.assessments.items = this.assessments.items.map(item => {
+                const ref = this.references.find(r => String(r.id) === String(item.ref_id))
+                if (ref) {
+                  item.authors = Commons.parseReference(ref, true, false)
+                }
+                return item
+              })
               this.assessments.items.sort((a, b) => {
-                const authorsA = a.authors || '';
-                const authorsB = b.authors || '';
-                return authorsA.localeCompare(authorsB);
-              });
+                const authorsA = a.authors || ''
+                const authorsB = b.authors || ''
+                return authorsA.localeCompare(authorsB)
+              })
             }
           } else {
-            // Crear items ordenados por autores
             const sortedReferences = [...this.references].sort((a, b) => {
-              const authorsA = this.getReferenceData(a) || '';
-              const authorsB = this.getReferenceData(b) || '';
-              return authorsA.localeCompare(authorsB);
-            });
+              const authorsA = this.getReferenceData(a) || ''
+              const authorsB = this.getReferenceData(b) || ''
+              return authorsA.localeCompare(authorsB)
+            })
 
-            // Inicializar con estructura vacía si no hay datos
             this.assessments = {
-              items: sortedReferences.map(ref => ({
-                ref_id: ref.id,
-                authors: this.getReferenceData(ref),
-                stages: [
-                  {
-                    key: 0,
-                    options: Array(4).fill({ option: null, text: '' })
-                  },
-                  {
-                    key: 1,
-                    options: Array(4).fill({ option: null, text: '' })
-                  },
-                  {
-                    key: 2,
-                    options: [{ option: null, text: '' }]
-                  },
-                  {
-                    key: 3,
-                    options: [{ option: null, text: '' }]
-                  }
-                ]
-              }))
+              items: sortedReferences.map(
+                ref => emptyAssessmentItem(ref.id, this.getReferenceData(ref))
+              )
             }
           }
         })
         .catch(error => {
           console.error('Error fetching Assessments data:', error)
+          this.$notify.error(this.$t('notifications.load_error'))
+        })
+        .finally(() => {
+          this.isLoading = false
         })
     },
     getCharacteristics: function () {
@@ -847,125 +1181,863 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_characteristics', { params })
+      Api.get('/isoqf_characteristics', params)
         .then(response => {
+          for (let y = 0; y < this.meta.length; y++) {
+            for (let z = 0; z < this.meta[y].items.length; z++) {
+              this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = ''
+              this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = ''
+            }
+          }
+
+          if (!response.data || !response.data.length) return
+
           const data = response.data[0]
           const items = data.items
 
-          for (let x = 0; x < items.length; x++) {
-            if (items[x].ref_id === this.refId) {
+          // Standardize authors to be strings instead of arrays
+          if (items && Array.isArray(items)) {
+            data.items = items.map(item => {
+              const ref = this.references.find(r => r.id === item.ref_id)
+              if (ref) {
+                item.authors = Commons.parseReference(ref, true, false)
+              }
+              return item
+            })
+          }
+
+          for (let x = 0; x < data.items.length; x++) {
+            if (data.items[x].ref_id === this.refId) {
               for (let y = 0; y < this.meta.length; y++) {
                 for (let z = 0; z < this.meta[y].items.length; z++) {
-                  this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = items[x][this.meta[y].items[z] + 'extractedData']
-                  this.meta[y].values[z][this.meta[y].items[z] + 'concerns'] = items[x][this.meta[y].items[z] + 'concerns']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = data.items[x][this.meta[y].items[z] + 'extractedData']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = data.items[x][this.meta[y].items[z] + 'comments']
                 }
               }
             }
           }
 
-          this.characteristics = response.data[0]
+          this.characteristics = data
         })
         .catch(error => {
           console.error('Error fetching characteristics:', error)
+          this.$notify.error(this.$t('notifications.load_error'))
         })
     },
-    openModal: function (stage = 0, modal) {
+    openModal: function (stage = 0, data, tab = 0, faLabel = null) {
       this.getCharacteristics()
       this.modal.stage = stage
-      this.modal.index = modal.index
-      this.selectedMeta = 0
-      this.refId = modal.item.ref_id
-      this.ui.authors = modal.item.authors
+      this.modal.index = data.index
+      this.modal.tab = tab
+      this.modal.faLabel = faLabel
+      this.selectedMeta = tab
+      this.refId = data.item.ref_id
+      this.ui.authors = data.item.authors
+      this.isModalOpen = true
+      this.deniedCellHolders = new Map()
+      this.studyLockLost = false
+      this.pendingConflictRefId = ''
+      // `incompleteCells` NO se limpia acá, aunque cambie de estudio. Limpiarlo lo dejaba
+      // vacío para siempre: al reabrir el modal los AssessmentForm siguen montados y su
+      // `isIncomplete` no cambió, así que el watcher no vuelve a emitir y nadie repuebla el
+      // mapa — la X del encabezado dejaba de avisar. Medido en navegador; el test que
+      // afirmaba lo contrario estaba fijando el bug.
+      //
+      // Y no hace falta: el mapa siempre describe lo que los formularios MONTADOS muestran.
+      // Si al cambiar de estudio una celda cambia de estado, el watcher emite; si no cambia,
+      // es porque el estado es el mismo y lo que el mapa dice ya es cierto. Las celdas de
+      // etapas que se desmontan se dan de baja en su `beforeDestroy`.
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
+      this.bypassTabGuard = false
+      this.bypassCloseGuard = false
+      this.oaReminderShown = false
+      // The bare study lock is NOT taken here: it would block the ten cells of this
+      // study for everybody else for as long as the modal stays open. It is acquired
+      // on demand, when a study field is actually edited (see onStartEditing).
+      this.refreshStudyFieldsLockState(data.item.ref_id)
+      // The refId/stage/tab assignments above may leave activeLeafRef unchanged
+      // (reopening the same cell), so the watcher cannot be relied on here.
+      this.syncLeafLock(this.activeLeafRef, null)
+      // Acá sí `canEdit`: a diferencia del Paso 3, este modal se abre sin haber tomado el
+      // lock del estudio, así que no hay resultado de acquire que consultar.
+      if (this.canEdit && LockService.isEnabled) this.startInactivityWatch()
       this.$bvModal.show('modal-1')
+    },
+    onOpenModal ({ stage, data, tab, faLabel = null }) {
+      this.openModal(stage, data, tab, faLabel)
+    },
+    /**
+     * Reads from the lock listing whether the study fields can be written at all.
+     * `saveWholeStudyBlocked` is the right question: endpoint B rewrites the whole
+     * item, so anybody holding the study OR one of its cells blocks it.
+     */
+    refreshStudyFieldsLockState: function (refId) {
+      // A user without write permission sees the whole assessment read-only, cells
+      // included — the check acquireStudyLock used to make when the modal opened.
+      if (!this.canEdit) {
+        this.isRefReadOnly = true
+        this.studyFieldsReadOnly = true
+        this.studyFieldsLockedBy = null
+        return
+      }
+      if (!refId) {
+        this.studyFieldsReadOnly = false
+        this.studyFieldsLockedBy = null
+        return
+      }
+      const state = this.studyLockStateOf(refId)
+      this.studyFieldsReadOnly = state.saveWholeStudyBlocked || this.studyLockLost
+      this.studyFieldsLockedBy = state.wholeStudyBlockedBy ||
+        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      // Somebody holding the WHOLE study blocks every cell too (the backend rejects
+      // both granularities against each other), so say it once on open instead of
+      // letting the user discover it cell by cell. A single held cell does not.
+      if (state.wholeStudyBlockedBy) {
+        this.isRefReadOnly = true
+        this.refLockedBy = state.wholeStudyBlockedBy
+      }
+    },
+    /** Takes the study lock the field editor needs, or leaves the fields read-only. */
+    async ensureStudyLock () {
+      if (this.holdsStudyLock) return true
+      if (!this.refId || !this.canEdit) return false
+      const result = await LockService.acquireRef(this.$route.params.id, this.refId)
+      if (result.success) {
+        this.holdsStudyLock = true
+        this.studyFieldsReadOnly = false
+        this.studyFieldsLockedBy = null
+        this.studyLockLost = false
+        return true
+      }
+      this.studyFieldsReadOnly = true
+      this.studyFieldsLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
+      if (this.$notify) {
+        this.$notify.warning(result.permissionDenied
+          ? this.$t('lock.permissions_revoked')
+          : this.$t('lock.ref_locked_by', { user: this.studyFieldsLockedBy }))
+      }
+      return false
+    },
+    releaseStudyLock: function () {
+      if (!this.holdsStudyLock) return
+      LockService.releaseRef(this.refId)
+      this.holdsStudyLock = false
+    },
+    async acquireStudyLock (refId) {
+      if (!refId) return
+      if (!this.canEdit) {
+        this.isRefReadOnly = true
+        this.refLockedBy = null
+        return
+      }
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.isRefReadOnly = false
+        this.refLockedBy = null
+      } else if (result.permissionDenied) {
+        // Nobody else is editing this study — this user's own can_write was
+        // revoked (their canEdit prop just hadn't caught up yet). Don't reuse
+        // the "locked by X" message, there is no X.
+        this.isRefReadOnly = true
+        this.refLockedBy = null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.permissions_revoked'))
+        }
+      } else {
+        this.isRefReadOnly = true
+        this.refLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.refLockedBy }))
+        }
+      }
+    },
+    /**
+     * Thirty minutes with the assessment modal open and nobody typing. Persist first,
+     * close second: `@hidden` releases the bare study lock AND every leaf lock, so a
+     * PATCH fired after it would arrive unauthorized.
+     */
+    /** Publica que esta pestaña sigue con el estudio abierto, y desde cuándo. */
+    onInactivityHeartbeat (lastActivityAt) {
+      announcePresence(this.refId, lastActivityAt)
+    },
+    onInactivityExpired (lastActivityAt) {
+      // The children own the pending text: every AssessmentForm and every
+      // CamelotAssessmentCard has its own 1.5s debounce, and they live behind
+      // b-tabs + v-for + a per-stage v-if, where $refs cannot reach them.
+      // Otra pestaña de la MISMA persona puede tener este estudio abierto y activo: el
+      // backend refresca el lock cuando el user_id coincide, así que las dos creen
+      // tenerlo. Liberarlo acá se lo sacaría a quien está escribiendo, y guardar nuestra
+      // copia vieja pisaría lo suyo. Cerramos el modal y nos hacemos a un lado.
+      if (otherTabActiveOn(this.refId, lastActivityAt)) {
+        this.skipReleaseOnClose = true
+        this.stopInactivityWatch()
+        this.$bvModal.hide('modal-1')
+        this.onAssessmentModalClosed()
+        return
+      }
+      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+      this.$bvModal.hide('modal-1')
+      // No se delega la liberación al `@hidden`. Medido en navegador: con la pestaña de
+      // fondo el modal se cierra visualmente pero `hidden` no llega —depende de
+      // `transitionend`, y las transiciones no corren ocultas—, así que los locks quedaban
+      // vivos en el servidor. Apostar la única razón de ser de este mecanismo a un evento
+      // que esta base de código ya tiene documentado como poco confiable no se sostiene.
+      // `onAssessmentModalClosed` es idempotente: si el `hidden` llega después, no molesta.
+      this.onAssessmentModalClosed()
+    },
+    onAssessmentModalClosed () {
+      this.bypassCloseGuard = false
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
+      clearPresence(this.refId)
+      this.stopInactivityWatch()
+      // Antes de soltar los locks: el 409 en vuelo llega después.
+      this.retainConflictTarget()
+      this.isModalOpen = false
+      const suelta = !this.skipReleaseOnClose
+      this.skipReleaseOnClose = false
+      // No argument: releases the bare study lock AND every leaf lock still held.
+      if (suelta) LockService.releaseRef()
+      this.holdsStudyLock = false
+      this.studyLockLost = false
+      this.isRefReadOnly = false
+      this.refLockedBy = null
+      this.studyFieldsReadOnly = false
+      this.studyFieldsLockedBy = null
+      this.deniedCellHolders = new Map()
+      this.fetchAndUpdateRefLocks()
+      // Nothing is being typed any more, so a reload held back while the modal was
+      // open can be applied now.
+      this.flushPendingRefresh()
+    },
+    /**
+     * The heartbeat came back 409: this tab no longer holds a lock it thought it had.
+     * Granularity decides the blast radius — the bare study takes every cell with it,
+     * a leaf takes only its own cell (that is what endpoint D exists for).
+     */
+    handleRefLockLost (event) {
+      const detail = (event && event.detail) || {}
+      const lostRef = detail.refId
+      if (!lostRef || !this.refId) return
+
+      if (lostRef === this.refId) {
+        this.isRefReadOnly = true
+        this.refLockedBy = detail.lockedBy || null
+        // Not just cosmetic: holdsStudyLock is what ensureStudyLock checks before
+        // skipping the acquire, so leaving it true would silently authorize a write
+        // we can no longer make.
+        this.holdsStudyLock = false
+        this.studyLockLost = true
+        this.studyFieldsReadOnly = true
+        this.studyFieldsLockedBy = detail.lockedBy || null
+        return
+      }
+
+      if (baseRefOf(lostRef) !== this.refId) return
+      const position = leafPositionOf(lostRef)
+      if (!position) return
+      const [stage, option] = position.split('-').map(Number)
+      this.markCellDenied(stage, option, true, detail.lockedBy || null)
+      // Sólo cuando ya no queda NINGÚN lock: perder una hoja no libera el estudio ni las
+      // otras nueve celdas, y ésas siguen mereciendo el temporizador.
+      if (!LockService.refLocked) this.stopInactivityWatch()
+    },
+    /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
+    retainConflictTarget () {
+      if (!this.isSavingField) return
+      this.pendingConflictRefId = this.refId || ''
+    },
+    handleRefLockConflict (event) {
+      const { refId, failedData, lockedBy, source } = event.detail
+      // Los conflictos del endpoint D llegan con la clave compuesta `ref::sK::oI`, que
+      // nunca iba a coincidir con refId pelado. `baseRefOf` devuelve null cuando NO hay
+      // sufijo de hoja, así que el `|| refId` no es defensivo: sin él se rompe el camino
+      // del endpoint B, que es el que hoy funciona.
+      const base = baseRefOf(refId) || refId
+      const expected = base === this.refId ||
+        (this.pendingConflictRefId && base === this.pendingConflictRefId)
+      if (!expected) return
+      this.pendingConflictRefId = ''
+      this.conflictData = failedData
+      this.conflictLockedBy = lockedBy
+      this.conflictRefId = refId
+      this.conflictSource = source || 'live'
+      this.$nextTick(() => {
+        if (this.$refs.conflictModal) this.$refs.conflictModal.show()
+      })
+    },
+    clearConflict () {
+      this.conflictData = null
+      this.conflictLockedBy = ''
+      this.conflictRefId = ''
+      this.conflictSource = 'live'
+    },
+    /** Salida por etapa. Como el cierre, sólo pregunta por la celda visible. */
+    goToStage (stage) {
+      // El corte va ANTES de `guardExplanation`: una navegación bloqueada que se encole
+      // en `pendingNavigation` la ejecuta igual el botón «más tarde» del aviso de
+      // explicación, y el gate se saltearía por la puerta de al lado.
+      if (stage === OVERALL_ASSESSMENT.stage && this.overallAssessmentBlocked) return
+      this.guardExplanation(() => {
+        this.bypassTabGuard = false
+        this.modal.stage = stage
+        this.modal.tab = 0
+        this.selectedMeta = 0
+      }, [this.activeMeta])
+    },
+    getStageTitle (stage) {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
+    },
+    displayExclamationAlert (metaIndex, itemIndex) {
+      if (!this.meta[metaIndex] || !this.meta[metaIndex].values[itemIndex]) return false
+
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      const extractedData = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData']
+      const comments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments']
+
+      return (!extractedData || extractedData.trim() === '') && (!comments || comments.trim() === '')
     },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
     },
-    isCompleted: function (stage = 0, index = 0) {
-      // Verificar si el item existe y tiene la estructura necesaria
-      if (!this.assessments ||
-          !this.assessments.items ||
-          !this.assessments.items[index] ||
-          !this.assessments.items[index].stages ||
-          !this.assessments.items[index].stages[stage] ||
-          !this.assessments.items[index].stages[stage].options) {
-        return false
+    startEditing (metaIndex, itemIndex, type) {
+      this.editingField = { metaIndex, itemIndex, type }
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      if (type === 'extractedData') {
+        this.editValueExtracted = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData'] || ''
+      } else {
+        this.editValueComments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments'] || ''
       }
-
-      const options = this.assessments.items[index].stages[stage].options
-      let cnt = 0
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].option === null) {
-          cnt++
-        }
-      }
-      return cnt === 0
     },
-        getStepSummary: function (stage, index) {
-      if (!this.assessments ||
-          !this.assessments.items ||
-          !this.assessments.items[index] ||
-          !this.assessments.items[index].stages ||
-          !this.assessments.items[index].stages[stage] ||
-          !this.assessments.items[index].stages[stage].options) {
-        return null
-      }
-
-      const options = this.assessments.items[index].stages[stage].options
-      const summary = {}
-
-      // Definir los nombres de los dominios para cada etapa
-      const domainNames = {
-        0: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 1: Meta domains
-        1: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 2: Meta domains
-        2: ['Fit assessment'], // Step 3: Single assessment
-        3: ['Overall assessment'] // Step 4: Single assessment
-      }
-
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].option !== null) {
-          const domainName = domainNames[stage] && domainNames[stage][i] ? domainNames[stage][i] : `Option ${i + 1}`
-
-          // Buscar la respuesta correspondiente en ui.responses
-          const response = this.ui.responses.find(r => r.value === options[i].option)
-
-          summary[domainName] = {
-            text: response ? response.text : options[i].option,
-            color: response ? response.color : '#000000'
-          }
+    async onStartEditing ({ metaIndex, itemIndex, type }) {
+      // "One study, one user" for the study fields: whoever gets here second stays
+      // read-only instead of overwriting. The lock also makes Step 3 show the study
+      // as taken, which is exactly the mutual exclusion we want.
+      if (!(await this.ensureStudyLock())) return
+      this.startEditing(metaIndex, itemIndex, type)
+    },
+    scrollToField (metaIndex, itemIndex) {
+      this.$nextTick(() => {
+        const elementId = `field-${metaIndex}-${itemIndex}`
+        const element = document.getElementById(elementId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
+      })
+    },
+    cancelEditing () {
+      const { metaIndex, itemIndex } = this.editingField
+      this.editingField = { metaIndex: null, itemIndex: null, type: null }
+      // Leaving the field editor is the end of "one study, one user": both the Cancel
+      // button and saveField() (once the PATCH resolves) come through here, so the
+      // study stops being locked as soon as nobody is writing its fields.
+      this.releaseStudyLock()
+      this.refreshStudyFieldsLockState(this.refId)
+      this.editValueExtracted = ''
+      this.editValueComments = ''
+      if (metaIndex !== null && itemIndex !== null) {
+        this.scrollToField(metaIndex, itemIndex)
+      }
+    },
+    onCancelEditing () {
+      this.cancelEditing()
+    },
+    saveField (newValue, keepEditing = false) {
+      if (!this.characteristics || this.isRefReadOnly) return
+
+      this.isSavingField = true
+      const { metaIndex, itemIndex, type } = this.editingField
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+
+      if (type === 'extractedData') {
+        this.editValueExtracted = newValue
+      } else {
+        this.editValueComments = newValue
       }
 
-      return Object.keys(summary).length > 0 ? summary : null
+      // Asegurar estructura básica si es un objeto nuevo
+      if (!this.characteristics.organization) {
+        this.characteristics.organization = this.$route.params.org_id
+        this.characteristics.project_id = this.$route.params.id
+      }
+
+      if (!this.characteristics.items) {
+        this.$set(this.characteristics, 'items', [])
+      }
+
+      // Actualizar o añadir el ítem en el arreglo principal
+      let existingItemIdx = this.characteristics.items.findIndex(item => item.ref_id === this.refId)
+      const fieldName = type === 'extractedData' ? itemPrefix + 'extractedData' : itemPrefix + 'comments'
+      const fieldValue = type === 'extractedData' ? this.editValueExtracted : this.editValueComments
+
+      if (existingItemIdx !== -1) {
+        this.$set(this.characteristics.items[existingItemIdx], fieldName, fieldValue)
+      } else {
+        this.characteristics.items.push({
+          ref_id: this.refId,
+          authors: this.ui.authors,
+          [fieldName]: fieldValue
+        })
+      }
+
+      // Actualizar la vista local meta para feedback inmediato
+      this.meta[metaIndex].values[itemIndex][fieldName] = fieldValue
+
+      // Granular save: PATCH only this study row to the /item/<ref_id> sub-resource,
+      // avoiding a Last-Write-Wins rewrite of the whole items array. The backend
+      // upserts the matched item; other rows are left untouched. No refetch needed.
+      const itemPayload = this.characteristics.items.find(it => String(it.ref_id) === String(this.refId))
+
+      const request = this.characteristics.id
+        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/item/${this.refId}`, itemPayload)
+        : Api.post('/isoqf_characteristics/', {
+          organization: this.characteristics.organization,
+          project_id: this.characteristics.project_id,
+          items: [itemPayload]
+        })
+
+      request
+        .then(response => {
+          const responseData = response.data.$set || response.data
+          this.characteristics = {
+            ...this.characteristics,
+            ...responseData,
+            id: response.data.id || this.characteristics.id || response.data._id
+          }
+
+          if (!keepEditing) {
+            this.cancelEditing()
+            this.$notify.success(this.$t('notifications.saved'))
+          }
+          this.isSavingField = false
+          this.$root.$emit('characteristics-updated', this.characteristics)
+        })
+        .catch(error => {
+          console.error('Error saving characteristic field:', error)
+          // Already announced by the lock channel, with the holder's name and the text
+          // kept locally. The generic "try again" would contradict it.
+          if (!isLockRejection(error)) {
+            this.$notify.error(this.$t('notifications.save_error'))
+          }
+          this.isSavingField = false
+          this.getCharacteristics()
+        })
+    },
+    onSaveField (newValue) {
+      this.saveField(newValue)
+    },
+    onAutoSaveField (newValue) {
+      this.saveField(newValue, true)
     }
   }
 }
 </script>
 
 <style lang="scss">
-.modal-header {
-  background-color: #1E2137;
-  color: #fff;
-  font-size: 1.375rem;
+.cursor-pointer {
+  cursor: pointer;
 }
-.modal-body {
+
+.step-four-container {
+  .help-link {
+    color: #898989 !important;
+    text-decoration: none !important;
+    font-size: 0.9rem;
+
+    &:hover,
+    &:focus {
+      color: #6c757d !important;
+      text-decoration: underline !important;
+    }
+  }
+
+  .color-preview-bars {
+    gap: 1px;
+    vertical-align: middle;
+    align-items: center;
+
+    .color-bar {
+      width: 8px !important;
+      height: 16px !important;
+      display: block;
+      flex-shrink: 0;
+      border-radius: 1px;
+    }
+  }
+
+  .camelot-table {
+    font-size: 0.9rem;
+
+    th,
+    td {
+      vertical-align: middle !important;
+      padding: 0.75rem 0.5rem;
+    }
+
+    .assessment-col {
+      width: 50px;
+      min-width: 50px;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .edit-btn {
+      white-space: nowrap;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  .header-top-row {
+    background-color: #E9ECEF;
+    color: #152536;
+
+    th {
+      border-bottom: none !important;
+      padding: 1rem 0.5rem;
+    }
+  }
+
+  .group-header {
+    background-color: #E9ECEF;
+  }
+
+  .header-overall-group {
+    background-color: #D8EBF5 !important;
+  }
+
+  .header-second-row {
+    background-color: #D8DAE5 !important;
+    color: #495057;
+
+    th {
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+  }
+
+  .header-overall-row {
+    background-color: #D8EBF5 !important;
+    color: #495057;
+
+    th {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.assessment-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+}
+
+.circle-filled {
+  border: none;
+}
+
+.circle-not-completed {
+  border: 2px dashed #B3B3B3;
+  background-color: transparent;
+}
+
+// Assessed, but the explanation is still missing. Used by the legend dropdown;
+// the grid draws it through the AssessmentCircle component.
+.circle-incomplete {
+  // Legend swatch only — the grid draws this through AssessmentCircle, which
+  // takes fill and ink from the assessment colour. #6C757D is a neutral stand-in
+  // for "any colour"; white is what contrastOn() returns for it, so the swatch
+  // matches the real thing and carries its own ground in both themes.
+  border: 2px dashed #FFFFFF;
+  background-color: #6C757D;
+  color: #FFFFFF;
+}
+
+.circle-warning-icon {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.camelot-modal-header {
+  background-color: var(--modal-header-bg);
+  color: var(--modal-header-color);
+  border-bottom: none;
+  padding: 1.5rem;
+
+  .modal-breadcrumb {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+  }
+
+  .modal-main-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .close {
+    color: #fff;
+    text-shadow: none;
+    opacity: 0.8;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.camelot-modal-footer {
+  background-color: #F8F9FA;
+  padding: 1.5rem;
+  border-top: 1px solid #DEE2E6;
+
+  .nav-footer-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: color 0.2s;
+
+    // El realce del hover es de los links que llevan a algún lado. Excluir al bloqueado
+    // acá evita tener que repetir su color —que el tema oscuro reescribe— en un override.
+    &:not(.nav-footer-link-blocked):hover {
+      color: #1065AB;
+      text-decoration: none !important;
+    }
+  }
+
+  /**
+   * Visible pero inerte. El link sigue diciendo a dónde llevaría; el tooltip, por qué
+   * todavía no lleva.
+   *
+   * Apagado con `opacity` y no con un color: el tema oscuro reescribe el color de
+   * `.nav-footer-link` y un valor fijo acá quedaba idéntico al del link activo — el
+   * bloqueado sólo se distinguía por el cursor. Medido en navegador; jsdom no carga
+   * este SCSS ni conoce los temas, así que ningún test lo habría atrapado.
+   */
+  .nav-footer-link-blocked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.camelot-modal-body {
   color: #152536;
+  background-color: #E9E9EB;
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding-bottom: 0.5rem;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #495057;
+    margin-bottom: 0;
+
+    &:hover {
+      color: #1065AB;
+    }
+  }
+
+  h5 {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #152536;
+    text-transform: uppercase;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #212529;
+  }
 }
+
 .modal-author {
   font-size: 1rem;
 }
+
 .modal-active-tab {
   font-weight: bold;
-  background-color: #9B9EB6 !important;
+  background: linear-gradient(180deg, #dde3ec 0%, #cfd7e4 100%) !important;
+  border-color: #287BDC !important;
 }
+
 .modal-active-tab-text {
-  color: #152536;
+  color: #1a5fa8 !important;
 }
+
 .modal-normal-tab {
-  background-color: #D8DAE5 !important;
+  background-color: #E3E3E3 !important;
+  border-color: #848E98 !important;
 }
+
 .modal-normal-tab-text {
-  color: #6C6C6C;
+  font-weight: bold;
+  color: #212529 !important;
+}
+
+.column-header {
+  margin-bottom: 1.5rem;
+}
+
+.text-wrap-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.edit-category-btn {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none !important;
+
+  &:hover {
+    color: #0056b3 !important;
+  }
+}
+
+.item-card {
+  border: 1px solid #b6b6b6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  .card-header {
+    background-color: #CACACA;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #b6b6b6;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  h3,
+  h4 {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .camelot-modal-dialog {
+    max-width: calc(100% - 80px) !important;
+    margin: 1.75rem auto !important;
+  }
+}
+
+.field-section {
+  padding: 0.5rem;
+  background-color: #fff;
+  border-radius: 0.25rem;
+}
+
+.edit-btn-thin {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.modal-column-scroll {
+  max-height: max-content;
+  overflow-y: auto;
+  padding-right: 10px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #D8DAE5;
+    border-radius: 3px;
+  }
+}
+
+.b-sidebar-outer {
+  z-index: 1060 !important;
+}
+
+.not-completed-alert {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .alert-strip {
+    width: 5px;
+    flex-shrink: 0;
+  }
+
+  &.alert-warning {
+    background: linear-gradient(90deg, #fff3cd 0%, #fff9e6 1%) !important;
+
+    .alert-strip {
+      background-color: #856404;
+    }
+  }
+
+  &.alert-danger {
+    background: linear-gradient(90deg, rgba(179, 21, 41, 0.1) 0%, rgba(179, 21, 41, 0.1) 100%) !important;
+    border-color: #B31529;
+    color: #B31529;
+
+    .alert-strip {
+      background-color: #B31529;
+    }
+  }
+
+  .alert-content {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+html[data-theme="dark"] {
+  .not-completed-alert {
+    &.alert-warning {
+      background: rgba(180, 120, 20, 0.2) !important;
+      border-color: #a07820 !important;
+      color: #f0c060;
+
+      .alert-strip {
+        background-color: #d4a017;
+      }
+    }
+  }
 }
 </style>

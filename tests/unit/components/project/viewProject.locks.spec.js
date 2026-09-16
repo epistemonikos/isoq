@@ -1,0 +1,197 @@
+import { shallowMount, createLocalVue } from '@vue/test-utils'
+import viewProject from '@/components/project/viewProject.vue'
+import BootstrapVue from 'bootstrap-vue'
+import LockService from '@/services/lockService'
+import Api from '@/utils/Api'
+
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+jest.mock('@/utils/Api', () => ({
+  get: jest.fn().mockResolvedValue({ data: [] }),
+  post: jest.fn().mockResolvedValue({ data: {} }),
+  patch: jest.fn().mockResolvedValue({ data: {} }),
+  delete: jest.fn().mockResolvedValue({ data: {} })
+}))
+
+jest.mock('@/services/lockService', () => ({
+  fetchRefLocks: jest.fn().mockResolvedValue([]),
+  acquire: jest.fn().mockResolvedValue({ success: true }),
+  release: jest.fn(),
+  releaseRef: jest.fn()
+}))
+
+jest.mock('vuedraggable', () => ({ render: h => h('div') }))
+
+const localVue = createLocalVue()
+localVue.use(BootstrapVue)
+
+const stubs = {
+  'action-buttons': true, 'propertiesProject': true, 'UploadReferences': true,
+  'InclusionExclusioCriteria': true, 'crudTables': true, 'PrintViewTable': true,
+  'ViewTable': true, 'CamelotStepThree': true, 'CamelotStepFour': true,
+  'videoHelp': true, 'back-to-top': true, 'content-guidance': true
+}
+
+function createWrapper () {
+  const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const wrapper = shallowMount(viewProject, {
+    localVue,
+    mocks: {
+      $t: (key) => key,
+      $route: { params: { id: 'proj1', org_id: 'org1' }, query: {} },
+      $router: { push: jest.fn() },
+      $store: { state: { user: { personal_organization: 'org1', id: 1 } } },
+      $notify
+    },
+    stubs
+  })
+  // BootstrapVue installs $bvModal and $bvToast via beforeCreate, overwriting mocks.
+  // Spy on the real instances after mount instead.
+  const bvModalShow = jest.spyOn(wrapper.vm.$bvModal, 'show').mockImplementation(() => {})
+  const bvToastToast = jest.spyOn(wrapper.vm.$bvToast, 'toast').mockImplementation(() => {})
+  return { wrapper, $notify, bvModalShow, bvToastToast }
+}
+
+// Granular ref-level locking (Step 3/4) replaced the project-wide lock here: this
+// view never acquires one, so attemptLock() and everything downstream of it
+// (lockInfo -> isLockedByOther -> the :isLocked prop actionButtons never declared)
+// was wiring that could not fire. The project lock is still acquired/released by
+// editList.vue — that half is alive and stays until the product decision on it.
+describe('viewProject.vue — el cableado muerto del lock de proyecto no vuelve', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('no expone attemptLock(): esta vista no adquiere el lock de proyecto', () => {
+    const { wrapper } = createWrapper()
+    expect(wrapper.vm.attemptLock).toBeUndefined()
+    wrapper.destroy()
+  })
+
+  it('no expone lockInfo ni isLockedByOther (nadie podía escribirlos)', () => {
+    const { wrapper } = createWrapper()
+    expect(wrapper.vm.lockInfo).toBeUndefined()
+    expect(wrapper.vm.isLockedByOther).toBeUndefined()
+    expect(wrapper.vm.lockDataRecovery).toBeUndefined()
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — lock automático al abrir proyecto', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('NO llama LockService.acquire automáticamente al cargar el proyecto en modo edit', async () => {
+    const { wrapper } = createWrapper()
+    // El usuario pertenece a la misma personal_organization → checkPermissions('can_write') = true
+    // por lo que getProject fija mode='edit'. El lock ya NO debe adquirirse automáticamente.
+    await wrapper.vm.getProject()
+    await flushPromises()
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(LockService.acquire).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — handleLockLost()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sets mode=view and shows modal-lock-lost when projectId matches', async () => {
+    const { wrapper, bvModalShow } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1' }, mode: 'edit' })
+    wrapper.vm.handleLockLost({ detail: { projectId: 'proj1' } })
+    expect(wrapper.vm.mode).toBe('view')
+    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-lost')
+    wrapper.destroy()
+  })
+
+  it('does nothing when projectId does not match', async () => {
+    const { wrapper, bvModalShow } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1' }, mode: 'edit' })
+    wrapper.vm.handleLockLost({ detail: { projectId: 'other-proj' } })
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(bvModalShow).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('sets mode=view when event.type is "axios-refresh-lock" regardless of projectId', async () => {
+    const { wrapper, bvModalShow } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1' }, mode: 'edit' })
+    wrapper.vm.handleLockLost({ type: 'axios-refresh-lock', detail: null })
+    expect(wrapper.vm.mode).toBe('view')
+    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-lost')
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — handleIdle()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sets mode=view and shows modal-lock-idle when projectId matches', async () => {
+    const { wrapper, bvModalShow } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1' }, mode: 'edit' })
+    wrapper.vm.handleIdle({ detail: { projectId: 'proj1' } })
+    expect(wrapper.vm.mode).toBe('view')
+    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-idle')
+    wrapper.destroy()
+  })
+
+  it('does nothing when projectId does not match', async () => {
+    const { wrapper, bvModalShow } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1' }, mode: 'edit' })
+    wrapper.vm.handleIdle({ detail: { projectId: 'other-proj' } })
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(bvModalShow).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — beforeDestroy', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  // Verified live: a lock taken in the Step 3/4 table survived navigating out of the
+  // project and stayed held under the user's name until the server TTV expired it.
+  // editList.vue already had this net; this view (which hosts crudTables) did not.
+  it('libera los ref-locks que queden abiertos al salir del proyecto', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    wrapper.destroy()
+    expect(LockService.releaseRef).toHaveBeenCalledWith()
+  })
+
+  it('releases the lock and removes all four window event listeners', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const removeSpy = jest.spyOn(window, 'removeEventListener')
+    wrapper.destroy()
+    expect(LockService.release).toHaveBeenCalled()
+    expect(removeSpy).toHaveBeenCalledWith('lock-lost', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('lock-idle', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('axios-refresh-lock', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('permission-denied', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+})
+
+describe('viewProject.vue — permission-denied event', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('registers refreshPermissions as the permission-denied listener on mount', async () => {
+    const addSpy = jest.spyOn(window, 'addEventListener')
+    const { wrapper } = createWrapper()
+    await flushPromises()
+
+    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.refreshPermissions)
+    addSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  it('re-fetches permissions when the event fires (Api.get is called)', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    Api.get.mockClear()
+
+    window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url: '/isoqf_findings/f1', method: 'patch' } }))
+    await flushPromises()
+
+    expect(Api.get).toHaveBeenCalledWith(`/isoqf_projects/${wrapper.vm.$route.params.id}`, expect.any(Object))
+    wrapper.destroy()
+  })
+})

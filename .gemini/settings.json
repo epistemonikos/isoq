@@ -1,0 +1,14 @@
+{
+  "general": {
+    "previewFeatures": true
+  },
+  "context": {
+    "fileName": ["CLAUDE.md"]
+  },
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  }
+}

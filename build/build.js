@@ -1,7 +1,8 @@
 'use strict'
 require('./check-versions')()
 
-process.env.NODE_ENV = 'production'
+const buildEnv = process.env.BUILD_ENV || 'production'
+process.env.NODE_ENV = buildEnv === 'test' ? 'test' : 'production'
 
 const ora = require('ora')
 const rm = require('rimraf')
@@ -9,9 +10,11 @@ const path = require('path')
 const chalk = require('chalk')
 const webpack = require('webpack')
 const config = require('../config')
-const webpackConfig = require('./webpack.prod.conf')
+const webpackConfig = buildEnv === 'test'
+  ? require('./webpack.test.conf')
+  : require('./webpack.prod.conf')
 
-const spinner = ora('building for production...')
+const spinner = ora(`building for ${buildEnv}...`)
 spinner.start()
 
 rm(path.join(config.build.assetsRoot, config.build.assetsSubDirectory), err => {

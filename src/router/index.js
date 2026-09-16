@@ -1,19 +1,25 @@
+import { isGdprEnabled } from '@/constants/gdpr'
+import { store } from '@/store'
+
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
+const AdminPanel = () => import(/* webpackChunkName: "admin" */ '@/components/admin/AdminPanel.vue')
 const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
 const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
 const ForgotPassword = () => import(/* webpackChunkName: "forgotpassword" */ '@/components/ForgotPassword')
 const CreateAccount = () => import(/* webpackChunkName: "createaccount" */ '@/components/CreateAccount')
 const Profile = () => import(/* webpackChunkName: "profile" */ '@/components/profile/viewProfile')
-const Organizations = () => import(/* webpackChunkName: "organizations" */ '@/components/Organizations')
 const ViewOrganization = () => import(/* webpackChunkName: "vieworganization" */ '@/components/organization/viewOrganization')
 const EditList = () => import(/* webpackChunkName: "editlist" */ '@/components/list/editList')
 const ViewProject = () => import(/* webpackChunkName: "viewproject" */ '@/components/project/viewProject')
 const Browse = () => import(/* webpackChunkName: "browse" */ '@/components/Browse')
 const NewPassword = () => import(/* webpackChunkName: "newpassword" */ '@/components/NewPassword')
+const CheckEmail = () => import(/* webpackChunkName: "checkemail" */ '@/components/CheckEmail')
+const VerifyEmail = () => import(/* webpackChunkName: "verifyemail" */ '@/components/VerifyEmail')
 const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf" */ '@/components/previewContent/previewContentSoQf')
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 const WhatsNew = () => import(/* webpackChunkName: "whatsnew" */ '@/components/WhatsNew')
+const PrivacyAndTerms = () => import(/* webpackChunkName: "privacyandterms" */ '@/components/PrivacyAndTerms')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -41,6 +47,37 @@ var routes = [
     meta: {
       title: 'Help - Interactive Summary of Qualitative Findings'
     }
+  },
+  {
+    path: '/privacy-and-terms',
+    name: 'PrivacyAndTerms',
+    component: PrivacyAndTerms,
+    meta: {
+      title: 'Privacy and Terms - Interactive Summary of Qualitative Findings'
+    },
+    // Con ENABLE_GDPR apagado la ruta se redirige, no se elimina.
+    //
+    // Eliminarla dejaría las tres URLs legadas de abajo apuntando a un nombre
+    // inexistente, y vue-router responde a eso con una pantalla en blanco y un
+    // error de consola. Como las tres redirigen por NOMBRE hacia acá, este
+    // único beforeEnter cubre las cuatro URLs con una salida limpia.
+    beforeEnter: (to, from, next) => {
+      next(isGdprEnabled() ? undefined : { name: 'MainPage' })
+    }
+  },
+  // Las tres URLs de abajo las publica master vía new-gdpr. Si alguien las
+  // comparte, tienen que seguir funcionando cuando develop llegue a producción.
+  {
+    path: '/terms-and-conditions',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'terms' } }
+  },
+  {
+    path: '/privacy-policy',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'privacy' } }
+  },
+  {
+    path: '/intellectual-property',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'property' } }
   },
   {
     path: '/login',
@@ -79,7 +116,8 @@ var routes = [
     name: 'Profile',
     component: Profile,
     meta: {
-      title: 'Profile - Interactive Summary of Qualitative Findings'
+      title: 'Profile - Interactive Summary of Qualitative Findings',
+      requiresAuth: true
     }
   },
   {
@@ -88,15 +126,6 @@ var routes = [
     component: ViewOrganization,
     meta: {
       title: 'Workspace - Interactive Summary of Qualitative Findings',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/workspaces',
-    name: 'Organizations',
-    component: Organizations,
-    meta: {
-      title: 'Workspaces - Interactive Summary of Qualitative Findings',
       requiresAuth: true
     }
   },
@@ -126,6 +155,22 @@ var routes = [
     }
   },
   {
+    path: '/accounts/check_email',
+    name: 'checkEmail',
+    component: CheckEmail,
+    meta: {
+      title: 'Check your email - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/accounts/verify_email/:token',
+    name: 'verifyEmail',
+    component: VerifyEmail,
+    meta: {
+      title: 'Verify email - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
     path: '/preview/isoq/:org_id/:isoqf_id/:token',
     name: 'previewContentSoQf',
     component: previewContentSoQf,
@@ -134,7 +179,15 @@ var routes = [
     }
   },
   {
-    path: '/preview/worksheet/:id/:token',
+    path: '/shared/:token',
+    name: 'sharedContent',
+    component: previewContentSoQf,
+    meta: {
+      title: 'iSoQ Shared - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/preview/worksheet/:id/:projectId/:token',
     name: 'previewWorksheet',
     component: previewWorksheet,
     meta: {
@@ -147,6 +200,39 @@ var routes = [
     component: WhatsNew,
     meta: {
       title: 'Whats new - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminPanel,
+    meta: {
+      title: 'Admin - iSoQ',
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
+  {
+    // Catch-all de URLs que no existen. Va ÚLTIMA a propósito: vue-router
+    // resuelve por la primera coincidencia y '*' matchea todo, así que puesta
+    // antes dejaría la aplicación entera fuera de servicio.
+    //
+    // Cubre también /workspaces, que era el listado de organizaciones y se
+    // eliminó por no usarse.
+    //
+    // Sin esto el router-view queda vacío: el usuario ve el encabezado y nada
+    // más, que se lee como un error de red y no como "esa dirección no existe".
+    //
+    // Va en beforeEnter y no en `redirect`, que sería más corto: la función de
+    // redirect se evalúa antes que el beforeEach global de main.js, o sea antes
+    // de que getLogginInfo haya poblado el store, y entonces todo el mundo
+    // parecería un visitante sin sesión. El beforeEnter corre después.
+    path: '*',
+    beforeEnter (to, from, next) {
+      const user = store.state.user
+      next(store.getters.isLoggedIn && user.personal_organization
+        ? { name: 'viewOrganization', params: { id: user.personal_organization } }
+        : { name: 'MainPage' })
     }
   }
 ]
