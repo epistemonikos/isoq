@@ -71,6 +71,12 @@
         </b-col>
       </b-row>
 
+      <b-alert v-if="presenceNotice" show variant="info" class="mb-3"
+        data-testid="worksheet-presence">
+        <font-awesome-icon icon="user"></font-awesome-icon>
+        {{ presenceNotice }}
+      </b-alert>
+
       <b-row class="mt-4">
         <b-col cols="12">
           <div id="progress-status" v-if="mode === 'edit'" class="d-print-none">
@@ -125,11 +131,13 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import PresenceService from '@/services/presenceService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
+import { presentReviewersOf } from '@/utils/findingPresence'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 // Más corto que los 15 s de las otras superficies que pintan candados
@@ -345,7 +353,9 @@ export default {
       // Locks vigentes del proyecto, sondeados con GET /api/lock/<pid>/refs. Los
       // consume `editListEvidenceProfile` para grisar los botones ANTES del clic:
       // sin esto la persona se enteraba recién al abrir el modal, por un banner.
-      activeRefLocks: []
+      activeRefLocks: [],
+      // Presencia (sin lock) de este proyecto, sondeada junto con los ref-locks.
+      activePresence: []
     }
   },
   created () {
@@ -374,6 +384,23 @@ export default {
         this.meth_assessments && this.meth_assessments.id,
         ...(this.list && this.list.references ? this.list.references : [])
       ]
+    },
+    currentUserId: function () {
+      return (this.$store && this.$store.state && this.$store.state.user &&
+        this.$store.state.user.id) || null
+    },
+    /** Los OTROS que están en este hallazgo. Informa, no bloquea nada. */
+    presenceNotice: function () {
+      const nombres = presentReviewersOf(
+        this.activePresence, this.foreignRefLocks,
+        this.findings && this.findings.id, this.currentUserId)
+      if (!nombres.length) return ''
+      const users = nombres.length === 1
+        ? nombres[0]
+        : `${nombres.slice(0, -1).join(', ')} ${this.$t('presence.and')} ${nombres[nombres.length - 1]}`
+      return this.$t(
+        nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
+        { users })
     }
   },
   mounted () {
@@ -400,6 +427,10 @@ export default {
     // extracted_data row) would leak its ref lock until the server TTL. No argument
     // releases every ref this tab still holds — all of them belong to this view.
     LockService.releaseRef()
+    // Suelta la presencia marcada por enterPresence(). No es un ref-lock: no bloquea
+    // nada, pero si no se suelta la persona sigue apareciendo como presente después de
+    // salir.
+    PresenceService.leave()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)
@@ -595,6 +626,30 @@ export default {
       this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
       this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
     },
+    /**
+     * Marca presencia en este hallazgo.
+     *
+     * ÚNICO punto de alta de toda la app. Los editores (dimensión del evidence
+     * profile, nombre, referencias, borrado) ya sostienen un ref-lock real que el
+     * listado lee y nombra con más precisión; marcarles presencia además los haría
+     * salir dos veces con dos textos distintos.
+     *
+     * El `project_id` no sale de la ruta: en `/worksheet/:id/edit` el `:id` es el de
+     * la LIST. Sólo existe tras getList(), que es desde donde se llama esto.
+     */
+    enterPresence: async function () {
+      const projectId = this.list && this.list.project_id
+      const findingId = this.findings && this.findings.id
+      if (!projectId || !findingId) return
+      await PresenceService.enter(projectId, findingId)
+    },
+    fetchPresence: async function () {
+      const projectId = this.list && this.list.project_id
+      if (!projectId) return
+      const present = await PresenceService.fetch(projectId)
+      if (!this.$_alive) return
+      this.activePresence = present || []
+    },
     // El project_id NO sale de la ruta: en `/worksheet/:id/edit` el `:id` es el de
     // la LIST (getList lo usa tal cual para /getLists, y la ruta de preview lleva el
     // projectId como un param aparte). Sólo existe tras getList(), así que hasta
@@ -625,6 +680,9 @@ export default {
         .then(() => {
           if (this.$_alive) this.refreshIfSomebodyReleased()
         })
+        // Mismo tick del sondeo de locks: la presencia se refresca con la misma
+        // cadencia, sin un timer propio.
+        .then(() => { this.fetchPresence() })
     },
     /**
      * Cuando otra persona SUELTA un candado de esta hoja, recarga los datos.
@@ -709,6 +767,9 @@ export default {
           // botones tardarían un ciclo entero en grisarse. Último de la cadena a
           // propósito — ver el comentario de fetchAndUpdateRefLocks.
           this.fetchAndUpdateRefLocks()
+          // Mismo momento y por la misma razón: es el primer punto con project_id.
+          this.enterPresence()
+          this.fetchPresence()
         })
     },
     syncOrderWithProject: function () {
