@@ -313,6 +313,7 @@
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
                 :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :references="references"
                 :refs="refs" :filter="table_settings.filter" :findings="findings" :refLocks="activeRefLocks"
+                :presence="activePresence"
                 @get-lists="getLists" @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
                 @editor-open="onIsoqEditorOpen" @lock-denied="fetchAndUpdateRefLocks"
                 @set-load-references="statusLoadReferences" @get-references="getReferences"
@@ -470,6 +471,7 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import PresenceService from '@/services/presenceService'
 import draggable from 'vuedraggable'
 import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
@@ -529,6 +531,10 @@ export default {
       // startProjectPolling). Se los pasamos a ViewTable para que grisée los botones de
       // un finding que otro está editando antes de que alguien lo intente.
       activeRefLocks: [],
+      // Quiénes están DENTRO de cada hallazgo, que es una pregunta distinta de quién
+      // tiene un lock: entrar a la worksheet no toma ninguno. Se le pasa a ViewTable
+      // para que lo informe sin deshabilitar nada.
+      activePresence: [],
       // Un refresco automático repinta `lists` debajo de quien esté escribiendo. Estos
       // dos dicen si hay un editor abierto: uno para los modales de ViewTable (llegan por
       // el evento `editor-open`) y otro para los de esta misma vista.
@@ -833,9 +839,13 @@ export default {
     fetchAndUpdateRefLocks: async function () {
       this.activeRefLocks = await LockService.fetchRefLocks(this.$route.params.id)
     },
+    fetchPresence: async function () {
+      this.activePresence = await PresenceService.fetch(this.$route.params.id)
+    },
     /**
-     * Un solo timer para las dos preguntas que se le hacen al servidor cada 15 s: quién
-     * tiene tomado qué, y si alguien cambió algo. Mismo piggyback que StepThree/StepFour.
+     * Un solo timer para las tres preguntas que se le hacen al servidor cada 15 s: quién
+     * tiene tomado qué, si alguien cambió algo, y quién está adentro de cada hallazgo.
+     * Mismo piggyback que StepThree/StepFour.
      *
      * Va en esta vista y no en ViewTable porque `getLists()` vive acá, y sobre todo
      * porque viewProject no se desmonta mientras se esté en el proyecto: los cuatro tabs
@@ -847,9 +857,11 @@ export default {
     startProjectPolling: function () {
       this.fetchAndUpdateRefLocks()
       this.checkProjectFreshness()
+      this.fetchPresence()
       this.projectPollTimer = setInterval(() => {
         this.fetchAndUpdateRefLocks()
         this.checkProjectFreshness()
+        this.fetchPresence()
       }, PROJECT_POLL_INTERVAL)
     },
     stopProjectPolling: function () {
