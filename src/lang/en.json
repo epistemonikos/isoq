@@ -296,6 +296,11 @@
     "cerqual_locked_by": "{user} is finishing the GRADE-CERQual assessment of confidence, so this change cannot be applied yet — it would clear their work. Try again in a moment.",
     "evaluating_section": "{user} is assessing {section}"
   },
+  "presence": {
+    "reviewing_one": "{users} is reviewing this finding",
+    "reviewing_many": "{users} are reviewing this finding",
+    "and": "and"
+  },
   "version_conflict": {
     "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",
     "theirs": "What is stored now",

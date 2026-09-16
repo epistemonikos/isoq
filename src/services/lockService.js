@@ -459,9 +459,9 @@ class LockService {
  * different granularities and belong to different users. Two different leaves
  * of the same study do not clash — that is exactly what endpoint D enables.
  *
- * Compares by `user_name` because the endpoint does not expose `user_id`; two
- * collaborators sharing a name would read as one. The backend offered to add
- * `user_id` to the listing if that ever bites.
+ * Compares by `user_name`, not `user_id`: `GET /api/lock/<project>/refs` does
+ * project `user_id` today, but this comparison hasn't been migrated to it — two
+ * collaborators sharing a name still read as one.
  */
 export function studyLockState (locks, refId, myUserName) {
   const others = (locks || []).filter(lock => lock.user_name !== myUserName)

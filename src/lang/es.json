@@ -296,6 +296,11 @@
     "cerqual_locked_by": "{user} está terminando la evaluación GRADE-CERQual de confianza, así que este cambio no se puede aplicar todavía: borraría su trabajo. Probá de nuevo en un momento.",
     "evaluating_section": "{user} está evaluando {section}"
   },
+  "presence": {
+    "reviewing_one": "{users} está revisando este hallazgo",
+    "reviewing_many": "{users} están revisando este hallazgo",
+    "and": "y"
+  },
   "version_conflict": {
     "message": "Otra persona guardó cambios en este estudio mientras lo editabas. Tu texto no se guardó. Abajo está lo que quedó guardado y lo que intentaste guardar, para que puedas rehacer tu cambio sin perder el de la otra persona.",
     "theirs": "Lo que quedó guardado",
