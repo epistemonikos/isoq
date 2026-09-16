@@ -183,9 +183,11 @@ describe('ViewTable — presencia en los modales', () => {
     await flushPromises()
 
     wrapper.vm.onRemoveFindingHidden()
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.vm.freshPresence).toEqual([])
     expect(wrapper.vm.modalPresenceNotice).toBe('')
+    expect(wrapper.find('[data-testid="modal-presence"]').exists()).toBe(false)
   })
 
   it('sin nadie adentro el modal no muestra el aviso', async () => {
