@@ -3,7 +3,7 @@
 // La presencia es un superconjunto de los locks: quien abre un editor sigue estando
 // adentro, pero ya tiene un mensaje más informativo ("está evaluando Coherence").
 // Nombrarlo dos veces con dos textos distintos es peor que no nombrarlo.
-import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
+import { presentReviewersOf, joinReviewerNames, presenceNoticeText } from '@/utils/findingPresence'
 
 const PRESENT = [
   { finding_id: 'f1', user_id: 'u-ana', user_name: 'Ana Soto' },
@@ -70,6 +70,21 @@ describe('presentReviewersOf', () => {
     expect(presentReviewersOf(PRESENT, [], null, 'u-yo')).toEqual([])
     expect(presentReviewersOf([null, undefined], [], 'f1', 'u-yo')).toEqual([])
   })
+
+  it('COMPORTAMIENTO FIJADO: con myUserId falsy nadie se excluye como uno mismo', () => {
+    // `if (myUserId && ...)` sólo compara cuando hay con qué comparar. En el primer
+    // pintado, antes de que el store del usuario esté poblado, `myUserId` es
+    // undefined/null/'' y esta llamada NO filtra a nadie — uno mismo puede aparecer
+    // listado como revisando su propio hallazgo. Es el comportamiento de hoy, no
+    // necesariamente el deseado: este test lo deja escrito para que cambiarlo sea
+    // una decisión deliberada y no una regresión silenciosa.
+    expect(presentReviewersOf(PRESENT, [], 'f1', undefined))
+      .toEqual(['Ana Soto', 'Luis Paz'])
+    expect(presentReviewersOf(PRESENT, [], 'f1', null))
+      .toEqual(['Ana Soto', 'Luis Paz'])
+    expect(presentReviewersOf(PRESENT, [], 'f1', ''))
+      .toEqual(['Ana Soto', 'Luis Paz'])
+  })
 })
 
 // El conector («y» / «and» / «e») no es el mismo string en las tres traducciones, así
@@ -99,5 +114,38 @@ describe('joinReviewerNames', () => {
     // quedar en inglés.
     expect(joinReviewerNames(['Ana Soto', 'Luis Paz'], 'and'))
       .toBe('Ana Soto and Luis Paz')
+  })
+})
+
+// La frase completa que dibujan las tres superficies (la fila y los dos modales
+// de ViewTable.vue, el encabezado de editList.vue). `t` es un `$t` de mentira que
+// registra qué clave se usó, para comprobar que singular y plural no se
+// intercambian.
+describe('presenceNoticeText', () => {
+  const t = (key, params) => {
+    if (key === 'presence.and') return 'y'
+    if (key === 'presence.reviewing_one') return `${params.users} está revisando este hallazgo`
+    if (key === 'presence.reviewing_many') return `${params.users} están revisando este hallazgo`
+    return key
+  }
+
+  it('sin nombres devuelve vacío y no llama a t con una clave de presencia', () => {
+    expect(presenceNoticeText([], t)).toBe('')
+    expect(presenceNoticeText(null, t)).toBe('')
+  })
+
+  it('un nombre usa la clave singular', () => {
+    expect(presenceNoticeText(['Ana Soto'], t))
+      .toBe('Ana Soto está revisando este hallazgo')
+  })
+
+  it('dos nombres usan la clave plural, unidos por el conector', () => {
+    expect(presenceNoticeText(['Ana Soto', 'Luis Paz'], t))
+      .toBe('Ana Soto y Luis Paz están revisando este hallazgo')
+  })
+
+  it('tres nombres también usan la clave plural, con comas', () => {
+    expect(presenceNoticeText(['Ana Soto', 'Luis Paz', 'Mara Ruiz'], t))
+      .toBe('Ana Soto, Luis Paz y Mara Ruiz están revisando este hallazgo')
   })
 })

@@ -102,23 +102,49 @@ class PresenceService {
   }
 
   /**
-   * Quiénes están en cada hallazgo del proyecto.
+   * Quiénes están en cada hallazgo del proyecto, distinguiendo por qué `present`
+   * puede venir vacío.
    *
-   * Devuelve `[]` ante cualquier fallo y nunca lanza: los llamadores lo invocan
-   * desde cadenas que no tienen `.catch` propio, y ahí un throw se traga en silencio
-   * todo lo que sigue — el mismo modo de falla que documenta
-   * `editList.fetchAndUpdateRefLocks`.
+   * Mismo motivo que `lockService.probeRefLocks`: un array vacío tiene dos
+   * significados y uno de ellos miente. `enabled` es del SERVIDOR — con el flag
+   * de cliente encendido y el de servidor apagado, `get_presence` contesta
+   * `{enabled: false, present: []}`, y sin distinguirlo las cinco superficies de
+   * presencia quedan permanentemente vacías sin manera de saber por qué. Es
+   * exactamente la mala configuración que ya costó una sesión de debugging con
+   * los ref-locks.
+   *
+   * Devuelve el valor de repliegue ante cualquier fallo y nunca lanza: los
+   * llamadores lo invocan desde cadenas que no tienen `.catch` propio, y ahí un
+   * throw se traga en silencio todo lo que sigue — el mismo modo de falla que
+   * documenta `editList.fetchAndUpdateRefLocks`.
    */
-  async fetch (projectId) {
-    if (!this.isEnabled || !projectId) return []
+  async probePresence (projectId) {
+    if (!this.isEnabled || !projectId) return { present: [], enabled: true }
     try {
       const response = await axios.get(`/api/presence/${projectId}`,
         { headers: Api.getHeaders() })
-      const data = response && response.data
-      return (data && Array.isArray(data.present)) ? data.present : []
+      return this.readPresenceListing(response && response.data)
     } catch (e) {
-      return []
+      return { present: [], enabled: true }
     }
+  }
+
+  /**
+   * La forma que trae `get_presence` desde el día uno, y cualquier otra que no
+   * reconozcamos. Una forma desconocida cae en la conducta anterior a este
+   * método —`present: []`— y no cambia de rama: el servidor no puede
+   * instrumentar lo que este cliente descarta de su respuesta.
+   */
+  readPresenceListing (data) {
+    if (data && Array.isArray(data.present)) {
+      return { present: data.present, enabled: data.enabled !== false }
+    }
+    return { present: [], enabled: true }
+  }
+
+  /** Contrato plano para los llamadores que sólo necesitan la lista. */
+  async fetch (projectId) {
+    return (await this.probePresence(projectId)).present
   }
 }
 

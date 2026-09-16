@@ -71,7 +71,7 @@
         </b-col>
       </b-row>
 
-      <b-alert v-if="presenceNotice" show variant="info" class="mb-3"
+      <b-alert v-if="presenceNotice" show variant="info" class="mb-3 d-print-none"
         data-testid="worksheet-presence">
         <font-awesome-icon icon="user"></font-awesome-icon>
         {{ presenceNotice }}
@@ -137,7 +137,7 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
-import { presentReviewersOf, joinReviewerNames } from '@/utils/findingPresence'
+import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 // Más corto que los 15 s de las otras superficies que pintan candados
@@ -392,19 +392,15 @@ export default {
     /**
      * Los OTROS que están en este hallazgo. Informa, no bloquea nada.
      *
-     * El join de los nombres es `joinReviewerNames` (`@/utils/findingPresence`): ya
-     * lo pedían las dos superficies de `ViewTable.vue` (fila y modal), y una tercera
+     * La frase completa es `presenceNoticeText` (`@/utils/findingPresence`): ya la
+     * pedían las dos superficies de `ViewTable.vue` (fila y modal), y una tercera
      * copia escrita a mano acá era la primera oportunidad de que se desincronizaran.
      */
     presenceNotice: function () {
       const nombres = presentReviewersOf(
         this.activePresence, this.foreignRefLocks,
         this.findings && this.findings.id, this.currentUserId)
-      if (!nombres.length) return ''
-      const users = joinReviewerNames(nombres, this.$t('presence.and'))
-      return this.$t(
-        nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
-        { users })
+      return presenceNoticeText(nombres, this.$t.bind(this))
     }
   },
   mounted () {
@@ -772,8 +768,11 @@ export default {
           // propósito — ver el comentario de fetchAndUpdateRefLocks.
           this.fetchAndUpdateRefLocks()
           // Mismo momento y por la misma razón: es el primer punto con project_id.
+          // La presencia se pide UNA vez acá dentro de `fetchAndUpdateRefLocks` (su
+          // último `.then`) — llamar a `fetchPresence()` también en este punto
+          // disparaba un segundo `GET /api/presence` idéntico en cada carga y en
+          // cada recarga de `refreshIfSomebodyReleased()`.
           this.enterPresence()
-          this.fetchPresence()
         })
     },
     syncOrderWithProject: function () {

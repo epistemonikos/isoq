@@ -87,3 +87,27 @@ export function joinReviewerNames (nombres, connector) {
   if (nombres.length === 1) return nombres[0]
   return `${nombres.slice(0, -1).join(', ')} ${connector} ${nombres[nombres.length - 1]}`
 }
+
+/**
+ * La frase completa del aviso de presencia: junta los nombres y elige la clave
+ * singular o plural.
+ *
+ * Tres superficies (la fila y los dos modales de `ViewTable.vue`, y el encabezado
+ * de `editList.vue`) tenían esta misma cuenta escrita a mano cada una — el commit
+ * que extrajo `joinReviewerNames` dejó ésta, la otra mitad de la frase, copiada
+ * en las dos. `t` es la función de traducción del componente que llama: este
+ * módulo no importa i18n (mismo patrón que `SECTION_LABEL_KEYS` en
+ * `evidenceProfileLockKeys.js`), así que recibirla como parámetro es la misma
+ * dirección de dependencia que ya usa `joinReviewerNames` con el conector.
+ *
+ * @param {string[]} nombres de `presentReviewersOf`
+ * @param {function} t función `$t` del componente
+ * @returns {string} vacío si no hay nadie que nombrar
+ */
+export function presenceNoticeText (nombres, t) {
+  if (!nombres || !nombres.length) return ''
+  const users = joinReviewerNames(nombres, t('presence.and'))
+  return t(
+    nombres.length === 1 ? 'presence.reviewing_one' : 'presence.reviewing_many',
+    { users })
+}

@@ -121,6 +121,49 @@ describe('presenceService', () => {
     await expect(PresenceService.enter('p1', 'f1')).resolves.toBeUndefined()
   })
 
+  it('probePresence: enabled true con filas', async () => {
+    axios.get.mockResolvedValue({
+      data: { enabled: true, present: [{ finding_id: 'f1', user_id: 'u', user_name: 'A' }] }
+    })
+
+    const result = await PresenceService.probePresence('p1')
+
+    expect(result).toEqual({
+      present: [{ finding_id: 'f1', user_id: 'u', user_name: 'A' }],
+      enabled: true
+    })
+  })
+
+  it('probePresence: enabled false — el flag de servidor está apagado', async () => {
+    // El caso que se perdió antes con lockService: con el cliente encendido y el
+    // servidor apagado, `present` viene vacío pero por una razón distinta a «nadie
+    // está adentro». Sin este campo las cinco superficies de presencia quedan
+    // vacías sin manera de saber por qué.
+    axios.get.mockResolvedValue({ data: { enabled: false, present: [] } })
+
+    const result = await PresenceService.probePresence('p1')
+
+    expect(result).toEqual({ present: [], enabled: false })
+  })
+
+  it('probePresence: sin el campo `enabled` se asume true', async () => {
+    axios.get.mockResolvedValue({
+      data: { present: [{ finding_id: 'f1', user_id: 'u', user_name: 'A' }] }
+    })
+
+    const result = await PresenceService.probePresence('p1')
+
+    expect(result.enabled).toBe(true)
+  })
+
+  it('probePresence: un fallo de red devuelve present vacío y enabled true', async () => {
+    axios.get.mockRejectedValue(new Error('network'))
+
+    await expect(PresenceService.probePresence('p1')).resolves.toEqual({
+      present: [], enabled: true
+    })
+  })
+
   it('sin conexión, ping() no manda nada ni lo encola', async () => {
     // A diferencia de las mutaciones de negocio (que Api SÍ encola para el
     // reconecte), una presencia es una afirmación sobre el presente: replicarla
