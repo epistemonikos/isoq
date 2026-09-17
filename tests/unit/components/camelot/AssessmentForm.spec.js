@@ -4,6 +4,7 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 
 const localVue = createLocalVue()
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 jest.mock('@/utils/Api')
 jest.mock('@/services/lockService', () => ({
@@ -191,7 +192,9 @@ describe('AssessmentForm.vue', () => {
       })
       await localWrapper.setData({ selected: 'A', text1: 'Explanation' })
       await localWrapper.vm.save()
-      await localWrapper.vm.$nextTick()
+      // Un tick más: antes de escribir se le pregunta al servidor si el documento ya
+      // existe, para no crear un segundo documento del proyecto (ver resolveTableDoc).
+      await flushPromises()
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
       localWrapper.destroy()
     })
@@ -209,7 +212,7 @@ describe('AssessmentForm.vue', () => {
       })
       await localWrapper.setData({ selected: 'A', text1: 'Explanation' })
       await localWrapper.vm.save()
-      await localWrapper.vm.$nextTick()
+      await flushPromises()
       expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
       localWrapper.destroy()
     })

@@ -102,6 +102,7 @@
 <script>
 import Api from '@/utils/Api'
 import { isLockRejection } from '@/utils/lockErrors'
+import { resolveTableDoc } from '@/utils/tableDocs'
 import _debounce from 'lodash.debounce'
 import pendingEditsMixin from '@/mixins/pendingEditsMixin'
 import {
@@ -510,7 +511,7 @@ export default {
       this.text1 = ''
       this.notes = ''
     },
-    performSave (silent = false) {
+    async performSave (silent = false) {
       if (this.isReadOnly) return
       if (!this.refId) {
         this.isSaving = false
@@ -584,7 +585,22 @@ export default {
       const optionChanged = this.baselineOption !== this.selected
       if (localLeaf) Object.assign(localLeaf, leaf)
 
-      if (!this.assessments.id) {
+      // `assessments.id` en blanco no significa "no existe": también significa que el GET
+      // falló o que todavía no llegó. Crear en esos casos parte el proyecto en dos
+      // documentos y la lectura, que toma `data[0]`, puede caer en el que no tiene los
+      // datos. La regla vive en `resolveTableDoc` porque la comparten tres pantallas.
+      const destino = await resolveTableDoc({
+        knownId: this.assessments.id,
+        collection: '/isoqf_assessments',
+        organization: this.$route.params.org_id,
+        projectId: this.$route.params.id
+      })
+      if (destino.failed) {
+        onError(new Error('No se pudo verificar el documento de assessments'))
+        return
+      }
+
+      if (!destino.id) {
         // No document yet: create it through B with the canonical skeleton, then
         // every later edit goes through D.
         const seeded = emptyAssessmentItem(
@@ -619,7 +635,7 @@ export default {
       // Endpoint D: writes ONE leaf. Saving the study through B would replace
       // all ten and wipe whatever anyone else just wrote.
       return Api.patch(
-        `/isoqf_assessments/${this.assessments.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
+        `/isoqf_assessments/${destino.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
         leaf
       )
         .then(onSuccess)

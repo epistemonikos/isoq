@@ -354,6 +354,7 @@ import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { requestPendingEditsFlush } from '@/mixins/pendingEditsMixin'
+import { resolveTableDoc } from '@/utils/tableDocs'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
@@ -1622,43 +1623,6 @@ export default {
     onCancelEditing () {
       this.cancelEditing()
     },
-    /**
-     * Contesta si el proyecto YA tiene documento de características, preguntándoselo al
-     * servidor cuando no lo sabemos.
-     *
-     * `characteristics.id` en blanco significa dos cosas distintas: que el documento no
-     * existe —y crear está bien—, o que no lo pudimos leer. Lo segundo pasa cuando el GET
-     * de `getCharacteristics` falla (su `.catch` sólo muestra un toast y deja el estado
-     * inicial `{ items: [] }`) y cuando el auto-guardado de 1,5 s le gana a esa respuesta,
-     * que en un proyecto grande tarda. Crear en esos casos parte el proyecto en dos
-     * documentos, y como la lectura toma `response.data[0]` sin orden garantizado, la
-     * próxima puede caer en el que no tiene los datos. Medido en la base: un proyecto con
-     * 13 documentos creados de a uno, con minutos de diferencia, el mismo día.
-     *
-     * Devuelve `{ id }` con el documento a escribir, `{ id: null }` si de verdad no hay
-     * ninguno, o `{ failed: true }` si no se pudo averiguar — y ahí no se crea nada: un
-     * guardado perdido con aviso es preferible a los datos partidos en silencio.
-     */
-    async resolveCharacteristicsDoc () {
-      if (this.characteristics.id) return { id: this.characteristics.id }
-      try {
-        const response = await Api.get('/isoqf_characteristics', {
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
-        })
-        const doc = response.data && response.data.length ? response.data[0] : null
-        if (doc && doc.id) {
-          // Sólo el id: el documento del servidor no puede pisar lo que se está
-          // escribiendo, que vive en el estado local, y el PATCH es por ítem.
-          this.$set(this.characteristics, 'id', doc.id)
-          return { id: doc.id }
-        }
-        return { id: null }
-      } catch (error) {
-        console.error('No se pudo verificar el documento de características:', error)
-        return { failed: true }
-      }
-    },
     async saveField (newValue, keepEditing = false) {
       if (!this.characteristics || this.isRefReadOnly) return
 
@@ -1707,7 +1671,13 @@ export default {
 
       // Se arma el payload ANTES de preguntar: lo que se está guardando es lo local, y la
       // verificación no debe poder cambiarlo.
-      const destino = await this.resolveCharacteristicsDoc()
+      const destino = await resolveTableDoc({
+        knownId: this.characteristics.id,
+        collection: '/isoqf_characteristics',
+        organization: this.$route.params.org_id,
+        projectId: this.$route.params.id
+      })
+      if (destino.id) this.$set(this.characteristics, 'id', destino.id)
       if (destino.failed) {
         this.isSavingField = false
         this.$notify.error(this.$t('notifications.save_error'))

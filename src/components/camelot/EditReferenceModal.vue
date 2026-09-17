@@ -136,6 +136,7 @@ import { conflictComparison } from '@/utils/versionConflict'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import { copyItemMetadata } from '@/utils/itemMetadata'
+import { resolveTableDoc } from '@/utils/tableDocs'
 import { withoutVirtualMark } from '@/utils/camelotFields'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
@@ -729,7 +730,7 @@ export default {
       const saved = items.find(row => row && row.ref_id === refId)
       this.confirmedRowMetadata = copyItemMetadata({}, saved)
     },
-    performSave (closeAfter) {
+    async performSave (closeAfter) {
       if (this.isSaving || this.isReadOnly) return
       this.isSaving = true
       if (!closeAfter) this.autoSaveStatus = 'saving'
@@ -806,7 +807,25 @@ export default {
       //
       // `mergedFields` sigue siendo el contenido de la rama POST, que manda el documento
       // completo: ahí `fields` no es un colado sino el cuerpo.
-      const apiCall = this.charsData.id
+      // `charsData.id` en blanco no significa sólo "no existe": también que el GET falló o
+      // que todavía no llegó. Crear en esos casos deja al proyecto con dos documentos, y
+      // las lecturas —que toman `data[0]`— caen en cualquiera. Misma regla que el Paso 4,
+      // en el mismo lugar: `resolveTableDoc`.
+      const destino = await resolveTableDoc({
+        knownId: this.charsData.id,
+        collection: '/isoqf_characteristics',
+        organization: this.$route.params.org_id || '',
+        projectId: this.$route.params.id || ''
+      })
+      if (destino.failed) {
+        this.isSaving = false
+        this.autoSaveStatus = null
+        this.$notify.error(this.$t('notifications.save_error'))
+        return
+      }
+      if (destino.id && !this.charsData.id) this.$set(this.charsData, 'id', destino.id)
+
+      const apiCall = destino.id
         ? this.patchItemAfterColumns(item, generatedKeys)
         : Api.post('/isoqf_characteristics/', {
           organization: this.$route.params.org_id || '',
