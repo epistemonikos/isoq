@@ -1622,7 +1622,44 @@ export default {
     onCancelEditing () {
       this.cancelEditing()
     },
-    saveField (newValue, keepEditing = false) {
+    /**
+     * Contesta si el proyecto YA tiene documento de características, preguntándoselo al
+     * servidor cuando no lo sabemos.
+     *
+     * `characteristics.id` en blanco significa dos cosas distintas: que el documento no
+     * existe —y crear está bien—, o que no lo pudimos leer. Lo segundo pasa cuando el GET
+     * de `getCharacteristics` falla (su `.catch` sólo muestra un toast y deja el estado
+     * inicial `{ items: [] }`) y cuando el auto-guardado de 1,5 s le gana a esa respuesta,
+     * que en un proyecto grande tarda. Crear en esos casos parte el proyecto en dos
+     * documentos, y como la lectura toma `response.data[0]` sin orden garantizado, la
+     * próxima puede caer en el que no tiene los datos. Medido en la base: un proyecto con
+     * 13 documentos creados de a uno, con minutos de diferencia, el mismo día.
+     *
+     * Devuelve `{ id }` con el documento a escribir, `{ id: null }` si de verdad no hay
+     * ninguno, o `{ failed: true }` si no se pudo averiguar — y ahí no se crea nada: un
+     * guardado perdido con aviso es preferible a los datos partidos en silencio.
+     */
+    async resolveCharacteristicsDoc () {
+      if (this.characteristics.id) return { id: this.characteristics.id }
+      try {
+        const response = await Api.get('/isoqf_characteristics', {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+        const doc = response.data && response.data.length ? response.data[0] : null
+        if (doc && doc.id) {
+          // Sólo el id: el documento del servidor no puede pisar lo que se está
+          // escribiendo, que vive en el estado local, y el PATCH es por ítem.
+          this.$set(this.characteristics, 'id', doc.id)
+          return { id: doc.id }
+        }
+        return { id: null }
+      } catch (error) {
+        console.error('No se pudo verificar el documento de características:', error)
+        return { failed: true }
+      }
+    },
+    async saveField (newValue, keepEditing = false) {
       if (!this.characteristics || this.isRefReadOnly) return
 
       this.isSavingField = true
@@ -1668,8 +1705,17 @@ export default {
       // upserts the matched item; other rows are left untouched. No refetch needed.
       const itemPayload = this.characteristics.items.find(it => String(it.ref_id) === String(this.refId))
 
-      const request = this.characteristics.id
-        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/item/${this.refId}`, itemPayload)
+      // Se arma el payload ANTES de preguntar: lo que se está guardando es lo local, y la
+      // verificación no debe poder cambiarlo.
+      const destino = await this.resolveCharacteristicsDoc()
+      if (destino.failed) {
+        this.isSavingField = false
+        this.$notify.error(this.$t('notifications.save_error'))
+        return
+      }
+
+      const request = destino.id
+        ? Api.patch(`/isoqf_characteristics/${destino.id}/item/${this.refId}`, itemPayload)
         : Api.post('/isoqf_characteristics/', {
           organization: this.characteristics.organization,
           project_id: this.characteristics.project_id,

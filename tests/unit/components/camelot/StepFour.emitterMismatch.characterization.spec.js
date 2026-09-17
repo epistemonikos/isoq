@@ -108,7 +108,17 @@ describe('StepFour.vue — desajuste emisor/destino en saveField (CARACTERIZACI�
     })
 
     // this.meta[null].items[null] -> TypeError. El PATCH nunca sale.
-    expect(() => wrapper.vm.onAutoSaveField('texto huerfano')).toThrow(TypeError)
+    //
+    // Desde que `saveField` es async —tiene que preguntar si el documento existe antes de
+    // crearlo— el TypeError llega como rechazo y no como excepción síncrona. Lo que este
+    // test caracteriza no cambió: ese camino revienta y no escribe. El rechazo no queda
+    // suelto porque `trackPendingWrite` lo absorbe, que es lo que hace `onAutoSaveField`.
+    await expect(wrapper.vm.saveField('texto huerfano', true)).rejects.toThrow(TypeError)
+    expect(Api.patch).not.toHaveBeenCalled()
+
+    // Y por el camino real (el que usa la tarjeta) el error no se propaga ni queda sin
+    // manejar: la operación se anota y se descarta.
+    await expect(wrapper.vm.onAutoSaveField('texto huerfano')).resolves.toBeDefined()
     expect(Api.patch).not.toHaveBeenCalled()
 
     wrapper.destroy()
