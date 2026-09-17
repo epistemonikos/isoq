@@ -88,7 +88,8 @@
                   {{ $t('characteristics.description') }}
                 </p>
                 <template v-if="project.use_camelot">
-                  <CamelotStepThree type="isoqf_characteristics" :references="references" :canEdit="isEditing">
+                  <CamelotStepThree type="isoqf_characteristics" :references="references" :canEdit="isEditing"
+                    @editor-open="onCamelotEditorOpen">
                   </CamelotStepThree>
                 </template>
                 <template v-else>
@@ -119,7 +120,8 @@
                   {{ $t('steps.step_4_long_description') }}
                 </p>
                 <template v-if="project.use_camelot">
-                  <CamelotStepFour type="isoqf_methodological" :references="references" :canEdit="isEditing">
+                  <CamelotStepFour type="isoqf_methodological" :references="references" :canEdit="isEditing"
+                    @editor-open="onCamelotEditorOpen">
                   </CamelotStepFour>
                 </template>
                 <template v-else>
@@ -543,6 +545,11 @@ export default {
       suppressCategoryReload: false,
       isoqEditorOpen: false,
       projectEditorOpen: false,
+      // Y un tercero para los modales de los pasos 3 y 4 de CAMELOT, que viven en sus
+      // propios componentes. Su `hasOpenEditor()` sólo frena el sondeo de ellos; éste
+      // recarga las referencias, y el watcher de `references` de allá encadena la recarga
+      // de lo que el modal abierto está mostrando.
+      camelotEditorOpen: false,
       stepStage: 0,
       camelotLogo: require('@/assets/camelot-logo.svg'),
       project: {
@@ -824,7 +831,7 @@ export default {
      * dejaría colgados los índices que los modales capturaron al abrir.
      */
     hasOpenEditor: function () {
-      return this.isoqEditorOpen || this.projectEditorOpen
+      return this.isoqEditorOpen || this.projectEditorOpen || this.camelotEditorOpen
     },
     /** ViewTable avisa por evento porque los modales del listado viven en el hijo. */
     onIsoqEditorOpen: function (open) {
@@ -834,6 +841,15 @@ export default {
     /** Ídem para los modales propios de esta vista (alta, reordenar, categorías). */
     onProjectEditorOpen: function (open) {
       this.projectEditorOpen = open
+      if (!open) this.flushPendingRefresh()
+    },
+    /**
+     * Ídem para los editores de los pasos 3 y 4 de CAMELOT. Un solo flag para los dos: no
+     * se pueden ver a la vez —son pasos distintos del mismo acordeón— y lo único que se
+     * pregunta acá es si hay alguien escribiendo en alguna parte.
+     */
+    onCamelotEditorOpen: function (open) {
+      this.camelotEditorOpen = open
       if (!open) this.flushPendingRefresh()
     },
     fetchAndUpdateRefLocks: async function () {

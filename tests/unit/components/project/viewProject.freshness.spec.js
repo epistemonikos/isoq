@@ -285,3 +285,64 @@ describe('viewProject — el sondeo periódico', () => {
     wrapper = null
   })
 })
+
+// Los pasos 3 y 4 de CAMELOT son componentes hijos con sus propios modales, y su guarda
+// `hasOpenEditor()` sólo frena SU sondeo. El de esta vista los esquivaba: recarga las
+// referencias, y el watcher de `references` en StepFour/StepThree encadena una recarga de
+// los datos que el modal abierto está mostrando. Reporte que lo originó: en el Paso 4, la
+// opción recién marcada se desmarcaba sola y la explicación se borraba a medio escribir.
+describe('viewProject — los editores de CAMELOT también frenan el refresco', () => {
+  let wrapper
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    axios.get.mockResolvedValue({ data: { id: 'proj1', last_update: 1000 } })
+    wrapper = createWrapper()
+    await flushPromises()
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  it('el modal de un paso CAMELOT cuenta como editor abierto', () => {
+    wrapper.vm.onCamelotEditorOpen(true)
+
+    expect(wrapper.vm.hasOpenEditor()).toBe(true)
+  })
+
+  it('con el modal del Paso 4 abierto, un cambio ajeno no recarga las referencias', async () => {
+    const getReferences = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+    wrapper.vm.onCamelotEditorOpen(true)
+    await wrapper.setData({ knownLastUpdate: 1000 })
+    axios.get.mockResolvedValue({ data: { id: 'proj1', last_update: 2000 } })
+
+    await wrapper.vm.checkProjectFreshness()
+
+    expect(wrapper.vm.pendingRefresh).toBe(true)
+    expect(getReferences).not.toHaveBeenCalled()
+  })
+
+  it('al cerrarse, aplica el refresco que quedó esperando', async () => {
+    const getLists = jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    await wrapper.setData({ pendingRefresh: true })
+
+    wrapper.vm.onCamelotEditorOpen(false)
+    await flushPromises()
+
+    expect(getLists).toHaveBeenCalledTimes(1)
+    expect(wrapper.vm.pendingRefresh).toBe(false)
+  })
+
+  // El handler no sirve de nada si nadie lo llama: la plantilla tiene que escuchar el
+  // evento en los dos pasos.
+  it('los dos pasos CAMELOT están cableados al handler', async () => {
+    await wrapper.setData({ project: { ...wrapper.vm.project, use_camelot: true } })
+
+    const four = wrapper.find({ name: 'CamelotStepFour' })
+    const three = wrapper.find({ name: 'CamelotStepThree' })
+
+    expect(four.exists()).toBe(true)
+    expect(three.exists()).toBe(true)
+    expect(typeof four.vm.$listeners['editor-open']).toBe('function')
+    expect(typeof three.vm.$listeners['editor-open']).toBe('function')
+  })
+})

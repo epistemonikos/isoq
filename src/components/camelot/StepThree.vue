@@ -167,6 +167,14 @@ export default {
     }
   },
   watch: {
+    /**
+     * El refresco de `viewProject` no conoce estos modales: recarga las referencias y eso
+     * encadena la recarga de los datos que el editor abierto está mostrando. `hasOpenEditor()`
+     * sólo contesta por el sondeo de este componente, así que el hecho sube por evento.
+     */
+    editorOpen (open) {
+      this.$emit('editor-open', open)
+    },
     filterableColumns: {
       immediate: true,
       handler (newCols, oldCols) {
@@ -296,6 +304,13 @@ export default {
     }
   },
   computed: {
+    /**
+     * Hay algo abierto que la persona puede estar escribiendo. Un solo lugar para los dos
+     * modales: lo usan la guarda del sondeo propio y el aviso al padre.
+     */
+    editorOpen () {
+      return this.currentItem !== null || this.columnsModalOpen
+    },
     tableItems () {
       // Always use references as base to ensure all are displayed
       const items = this.references.map(ref => {
@@ -443,7 +458,7 @@ export default {
     },
     /** A reload while a study is open would discard what the user is writing. */
     hasOpenEditor: function () {
-      return this.currentItem !== null || this.columnsModalOpen
+      return this.editorOpen
     },
     onColumnsModalClosed: function () {
       this.columnsModalOpen = false

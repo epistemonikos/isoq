@@ -449,6 +449,9 @@ export default {
       holdsStudyLock: false,
       refLockedBy: null,
       isModalOpen: false,
+      // Escrituras que `flushBeforeLeaving` dejó en vuelo, para no soltar el lock antes de
+      // que lleguen. No es reactivo a propósito: nada lo dibuja.
+      pendingWrites: null,
       // Cells whose lock we asked for and did not get, as 'stage-option' keys.
       // Kept apart from the ones the /refs poll reports so a poll never erases
       // a refusal we just received.
@@ -809,9 +812,37 @@ export default {
      * del grupo no lo está, es un aviso sobre algo que no está en pantalla—. Un alcance
      * ancho se pide explícitamente pasando `this.incompleteMetasInStage`.
      */
+    /**
+     * Pide a los formularios de este estudio que escriban lo que el debounce dejó agendado.
+     *
+     * Se llama SIEMPRE antes de irse, nunca después: salir de una etapa la desmonta —se
+     * conmutan con `v-if`— y el `beforeDestroy` de cada AssessmentForm cancela su
+     * auto-guardado. Un flush posterior no encuentra a nadie a quien pedírselo.
+     *
+     * Sin lock no hay nada que escribir: el 409 llegaría igual y el texto se perdería lo
+     * mismo, con un error de por medio.
+     */
+    flushBeforeLeaving () {
+      if (this.isRefReadOnly) return Promise.resolve()
+      // Se recuerda, no sólo se dispara: quien suelta el ref-lock —el cambio de celda y el
+      // cierre— tiene que esperar a que la escritura haya llegado. Sin eso el PATCH sale y
+      // el servidor lo rechaza con 409 `lock_not_held`, que es el mismo dato perdido con un
+      // error encima. Medido en navegador al cambiar de etapa.
+      this.pendingWrites = requestPendingEditsFlush(this.refId)
+      return this.pendingWrites
+    },
+    /** Espera lo que `flushBeforeLeaving` dejó en vuelo. Una sola vez: después se limpia. */
+    async settlePendingWrites () {
+      const enVuelo = this.pendingWrites
+      this.pendingWrites = null
+      if (enVuelo) await enVuelo
+    },
     guardExplanation (action, metas) {
       const blocking = metas.filter(meta => this.incompleteMetasInStage.includes(meta))
       if (!blocking.length) {
+        // La salida que no pregunta nada es la frecuente —la celda está completa— y era la
+        // única que se iba sin escribir. La rama del «más tarde» ya lo hacía.
+        this.flushBeforeLeaving()
         action()
         return
       }
@@ -895,7 +926,7 @@ export default {
       this.pendingNavigation = null
       this.explanationGuardFocusMeta = null
       this.pendingFocusId = null
-      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      this.flushBeforeLeaving()
       if (action) action()
     },
     /** Salida por pestaña. Sólo pregunta por la pestaña que se abandona. */
@@ -927,11 +958,19 @@ export default {
      * que inició una persona sobre este modal.
      */
     onAssessmentModalHide (bvEvt) {
+      // Ya vino de requestModalClose, que pasó por el guard y escribió lo pendiente.
       if (this.bypassCloseGuard) return
       if (!bvEvt || bvEvt.trigger !== 'headerclose') return
-      if (!this.activeCellIsIncomplete) return
-      bvEvt.preventDefault()
-      this.requestModalClose()
+      if (this.activeCellIsIncomplete) {
+        bvEvt.preventDefault()
+        this.requestModalClose()
+        return
+      }
+      // Con la celda completa no hay aviso que interceptar: el modal se cierra acá mismo y
+      // se lleva puesto el debounce que todavía no disparó. Los cierres PROGRAMÁTICOS no
+      // pasan por este punto a propósito — cada uno ya decidió: la inactividad escribe, y
+      // el de «la misma persona en otra pestaña» justamente no debe escribir.
+      this.flushBeforeLeaving()
     },
     // True when THIS cell is off limits: either the whole study is read-only, or
     // another user holds this particular leaf.
@@ -959,7 +998,11 @@ export default {
      * lock stays put: it is what authorizes the Step 3 fields in the same modal.
      */
     async syncLeafLock (newKey, oldKey) {
-      if (oldKey) await LockService.releaseRef(oldKey)
+      if (oldKey) {
+        // El orden importa: soltar antes de que la escritura llegue la deja sin permiso.
+        await this.settlePendingWrites()
+        await LockService.releaseRef(oldKey)
+      }
       if (!newKey || !this.isModalOpen || !this.canEdit) return
 
       const result = await LockService.acquireRef(this.$route.params.id, newKey)
@@ -1234,6 +1277,10 @@ export default {
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
       this.isModalOpen = true
+      // El refresco de `viewProject` no conoce este modal: recarga las referencias y eso
+      // encadena un `getAssessments()` acá, cuyo documento pisaba lo que se está
+      // escribiendo. `hasOpenEditor()` sólo contesta por el sondeo propio.
+      this.$emit('editor-open', true)
       this.deniedCellHolders = new Map()
       this.studyLockLost = false
       this.pendingConflictRefId = ''
@@ -1377,7 +1424,7 @@ export default {
         this.onAssessmentModalClosed()
         return
       }
-      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      this.flushBeforeLeaving()
       if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
       this.$bvModal.hide('modal-1')
       // No se delega la liberación al `@hidden`. Medido en navegador: con la pestaña de
@@ -1398,10 +1445,12 @@ export default {
       // Antes de soltar los locks: el 409 en vuelo llega después.
       this.retainConflictTarget()
       this.isModalOpen = false
+      this.$emit('editor-open', false)
       const suelta = !this.skipReleaseOnClose
       this.skipReleaseOnClose = false
       // No argument: releases the bare study lock AND every leaf lock still held.
-      if (suelta) LockService.releaseRef()
+      // Igual que en syncLeafLock: primero que llegue lo que se está escribiendo.
+      if (suelta) this.settlePendingWrites().then(() => LockService.releaseRef())
       this.holdsStudyLock = false
       this.studyLockLost = false
       this.isRefReadOnly = false

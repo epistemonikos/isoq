@@ -224,6 +224,10 @@ describe('StepFour — otra pestaña de la misma persona', () => {
     otherTabActiveOn.mockReturnValue(false)
 
     wrapper.vm.onInactivityExpired()
+    // El release espera a que llegue lo que el flush dejó en vuelo: soltar el lock con el
+    // PATCH viajando lo deja sin permiso. Sigue sin depender del `@hidden`, que es lo que
+    // este bloque protege.
+    await flushPromises()
 
     expect(LockService.releaseRef).toHaveBeenCalled()
     wrapper.destroy()
@@ -306,6 +310,8 @@ describe('StepFour — expiración', () => {
     expect(wrapper.vm.isModalOpen).toBe(true)
 
     wrapper.vm.onInactivityExpired()
+    // Un microtask, no el `@hidden`: lo que se espera es la escritura pendiente.
+    await flushPromises()
 
     expect(LockService.releaseRef).toHaveBeenCalled()
     expect(wrapper.vm.isModalOpen).toBe(false)

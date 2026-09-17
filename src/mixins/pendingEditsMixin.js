@@ -21,10 +21,25 @@
  */
 export const FLUSH_PENDING_EDITS = 'flush-pending-edits'
 
-/** Del lado del anfitrión: pide a los editores de `scope` que persistan lo pendiente. */
+/**
+ * Del lado del anfitrión: pide a los editores de `scope` que persistan lo pendiente, y
+ * devuelve una promesa que resuelve cuando terminaron de escribir.
+ *
+ * Esperar no es un lujo: quien se va suele soltar el ref-lock justo después, y un PATCH
+ * disparado pero todavía en vuelo llega sin permiso. Medido en navegador al cambiar de
+ * etapa en el Paso 4: el servidor contestaba 409 `lock_not_held` y el dato se perdía igual
+ * que si nunca se hubiera pedido el flush.
+ *
+ * Los editores declaran su escritura devolviéndola desde `flushPendingEdits`; el que no
+ * devuelve nada —hay varios que escriben y siguen— no cambia de comportamiento, y la
+ * promesa resuelve igual. Nunca rechaza: un editor que falla no puede dejar clavado al que
+ * se está yendo, y su error ya viaja por el canal de conflicto.
+ */
 export function requestPendingEditsFlush (scope) {
-  if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent(FLUSH_PENDING_EDITS, { detail: { scope: scope || null } }))
+  if (typeof window === 'undefined') return Promise.resolve([])
+  const detail = { scope: scope || null, pending: [] }
+  window.dispatchEvent(new CustomEvent(FLUSH_PENDING_EDITS, { detail }))
+  return Promise.all(detail.pending.map(p => Promise.resolve(p).catch(() => null)))
 }
 
 export default {
@@ -36,8 +51,14 @@ export default {
   },
   methods: {
     handlePendingEditsFlush (event) {
-      const scope = (event && event.detail && event.detail.scope) || null
-      if (typeof this.flushPendingEdits === 'function') this.flushPendingEdits(scope)
+      const detail = (event && event.detail) || {}
+      if (typeof this.flushPendingEdits !== 'function') return
+      const escritura = this.flushPendingEdits(detail.scope || null)
+      // El componente no tiene por qué conocer el evento: si devolvió algo esperable, lo
+      // anota acá para que el anfitrión pueda aguantar el lock hasta que termine.
+      if (escritura && typeof escritura.then === 'function' && Array.isArray(detail.pending)) {
+        detail.pending.push(escritura)
+      }
     }
   }
 }

@@ -133,6 +133,14 @@ export default {
        * y el propio guardado manual.
        */
       baselineOption: null,
+      /**
+       * La celda tal como la tomamos del documento la última vez: al montar, al cambiar de
+       * celda, o al guardar. Es el punto de comparación para saber si los campos traen un
+       * borrador encima; no es lo mismo que `baselineOption`, que responde otra pregunta
+       * (si el guardado MANUAL movió el juicio) y a propósito no se mueve con el
+       * auto-guardado.
+       */
+      hydratedLeaf: { option: null, text: '', notes: '' },
       isSaving: false,
       autoSaveStatus: null,
       options: [
@@ -321,9 +329,7 @@ export default {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items.length) {
-        this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
-        this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
-        this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
+        this.hydrateFrom(this.leafAt(this.assessments, this.modalIndex, newValue, this.selectedMeta))
         this.baselineOption = this.selected
       }
     },
@@ -331,9 +337,7 @@ export default {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items) {
-        this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
-        this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
-        this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
+        this.hydrateFrom(this.leafAt(this.assessments, this.modalIndex, this.modalStage, newValue))
         this.baselineOption = this.selected
       }
     },
@@ -341,9 +345,7 @@ export default {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items && this.assessments.items[newValue]) {
-        this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
-        this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
-        this.notes = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].notes || ''
+        this.hydrateFrom(this.leafAt(this.assessments, newValue, this.modalStage, this.selectedMeta))
         this.baselineOption = this.selected
       }
     },
@@ -351,14 +353,22 @@ export default {
      * Rehidrata desde el documento recargado. NO toca `baselineOption`: este watcher
      * corre después de CADA guardado (el éxito dispara un refetch en el padre), así que
      * mover ahí la referencia la dejaría siempre igual a lo elegido.
+     *
+     * Y NO pisa un borrador. Acá llegan documentos que la persona no pidió: el refresco de
+     * `viewProject` recarga las referencias cada 15 s y eso encadena un `getAssessments`,
+     * y el refetch del propio guardado responde con lo que el servidor alcanzó a escribir.
+     * Los dos llegan con datos ANTERIORES a lo que se está tecleando, así que sincronizar a
+     * ciegas desmarcaba la opción recién elegida y borraba la explicación a medio escribir.
+     * El criterio es el estado, no el origen: si los campos difieren de la última
+     * hidratación, hay algo sin guardar encima y el documento entrante se descarta. La
+     * próxima hidratación legítima llega igual — el guardado propio vuelve a fijar el punto
+     * de referencia, y cambiar de celda rehidrata sin condición.
      */
     assessments: {
       handler (newValue) {
-        if (newValue.items.length) {
-          this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
-          this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
-          this.notes = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
-        }
+        if (!newValue.items.length) return
+        if (this.hasUnsavedEdits()) return
+        this.hydrateFrom(this.leafAt(newValue, this.modalIndex, this.modalStage, this.selectedMeta))
       },
       deep: true
     },
@@ -374,12 +384,10 @@ export default {
   },
   mounted: function () {
     if (this.assessments.items.length) {
-      this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
-      this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
-      this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
+      this.hydrateFrom(this.leafAt(this.assessments, this.modalIndex, this.modalStage, this.selectedMeta))
       this.baselineOption = this.selected
     }
-    this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
+    this.autoSaveDebounced = _debounce(function () { return this.performSave(true) }.bind(this), 1500)
   },
   beforeDestroy () {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
@@ -393,6 +401,30 @@ export default {
     })
   },
   methods: {
+    /** La celda (stage, option) de un estudio dentro de un documento, o null si no está. */
+    leafAt (doc, index, stage, meta) {
+      const item = doc && doc.items ? doc.items[index] : null
+      const stages = item && item.stages ? item.stages[stage] : null
+      return stages && stages.options ? stages.options[meta] : null
+    },
+    /** Único punto donde el documento escribe en los campos: copia y fija la referencia. */
+    hydrateFrom (leaf) {
+      if (!leaf) return
+      this.selected = leaf.option
+      this.text1 = leaf.text
+      this.notes = leaf.notes || ''
+      this.markHydrated()
+    },
+    markHydrated () {
+      this.hydratedLeaf = { option: this.selected, text: this.text1, notes: this.notes }
+    },
+    /** Hay algo escrito que el servidor todavía no confirmó. */
+    hasUnsavedEdits () {
+      const saved = this.hydratedLeaf
+      return this.selected !== saved.option ||
+        this.text1 !== saved.text ||
+        this.notes !== saved.notes
+    },
     checkChanges () {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
       const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
@@ -417,10 +449,7 @@ export default {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items && this.assessments.items[this.modalIndex]) {
-        const opts = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
-        this.selected = opts.option
-        this.text1 = opts.text
-        this.notes = opts.notes || ''
+        this.hydrateFrom(this.leafAt(this.assessments, this.modalIndex, this.modalStage, this.selectedMeta))
       }
       // Cerrar deja de ser decisión de este componente: el padre tiene que poder frenarlo
       // si alguna celda de la etapa quedó con un juicio sin explicar.
@@ -470,7 +499,11 @@ export default {
     flushPendingEdits (scope) {
       if (this.isReadOnly) return
       if (scope && scope !== this.refId) return
-      if (this.autoSaveDebounced) this.autoSaveDebounced.flush()
+      // Devuelve la escritura para que quien se va pueda esperarla: soltar el ref-lock con
+      // el PATCH en vuelo lo deja llegar sin permiso (409 `lock_not_held`), y el texto se
+      // pierde igual. `flush()` es no-op sin nada agendado, y ahí devuelve undefined.
+      if (!this.autoSaveDebounced) return
+      return this.autoSaveDebounced.flush()
     },
     clearSelection () {
       this.selected = null
@@ -491,6 +524,11 @@ export default {
       const leaf = { option: this.selected, text: this.text1, notes: this.notes }
 
       const onSuccess = () => {
+        // Lo que acabamos de escribir pasa a ser "lo guardado", y antes de pedir el
+        // refetch: si no, el documento que vuelve encontraría los campos marcados como
+        // borrador y no se aplicaría nunca más. Si la persona siguió editando mientras el
+        // PATCH volaba, sus valores ya difieren de éste y el borrador se sigue protegiendo.
+        this.hydratedLeaf = { option: leaf.option, text: leaf.text, notes: leaf.notes }
         // Refetch rather than trusting the reloaded document this endpoint
         // returns: StepFour merges items across SEVERAL isoqf_assessments
         // documents, and a single doc would not reproduce that merge.
@@ -557,14 +595,13 @@ export default {
             seeded.stages[this.modalStage].options[this.selectedMeta]) {
           Object.assign(seeded.stages[this.modalStage].options[this.selectedMeta], leaf)
         }
-        Api.post('/isoqf_assessments', {
+        return Api.post('/isoqf_assessments', {
           organization: this.$route.params.org_id,
           project_id: this.$route.params.id,
           items: [seeded]
         })
           .then(onSuccess)
           .catch(onError)
-        return
       }
 
       // The backend keys stages by stages[].key, not by array position, and
@@ -581,7 +618,7 @@ export default {
 
       // Endpoint D: writes ONE leaf. Saving the study through B would replace
       // all ten and wipe whatever anyone else just wrote.
-      Api.patch(
+      return Api.patch(
         `/isoqf_assessments/${this.assessments.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
         leaf
       )
