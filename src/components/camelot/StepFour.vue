@@ -828,7 +828,27 @@ export default {
       // cierre— tiene que esperar a que la escritura haya llegado. Sin eso el PATCH sale y
       // el servidor lo rechaza con 409 `lock_not_held`, que es el mismo dato perdido con un
       // error encima. Medido en navegador al cambiar de etapa.
-      this.pendingWrites = requestPendingEditsFlush(this.refId)
+      //
+      // Se COMPONE en vez de asignar: el dispatch es síncrono, y los campos de estudio
+      // responden a él emitiendo, así que su PATCH ya quedó anotado acá antes de que esta
+      // línea corra. Asignar lo borraría.
+      return this.trackPendingWrite(requestPendingEditsFlush(this.refId))
+    },
+    /**
+     * Anota una escritura en vuelo para que el release del ref-lock la espere.
+     *
+     * Hace falta un registro propio además del canal de `flushPendingEdits` porque las
+     * tarjetas de campos de estudio NO escriben: emiten, y el PATCH lo hace este
+     * componente. La promesa vive acá, así que acá se anota — y queda cubierto también el
+     * auto-guardado normal, que no pasa por ningún flush.
+     *
+     * Nunca rechaza: un guardado fallido no puede dejar el lock tomado para siempre.
+     */
+    trackPendingWrite (escritura) {
+      const anterior = this.pendingWrites
+      this.pendingWrites = Promise.all(
+        [anterior, escritura].map(p => Promise.resolve(p).catch(() => null))
+      )
       return this.pendingWrites
     },
     /** Espera lo que `flushBeforeLeaving` dejó en vuelo. Una sola vez: después se limpia. */
@@ -1656,7 +1676,9 @@ export default {
           items: [itemPayload]
         })
 
-      request
+      // Se devuelve la cadena: quien anota esta operación necesita que su promesa resuelva
+      // cuando la escritura TERMINÓ, no cuando salió. Si no, el lock se suelta igual.
+      return request
         .then(response => {
           const responseData = response.data.$set || response.data
           this.characteristics = {
@@ -1683,11 +1705,18 @@ export default {
           this.getCharacteristics()
         })
     },
+    /**
+     * Se anota la operación ENTERA, no la petición: `saveField` empieza preguntando si el
+     * documento existe, así que para cuando arma el PATCH ya pasó un await. Anotarlo desde
+     * adentro llegaría tarde —`flushBeforeLeaving` compone su promesa apenas termina el
+     * dispatch, que es síncrono— y el cierre soltaría el ref-lock con la escritura en vuelo.
+     */
     onSaveField (newValue) {
-      this.saveField(newValue)
+      // Devuelve la operación anotada (que nunca rechaza) para poder afirmarlo en tests.
+      return this.trackPendingWrite(this.saveField(newValue))
     },
     onAutoSaveField (newValue) {
-      this.saveField(newValue, true)
+      return this.trackPendingWrite(this.saveField(newValue, true))
     }
   }
 }
