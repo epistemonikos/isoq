@@ -15,20 +15,92 @@ export { refLockKeyFromUrl }
 // Estado de conexión
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 
+/*
+ * Un error de red es una SOSPECHA de estar sin conexión, no un hecho.
+ *
+ * Antes la dejaba firme: `isOnline` quedaba en false y lo único que lo devolvía era el
+ * evento `online` del navegador, que no llega si el navegador nunca perdió la red (se
+ * reinició el servidor, un wifi que parpadeó). La pestaña entera quedaba sirviendo caché y
+ * encolando escrituras hasta recargar, y OfflineIndicator lo copiaba al store.
+ *
+ * Ahora `markOffline()` además pregunta: sondea `/api/health` con espera creciente hasta
+ * que el servidor conteste. Con el navegador sin red no sondea — el evento `online` va a
+ * llegar solo, y sondear sería gastar batería contra un fallo seguro.
+ */
+const PROBE_DELAYS = [5000, 10000, 20000, 30000]
+let probeTimer = null
+let probeAttempt = 0
+let syncInFlight = null
+
+const browserSaysOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false
+
+function stopProbe () {
+  if (probeTimer) clearTimeout(probeTimer)
+  probeTimer = null
+  probeAttempt = 0
+}
+
+function scheduleProbe () {
+  if (probeTimer || browserSaysOffline()) return
+  const delay = PROBE_DELAYS[Math.min(probeAttempt, PROBE_DELAYS.length - 1)]
+  probeTimer = setTimeout(runProbe, delay)
+}
+
+async function runProbe () {
+  probeTimer = null
+  if (isOnline || browserSaysOffline()) return
+  try {
+    await axios.get('/api/health', { timeout: 5000 })
+    markOnline()
+  } catch (error) {
+    // Cualquier respuesta cuenta como red, aunque sea un 503 de un deploy: el servidor
+    // contesta, y seguir offline encolaría escrituras que ahora fallarían de verdad.
+    if (error && error.response) {
+      markOnline()
+      return
+    }
+    probeAttempt++
+    scheduleProbe()
+  }
+}
+
+function markOffline () {
+  isOnline = false
+  scheduleProbe()
+}
+
+function markOnline () {
+  const wasOffline = !isOnline
+  isOnline = true
+  stopProbe()
+  if (wasOffline) Api.syncPendingOperations()
+}
+
 // Listeners para cambios de conexión
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    // Resetear estado - la próxima petición confirmará si realmente hay conexión
     isOnline = true
-    // Intentar sincronizar operaciones pendientes
-    setTimeout(() => {
-      Api.syncPendingOperations()
-    }, 1000)
+    stopProbe()
+    // Sin el retraso de antes: `syncPendingOperations` ya no puede correr dos veces a la
+    // vez, así que no hace falta dejarle paso a OfflineIndicator.
+    Api.syncPendingOperations()
   })
 
   window.addEventListener('offline', () => {
     isOnline = false
+    stopProbe()
   })
+
+  // Chrome frena los setTimeout de una pestaña oculta hasta uno por minuto, así que el
+  // sondeo programado puede llegar tarde. Volver al frente es cuando la persona va a
+  // actuar: se sondea en el acto (lo mismo hace `revalidateLocks()` con los locks).
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || isOnline) return
+      stopProbe()
+      runProbe()
+    })
+  }
 }
 
 /**
@@ -233,6 +305,7 @@ export default class Api {
 
   static setOnline (status) {
     isOnline = status
+    if (status) stopProbe()
   }
 
   static getUrl (path) {
@@ -332,8 +405,9 @@ export default class Api {
       return null
     }
 
-    // Si sabemos que estamos offline, intentar cache primero
-    if (!isOnline) {
+    // Si sabemos que estamos offline, intentar cache primero. `networkOnly` no tiene caché a
+    // la que caer: no intentar la red sería fallar seguro, y si responde, la red volvió.
+    if (!isOnline && !networkOnly) {
       const cached = await tryServeFromCache('offline')
       if (cached) return cached
       throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
@@ -342,6 +416,7 @@ export default class Api {
     // Intentar la red
     try {
       const response = await axios(options)
+      if (!isOnline) markOnline()
 
       // Cachear la respuesta si es cacheable
       if (this.shouldCache(path)) {
@@ -360,8 +435,7 @@ export default class Api {
 
       if (isNetworkError) {
         // Marcar como offline
-        isOnline = false
-        // console.log('Network error detected, switching to offline mode')
+        markOffline()
 
         // Intentar servir desde cache
         const cached = await tryServeFromCache('network error')
@@ -423,7 +497,7 @@ export default class Api {
       return response
     } catch (error) {
       if (!error.response) {
-        isOnline = false
+        markOffline()
         await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
@@ -478,7 +552,7 @@ export default class Api {
       return response
     } catch (error) {
       if (!error.response) {
-        isOnline = false
+        markOffline()
         await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
@@ -525,13 +599,15 @@ export default class Api {
       }
     }
 
-    if (!isOnline) {
-      if (!noQueue) await tryOptimisticUpdate(path, data)
+    // `noQueue` no tiene cola a la que caer: igual que `networkOnly` en `get`, se intenta.
+    if (!isOnline && !noQueue) {
+      await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
     try {
       const response = await axios.post(url, data, { ...config, headers: this.getHeaders(config, data) })
+      if (!isOnline) markOnline()
       if (this.shouldCache(path)) {
         // Para POST es más complejo porque el ID puede venir del servidor
         // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
@@ -542,7 +618,7 @@ export default class Api {
       return response
     } catch (error) {
       if (!error.response) {
-        isOnline = false
+        markOffline()
         if (!noQueue) await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
@@ -570,15 +646,17 @@ export default class Api {
       return { data: null, queued: true, status: 200 }
     }
 
-    if (!isOnline) {
+    if (!isOnline && !noQueue) {
       return queueOperation()
     }
 
     try {
-      return await axios.delete(url, { ...config, data, headers: this.getHeaders(config, data) })
+      const response = await axios.delete(url, { ...config, data, headers: this.getHeaders(config, data) })
+      if (!isOnline) markOnline()
+      return response
     } catch (error) {
       if (!error.response) {
-        isOnline = false
+        markOffline()
         return queueOperation()
       }
       throw error
@@ -586,7 +664,20 @@ export default class Api {
   }
 
   // Sincronizar operaciones pendientes cuando vuelva la conexión
-  static async syncPendingOperations () {
+  /**
+   * Una sola corrida a la vez. Al volver la red se dispara desde varios lados (el evento
+   * `online` acá y en OfflineIndicator, el sondeo), y dos corridas solapadas leían la misma
+   * cola antes de que se vaciara: cada operación se reproducía dos veces. Quien llega con
+   * una corrida en curso recibe esa misma promesa.
+   */
+  static syncPendingOperations () {
+    if (!syncInFlight) {
+      syncInFlight = this._syncPendingOperations().finally(() => { syncInFlight = null })
+    }
+    return syncInFlight
+  }
+
+  static async _syncPendingOperations () {
     if (!isOnline) return
 
     try {

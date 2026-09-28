@@ -26,19 +26,20 @@ const errorDeRed = () => Object.assign(new Error('Network Error'), { code: 'ERR_
  */
 describe('Api — noQueue: una escritura que no se puede diferir falla en vez de encolarse', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
     Api.setOnline(true)
   })
 
-  it.each(['post', 'delete'])('%s sin conexión: error offline y nada en la cola', async (method) => {
+  it.each(['post', 'delete'])('%s sin conexión: lo intenta igual, y si falla, error offline y nada en la cola', async (method) => {
+    // Con el flag offline igual se intenta: no hay cola a la que caer, así que no intentarlo
+    // sería fallar seguro (ver Api.recovery.spec.js).
     Api.setOnline(false)
+    axios[method].mockRejectedValueOnce(errorDeRed())
 
     const error = await Api[method]('/isoqf_characteristics/doc1', { a: 1 }, { noQueue: true }).catch(e => e)
 
     expect(error.isOfflineError).toBe(true)
     expect(addPendingOperation).not.toHaveBeenCalled()
-    expect(axios.post).not.toHaveBeenCalled()
-    expect(axios.delete).not.toHaveBeenCalled()
   })
 
   it.each(['post', 'delete'])('%s con la red cayéndose en el envío: error offline y nada en la cola', async (method) => {
@@ -72,7 +73,7 @@ describe('Api — noQueue: una escritura que no se puede diferir falla en vez de
 
 describe('Api — networkOnly: una lectura que decide no acepta la caché como respuesta', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
     Api.setOnline(true)
     jest.spyOn(Api, 'getCachedData').mockResolvedValue([])
   })
@@ -81,6 +82,7 @@ describe('Api — networkOnly: una lectura que decide no acepta la caché como r
 
   it('sin conexión falla, aunque haya caché', async () => {
     Api.setOnline(false)
+    axios.mockRejectedValueOnce(errorDeRed())
 
     const error = await Api.get('/isoqf_characteristics', {}, { networkOnly: true }).catch(e => e)
 
