@@ -19,8 +19,10 @@ import Api from '@/utils/Api'
  * base: un proyecto con 13 documentos creados de a uno, con minutos de diferencia.
  *
  * Quién sabe si el documento existe es el servidor, así que se le pregunta. Esta función
- * es el único lugar donde vive esa regla: la escriben tres pantallas (el modal del Paso 4,
- * su formulario de assessments y el editor de estudios del Paso 3) y ya se duplicó una vez.
+ * es el único lugar donde vive esa regla, y la usan todos los que crean el documento: el
+ * modal del Paso 4, su formulario de assessments, el editor de estudios del Paso 3, el alta
+ * de columnas (`columnService.ensureTableDocument`) y el import de `crudTables`. Ya se
+ * duplicó una vez; el import, que decidía por la cantidad de filas, partía proyectos.
  *
  * @returns {Promise<{id: string|null, failed?: boolean}>}
  *   `{ id }` con el documento a escribir · `{ id: null }` si de verdad no hay ninguno y
@@ -36,7 +38,7 @@ export async function resolveTableDoc ({ knownId, collection, organization, proj
       project_id: projectId
     })
     const doc = response && response.data && response.data.length ? response.data[0] : null
-    return { id: doc && doc.id ? doc.id : null }
+    return { id: (doc && (doc.id || doc._id)) || null }
   } catch (error) {
     console.error(`No se pudo verificar el documento de ${collection}:`, error)
     return { failed: true }

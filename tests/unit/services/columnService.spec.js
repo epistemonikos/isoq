@@ -211,8 +211,27 @@ describe('columnService — ensureTableDocument', () => {
     await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
 
     expect(Api.get).toHaveBeenCalledWith(
-      '/isoqf_characteristics?organization=org1&project_id=proj1'
+      '/isoqf_characteristics', { organization: 'org1', project_id: 'proj1' }
     )
+  })
+
+  // Un GET fallido no es «no existe»: crear ahí es exactamente lo que partía los proyectos
+  // en varios documentos. La regla es la de `resolveTableDoc`, y este servicio la usa en vez
+  // de tener una copia propia.
+  it('si no puede averiguar si existe, falla sin crear', async () => {
+    Api.get.mockRejectedValueOnce(new Error('Network Error'))
+
+    await expect(ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')).rejects.toThrow()
+    expect(Api.post).not.toHaveBeenCalled()
+  })
+
+  it('reconoce un documento que viene con `_id` en vez de `id`', async () => {
+    Api.get.mockResolvedValueOnce({ data: [{ _id: 'existente' }] })
+
+    const id = await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(id).toBe('existente')
+    expect(Api.post).not.toHaveBeenCalled()
   })
 })
 

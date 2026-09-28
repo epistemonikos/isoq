@@ -308,6 +308,7 @@ import { conflictComparison } from '@/utils/versionConflict'
 import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 import { isLockRejection } from '@/utils/lockErrors'
 import { fieldsLockKey } from '@/utils/refLockUrls'
+import { resolveTableDoc } from '@/utils/tableDocs'
 import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
@@ -1445,8 +1446,22 @@ export default {
       // nuevo — un castigo por haber dudado.
       if (!(await this.confirmImportOverRefLocks())) return
 
-      if (this.dataTable.items.length) {
-        this.cleanImportedData(this.dataTable.id, params)
+      // Reemplazar o crear se decide por el DOCUMENTO, no por las filas cargadas: un
+      // documento puede existir sin filas visibles, y si el GET de carga falló nos quedamos
+      // sin id aunque exista. Decidir por `items.length` creaba un segundo documento.
+      const destino = await resolveTableDoc({
+        knownId: this.dataTable.id,
+        collection: `/${this.type}`,
+        organization: this.$route.params.org_id,
+        projectId: this.$route.params.id
+      })
+      if (destino.failed) {
+        this.$emit('print-errors', new Error(`No se pudo verificar el documento de ${this.type}`))
+        return
+      }
+
+      if (destino.id) {
+        this.cleanImportedData(destino.id, params)
       } else {
         this.insertImportedData(params)
       }

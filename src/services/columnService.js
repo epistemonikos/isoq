@@ -14,6 +14,7 @@
 import Api from '@/utils/Api'
 import { i18n } from '@/plugins/i18n'
 import { newCustomFieldKey } from '@/utils/customFieldsHelper'
+import { resolveTableDoc } from '@/utils/tableDocs'
 
 // Claves que el backend conserva en su posición y que rechaza si viajan en `order`.
 // Las 24 claves CAMELOT NO están acá a propósito: no se pueden crear ni borrar, pero sí
@@ -78,13 +79,16 @@ export function reorderColumns (collection, docId, order) {
  * @returns {Promise<string|null>}
  */
 export async function ensureTableDocument (collection, organization, projectId, options = {}) {
-  const existing = await Api.get(
-    `/${collection}?organization=${organization}&project_id=${projectId}`
-  )
-  const found = existing && existing.data && existing.data[0]
+  // Crear o no lo decide la misma regla que el resto de la app: un id en blanco no es «no
+  // existe», y si no se puede averiguar no se crea. Acá «no se puede» se convierte en una
+  // excepción porque los dos llamadores ya la tratan como error de guardado.
+  const destino = await resolveTableDoc({
+    collection: `/${collection}`, organization, projectId
+  })
+  if (destino.failed) throw new Error(`No se pudo verificar el documento de ${collection}`)
   // Sembrar sobre un documento que ya existe sobrescribiría sus filas: es sólo para el
   // nacimiento.
-  if (found) return found.id || found._id || null
+  if (destino.id) return destino.id
 
   // La creación es la única ruta donde el cliente manda `fields` completo: el documento no
   // existe, así que no hay copia obsoleta posible ni columnas de otra persona que perder.
