@@ -782,7 +782,7 @@ export default class Api {
             // de intentarlo. Mismo trato que el lock tomado por otra persona, arriba.
             await removePendingOperation(op.id)
           } else {
-            const outcome = replayOutcome(error)
+            const outcome = replayOutcome(error, op.method)
             if (outcome === 'retry') {
               if (!error || !error.response) markOffline()
               stop = true

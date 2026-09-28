@@ -56,3 +56,21 @@ describe('rejectionReason', () => {
     expect(rejectionReason(status)).toBe(reason)
   })
 })
+
+// Borrar algo que ya no está es haber llegado a donde se quería. El backend responde 404
+// sobre un documento inexistente (antes daba 200 sin efecto): para un DELETE eso es éxito,
+// y avisar «no se guardó» sería falso.
+describe('replayOutcome — un DELETE que ya no encuentra nada', () => {
+  it.each([404, 410])('%s en un DELETE: hecho, sin aviso', (status) => {
+    expect(replayOutcome(conStatus(status), 'DELETE')).toBe('done')
+  })
+
+  it('un 404 en un PATCH sigue siendo trabajo perdido', () => {
+    expect(replayOutcome(conStatus(404), 'PATCH')).toBe('drop')
+  })
+
+  it('un 403 en un DELETE sigue siendo un rechazo', () => {
+    expect(replayOutcome(conStatus(403), 'DELETE')).toBe('drop')
+  })
+})
+

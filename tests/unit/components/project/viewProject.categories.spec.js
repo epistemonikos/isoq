@@ -345,6 +345,31 @@ describe('viewProject.vue — updateCategoryName()', () => {
 describe('viewProject.vue — removeCategory()', () => {
   beforeEach(() => jest.clearAllMocks())
 
+  // Si otra persona la borró primero, el backend responde 404 (antes, 200 sin efecto). La
+  // categoría ya no está, que es lo que se pidió: avisar «error al borrar» y dejarla en
+  // pantalla sería decirle lo contrario de lo que pasó.
+  it('un 404 cuenta como borrada: refresca y avisa éxito', async () => {
+    Api.delete.mockRejectedValueOnce(Object.assign(new Error('404'), { response: { status: 404 } }))
+    const { wrapper, $notify } = createWrapper()
+    await flushPromises()
+    const getListCategoriesSpy = jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    jest.spyOn(wrapper.vm, 'updateLists').mockImplementation(() => {})
+    await wrapper.setData({
+      modal_edit_list_categories: {
+        ...wrapper.vm.modal_edit_list_categories,
+        id: 'cat1',
+        index: 0,
+        options: [{ id: 'cat1', text: 'Category 1' }]
+      }
+    })
+    wrapper.vm.removeCategory()
+    await flushPromises()
+    expect(getListCategoriesSpy).toHaveBeenCalled()
+    expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.success).toHaveBeenCalledWith('notifications.deleted')
+    wrapper.destroy()
+  })
+
   it('deletes /isoqf_list_categories/:id', async () => {
     Api.delete.mockResolvedValueOnce({ data: {} })
     const { wrapper } = createWrapper()

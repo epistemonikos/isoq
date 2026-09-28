@@ -16,15 +16,27 @@ import { refLockKeyFromUrl } from '@/utils/refLockUrls'
  *                    sigue fuera de orden.
  *   'drop'           sale de la cola, y la cola avisa qué se perdió.
  *   'drop-announced' sale de la cola sin aviso propio: el interceptor ya lo anunció.
+ *   'done'           un DELETE sobre algo que ya no está: sale como un éxito.
  */
 
 // 401: la sesión venció. Al volver a entrar la misma escritura puede pasar, y tirarla sería
 // perder trabajo por un token.
 const RETRYABLE_STATUSES = [401, 408, 429]
 
-export function replayOutcome (error) {
+/**
+ * El documento ya no está. Para un DELETE eso es haber llegado a donde se quería: el
+ * backend responde 404 sobre un documento inexistente (antes, 200 sin efecto), y tratarlo
+ * como error le diría a la persona lo contrario de lo que pasó.
+ */
+export function isAlreadyGone (error) {
+  const status = error && error.response && error.response.status
+  return status === 404 || status === 410
+}
+
+export function replayOutcome (error, method = '') {
   const status = error && error.response && error.response.status
   if (!status) return 'retry'
+  if (String(method).toUpperCase() === 'DELETE' && isAlreadyGone(error)) return 'done'
   if (RETRYABLE_STATUSES.includes(status) || status >= 500) return 'retry'
 
   // Un 409 en una ruta granular es un lock ajeno: el interceptor ya lo mandó al canal de

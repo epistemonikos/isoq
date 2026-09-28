@@ -312,6 +312,7 @@ import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 import { isLockRejection } from '@/utils/lockErrors'
 import { fieldsLockKey } from '@/utils/refLockUrls'
 import { resolveTableDoc } from '@/utils/tableDocs'
+import { isAlreadyGone } from '@/utils/replayOutcome'
 import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
@@ -1495,6 +1496,8 @@ export default {
       return Api.delete(`/${this.type}/${id}`, undefined, { noQueue: true })
         .then(() => this.insertImportedData(params))
         .catch((error) => {
+          // Si ya no estaba, el reemplazo sigue: borrarlo era sólo el paso previo a crear.
+          if (isAlreadyGone(error)) return this.insertImportedData(params)
           this.noteImportSaveError(error)
           this.$emit('print-errors', error)
           return false

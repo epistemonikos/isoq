@@ -472,6 +472,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { isAlreadyGone } from '@/utils/replayOutcome'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
 import draggable from 'vuedraggable'
@@ -1637,18 +1638,22 @@ export default {
       const deletedItem = _options.splice(index, 1)
 
       if (objID) {
+        const onDeleted = async () => {
+          await this.getListCategories()
+          this.updateLists(deletedItem)
+          this.modal_edit_list_categories.remove = false
+          this.modal_edit_list_categories.text = ''
+          this.modal_edit_list_categories.extra_info = ''
+          this.modal_edit_list_categories.index = null
+          this.modal_edit_list_categories.id = null
+          this.$notify.success(this.$t('notifications.deleted'))
+        }
         Api.delete(`/isoqf_list_categories/${objID}`)
-          .then(async () => {
-            await this.getListCategories()
-            this.updateLists(deletedItem)
-            this.modal_edit_list_categories.remove = false
-            this.modal_edit_list_categories.text = ''
-            this.modal_edit_list_categories.extra_info = ''
-            this.modal_edit_list_categories.index = null
-            this.modal_edit_list_categories.id = null
-            this.$notify.success(this.$t('notifications.deleted'))
-          })
+          .then(onDeleted)
           .catch((error) => {
+            // Si otra persona la borró primero, el backend responde 404: ya no está, que es
+            // lo que se pidió. «Error al borrar» dejaría en pantalla una categoría que no existe.
+            if (isAlreadyGone(error)) return onDeleted()
             Commons.printErrors(error)
             this.$notify.error(this.$t('notifications.delete_error'))
           })

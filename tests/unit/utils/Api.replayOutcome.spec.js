@@ -92,6 +92,16 @@ describe('Api.syncPendingOperations — qué hace con cada rechazo', () => {
     expect(removePendingOperation).not.toHaveBeenCalled()
   })
 
+  it('un DELETE que da 404 sale de la cola sin aviso: ya no estaba, que era lo que se quería', async () => {
+    getPendingOperations.mockResolvedValue([{ id: 1, method: 'DELETE', endpoint: '/api/isoqf_list_categories/c1', payload: null }])
+    axios.delete.mockRejectedValueOnce(rechazo(404))
+
+    await Api.syncPendingOperations()
+
+    expect(removePendingOperation).toHaveBeenCalledWith(1)
+    expect(rechazos).toEqual([])
+  })
+
   it('un 409 de lock ya anunciado sale de la cola sin sumar un segundo aviso', async () => {
     getPendingOperations.mockResolvedValue([op(1, '/api/isoqf_characteristics/c1/item/R1')])
     axios.patch.mockRejectedValueOnce(Object.assign(rechazo(409), { config: { url: '/api/isoqf_characteristics/c1/item/R1' } }))

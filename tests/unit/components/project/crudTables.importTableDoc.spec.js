@@ -174,6 +174,18 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
     expect(Api.post).toHaveBeenCalledWith('/isoqf_characteristics/', expect.any(Object), { noQueue: true })
   })
 
+  it('si el documento ya no existe al borrarlo, sigue y crea: era el reemplazo que se pedía', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.delete.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('404'), { response: { status: 404 } })))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(Api.post).toHaveBeenCalledTimes(1)
+    expect(wrapper.html()).not.toMatch(/import_modal\.save_(offline|failed|check_failed)/)
+  })
+
   it('si la escritura falla, el archivo sigue cargado para reintentar', async () => {
     // Antes se limpiaba sin esperar el resultado. Con el DELETE hecho y el POST caído, la
     // persona se quedaba sin la tabla y sin el archivo.
