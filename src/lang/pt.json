@@ -147,7 +147,9 @@
     "no_authors": "Autor(es) não encontrados",
     "delete_shared_project_warning": "Para excluir este projeto compartilhado, primeiro você deve atribuir um novo proprietário",
     "select_new_owner": "Selecionar novo proprietário",
-    "enter_password_confirm": "Digite sua senha para confirmar"
+    "enter_password_confirm": "Digite sua senha para confirmar",
+    "connection_failed": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+    "server_failed": "O servidor não conseguiu processar a solicitação. Tente novamente em alguns minutos."
   },
   "menu": {
     "about": "Sobre",
@@ -253,7 +255,8 @@
     "email_verified": "Seu e-mail foi verificado. Redirecionando para o login...",
     "verification_failed": "O link de verificação é inválido ou expirou.",
     "email_not_verified": "Seu endereço de e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada.",
-    "resend_verification_btn": "Reenviar e-mail de verificação"
+    "resend_verification_btn": "Reenviar e-mail de verificação",
+    "resend_email_failed": "Não foi possível reenviar o e-mail."
   },
   "subscribe": {
     "title": "Boletim informativo",

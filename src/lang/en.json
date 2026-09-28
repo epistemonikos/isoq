@@ -147,7 +147,9 @@
     "no_authors": "No author(s)",
     "delete_shared_project_warning": "To delete this shared project, you must first assign it a new owner",
     "select_new_owner": "Select new owner",
-    "enter_password_confirm": "Enter your password to confirm"
+    "enter_password_confirm": "Enter your password to confirm",
+    "connection_failed": "Could not connect to the server. Please check your connection and try again.",
+    "server_failed": "The server could not process the request. Please try again in a few minutes."
   },
   "menu": {
     "about": "About",
@@ -253,7 +255,8 @@
     "email_verified": "Your email has been verified. Redirecting to login...",
     "verification_failed": "The verification link is invalid or has expired.",
     "email_not_verified": "Your email address has not been verified yet. Please check your inbox.",
-    "resend_verification_btn": "Resend verification email"
+    "resend_verification_btn": "Resend verification email",
+    "resend_email_failed": "The email could not be resent."
   },
   "subscribe": {
     "title": "Newsletter",

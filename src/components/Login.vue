@@ -7,11 +7,20 @@
             <b-card
               :header="$t('common.login')">
                 <b-alert
-                  :show="$store.state.status === 'error' && !emailNotVerified && !passwordCompromised"
+                  :show="$store.state.status === 'error' && !emailNotVerified && !passwordCompromised && !loginRequestFailed"
                   variant="warning"
                   dismissible
                   @dismissed="changeStatus">
                     {{ $t('auth.login_error') }}
+                </b-alert>
+                <!-- La petición no llegó o el servidor falló: no es un error de credenciales.
+                     Antes caía en el aviso de arriba («usuario o contraseña incorrectos»). -->
+                <b-alert
+                  :show="!!loginRequestFailed"
+                  variant="danger"
+                  dismissible
+                  @dismissed="loginRequestFailed = ''">
+                  {{ loginRequestFailed ? $t(loginRequestFailed) : '' }}
                 </b-alert>
                 <b-alert
                   :show="emailNotVerified"
@@ -27,6 +36,9 @@
                       {{ $t('account.resend_verification_btn') }}
                     </b-button>
                     <span v-if="resendVerificationSent" class="ml-2">{{ $t('account.resend_email_sent') }}</span>
+                    <span v-if="resendVerificationFailed" class="ml-2 text-danger">
+                      {{ $t('account.resend_email_failed') }} {{ $t(resendVerificationFailed) }}
+                    </span>
                   </div>
                 </b-alert>
                 <b-alert
@@ -148,6 +160,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
 import { isGdprEnabled } from '@/constants/gdpr'
 import { downloadPersonalData } from '@/services/personalDataExport'
@@ -162,6 +175,9 @@ export default {
       passwordCompromised: false,
       isResendingVerification: false,
       resendVerificationSent: false,
+      // Claves i18n del motivo, o '' sin aviso.
+      resendVerificationFailed: '',
+      loginRequestFailed: '',
       termsAccepted: false,
       newsletterAccepted: false,
       termsError: '',
@@ -181,10 +197,13 @@ export default {
       this.emailNotVerified = false
       this.passwordCompromised = false
       this.resendVerificationSent = false
+      this.resendVerificationFailed = ''
+      this.loginRequestFailed = ''
     },
     password () {
       this.emailNotVerified = false
       this.passwordCompromised = false
+      this.loginRequestFailed = ''
     }
   },
   computed: {
@@ -202,6 +221,7 @@ export default {
       this.emailNotVerified = false
       this.passwordCompromised = false
       this.resendVerificationSent = false
+      this.loginRequestFailed = ''
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
@@ -254,19 +274,28 @@ export default {
             this.passwordCompromised = true
           } else {
             console.error(error)
+            // Sin un `status` del servidor esto no es un rechazo de credenciales: la petición
+            // no llegó o el servidor falló. Decir «usuario o contraseña incorrectos» mandaba a
+            // resetear una contraseña que estaba bien.
+            const status = error && error.response && error.response.data && error.response.data.status
+            if (!status) this.loginRequestFailed = requestFailureKey(error)
           }
         })
     },
     resendVerification () {
       this.isResendingVerification = true
       this.resendVerificationSent = false
+      this.resendVerificationFailed = ''
       Api.post('/auth/resend_verification', { email: this.username })
         .then(() => {
           this.resendVerificationSent = true
           this.isResendingVerification = false
         })
-        .catch(() => {
+        .catch((error) => {
+          // Se dice al lado del botón, igual que el «reenviado». Antes sólo se apagaba el
+          // spinner, y la persona se quedaba esperando un correo que no había salido.
           this.isResendingVerification = false
+          this.resendVerificationFailed = requestFailureKey(error)
         })
     },
     changeStatus () {

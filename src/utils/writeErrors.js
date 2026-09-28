@@ -36,3 +36,15 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
   if (reason === 'gone') return 'notifications.write_gone'
   return fallbackKey
 }
+
+/**
+ * Para las pantallas previas al login. Sus rutas (`/auth/`) no pasan por el aviso central de
+ * «necesita conexión», así que el caso sin red lo dicen ellas. No se dice «sin conexión»: un
+ * servidor caído llega igual como error de red, y mandar a revisar el wifi a quien lo tiene
+ * sería otro aviso falso.
+ */
+export function requestFailureKey (error) {
+  const status = error && error.response && error.response.status
+  if (!status || (error && error.isOfflineError)) return 'common.connection_failed'
+  return 'common.server_failed'
+}

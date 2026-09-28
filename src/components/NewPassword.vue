@@ -52,6 +52,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 
 export default {
   data () {
@@ -64,7 +65,9 @@ export default {
       msgPassword: '',
       touched: false,
       countdown: 5,
-      redirectTimer: null
+      redirectTimer: null,
+      // El banner muestra un fallo de ENVÍO: cerrarlo no debe borrar lo escrito.
+      requestFailed: false
     }
   },
   computed: {
@@ -98,6 +101,7 @@ export default {
         username: this.$route.params.username,
         password: this.password
       }
+      this.requestFailed = false
       Api.post('/auth/new_password', params)
         .then((response) => {
           const data = response.data
@@ -123,11 +127,25 @@ export default {
           }
         })
         .catch((error) => {
+          // Antes sólo `console.error`: el botón no hacía nada visible.
           console.error(error)
+          this.requestFailed = true
+          this.showBanner = true
+          this.msgBanner = this.$t(requestFailureKey(error))
+          this.classBanner = 'danger'
         })
     },
     cleanVars: function () {
       if (this.classBanner === 'success') return
+      // Tras un fallo de envío se cierra el aviso y nada más: borrar las contraseñas
+      // obligaría a escribirlas otra vez sólo para reintentar.
+      if (this.requestFailed) {
+        this.requestFailed = false
+        this.showBanner = false
+        this.msgBanner = ''
+        this.classBanner = ''
+        return
+      }
       if (this.redirectTimer) {
         clearInterval(this.redirectTimer)
         this.redirectTimer = null

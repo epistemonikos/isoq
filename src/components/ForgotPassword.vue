@@ -7,6 +7,11 @@
             <b-card
               v-if="ui.main"
               :header="$t('account.reset_password')">
+              <!-- La solicitud no llegó o el servidor falló. El «no registrado» sigue en el
+                   propio campo: es otra cosa, y la persona lo corrige escribiendo. -->
+              <b-alert :show="!!ui.requestError" variant="danger">
+                {{ ui.requestError ? $t(ui.requestError) : '' }}
+              </b-alert>
               <b-form-group
                 id="recovery_input_email"
                 :label="$t('account.email_label')"
@@ -49,6 +54,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 
 export default {
   data () {
@@ -56,7 +62,8 @@ export default {
       ui: {
         main: true,
         sent: false,
-        error: null
+        error: null,
+        requestError: ''
       },
       username: '',
       tmpUsername: ''
@@ -76,6 +83,7 @@ export default {
       let params = {
         username: this.username
       }
+      this.ui.requestError = ''
       Api.post(`/auth/recover`, params)
         .then((response) => {
           if (response.data.status === 'sent') {
@@ -87,7 +95,10 @@ export default {
           }
         })
         .catch((error) => {
+          // Antes sólo `console.error`: la persona apretaba «Recuperar», no pasaba nada y no
+          // sabía si esperar el correo.
           console.error(error)
+          this.ui.requestError = requestFailureKey(error)
         })
     }
   }

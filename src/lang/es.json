@@ -147,7 +147,9 @@
     "no_authors": "Autor(es) no encontrados",
     "delete_shared_project_warning": "Para borrar este proyecto que se encuentra compartido deberás primero asignar un nuevo dueño",
     "select_new_owner": "Seleccionar nuevo dueño",
-    "enter_password_confirm": "Ingresa tu contraseña para confirmar"
+    "enter_password_confirm": "Ingresa tu contraseña para confirmar",
+    "connection_failed": "No se pudo conectar con el servidor. Revise su conexión y vuelva a intentarlo.",
+    "server_failed": "El servidor no pudo procesar la solicitud. Vuelva a intentarlo en unos minutos."
   },
   "menu": {
     "about": "Acerca de",
@@ -253,7 +255,8 @@
     "email_verified": "Tu correo electrónico ha sido verificado. Redirigiendo al inicio de sesión...",
     "verification_failed": "El enlace de verificación no es válido o ha expirado.",
     "email_not_verified": "Tu dirección de correo electrónico aún no ha sido verificada. Por favor revisa tu bandeja de entrada.",
-    "resend_verification_btn": "Reenviar correo de verificación"
+    "resend_verification_btn": "Reenviar correo de verificación",
+    "resend_email_failed": "No se pudo reenviar el correo."
   },
   "subscribe": {
     "title": "Boletín informativo",

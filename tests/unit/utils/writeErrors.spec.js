@@ -1,4 +1,4 @@
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, requestFailureKey } from '@/utils/writeErrors'
 
 const conStatus = (status, { url = '/isoqf_projects/p1', data = {} } = {}) => ({
   config: { url }, response: { status, data }
@@ -72,3 +72,22 @@ describe('writeErrorMessageKey', () => {
     expect(writeErrorMessageKey(conStatus(409, { data: { reason: 'algo_nuevo' } }))).toBe('notifications.save_error')
   })
 })
+
+/**
+ * Para las pantallas previas al login. Sus rutas (`/auth/`) no pasan por el aviso central
+ * de «necesita conexión», así que acá el caso sin red SÍ se dice. Y no se dice «sin
+ * conexión»: un servidor caído llega igual como error de red, y mandar a revisar el wifi a
+ * quien tiene wifi es otro aviso falso.
+ */
+describe('requestFailureKey', () => {
+  it('sin respuesta (o marcado offline): no se pudo conectar', () => {
+    expect(requestFailureKey({ isOfflineError: true, response: { status: 0 } })).toBe('common.connection_failed')
+    expect(requestFailureKey(new Error('Network Error'))).toBe('common.connection_failed')
+  })
+
+  it('con respuesta de error: el servidor no pudo procesarla', () => {
+    expect(requestFailureKey({ response: { status: 500, data: {} } })).toBe('common.server_failed')
+    expect(requestFailureKey({ response: { status: 429, data: {} } })).toBe('common.server_failed')
+  })
+})
+
