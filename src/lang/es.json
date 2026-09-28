@@ -1202,7 +1202,13 @@
     "syncConflict": "Un cambio que hiciste sin conexión no se pudo guardar porque {user} editó los mismos datos. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "syncConflictNoUser": "Un cambio que hiciste sin conexión no se pudo guardar porque los datos fueron editados en otro lugar. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "writeBlockedTitle": "Necesita conexión",
-    "writeBlocked": "Esta acción necesita conexión a Internet y no se guardó. Vuelva a intentarlo cuando esté en línea."
+    "writeBlocked": "Esta acción necesita conexión a Internet y no se guardó. Vuelva a intentarlo cuando esté en línea.",
+    "replayRejectedTitle": "Cambios sin conexión que no se guardaron",
+    "replayRejected": {
+      "forbidden": "Ya no tiene permiso para editar este proyecto: {count} cambio(s) hecho(s) sin conexión no se pudieron guardar.",
+      "gone": "{count} cambio(s) hecho(s) sin conexión no se pudieron guardar: lo que editó ya no existe.",
+      "rejected": "El servidor rechazó {count} cambio(s) hecho(s) sin conexión; no se guardaron."
+    }
   },
   "camelot": {
     "guidance_labels": {

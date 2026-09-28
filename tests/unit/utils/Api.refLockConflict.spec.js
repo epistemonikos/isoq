@@ -218,4 +218,36 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
       expect(event.detail.refId).toBe('ref4')
     })
   })
+
+  // En un replay el interceptor tiene que decir que es un replay: la redacción «en vivo»
+  // manda a buscar a alguien que está editando ahora, cuando el cambio se hizo sin conexión.
+  it('un 409 de un replay sale con source replay', async () => {
+    const err = makeError('/isoqf_characteristics/char1/item/ref1', { ref_id: 'ref1' }, 'Ana')
+    err.config.isOfflineReplay = true
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+    expect(event.detail.source).toBe('replay')
+  })
+
+  // Un 403 en un replay es, casi siempre, un permiso que se perdió mientras la persona
+  // estaba sin conexión. El canal de locks lo anunciaría como «otra persona está
+  // editando», que es falso; lo anuncia la cola, con su motivo.
+  it('un 403 de un replay no va al canal de locks', async () => {
+    const err = makeError('/isoqf_characteristics/char1/item/ref1', { ref_id: 'ref1' }, '')
+    err.response.status = 403
+    err.config.isOfflineReplay = true
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    expect(dispatched.find(e => e.type === 'ref-lock-conflict')).toBeUndefined()
+  })
+
+  it('un 403 en vivo sigue yendo al canal de locks, como antes', async () => {
+    const err = makeError('/isoqf_characteristics/char1/item/ref1', { ref_id: 'ref1' }, '')
+    err.response.status = 403
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    expect(dispatched.find(e => e.type === 'ref-lock-conflict')).toBeTruthy()
+  })
 })
+

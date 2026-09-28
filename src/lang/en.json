@@ -1202,7 +1202,13 @@
     "syncConflict": "A change you made offline could not be saved because {user} edited the same data. Your text was kept locally so you can copy it.",
     "syncConflictNoUser": "A change you made offline could not be saved because the data was edited elsewhere. Your text was kept locally so you can copy it.",
     "writeBlockedTitle": "Needs a connection",
-    "writeBlocked": "This action needs an Internet connection and was not saved. Please try again once you are back online."
+    "writeBlocked": "This action needs an Internet connection and was not saved. Please try again once you are back online.",
+    "replayRejectedTitle": "Changes made offline were not saved",
+    "replayRejected": {
+      "forbidden": "You no longer have permission to edit this project: {count} change(s) made while offline could not be saved.",
+      "gone": "{count} change(s) made while offline could not be saved: what you edited no longer exists.",
+      "rejected": "The server rejected {count} change(s) made while offline; they were not saved."
+    }
   },
   "camelot": {
     "guidance_labels": {

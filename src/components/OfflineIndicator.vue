@@ -82,6 +82,8 @@ export default {
     window.addEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
     // Un alta sin conexión ya no se encola, y hay llamadores que no avisan nada.
     window.addEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
+    // Lo hecho sin conexión que el servidor no aceptó al volver.
+    window.addEventListener('offline-replay-rejected', this.handleReplayRejected)
 
     // Verificar estado y operaciones pendientes periódicamente
     this.checkInterval = setInterval(() => {
@@ -96,6 +98,7 @@ export default {
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
     window.removeEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
     window.removeEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
+    window.removeEventListener('offline-replay-rejected', this.handleReplayRejected)
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
     }
@@ -160,6 +163,25 @@ export default {
         title: this.$t('offline.writeBlockedTitle'),
         variant: 'warning',
         solid: true
+      })
+    },
+    /**
+     * Cambios hechos sin conexión que el servidor rechazó al volver: ya salieron de la cola.
+     * Un aviso por motivo (sin permiso, ya no existe, rechazado), porque lo que la persona
+     * puede hacer es distinto en cada caso. No se oculta solo: es trabajo perdido, y cuando
+     * llega puede no estar mirando.
+     */
+    handleReplayRejected (event) {
+      const rejected = (event.detail && event.detail.rejected) || []
+      const counts = {}
+      rejected.forEach(item => { counts[item.reason] = (counts[item.reason] || 0) + 1 })
+      Object.keys(counts).forEach(reason => {
+        this.$bvToast.toast(this.$t(`offline.replayRejected.${reason}`, { count: counts[reason] }), {
+          title: this.$t('offline.replayRejectedTitle'),
+          variant: 'danger',
+          solid: true,
+          noAutoHide: true
+        })
       })
     },
     checkOnlineStatus () {

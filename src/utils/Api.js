@@ -10,6 +10,7 @@ import { strategies } from '@/utils/OfflineStrategies'
 // Re-exported so the modules that already import it from here keep working.
 import { refLockKeyFromUrl } from '@/utils/refLockUrls'
 import { isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
+import { replayOutcome, rejectionReason } from '@/utils/replayOutcome'
 export { refLockKeyFromUrl }
 
 // Estado de conexión
@@ -186,6 +187,13 @@ function reportDuplicateKeyConflict (endpoint, payload, source) {
   }))
 }
 
+// Lo hecho sin conexión que el servidor no aceptó al volver. Un solo evento por corrida:
+// veinte ediciones rechazadas por el mismo permiso son un aviso, no veinte.
+function reportReplayRejected (rejected) {
+  if (typeof window === 'undefined' || !rejected.length) return
+  window.dispatchEvent(new CustomEvent('offline-replay-rejected', { detail: { rejected } }))
+}
+
 // Una escritura que no se hizo porque no había red y no podía esperar en la cola. El
 // aviso lo pinta OfflineIndicator, montado siempre: el llamador puede no mostrar nada.
 function reportOfflineWriteBlocked (path) {
@@ -243,13 +251,17 @@ axios.interceptors.response.use(
       }
 
       const refId = refLockKeyFromUrl(url)
-      if (refId && typeof window !== 'undefined') {
+      const isReplay = Boolean(error.config && error.config.isOfflineReplay)
+      // Un 403 en un replay es, casi siempre, un permiso que se perdió mientras la persona
+      // estaba sin conexión. Este canal lo anunciaría como «otra persona está editando», que
+      // es falso: lo anuncia la cola, con su motivo (ver replayOutcome.js).
+      if (refId && typeof window !== 'undefined' && !(isReplay && error.response.status === 403)) {
         let failedData = {}
         if (error.config && error.config.data) {
           try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
         }
         const lockedBy = (error.response.data && error.response.data.locked_by) || ''
-        reportRefLockConflict(refId, failedData, lockedBy)
+        reportRefLockConflict(refId, failedData, lockedBy, isReplay ? 'replay' : 'live')
       }
 
       if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
@@ -705,9 +717,13 @@ export default class Api {
 
     try {
       const operations = await getPendingOperations()
-      // console.log(`Syncing ${operations.length} pending operations...`)
+      const rejected = []
+      // Se corta la corrida ante un fallo transitorio: lo que sigue puede depender de esa
+      // operación, y si la red se cayó, todo lo demás va a fallar igual.
+      let stop = false
 
       for (const op of operations) {
+        if (stop) break
         // A granular write needs the ref lock the editor no longer holds (it was
         // closed, or the grant was only local because we were offline). Without it
         // the backend answers 409 `lock_not_held` and the change is lost.
@@ -765,8 +781,19 @@ export default class Api {
             // a la persona por el canal de conflicto de versión; acá sólo hay que dejar
             // de intentarlo. Mismo trato que el lock tomado por otra persona, arriba.
             await removePendingOperation(op.id)
+          } else {
+            const outcome = replayOutcome(error)
+            if (outcome === 'retry') {
+              if (!error || !error.response) markOffline()
+              stop = true
+            } else {
+              await removePendingOperation(op.id)
+              if (outcome === 'drop') {
+                const status = error.response.status
+                rejected.push({ status, method: op.method, endpoint: op.endpoint, reason: rejectionReason(status) })
+              }
+            }
           }
-          // Cualquier otro fallo sí se mantiene en la cola para reintentar después.
         } finally {
           if (heldLock) {
             const LockService = await getLockService()
@@ -774,6 +801,7 @@ export default class Api {
           }
         }
       }
+      reportReplayRejected(rejected)
     } catch (error) {
       console.error('Error during sync:', error)
     }
