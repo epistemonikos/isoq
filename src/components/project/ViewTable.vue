@@ -1014,7 +1014,8 @@ export default {
         .catch((error) => {
           this.$emit('set-busy', false)
           console.error(error)
-          this.$notify.error(this.$t('notifications.delete_error'))
+          // Sin conexión ya avisó OfflineIndicator, con el motivo.
+          if (!error || !error.isOfflineError) this.$notify.error(this.$t('notifications.delete_error'))
         })
     },
     cancelReferencesList: function () {

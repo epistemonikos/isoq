@@ -80,6 +80,8 @@ export default {
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
     // Mismo motivo, otro eje: acá no hay nadie editando, hay un nombre que ya existe.
     window.addEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
+    // Un alta sin conexión ya no se encola, y hay llamadores que no avisan nada.
+    window.addEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
 
     // Verificar estado y operaciones pendientes periódicamente
     this.checkInterval = setInterval(() => {
@@ -93,6 +95,7 @@ export default {
     window.removeEventListener('offlineSync', this.handleSyncComplete)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
     window.removeEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
+    window.removeEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
     }
@@ -145,6 +148,18 @@ export default {
         variant: 'warning',
         solid: true,
         noAutoHide: true
+      })
+    },
+    /**
+     * Una escritura que no se hizo por falta de conexión. A diferencia de los conflictos al
+     * sincronizar, acá no se perdió nada escrito: la persona sigue con el formulario lleno
+     * y sólo tiene que reintentar cuando vuelva la red. Por eso se oculta solo.
+     */
+    handleOfflineWriteBlocked () {
+      this.$bvToast.toast(this.$t('offline.writeBlocked'), {
+        title: this.$t('offline.writeBlockedTitle'),
+        variant: 'warning',
+        solid: true
       })
     },
     checkOnlineStatus () {

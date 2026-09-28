@@ -1437,7 +1437,12 @@ export default {
         })
         .catch((error) => {
           Commons.printErrors(error)
-          this.$notify.error(this.$t('notifications.create_error'))
+          // `isBusy` se prendió al empezar: sin apagarlo, la tabla quedaba en «Loading…»
+          // hasta recargar.
+          this.table_settings.isBusy = false
+          // Sin conexión ya avisó OfflineIndicator, con el motivo. «Error al crear» encima
+          // sería un segundo cartel que no dice nada nuevo.
+          if (!error || !error.isOfflineError) this.$notify.error(this.$t('notifications.create_error'))
         })
     },
     createFinding: function (listId, listName) {
@@ -1483,7 +1488,8 @@ export default {
         })
         .catch((error) => {
           Commons.printErrors(error)
-          this.$notify.error(this.$t('notifications.create_error'))
+          this.table_settings.isBusy = false
+          if (!error || !error.isOfflineError) this.$notify.error(this.$t('notifications.create_error'))
         })
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {

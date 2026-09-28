@@ -1200,7 +1200,9 @@
     "duplicateKeyConflict": "El nombre de grupo «{name}» que guardaste sin conexión no se sincronizó: otro grupo de este proyecto ya lo usa. Vuelve a renombrar el grupo, con un nombre distinto.",
     "duplicateKeyConflictNoName": "Un nombre de grupo que guardaste sin conexión no se sincronizó: otro grupo de este proyecto ya lo usa. Vuelve a renombrar el grupo, con un nombre distinto.",
     "syncConflict": "Un cambio que hiciste sin conexión no se pudo guardar porque {user} editó los mismos datos. Tu texto quedó guardado localmente para que puedas copiarlo.",
-    "syncConflictNoUser": "Un cambio que hiciste sin conexión no se pudo guardar porque los datos fueron editados en otro lugar. Tu texto quedó guardado localmente para que puedas copiarlo."
+    "syncConflictNoUser": "Un cambio que hiciste sin conexión no se pudo guardar porque los datos fueron editados en otro lugar. Tu texto quedó guardado localmente para que puedas copiarlo.",
+    "writeBlockedTitle": "Necesita conexión",
+    "writeBlocked": "Esta acción necesita conexión a Internet y no se guardó. Vuelva a intentarlo cuando esté en línea."
   },
   "camelot": {
     "guidance_labels": {

@@ -145,9 +145,9 @@ describe('Api — sale sola del modo offline cuando la red vuelve', () => {
   it('una escritura normal con el flag offline se sigue encolando sin tocar la red', async () => {
     await caerPorRed()
 
-    await Api.post('/isoqf_findings', { a: 1 })
+    await Api.patch('/isoqf_findings/f1', { a: 1 })
 
-    expect(axios.post).not.toHaveBeenCalled()
+    expect(axios.patch).not.toHaveBeenCalled()
   })
 })
 

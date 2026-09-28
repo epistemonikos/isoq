@@ -29,8 +29,10 @@ describe('Api.js (Real Implementation)', () => {
 
   describe('Offline handling with FormData and Auth (DESIRED behavior)', () => {
     it('should NOT attempt to queue a FormData object and should throw offline error', async () => {
-      // Simulate offline
+      // Simulate offline. Un POST con el flag offline intenta la red (el flag es una
+      // sospecha, ver Api.recovery.spec.js): que ese intento falle también.
       Api.setOnline(false)
+      axios.post.mockRejectedValueOnce(Object.assign(new Error('Network Error'), { code: 'ERR_NETWORK' }))
       
       const formData = new FormData()
       formData.append('username', 'test')
@@ -47,8 +49,9 @@ describe('Api.js (Real Implementation)', () => {
     })
 
     it('should NOT attempt to queue if it is an auth endpoint even if it is not FormData', async () => {
-      // Simulate offline
+      // Simulate offline (ver el comentario del test anterior).
       Api.setOnline(false)
+      axios.post.mockRejectedValueOnce(Object.assign(new Error('Network Error'), { code: 'ERR_NETWORK' }))
       
       const payload = { username: 'test', password: 'abc' }
       

@@ -186,6 +186,13 @@ function reportDuplicateKeyConflict (endpoint, payload, source) {
   }))
 }
 
+// Una escritura que no se hizo porque no había red y no podía esperar en la cola. El
+// aviso lo pinta OfflineIndicator, montado siempre: el llamador puede no mostrar nada.
+function reportOfflineWriteBlocked (path) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('offline-write-blocked', { detail: { path } }))
+}
+
 // Crear error compatible con estructura de Axios
 function createOfflineError (message) {
   const msg = message || i18n.t('offline.noConnection')
@@ -407,7 +414,7 @@ export default class Api {
 
     // Si sabemos que estamos offline, intentar cache primero. `networkOnly` no tiene caché a
     // la que caer: no intentar la red sería fallar seguro, y si responde, la red volvió.
-    if (!isOnline && !networkOnly) {
+    if (!isOnline && (!networkOnly || browserSaysOffline())) {
       const cached = await tryServeFromCache('offline')
       if (cached) return cached
       throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
@@ -561,17 +568,32 @@ export default class Api {
   }
 
   /**
-   * `config.noQueue`: la escritura no se puede diferir. Sin red falla con el error offline en
-   * vez de encolarse. Es para las que, reproducidas más tarde, ya no significan lo mismo:
-   * reemplazar la tabla entera pisaría lo que otra persona hizo mientras tanto.
+   * Un POST crea, y un alta NO se encola: sin red falla con el error offline.
+   *
+   * Encolada, le devolvía a quien llamó su propio payload sin id, y con eso se encadenaban
+   * altas hijas con el padre en `undefined` — medido con el alta de un finding: «Created
+   * successfully», una lista fantasma al volver la red y dos 403 reintentándose para siempre.
+   * Y un alta que llegó al servidor justo antes de cortarse la respuesta se duplicaba al
+   * reproducirse. Lo que sí espera en la cola son las escrituras idempotentes sobre un id
+   * (PATCH, PUT, DELETE).
+   *
+   * `config.queue: true` recupera el encolado para un alta que de verdad lo tolere (con id
+   * generado en el cliente, por ejemplo). Hoy no la usa nadie.
+   *
+   * `config.noQueue`: lo mismo, pero quien llama se hace cargo del aviso — la escritura no se
+   * puede diferir y ya tiene su propio cartel (el import de tabla). Sin él, Api emite
+   * `offline-write-blocked` y OfflineIndicator avisa: hay llamadores que sólo pasan el error a
+   * `printErrors`, que no muestra nada.
    */
   static async post (path, data, config = {}) {
     const url = this.getUrl(path)
-    const { noQueue = false, ...axiosConfig } = config
+    const { noQueue: explicitNoQueue = false, queue = false, ...axiosConfig } = config
     config = axiosConfig
+    const noQueue = explicitNoQueue || !queue
     // Helper para encolar operación
     const queueOperation = async () => {
       if (noQueue || !this.shouldQueue(path, data)) {
+        if (!explicitNoQueue && this.shouldQueue(path, data)) reportOfflineWriteBlocked(path)
         throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
       await addPendingOperation({
@@ -599,9 +621,10 @@ export default class Api {
       }
     }
 
-    // `noQueue` no tiene cola a la que caer: igual que `networkOnly` en `get`, se intenta.
-    if (!isOnline && !noQueue) {
-      await tryOptimisticUpdate(path, data)
+    // `noQueue` no tiene cola a la que caer: igual que `networkOnly` en `get`, se intenta —
+    // salvo que el navegador diga que no hay red, y ahí intentar es fallar seguro.
+    if (!isOnline && (!noQueue || browserSaysOffline())) {
+      if (!noQueue) await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
@@ -646,7 +669,7 @@ export default class Api {
       return { data: null, queued: true, status: 200 }
     }
 
-    if (!isOnline && !noQueue) {
+    if (!isOnline && (!noQueue || browserSaysOffline())) {
       return queueOperation()
     }
 

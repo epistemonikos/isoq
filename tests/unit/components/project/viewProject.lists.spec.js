@@ -685,3 +685,74 @@ describe('viewProject.vue — processLists() lists_print_version numbering (prin
     wrapper.destroy()
   })
 })
+
+// Sin conexión el alta ya no se encola: `Api.post` rechaza con el error offline y
+// OfflineIndicator explica por qué. Encima de eso, «error al crear» es un segundo cartel
+// que no dice nada nuevo. Y el alta no puede seguir encadenando: sin lista no hay finding.
+describe('viewProject.vue — alta de finding sin conexión', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const offline = () => Object.assign(new Error('offline'), { isOfflineError: true })
+
+  it('createList no encadena el finding ni suma el aviso genérico', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper, $notify } = createWrapper()
+    await wrapper.setData({ summarized_review: 'F' })
+    const createFinding = jest.spyOn(wrapper.vm, 'createFinding')
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(createFinding).not.toHaveBeenCalled()
+    expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.success).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('createList conserva lo escrito para reintentar', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ summarized_review: 'Lo que escribí' })
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(wrapper.vm.summarized_review).toBe('Lo que escribí')
+    wrapper.destroy()
+  })
+
+  // `createList` pone la tabla en «Loading…» al empezar. Sin esto, cualquier fallo —el de
+  // conexión ahora es el camino normal— la dejaba cargando para siempre, hasta recargar.
+  it.each([
+    ['sin conexión', () => Object.assign(new Error('offline'), { isOfflineError: true })],
+    ['con un error del servidor', () => Object.assign(new Error('500'), { response: { status: 500 } })]
+  ])('createList saca la tabla de «Loading…» si falla %s', async (_caso, error) => {
+    const { wrapper } = createWrapper()
+    // La carga del montaje también apaga `isBusy` al terminar: si llega después del alta,
+    // tapa el bug y el test pasa sin el arreglo. Se deja asentar primero.
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockRejectedValueOnce(error())
+    await wrapper.setData({ summarized_review: 'F' })
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('createFinding saca la tabla de «Loading…» si falla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockRejectedValueOnce(offline())
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('createFinding no suma el aviso genérico', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+

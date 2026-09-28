@@ -63,9 +63,10 @@ describe('Api — noQueue: una escritura que no se puede diferir falla en vez de
   })
 
   it('sin la opción, una escritura offline se sigue encolando como siempre', async () => {
+    // Un PATCH: los POST ya no se encolan por defecto (ver Api.offlineCreates.spec.js).
     Api.setOnline(false)
 
-    await Api.post('/isoqf_characteristics/', { a: 1 })
+    await Api.patch('/isoqf_characteristics/doc1/item/R1', { a: 1 })
 
     expect(addPendingOperation).toHaveBeenCalledTimes(1)
   })
