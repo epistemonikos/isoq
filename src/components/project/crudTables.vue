@@ -276,6 +276,9 @@
         <b-alert variant="info" :show="importDataTable.error !== null">
           {{ importDataTable.error }}
         </b-alert>
+        <b-alert v-if="importSaveError" show variant="danger" data-test="import-save-error">
+          {{ $t(importSaveError) }}
+        </b-alert>
         <b-table v-if="importDataTable.items.length" sticky-header responsive :fields="importDataTable.fieldsObj"
           :items="importDataTable.items"></b-table>
         <template v-slot:modal-footer>
@@ -478,6 +481,9 @@ export default {
       // Quién está editando estudios cuando se abre el diálogo de import. `enabled:false`
       // por defecto para que, hasta que el probe conteste, no se afirme nada.
       importLockProbe: { locks: [], reachable: true, enabled: false },
+      // Clave i18n del aviso de un import que no se guardó; '' sin aviso. Vive en el modal
+      // porque es donde está la persona, con el archivo todavía cargado.
+      importSaveError: '',
       expandedCells: {},
       autoSaveStatus: null
     }
@@ -1367,6 +1373,7 @@ export default {
       this.importDataTable.items = parsed.items
     },
     cleanVars: function (isCancel = false) {
+      this.importSaveError = ''
       this.importDataTable = {
         error: null,
         fields: [],
@@ -1455,16 +1462,20 @@ export default {
         organization: this.$route.params.org_id,
         projectId: this.$route.params.id
       })
+      this.importSaveError = ''
       if (destino.failed) {
+        this.importSaveError = 'import_modal.save_check_failed'
         this.$emit('print-errors', new Error(`No se pudo verificar el documento de ${this.type}`))
         return
       }
 
-      if (destino.id) {
-        this.cleanImportedData(destino.id, params)
-      } else {
-        this.insertImportedData(params)
-      }
+      const ok = destino.id
+        ? await this.cleanImportedData(destino.id, params)
+        : await this.insertImportedData(params)
+      // El archivo se limpia recién con la tabla escrita. Si el DELETE salió y el POST no,
+      // la persona se quedaba sin tabla y sin archivo; así puede reintentar sin volver a
+      // elegirlo, y el reintento ya no encuentra documento y sólo crea.
+      if (!ok) return
 
       this.importDataTable = {
         error: null,
@@ -1475,27 +1486,44 @@ export default {
         ]
       }
     },
+    // Las dos escrituras del import van con `noQueue`: reemplazar la tabla entera no se
+    // puede diferir. Reproducido al volver la red, el DELETE pisaría lo que otra persona
+    // escribió mientras tanto, o daría 404 y el POST que sigue duplicaría el documento.
+    // Sin red fallan con aviso, y la persona importa cuando tenga conexión.
+    // Devuelven si la tabla quedó escrita.
     cleanImportedData: function (id = '', params = {}) {
-      Api.delete(`/${this.type}/${id}`)
-        .then(() => {
-          this.insertImportedData(params)
-        })
+      return Api.delete(`/${this.type}/${id}`, undefined, { noQueue: true })
+        .then(() => this.insertImportedData(params))
         .catch((error) => {
+          this.noteImportSaveError(error)
           this.$emit('print-errors', error)
+          return false
         })
     },
     insertImportedData: function (params = {}) {
       if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
-        return
+        return Promise.resolve(false)
       }
-      Api.post(`/${this.type}/`, params)
+      return Api.post(`/${this.type}/`, params, { noQueue: true })
         .then(() => {
           this.getData()
           this.$refs[`import-table-${this.type}`].hide()
+          return true
         })
         .catch((error) => {
+          this.noteImportSaveError(error)
           this.$emit('print-errors', error)
+          return false
         })
+    },
+    noteImportSaveError: function (error) {
+      const status = error && error.response && error.response.status
+      // Un 409 es el lock de proyecto: el interceptor de Api ya mostró quién lo tiene, y un
+      // segundo cartel diciendo "vuelva a intentarlo" sería un consejo falso.
+      if (status === 409) return
+      this.importSaveError = error && error.isOfflineError
+        ? 'import_modal.save_offline'
+        : 'import_modal.save_failed'
     },
     /**
      * Muestra la tabla con una fila por estudio, derivando las que el documento no tiene.

@@ -502,7 +502,10 @@
     "ref_locks_confirm": "Estudios de este proyecto abiertos para edición en este momento: {count}, por {names}. Al importar se reemplaza la tabla completa, así que se perderá lo que hayan escrito.",
     "ref_locks_columns": "{name} está editando las columnas de esta tabla en este momento; el import también las reemplaza.",
     "ref_locks_unknown": "No pudimos comprobar si alguien está editando en este momento. Al importar se reemplaza la tabla completa, así que se perderá el trabajo sin guardar.",
-    "ref_locks_ok": "Importar de todos modos"
+    "ref_locks_ok": "Importar de todos modos",
+    "save_offline": "Importar requiere conexión: reemplaza la tabla completa y no puede quedar en espera. Su archivo sigue cargado; guárdelo cuando vuelva a estar en línea.",
+    "save_check_failed": "No pudimos confirmar si esta tabla ya existe, así que no se guardó nada. Su archivo sigue cargado; vuelva a intentarlo.",
+    "save_failed": "No se pudo guardar la importación. Su archivo sigue cargado; vuelva a intentarlo."
   },
   "meth_assessments": {
     "table_title": "Tabla de Evaluaciones Metodológicas",

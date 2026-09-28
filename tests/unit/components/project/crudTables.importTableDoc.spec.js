@@ -114,7 +114,7 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
     await wrapper.vm.saveImportedData()
     await flushPromises()
 
-    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1')
+    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1', undefined, { noQueue: true })
     expect(Api.post).toHaveBeenCalledTimes(1)
     // El id ya era conocido: no hace falta preguntarle al servidor antes de escribir. (El
     // GET que viene DESPUÉS es la recarga de la tabla, no una verificación.)
@@ -130,7 +130,7 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
     await wrapper.vm.saveImportedData()
     await flushPromises()
 
-    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-servidor')
+    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-servidor', undefined, { noQueue: true })
     expect(Api.post).toHaveBeenCalledTimes(1)
   })
 
@@ -159,5 +159,119 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
     expect(Api.delete).not.toHaveBeenCalled()
     expect(Api.post).toHaveBeenCalledTimes(1)
     expect(Api.post.mock.calls[0][0]).toBe('/isoqf_characteristics/')
+  })
+
+  // Reemplazar la tabla entera no se puede diferir: reproducido más tarde, el DELETE pisa
+  // lo que otra persona escribió mientras tanto, o da 404 y el POST que sigue duplica.
+  it('pide que sus escrituras no se encolen', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1', undefined, { noQueue: true })
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_characteristics/', expect.any(Object), { noQueue: true })
+  })
+
+  it('si la escritura falla, el archivo sigue cargado para reintentar', async () => {
+    // Antes se limpiaba sin esperar el resultado. Con el DELETE hecho y el POST caído, la
+    // persona se quedaba sin la tabla y sin el archivo.
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.post.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('offline'), { isOfflineError: true })))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.emitted('print-errors')).toBeTruthy()
+    expect(wrapper.vm.importDataTable.items).toHaveLength(1)
+  })
+
+  it('si la escritura sale bien, limpia el archivo', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.vm.importDataTable.items).toHaveLength(0)
+  })
+})
+
+// El aviso se afirma sobre el HTML, no sobre el estado ni el evento. `print-errors` termina
+// en `Commons.printErrors`, que no muestra nada: un test que miraba la emisión pasó verde
+// con la persona sin enterarse de que no se había guardado.
+describe('crudTables — si el import no se guarda, lo dice en el modal', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  const offline = () => Object.assign(new Error('offline'), {
+    isOfflineError: true, response: { status: 0, data: { offline: true } }
+  })
+
+  it('sin poder verificar el documento', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { fields: [], items: [] })
+    Api.get.mockImplementation(() => Promise.reject(new Error('500')))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('import_modal.save_check_failed')
+  })
+
+  it('sin conexión, con su propio texto: reintentar ahora no sirve', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.delete.mockImplementationOnce(() => Promise.reject(offline()))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('import_modal.save_offline')
+    expect(wrapper.html()).not.toContain('import_modal.save_failed')
+  })
+
+  it('con otro error del servidor', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.post.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('500'), { response: { status: 500 } })))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('import_modal.save_failed')
+  })
+
+  it('con un 409 no agrega nada: el interceptor ya avisó quién tiene el proyecto', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.delete.mockImplementationOnce(() => Promise.reject(Object.assign(new Error('409'), { response: { status: 409 } })))
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toMatch(/import_modal\.save_(offline|failed|check_failed)/)
+  })
+
+  it('el reintento que sale bien borra el aviso', async () => {
+    wrapper = createWrapper()
+    await conArchivoCargado(wrapper, { id: 'tabla-1', fields: FIELDS, items: [] })
+    Api.delete.mockImplementationOnce(() => Promise.reject(offline()))
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+    expect(wrapper.html()).toContain('import_modal.save_offline')
+
+    await wrapper.vm.saveImportedData()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toContain('import_modal.save_offline')
   })
 })

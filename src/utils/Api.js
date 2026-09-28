@@ -303,8 +303,15 @@ export default class Api {
     }
   }
 
+  /**
+   * `config.networkOnly`: la respuesta tiene que venir del servidor. Sin red falla en vez de
+   * servir la caché. Es para las lecturas que DECIDEN algo (si crear un documento): ahí una
+   * caché vieja con una lista vacía es un «no sé» disfrazado de «no existe».
+   */
   static async get (path, data, config = {}) {
     const url = this.getUrl(path)
+    const { networkOnly = false, ...axiosConfig } = config
+    config = axiosConfig
     const options = {
       ...config,
       url: url,
@@ -315,7 +322,7 @@ export default class Api {
 
     // Función helper para intentar servir desde cache
     const tryServeFromCache = async (reason) => {
-      if (this.shouldCache(path)) {
+      if (!networkOnly && this.shouldCache(path)) {
         const cachedData = await this.getCachedData(path, data)
         if (cachedData) {
           // console.log(`Serving from cache (${reason}):`, path)
@@ -479,11 +486,18 @@ export default class Api {
     }
   }
 
+  /**
+   * `config.noQueue`: la escritura no se puede diferir. Sin red falla con el error offline en
+   * vez de encolarse. Es para las que, reproducidas más tarde, ya no significan lo mismo:
+   * reemplazar la tabla entera pisaría lo que otra persona hizo mientras tanto.
+   */
   static async post (path, data, config = {}) {
     const url = this.getUrl(path)
+    const { noQueue = false, ...axiosConfig } = config
+    config = axiosConfig
     // Helper para encolar operación
     const queueOperation = async () => {
-      if (!this.shouldQueue(path, data)) {
+      if (noQueue || !this.shouldQueue(path, data)) {
         throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
       await addPendingOperation({
@@ -512,7 +526,7 @@ export default class Api {
     }
 
     if (!isOnline) {
-      await tryOptimisticUpdate(path, data)
+      if (!noQueue) await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
@@ -529,18 +543,21 @@ export default class Api {
     } catch (error) {
       if (!error.response) {
         isOnline = false
-        await tryOptimisticUpdate(path, data)
+        if (!noQueue) await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
       throw error
     }
   }
 
+  /** `config.noQueue`: igual que en `post`. */
   static async delete (path, data, config = {}) {
     const url = this.getUrl(path)
+    const { noQueue = false, ...axiosConfig } = config
+    config = axiosConfig
     // Helper para encolar operación
     const queueOperation = async () => {
-      if (!this.shouldQueue(path, data)) {
+      if (noQueue || !this.shouldQueue(path, data)) {
         throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
       await addPendingOperation({

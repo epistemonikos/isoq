@@ -136,7 +136,7 @@ describe('crudTables — el import pregunta antes de arrasar', () => {
     await flushPromises()
 
     expect(confirm).not.toHaveBeenCalled()
-    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1')
+    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1', undefined, { noQueue: true })
   })
 
   it('con gente editando, pregunta nombrándola y diciendo cuántos estudios', async () => {
@@ -167,7 +167,7 @@ describe('crudTables — el import pregunta antes de arrasar', () => {
     await wrapper.vm.saveImportedData()
     await flushPromises()
 
-    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1')
+    expect(Api.delete).toHaveBeenCalledWith('/isoqf_characteristics/tabla-1', undefined, { noQueue: true })
     expect(Api.post).toHaveBeenCalled()
   })
 

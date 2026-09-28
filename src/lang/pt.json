@@ -502,7 +502,10 @@
     "ref_locks_confirm": "Estudos deste projeto abertos para edição neste momento: {count}, por {names}. Ao importar, a tabela inteira é substituída, portanto o que tiverem escrito será perdido.",
     "ref_locks_columns": "{name} está editando as colunas desta tabela neste momento; a importação também as substitui.",
     "ref_locks_unknown": "Não foi possível verificar se alguém está editando neste momento. Ao importar, a tabela inteira é substituída, portanto o trabalho não salvo será perdido.",
-    "ref_locks_ok": "Importar mesmo assim"
+    "ref_locks_ok": "Importar mesmo assim",
+    "save_offline": "Importar exige conexão: substitui a tabela inteira e não pode ficar em espera. Seu arquivo continua carregado; salve-o quando voltar a ficar on-line.",
+    "save_check_failed": "Não foi possível confirmar se esta tabela já existe, então nada foi salvo. Seu arquivo continua carregado; tente novamente.",
+    "save_failed": "Não foi possível salvar a importação. Seu arquivo continua carregado; tente novamente."
   },
   "meth_assessments": {
     "table_title": "Tabela de Avaliações Metodológicas",

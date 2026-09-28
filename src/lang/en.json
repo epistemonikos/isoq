@@ -502,7 +502,10 @@
     "ref_locks_confirm": "Studies in this project open for editing right now: {count}, by {names}. Importing replaces the whole table, so anything they have written will be lost.",
     "ref_locks_columns": "{name} is editing this table's columns right now; the import replaces those too.",
     "ref_locks_unknown": "We could not check whether anyone is editing right now. Importing replaces the whole table, so any unsaved work will be lost.",
-    "ref_locks_ok": "Import anyway"
+    "ref_locks_ok": "Import anyway",
+    "save_offline": "Importing needs a connection: it replaces the whole table and cannot wait in the offline queue. Your file is still loaded — save it once you are back online.",
+    "save_check_failed": "We could not confirm whether this table already exists, so nothing was saved. Your file is still loaded — please try again.",
+    "save_failed": "The import could not be saved. Your file is still loaded — please try again."
   },
   "meth_assessments": {
     "table_title": "Methodological Assessments Table",

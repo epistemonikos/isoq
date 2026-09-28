@@ -36,7 +36,18 @@ describe('resolveTableDoc', () => {
     expect(Api.get).toHaveBeenCalledWith('/isoqf_characteristics', {
       organization: 'org1',
       project_id: 'proj1'
-    })
+    }, { networkOnly: true })
+  })
+
+  // Sin red, la caché de IndexedDB contesta lo último que vio. Si vio una lista vacía, eso
+  // se leería como «no existe» y se encolaría un alta que, al reproducirse, duplica. Para
+  // decidir si crear sólo vale la respuesta del servidor.
+  it('sin conexión no se conforma con la caché: no lo sabe, y no crea', async () => {
+    Api.get.mockRejectedValue(Object.assign(new Error('offline'), { isOfflineError: true }))
+
+    const resultado = await resolveTableDoc({ ...base, knownId: null })
+
+    expect(resultado).toEqual({ failed: true })
   })
 
   it('sin id y sin documento, habilita la creación', async () => {

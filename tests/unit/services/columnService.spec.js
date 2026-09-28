@@ -211,7 +211,7 @@ describe('columnService — ensureTableDocument', () => {
     await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
 
     expect(Api.get).toHaveBeenCalledWith(
-      '/isoqf_characteristics', { organization: 'org1', project_id: 'proj1' }
+      '/isoqf_characteristics', { organization: 'org1', project_id: 'proj1' }, { networkOnly: true }
     )
   })
 

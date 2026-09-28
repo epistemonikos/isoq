@@ -33,10 +33,12 @@ import Api from '@/utils/Api'
 export async function resolveTableDoc ({ knownId, collection, organization, projectId }) {
   if (knownId) return { id: knownId }
   try {
+    // Sólo vale la respuesta del servidor: sin red, la caché contestaría lo último que vio,
+    // y una lista vacía vieja se leería como «no existe» y encolaría un alta que duplica.
     const response = await Api.get(collection, {
       organization: organization,
       project_id: projectId
-    })
+    }, { networkOnly: true })
     const doc = response && response.data && response.data.length ? response.data[0] : null
     return { id: (doc && (doc.id || doc._id)) || null }
   } catch (error) {
