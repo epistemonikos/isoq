@@ -822,6 +822,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
@@ -1419,9 +1420,7 @@ export default {
             this.$emit('update-list-data')
             this.$refs['modal-evidence-profile-form']?.hide()
           })
-          .catch((error) => {
-            this.printErrors(error)
-          })
+          .catch((error) => this.onSaveError(error, 'notifications.save_error'))
       } else {
         // New finding: no id yet to target /section/, create it with the full profile.
         const { type, title, isoqf_id, displayNumber, ...evidenceProfileData } = this.selectedOptions
@@ -1434,10 +1433,20 @@ export default {
             this.$emit('callGetStageOneData', false)
             this.$refs['modal-evidence-profile-form']?.hide()
           })
-          .catch((error) => {
-            this.printErrors(error)
-          })
+          .catch((error) => this.onSaveError(error, 'notifications.create_error'))
       }
+    },
+    /**
+     * Un guardado que no entró. Antes iba a `printErrors`, que no muestra nada: el modal
+     * quedaba abierto sin decir por qué, y la tabla en «cargando» para siempre porque
+     * `busyEvidenceProfileTable` se prendió al empezar. El modal sigue abierto con lo
+     * escrito, para reintentar.
+     */
+    onSaveError: function (error, actionKey) {
+      this.printErrors(error)
+      this.$emit('busyEvidenceProfileTable', false)
+      const key = writeErrorMessageKey(error, actionKey)
+      if (key && this.$notify) this.$notify.error(this.$t(key))
     },
     openModalEvidenceProfie: function (section = null) {
       // Se guarda ANTES del `show()`: ese `show()` emite `@show` síncrono y `onModalShow`

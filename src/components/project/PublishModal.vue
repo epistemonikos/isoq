@@ -77,6 +77,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import videoHelp from '@/components/videoHelp'
 
 export default {
@@ -178,40 +179,49 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await Api.get('/api/project/can_publish', {
-          id: this.project.id,
-          workspace: this.$route.params.org_id,
-          isModal: isModal
-        })
+        let canPublish
+        try {
+          canPublish = await Api.get('/api/project/can_publish', {
+            id: this.project.id,
+            workspace: this.$route.params.org_id,
+            isModal: isModal
+          })
+        } catch (error) {
+          // Sin este catch el método rechazaba y el spinner quedaba girando para siempre.
+          this.onPublishError(error)
+          return
+        }
 
         if (canPublish.data.status) {
-          Api.patch('/api/publish', { params })
-            .then(() => {
-              this.modalProject = { name: '' }
-              this.$emit('getProject')
-              this.$emit('uiPublishShowLoader', false)
-              this.$refs['modal-change-status'].hide()
-            })
-            .catch((error) => {
-              console.log(error)
-            })
+          return this.patchPublicStatus(params)
         } else {
           document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
           this.errorsResponse.message = canPublish.data.message
           this.$emit('uiPublishShowLoader', false)
         }
       } else {
-        Api.patch('/api/publish', { params })
-          .then(() => {
-            this.modalProject = { name: '' }
-            this.$emit('getProject')
-            this.$emit('uiPublishShowLoader', false)
-            this.$refs['modal-change-status'].hide()
-          })
-          .catch((error) => {
-            console.log(error)
-          })
+        return this.patchPublicStatus(params)
       }
+    },
+
+    patchPublicStatus (params) {
+      return Api.patch('/api/publish', { params })
+        .then(() => {
+          this.modalProject = { name: '' }
+          this.$emit('getProject')
+          this.$emit('uiPublishShowLoader', false)
+          this.$refs['modal-change-status'].hide()
+        })
+        .catch(this.onPublishError)
+    },
+
+    // Antes terminaba en `console.log` sin apagar el loader: el spinner giraba para siempre y
+    // nadie decía que el proyecto había quedado como estaba. El modal queda abierto con lo
+    // elegido, para reintentar.
+    onPublishError (error) {
+      this.$emit('uiPublishShowLoader', false)
+      const key = writeErrorMessageKey(error, 'notifications.publish_error')
+      if (key) this.$notify.error(this.$t(key))
     },
 
     onModalShown (bvEvent, modalId) {

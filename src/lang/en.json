@@ -1596,7 +1596,15 @@
     "create_error": "Could not create. Please try again.",
     "deleted": "Deleted successfully",
     "delete_error": "Error deleting. Please try again.",
-    "load_error": "Error loading data. Please try again."
+    "load_error": "Error loading data. Please try again.",
+    "write_forbidden": "You do not have permission to make this change.",
+    "write_gone": "What you tried to change no longer exists. Please reload the page.",
+    "write_duplicate": "One with that name already exists.",
+    "publish_error": "The publication status could not be changed. The project stays as it was.",
+    "share_invite_error": "The project could not be shared. The invitation was not sent.",
+    "share_unshare_error": "Access could not be removed. The person still has access to the project.",
+    "share_permission_error": "The permission could not be changed. It stays as it was.",
+    "share_link_error": "The shared link could not be updated."
   },
   "admin": {
     "panel_link": "Admin Panel",

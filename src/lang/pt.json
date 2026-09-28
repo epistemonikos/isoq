@@ -1596,7 +1596,15 @@
     "create_error": "Não foi possível criar. Por favor, tente novamente.",
     "deleted": "Excluído com sucesso",
     "delete_error": "Erro ao excluir. Por favor, tente novamente.",
-    "load_error": "Erro ao carregar os dados. Por favor, tente novamente."
+    "load_error": "Erro ao carregar os dados. Por favor, tente novamente.",
+    "write_forbidden": "Você não tem permissão para fazer esta alteração.",
+    "write_gone": "O que você tentou alterar não existe mais. Recarregue a página.",
+    "write_duplicate": "Já existe um com esse nome.",
+    "publish_error": "Não foi possível alterar o estado de publicação. O projeto continua como estava.",
+    "share_invite_error": "Não foi possível compartilhar o projeto. O convite não foi enviado.",
+    "share_unshare_error": "Não foi possível remover o acesso. A pessoa ainda tem acesso ao projeto.",
+    "share_permission_error": "Não foi possível alterar a permissão. Continua como estava.",
+    "share_link_error": "Não foi possível atualizar o link compartilhado."
   },
   "admin": {
     "panel_link": "Painel de administração",

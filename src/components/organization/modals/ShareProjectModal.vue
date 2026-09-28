@@ -85,7 +85,7 @@
                 :disabled="data.item.state !== 'active'"
                 :title="data.item.state !== 'active' ? getDisabledTitle(data.item.state) : ''"
                 :options="[{value: 0, text: $t('common.can_view') || 'Can view'}, {value: 1, text: $t('common.can_view_edit') || 'Can view and edit'}]"
-                @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
+                @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index, data.item)"></b-form-select>
             </template>
             <template v-slot:empty>
               <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') }}</p>
@@ -153,6 +153,7 @@
 /* eslint-disable vue/no-mutating-props */
 /* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../../videoHelp')
 
@@ -178,6 +179,7 @@ export default {
   },
   data () {
     return {
+      revertingSharedLink: false,
       tabIndex: 0,
       enabledToShare: false
     }
@@ -203,6 +205,12 @@ export default {
       this.enabledToShare = enabledButton
     },
     'project.sharedTokenOnOff': function () {
+      // Devolver el interruptor tras un fallo vuelve a disparar este watcher: sin la guarda
+      // sería un segundo PATCH, esta vez con el valor contrario.
+      if (this.revertingSharedLink) {
+        this.revertingSharedLink = false
+        return
+      }
       const project = this.project
       const enable = !!(project.sharedTokenOnOff)
       if (!enable) {
@@ -219,7 +227,11 @@ export default {
             }
           })
           .catch((error) => {
-            console.log(error)
+            // El interruptor se movió antes del PATCH: si no se devuelve, la pantalla dice
+            // que el enlace está activo (o inactivo) cuando el servidor no lo cambió.
+            this.revertingSharedLink = true
+            project.sharedTokenOnOff = !enable
+            this.notifyShareError(error, 'notifications.share_link_error')
           })
       }
     }
@@ -269,7 +281,7 @@ export default {
             this.project.tmp_invite_emails = []
           }
         }).catch((error) => {
-          console.log(error)
+          this.notifyShareError(error, 'notifications.share_invite_error')
         }).finally(() => {
           this.$emit('processing', false)
         })
@@ -279,7 +291,7 @@ export default {
         const data = await Api.post(`/share/project/${project}/unshare`, null, {params: params})
         return data
       } catch (error) {
-        console.log('errors: => ', error)
+        this.notifyShareError(error, 'notifications.share_unshare_error')
       }
     },
     unshare: function (_index, user) {
@@ -314,7 +326,7 @@ export default {
           this.$emit('invited-unshared', response.data)
         })
         .catch((error) => {
-          console.log(error)
+          this.notifyShareError(error, 'notifications.share_unshare_error')
         })
         .finally(() => {
           this.$emit('processing', false)
@@ -323,7 +335,8 @@ export default {
     removeSharedEmail: function (index) {
       this.project.tmp_invite_emails.splice(index, 1)
     },
-    changePermission: function (projectId, userId, option, index) {
+    // `item` es la fila del selector: su `v-model` ya cambió antes del PATCH.
+    changePermission: function (projectId, userId, option, index, item = null) {
       const params = {
         'user_id': userId,
         'option': option
@@ -335,10 +348,17 @@ export default {
             this.$emit('permission-changed', response.data[0])
           }
         }).catch((error) => {
-          console.log(error)
+          // Devolver el selector a lo que de verdad quedó: las opciones son 0 (ver) y 1
+          // (ver y editar). Sin esto diría «sólo lectura» con la escritura todavía activa.
+          if (item) item.user_can = option === 1 ? 0 : 1
+          this.notifyShareError(error, 'notifications.share_permission_error')
         }).finally(() => {
           this.$emit('processing', false)
         })
+    },
+    notifyShareError: function (error, actionKey) {
+      const key = writeErrorMessageKey(error, actionKey)
+      if (key) this.$notify.error(this.$t(key))
     },
     formatDate: function (dateStr) {
       if (!dateStr) return ''
