@@ -300,6 +300,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -1076,12 +1077,22 @@ export default {
       this.pendingSaveReferences = false
     },
 
-    confirmSavePrivateProject: function () {
-      // User confirmed they want to proceed, making the project private
-      this.saveProjectAsPrivate()
-      // Save the references (which will be empty)
+    /**
+     * Quitar todas las referencias deja el proyecto sin publicar, así que antes se pasa a
+     * privado. Van EN ORDEN y no en paralelo: si pasar a privado fallaba, las referencias
+     * se borraban igual y quedaba un proyecto público sin referencias. Ahora, si falla, no
+     * se toca nada y se avisa.
+     */
+    confirmSavePrivateProject: async function () {
+      try {
+        await this.saveProjectAsPrivate()
+      } catch (error) {
+        this.cancelPrivateProjectWarning()
+        const key = writeErrorMessageKey(error, 'notifications.make_private_error')
+        if (key) this.$notify.error(this.$t(key))
+        return
+      }
       this.saveReferencesList()
-      // Close both modals
       this.$nextTick(() => {
         this.pendingSaveReferences = false
         this.$refs['modal-references-list'].hide()
@@ -1102,13 +1113,12 @@ export default {
         license_type: '',
         public_type: 'private'
       }
-      Api.patch(`/isoqf_projects/${this.project.id}`, params)
+      // Devuelve la promesa: `confirmSavePrivateProject` espera el resultado antes de
+      // quitar referencias.
+      return Api.patch(`/isoqf_projects/${this.project.id}`, params)
         .then(() => {
           // Emit an event to notify the parent component that the project status changed
           this.$emit('update-project-status')
-        })
-        .catch((error) => {
-          console.log(Commons.printErrors(error))
         })
     },
 

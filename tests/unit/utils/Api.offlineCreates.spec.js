@@ -87,6 +87,20 @@ describe('Api — un POST no se encola sin conexión', () => {
     expect(escucha.eventos).toEqual([{ path: '/isoqf_references/batch-import' }])
   })
 
+  // Subir un archivo RIS viaja como FormData, que nunca se encola. Excluirlo del aviso lo
+  // dejaba mudo sin conexión: la subida fallaba y nadie decía por qué.
+  it('avisa también con FormData (la subida de un archivo)', async () => {
+    Api.setOnline(false)
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => false })
+    const formData = new FormData()
+    formData.append('risFile', 'x')
+
+    await Api.post('/isoqf_references/process-ris', formData).catch(() => {})
+
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => true })
+    expect(escucha.eventos).toEqual([{ path: '/isoqf_references/process-ris' }])
+  })
+
   it('no avisa si quien llama pidió noQueue: ya tiene su propio aviso', async () => {
     axios.post.mockRejectedValueOnce(errorDeRed())
 

@@ -95,7 +95,7 @@
                 <template v-else>
                   <crudTables type="isoqf_characteristics" prefix="ch" :canEdit="isEditing" :project="project" :ui="ui"
                     :references="references" :refs="refs" :lists="lists" @get-project="getProject"
-                    @print-errors="printErrors" @updateDataTable="updateDataTable">
+                    @print-errors="onTableError" @updateDataTable="updateDataTable">
                   </crudTables>
                 </template>
                 <div class="mt-3">
@@ -127,7 +127,7 @@
                 <template v-else>
                   <crudTables type="isoqf_assessments" prefix="as" :canEdit="isEditing" :project="project" :ui="ui"
                     :references="references" :refs="refs" :lists="lists" @get-project="getProject"
-                    @print-errors="printErrors" @updateDataTable="updateDataTable">
+                    @print-errors="onTableError" @updateDataTable="updateDataTable">
                   </crudTables>
                 </template>
                 <div class="mt-3">
@@ -472,6 +472,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { isAlreadyGone } from '@/utils/replayOutcome'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -1484,7 +1485,17 @@ export default {
       }
       Api.post('/isoqf_findings', params)
         .then(async (response) => {
-          await this.createExtractedData(response.data.id)
+          try {
+            await this.createExtractedData(response.data.id)
+          } catch (error) {
+            // El finding existe pero sin su tabla de datos extraídos, y nada la vuelve a
+            // crear. Se refresca igual para que aparezca, y se dice la verdad.
+            Commons.printErrors(error)
+            this.table_settings.isBusy = false
+            this.getLists()
+            this.$notify.warning(this.$t('notifications.extracted_data_create_error'))
+            return
+          }
           this.$notify.success(this.$t('notifications.created'))
         })
         .catch((error) => {
@@ -1730,6 +1741,24 @@ export default {
     printErrors: function (error) {
       Commons.printErrors(error)
     },
+    /**
+     * Lo que `crudTables` no pudo hacer. Es el único que emite `print-errors`, y lo emitía
+     * a `printErrors`, que no muestra nada: crear, renombrar, reordenar o borrar columnas,
+     * guardar una fila, cargar la tabla… fallaban sin aviso. La regla del aviso es la de
+     * `writeErrorMessageKey`; una lectura dice «no se pudo cargar», no «no se pudo guardar».
+     */
+    onTableError: function (error) {
+      Commons.printErrors(error)
+      const method = String((error && error.config && error.config.method) || '').toLowerCase()
+      let key
+      if (method === 'get') {
+        // Sin conexión y sin caché ya lo dice OfflineIndicator («Sin conexión»).
+        key = (error && error.isOfflineError) ? null : 'notifications.load_error'
+      } else {
+        key = writeErrorMessageKey(error, 'notifications.save_error')
+      }
+      if (key) this.$notify.error(this.$t(key))
+    },
     createExtractedData: async function (findingID) {
       const _references = JSON.parse(JSON.stringify(this.references))
       let params = {
@@ -1747,12 +1776,11 @@ export default {
         params.items.push({ 'ref_id': reference.id, 'authors': await this.parseReference(reference, true), 'column_0': '' })
       }
 
-      Api.post('/isoqf_extracted_data', params)
+      // Se devuelve la promesa, y el fallo se propaga: `createFinding` esperaba esta función
+      // pero ella no esperaba su POST, así que «creado» salía antes de saber si había tabla.
+      return Api.post('/isoqf_extracted_data', params)
         .then(() => {
           this.getLists()
-        })
-        .catch((error) => {
-          Commons.printErrors(error)
         })
     },
     toggleSearch (show) {

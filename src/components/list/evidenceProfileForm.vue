@@ -1543,7 +1543,10 @@ export default {
           this.$emit('setShowEditExtractedDataInPlace', data)
         })
         .catch((error) => {
+          // La edición queda abierta con lo escrito; el lock de la fila sigue tomado.
           this.printErrors(error)
+          const key = writeErrorMessageKey(error, 'notifications.save_error')
+          if (key && this.$notify) this.$notify.error(this.$t(key))
         })
     },
     getExtractedData: function (status) {

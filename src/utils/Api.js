@@ -605,7 +605,10 @@ export default class Api {
     // Helper para encolar operación
     const queueOperation = async () => {
       if (noQueue || !this.shouldQueue(path, data)) {
-        if (!explicitNoQueue && this.shouldQueue(path, data)) reportOfflineWriteBlocked(path)
+        // Se avisa también con FormData (la subida de un archivo RIS): nunca se encola, y
+        // excluirlo la dejaba muda sin conexión. Sólo se excluyen las rutas de sesión, que
+        // manejan su propio error.
+        if (!explicitNoQueue && !NO_CACHE_PATTERNS.some(pattern => pattern.test(path))) reportOfflineWriteBlocked(path)
         throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
       await addPendingOperation({

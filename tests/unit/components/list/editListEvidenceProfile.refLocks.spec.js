@@ -1,6 +1,7 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import BootstrapVue from 'bootstrap-vue'
 import editListEvidenceProfile from '@/components/list/editListEvidenceProfile.vue'
+import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import { EVIDENCE_PROFILE_SECTIONS } from '@/utils/evidenceProfileLockKeys'
 
@@ -360,3 +361,37 @@ describe('editListEvidenceProfile — bloqueo visible de los assessments', () =>
     })
   })
 })
+
+// Mismo defecto que en ViewTable: pasar a privado y quitar referencias iban en paralelo.
+describe('editListEvidenceProfile.vue — pasar a privado antes de quitar las referencias', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+
+  it('si pasar a privado falla, no quita las referencias y avisa', async () => {
+    const wrapper = createWrapper()
+    // `cancelPrivateProjectWarning` restaura desde `list.references`, que en la app siempre viene.
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: ['ref1'] } })
+    wrapper.vm.$refs['modalReferences'] = { hide: jest.fn(), show: jest.fn() }
+    const saveRefs = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_projects/p1', method: 'patch' } }))
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(saveRefs).not.toHaveBeenCalled()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.make_private_error')
+    wrapper.destroy()
+  })
+
+  it('si pasa a privado, recién entonces quita las referencias', async () => {
+    const wrapper = createWrapper()
+    // `cancelPrivateProjectWarning` restaura desde `list.references`, que en la app siempre viene.
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: ['ref1'] } })
+    wrapper.vm.$refs['modalReferences'] = { hide: jest.fn(), show: jest.fn() }
+    const orden = []
+    Api.patch.mockImplementationOnce(() => { orden.push('privado'); return Promise.resolve({ data: {} }) })
+    jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => { orden.push('referencias') })
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(orden).toEqual(['privado', 'referencias'])
+    wrapper.destroy()
+  })
+})
+

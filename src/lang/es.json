@@ -1604,7 +1604,11 @@
     "share_invite_error": "No se pudo compartir el proyecto. La invitación no se envió.",
     "share_unshare_error": "No se pudo quitar el acceso. La persona sigue teniendo acceso al proyecto.",
     "share_permission_error": "No se pudo cambiar el permiso. Sigue como estaba.",
-    "share_link_error": "No se pudo actualizar el enlace compartido."
+    "share_link_error": "No se pudo actualizar el enlace compartido.",
+    "references_import_error": "No se pudieron importar las referencias. Lo que eligió sigue ahí; vuelva a intentarlo.",
+    "leave_project_error": "No se pudo salir del proyecto. Sigue teniendo acceso.",
+    "make_private_error": "No se pudo pasar el proyecto a privado, así que no se quitaron sus referencias. No cambió nada.",
+    "extracted_data_create_error": "El finding se creó, pero no se pudo crear su tabla de datos extraídos."
   },
   "admin": {
     "panel_link": "Panel de administración",

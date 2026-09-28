@@ -500,3 +500,36 @@ describe('ViewTable.vue — aviso de editor abierto', () => {
     wrapper.destroy()
   })
 })
+
+// Quitar todas las referencias de un finding publicado pasa el proyecto a privado. Iban en
+// paralelo: si pasar a privado fallaba, las referencias se borraban igual y quedaba un
+// proyecto público sin referencias.
+describe('ViewTable.vue — pasar a privado antes de quitar las referencias', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('si pasar a privado falla, no quita las referencias y avisa', async () => {
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn(), show: jest.fn() }
+    const saveRefs = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_projects/p1', method: 'patch' } }))
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(saveRefs).not.toHaveBeenCalled()
+    expect($notify.error).toHaveBeenCalledWith('notifications.make_private_error')
+    wrapper.destroy()
+  })
+
+  it('si pasa a privado, recién entonces quita las referencias', async () => {
+    const { wrapper } = createWrapper()
+    wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn(), show: jest.fn() }
+    const orden = []
+    Api.patch.mockImplementationOnce(() => { orden.push('privado'); return Promise.resolve({ data: {} }) })
+    jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => { orden.push('referencias') })
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(orden).toEqual(['privado', 'referencias'])
+    wrapper.destroy()
+  })
+})
+

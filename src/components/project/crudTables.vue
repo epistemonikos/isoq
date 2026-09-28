@@ -1466,7 +1466,6 @@ export default {
       this.importSaveError = ''
       if (destino.failed) {
         this.importSaveError = 'import_modal.save_check_failed'
-        this.$emit('print-errors', new Error(`No se pudo verificar el documento de ${this.type}`))
         return
       }
 
@@ -1498,8 +1497,8 @@ export default {
         .catch((error) => {
           // Si ya no estaba, el reemplazo sigue: borrarlo era sólo el paso previo a crear.
           if (isAlreadyGone(error)) return this.insertImportedData(params)
+          // Sin `print-errors`: el aviso ya está en el modal, y sería un segundo cartel.
           this.noteImportSaveError(error)
-          this.$emit('print-errors', error)
           return false
         })
     },
@@ -1514,8 +1513,8 @@ export default {
           return true
         })
         .catch((error) => {
+          // Sin `print-errors`: el aviso ya está en el modal, y sería un segundo cartel.
           this.noteImportSaveError(error)
-          this.$emit('print-errors', error)
           return false
         })
     },

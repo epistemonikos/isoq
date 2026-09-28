@@ -756,3 +756,79 @@ describe('viewProject.vue — alta de finding sin conexión', () => {
   })
 })
 
+// Si la tabla de datos extraídos no se crea, el finding queda sin ella para siempre: nadie
+// la vuelve a crear. Antes `createExtractedData` no devolvía la promesa, así que `createFinding`
+// decía «creado» sin esperar, y el fallo terminaba en `printErrors`.
+describe('viewProject.vue — la tabla de datos extraídos que no se crea', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('createExtractedData espera la escritura y la propaga si falla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    jest.spyOn(wrapper.vm, 'parseReference').mockResolvedValue('A 2020')
+    Api.post.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} } }))
+    await expect(wrapper.vm.createExtractedData('f1')).rejects.toBeTruthy()
+    wrapper.destroy()
+  })
+
+  it('createFinding avisa que el finding se creó sin su tabla, y no dice «creado» a secas', async () => {
+    const { wrapper, $notify } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockResolvedValueOnce({ data: { id: 'f1' } })
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockRejectedValue(Object.assign(new Error('500'), { response: { status: 500, data: {} } }))
+    const getLists = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'F')
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect($notify.success).not.toHaveBeenCalled()
+    expect($notify.warning).toHaveBeenCalledWith('notifications.extracted_data_create_error')
+    // El finding sí existe: la lista se refresca igual para que aparezca.
+    expect(getLists).toHaveBeenCalled()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+// `crudTables` es el único que emite `print-errors`, y `viewProject` lo mandaba a
+// `printErrors`, que no muestra nada: crear, renombrar, reordenar o borrar columnas y guardar
+// filas fallaban sin aviso. Se prueba el CABLEADO real: el evento del hijo llega a un aviso.
+describe('viewProject.vue — lo que crudTables no pudo hacer se ve', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  async function emitirDesdeLaTabla (wrapper, error) {
+    for (let i = 0; i < 5; i++) await flushPromises()
+    await wrapper.setData({ project: { ...wrapper.vm.project, use_camelot: false } })
+    const tabla = wrapper.findAllComponents({ name: 'crudTables' })
+    // Si el stub no se encuentra, el test tiene que fallar: no es verde por no probar nada.
+    expect(tabla.length).toBeGreaterThan(0)
+    tabla.at(0).vm.$emit('print-errors', error)
+  }
+
+  it('una escritura que falla: «no se pudo guardar»', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_characteristics/c1/field/column_1', method: 'delete' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    wrapper.destroy()
+  })
+
+  it('una lectura que falla: «no se pudo cargar», no «no se pudo guardar»', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_characteristics', method: 'get' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+
+  it('un 403 en una escritura dice que no tiene permiso', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('403'), { response: { status: 403, data: {} }, config: { url: '/isoqf_characteristics/c1', method: 'patch' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.write_forbidden')
+    wrapper.destroy()
+  })
+
+  it('sin conexión no suma aviso', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('offline'), { isOfflineError: true, response: { status: 0 }, config: { method: 'post' } }))
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+

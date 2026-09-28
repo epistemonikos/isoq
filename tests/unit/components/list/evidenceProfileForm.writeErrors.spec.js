@@ -154,3 +154,20 @@ describe('evidenceProfileForm — si no se guarda, lo dice y suelta la tabla', (
     wrapper.destroy()
   })
 })
+
+describe('evidenceProfileForm — la fila de datos extraídos que no se guarda', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('avisa y deja la edición abierta', async () => {
+    const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+    const wrapper = makeWrapper({}, $notify)
+    setupRefs(wrapper)
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_extracted_data/ed1/item/R1' } }))
+    wrapper.vm.updateContentExtractedDataItem('R1')
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    expect(wrapper.emitted('setShowEditExtractedDataInPlace')).toBeFalsy()
+    wrapper.destroy()
+  })
+})
+

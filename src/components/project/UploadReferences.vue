@@ -217,6 +217,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '@/utils/commons'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
@@ -394,8 +395,7 @@ export default {
         localStorage.removeItem('reference-upload-progress')
         this.$emit('CallGetReferences', false)
       } catch (error) {
-        console.error('Error uploading RIS file', error)
-        this.$emit('statusLoadReferences', false)
+        this.onImportError(error)
       }
     },
     saveReferences: async function (from = '') {
@@ -457,8 +457,7 @@ export default {
 
         this.$emit('CallGetReferences', false)
       } catch (error) {
-        console.error('saveReferences error', error)
-        this.$emit('statusLoadReferences', false)
+        this.onImportError(error)
       }
     },
     PubmedRequest: function () {
@@ -635,10 +634,23 @@ export default {
 
         this.$emit('CallGetReferences', false)
       } catch (error) {
-        console.error('Error importing references', error)
+        this.onImportError(error)
       } finally {
         this.$emit('statusLoadReferences', false)
       }
+    },
+    /**
+     * Referencias que no entraron, por cualquiera de los tres caminos (archivo RIS, archivo o
+     * Epistemonikos, PubMed). Antes terminaba en `console.error`: la carga se apagaba y la
+     * persona se quedaba sin referencias y sin saber por qué. Lo elegido se conserva para
+     * reintentar; el «Procesando N referencias…» se borra porque ya no está pasando.
+     */
+    onImportError: function (error) {
+      console.error('Error importing references', error)
+      this.uploadProgress = ''
+      this.$emit('statusLoadReferences', false)
+      const key = writeErrorMessageKey(error, 'notifications.references_import_error')
+      if (key) this.$notify.error(this.$t(key))
     },
     openModalReferencesSingle: function (showModal) {
       if (showModal) {

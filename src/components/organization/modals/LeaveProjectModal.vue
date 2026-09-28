@@ -12,6 +12,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 
 export default {
   name: 'LeaveProjectModal',
@@ -38,8 +39,10 @@ export default {
           this.$emit('project-left')
           this.hide()
         })
-        .catch((e) => {
-          console.log(e)
+        .catch((error) => {
+          // El modal queda abierto: la persona sigue teniendo acceso y puede reintentar.
+          const key = writeErrorMessageKey(error, 'notifications.leave_project_error')
+          if (key) this.$notify.error(this.$t(key))
         })
         .finally(() => {
           this.$emit('processing', false)

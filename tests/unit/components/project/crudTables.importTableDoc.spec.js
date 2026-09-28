@@ -144,7 +144,9 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
 
     expect(Api.delete).not.toHaveBeenCalled()
     expect(Api.post).not.toHaveBeenCalled()
-    expect(wrapper.emitted('print-errors')).toBeTruthy()
+    // El aviso está en el modal; `print-errors` ya no se emite para no sumar un segundo cartel.
+    expect(wrapper.html()).toContain('import_modal.save_check_failed')
+    expect(wrapper.emitted('print-errors')).toBeFalsy()
     // El archivo sigue cargado: la persona puede reintentar sin volver a elegirlo.
     expect(wrapper.vm.importDataTable.items).toHaveLength(1)
   })
@@ -196,7 +198,8 @@ describe('crudTables — el import no parte la tabla en dos documentos', () => {
     await wrapper.vm.saveImportedData()
     await flushPromises()
 
-    expect(wrapper.emitted('print-errors')).toBeTruthy()
+    expect(wrapper.html()).toContain('import_modal.save_')
+    expect(wrapper.emitted('print-errors')).toBeFalsy()
     expect(wrapper.vm.importDataTable.items).toHaveLength(1)
   })
 

@@ -1604,7 +1604,11 @@
     "share_invite_error": "The project could not be shared. The invitation was not sent.",
     "share_unshare_error": "Access could not be removed. The person still has access to the project.",
     "share_permission_error": "The permission could not be changed. It stays as it was.",
-    "share_link_error": "The shared link could not be updated."
+    "share_link_error": "The shared link could not be updated.",
+    "references_import_error": "The references could not be imported. Your selection is still there — please try again.",
+    "leave_project_error": "You could not leave the project. You still have access to it.",
+    "make_private_error": "The project could not be made private, so its references were not removed. Nothing changed.",
+    "extracted_data_create_error": "The finding was created, but its extracted data table could not be created."
   },
   "admin": {
     "panel_link": "Admin Panel",

@@ -1604,7 +1604,11 @@
     "share_invite_error": "Não foi possível compartilhar o projeto. O convite não foi enviado.",
     "share_unshare_error": "Não foi possível remover o acesso. A pessoa ainda tem acesso ao projeto.",
     "share_permission_error": "Não foi possível alterar a permissão. Continua como estava.",
-    "share_link_error": "Não foi possível atualizar o link compartilhado."
+    "share_link_error": "Não foi possível atualizar o link compartilhado.",
+    "references_import_error": "Não foi possível importar as referências. Sua seleção continua lá; tente novamente.",
+    "leave_project_error": "Não foi possível sair do projeto. Você ainda tem acesso a ele.",
+    "make_private_error": "Não foi possível tornar o projeto privado, então suas referências não foram removidas. Nada mudou.",
+    "extracted_data_create_error": "O achado foi criado, mas não foi possível criar sua tabela de dados extraídos."
   },
   "admin": {
     "panel_link": "Painel de administração",

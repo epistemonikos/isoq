@@ -649,6 +649,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { displayExplanation } from '../utils/commons'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { sectionOfType, blockedSectionsOf } from '@/utils/evidenceProfileLockKeys'
@@ -826,12 +827,22 @@ export default {
       this.pendingSaveReferences = false
     },
 
-    confirmSavePrivateProject: function () {
-      // El usuario confirmó que desea continuar, haciendo el proyecto privado
-      this.saveProjectAsPrivate()
-      // Guardar las referencias (que estarán vacías)
+    /**
+     * Quitar todas las referencias deja el proyecto sin publicar, así que antes se pasa a
+     * privado. Van EN ORDEN y no en paralelo: si pasar a privado fallaba, las referencias
+     * se borraban igual y quedaba un proyecto público sin referencias. Ahora, si falla, no
+     * se toca nada y se avisa.
+     */
+    confirmSavePrivateProject: async function () {
+      try {
+        await this.saveProjectAsPrivate()
+      } catch (error) {
+        this.cancelPrivateProjectWarning()
+        const key = writeErrorMessageKey(error, 'notifications.make_private_error')
+        if (key) this.$notify.error(this.$t(key))
+        return
+      }
       this.saveReferencesList()
-      // Cerrar ambos modales
       this.$nextTick(() => {
         this.pendingSaveReferences = false
         this.$refs['modalReferences'].hide()
@@ -852,13 +863,12 @@ export default {
         license_type: '',
         public_type: 'private'
       }
-      Api.patch(`/isoqf_projects/${this.project.id}`, params)
+      // Devuelve la promesa: `confirmSavePrivateProject` espera el resultado antes de
+      // quitar referencias.
+      return Api.patch(`/isoqf_projects/${this.project.id}`, params)
         .then(() => {
           // Emitir un evento para notificar al componente padre que el estado del proyecto cambió
           this.$emit('update-project-status')
-        })
-        .catch((error) => {
-          console.log('Error updating project status:', error)
         })
     },
 
