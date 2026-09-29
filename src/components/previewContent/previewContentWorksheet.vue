@@ -1,5 +1,8 @@
 <template>
   <div>
+    <b-container>
+      <LoadErrorAlert :parts="failedLoadParts" @retry="retryFailedLoads" />
+    </b-container>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
         <b-row>
@@ -78,6 +81,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import backToTop from '../backToTop'
 import { exportToWord } from '@/services/wordExportService'
 import evidenceProfile from '../list/editListEvidenceProfile.vue'
@@ -96,6 +100,7 @@ const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelo
 export default {
   mixins: [camelotMixin],
   components: {
+    LoadErrorAlert,
     'back-to-top': backToTop,
     'evidence-profile': evidenceProfile,
     'chars-of-studies': charsOfStudies,
@@ -106,6 +111,8 @@ export default {
   },
   data () {
     return {
+      // Qué cargas fallaron: la worksheet compartida se veía incompleta y así se exportaba a Word.
+      loadErrors: { finding: false, categories: false, references: false, evidence: false, extracted: false, characteristics: false, assessments: false },
       ui: {
         methodological_assessments: {
           display_warning: true
@@ -211,6 +218,9 @@ export default {
     }
   },
   computed: {
+    failedLoadParts () {
+      return Object.keys(this.loadErrors).filter(part => this.loadErrors[part])
+    },
     evidence_profile_fields_print_version: function () {
       return [
         { key: 'displayNumber', label: '#' },
@@ -400,15 +410,17 @@ export default {
 
       Promise.all([
         Api.get(url, params),
-        Api.get(catUrl, params).catch((error) => {
+        Api.get(catUrl, params).then((r) => { this.loadErrors.categories = false; return r }).catch((error) => {
           // Swallow so the chain survives without categories rather than breaking the
-          // worksheet entirely, but log it: silently falling back to sort-only numbering
-          // here is the exact bug this branch fixed, and it must not go unreported.
+          // worksheet entirely — but it must not go unreported: `printErrors` alone did not
+          // show anything, so the sort-only fallback numbering went by silently.
           this.printErrors(error)
+          this.loadErrors.categories = true
           return { data: [] }
         })
       ])
         .then(([response, catResponse]) => {
+          this.loadErrors.finding = false
           let lists = Array.isArray(response.data) ? response.data : [response.data]
           const categories = Array.isArray(catResponse.data)
             ? catResponse.data
@@ -430,13 +442,28 @@ export default {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
+          this.loadErrors.finding = true
           this.printErrors(error)
         })
+    },
+    /**
+     * Vuelve a pedir sólo lo que falló. Sin el finding o sin sus grupos se rehace todo
+     * (`getList` encadena el resto); el resto se pide por separado.
+     */
+    retryFailedLoads: function () {
+      const e = this.loadErrors
+      if (e.finding || e.categories) return this.getList()
+      if (e.references) this.getAllReferences()
+      if (e.evidence) this.getStageOneData()
+      else if (e.extracted) this.getExtractedData()
+      if (e.characteristics) this.getCharsOfStudies()
+      if (e.assessments) this.getMethAssessments()
     },
     getAllReferences: function () {
       const url = this.getSharedUrl(`/isoqf_references?project_id=${this.list.project_id}`)
       Api.get(url)
         .then((response) => {
+          this.loadErrors.references = false
           let _references = response.data
           let _refs = []
           let _refsWithTitles = []
@@ -452,6 +479,7 @@ export default {
             .sort((a, b) => a.id - b.id)
         })
         .catch((error) => {
+          this.loadErrors.references = true
           this.printErrors(error)
         })
     },
@@ -462,6 +490,7 @@ export default {
       }
       Api.get(url, params)
         .then((response) => {
+          this.loadErrors.evidence = false
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
             this.evidence_profile = []
@@ -483,6 +512,7 @@ export default {
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         }).catch((error) => {
+          this.loadErrors.evidence = true
           this.printErrors(error)
         })
     },
@@ -494,6 +524,7 @@ export default {
 
       Api.get(url, params)
         .then((response) => {
+          this.loadErrors.extracted = false
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
             this.extracted_data = response.data[0]
@@ -568,6 +599,7 @@ export default {
           }
         })
         .catch((error) => {
+          this.loadErrors.extracted = true
           this.printErrors(error)
         })
     },
@@ -578,6 +610,7 @@ export default {
       }
       Api.get(url, params)
         .then((response) => {
+          this.loadErrors.characteristics = false
           // Reference list is the source of truth: build one row per reference and
           // merge DB-persisted data when it exists. A CAMELOT project that was just
           // migrated (or never edited) has no isoqf_characteristics document yet, but
@@ -714,6 +747,7 @@ export default {
           this.characteristics_studies.tableTop = tableTop
         })
         .catch((error) => {
+          this.loadErrors.characteristics = true
           this.printErrors(error)
         })
     },
@@ -724,6 +758,7 @@ export default {
       }
       Api.get(url, params)
         .then((response) => {
+          this.loadErrors.assessments = false
           // Same left-join-on-references principle as getCharsOfStudies: the study
           // list drives the rows so the shared worksheet is never empty for a CAMELOT
           // project whose isoqf_assessments document has not been created yet.
@@ -832,6 +867,7 @@ export default {
           this.meth_assessments = data
         })
         .catch((error) => {
+          this.loadErrors.assessments = true
           this.printErrors(error)
         })
     },

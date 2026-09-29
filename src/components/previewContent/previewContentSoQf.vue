@@ -35,6 +35,9 @@
         </b-nav>
       </b-container>
     </b-container>
+    <b-container>
+      <LoadErrorAlert :parts="failedLoadParts" @retry="retryFailedLoads" />
+    </b-container>
     <b-container class="mb-5">
       <b-tabs
         id="tabsContent"
@@ -211,6 +214,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import Commons from '@/utils/commons'
 import { withDerivedRows } from '@/utils/derivedRows'
 
@@ -227,6 +231,7 @@ const actionButtons = () => import(/* webpackChunkName: "actionButtonsProject" *
 
 export default {
   components: {
+    LoadErrorAlert,
     'content-guidance': contentGuidance,
     organizationForm,
     'criteria': Criteria,
@@ -240,6 +245,8 @@ export default {
   },
   data () {
     return {
+      // Qué cargas fallaron: quien abre un link compartido veía tablas vacías y exportaba incompleto.
+      loadErrors: { categories: false, references: false, lists: false, findings: false, characteristics: false, assessments: false },
       bundleMode: false,
       name: 'previewContentSoqf',
       tabOpened: 2,
@@ -321,6 +328,9 @@ export default {
     }
   },
   computed: {
+    failedLoadParts () {
+      return Object.keys(this.loadErrors).filter(part => this.loadErrors[part])
+    },
     /**
      * Las dos tablas del proyecto, completadas con los estudios que no tienen fila.
      *
@@ -393,6 +403,19 @@ export default {
           this.$router.push({ name: 'MainPage' })
         })
     },
+    /**
+     * Vuelve a pedir sólo lo que falló. Los findings cuelgan de las listas, y las listas de
+     * los grupos (el watcher de `list_categories.options` dispara getLists): sin grupos no se
+     * pedía ni un finding.
+     */
+    retryFailedLoads: function () {
+      const e = this.loadErrors
+      if (e.references) this.getReferences(false)
+      if (e.categories) this.getListCategories()
+      else if (e.lists || e.findings) this.getLists()
+      if (e.characteristics) this.loadCharacteristicsForSharedLink()
+      if (e.assessments) this.loadAssessmentsForSharedLink()
+    },
     getLists: function () {
       const params = {
         organization: this.$route.params.org_id,
@@ -400,6 +423,7 @@ export default {
       }
       Api.get('/isoqf_lists', params)
         .then((response) => {
+          this.loadErrors.lists = false
           this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
           data = Commons.sortFindings(data, this.list_categories)
@@ -538,6 +562,7 @@ export default {
           this.table_settings.totalRows = data.length
         })
         .catch((error) => {
+          this.loadErrors.lists = true
           console.log(error)
         })
     },
@@ -548,6 +573,7 @@ export default {
       }
       Api.get('/isoqf_findings', params)
         .then((response) => {
+          this.loadErrors.findings = false
           if (response.data.length) {
             if (!this.findings.find(f => f.id === response.data[0].id)) {
               this.findings.push(response.data[0])
@@ -555,7 +581,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          this.loadErrors.findings = true
+          // `printErrors` no existe en este componente: el catch lanzaba un TypeError.
+          console.error(error)
         })
     },
     getListCategories: function () {
@@ -565,6 +593,7 @@ export default {
       }
       Api.get('/isoqf_list_categories', params)
         .then((response) => {
+          this.loadErrors.categories = false
           this.list_categories.options = []
           if (response.data.length) {
             let options = JSON.parse(JSON.stringify(response.data))
@@ -579,16 +608,19 @@ export default {
           }
         })
         .catch((error) => {
+          this.loadErrors.categories = true
           console.log(error)
         })
     },
     getReferences: function (changeTab = true) {
       Api.get(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
+          this.loadErrors.references = false
           const data = JSON.parse(JSON.stringify(response.data))
           this.references = data
         })
         .catch((error) => {
+          this.loadErrors.references = true
           console.log(error)
           // this.printErrors(error)
         })
@@ -955,6 +987,7 @@ export default {
       }
       Api.get(`/api/shared/${token}/isoqf_characteristics`, params)
         .then(response => {
+          this.loadErrors.characteristics = false
           if (response.data && response.data.length > 0) {
             const serverData = response.data[0] || { fields: [], items: [] }
             if (serverData.items && Array.isArray(serverData.items)) {
@@ -970,6 +1003,7 @@ export default {
           }
         })
         .catch(error => {
+          this.loadErrors.characteristics = true
           console.error('Error loading characteristics for shared link:', error)
         })
     },
@@ -981,6 +1015,7 @@ export default {
       }
       Api.get(`/api/shared/${token}/isoqf_assessments`, params)
         .then(response => {
+          this.loadErrors.assessments = false
           if (response.data && response.data.length > 0) {
             const serverData = response.data[0] || { items: [] }
             if (serverData.items && Array.isArray(serverData.items)) {
@@ -996,6 +1031,7 @@ export default {
           }
         })
         .catch(error => {
+          this.loadErrors.assessments = true
           console.error('Error loading assessments for shared link:', error)
         })
     }

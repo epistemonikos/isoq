@@ -425,7 +425,11 @@
       "categories": "the finding groups",
       "findings": "the finding assessments",
       "characteristics": "the characteristics of studies table",
-      "assessments": "the methodological assessments table"
+      "assessments": "the methodological assessments table",
+      "lists": "the findings",
+      "finding": "the finding",
+      "evidence": "the evidence profile",
+      "extracted": "the extracted data"
     }
   },
   "references": {

@@ -425,7 +425,11 @@
       "categories": "los grupos de findings",
       "findings": "las evaluaciones de los findings",
       "characteristics": "la tabla de características de los estudios",
-      "assessments": "la tabla de evaluaciones metodológicas"
+      "assessments": "la tabla de evaluaciones metodológicas",
+      "lists": "los findings",
+      "finding": "el finding",
+      "evidence": "el perfil de evidencia",
+      "extracted": "los datos extraídos"
     }
   },
   "references": {

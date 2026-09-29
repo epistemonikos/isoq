@@ -31,13 +31,7 @@
       <!-- Lo que no se pudo cargar del proyecto. Cada carga fallida se veía como otra cosa:
            sin referencias la pestaña iSoQ queda deshabilitada, sin grupos cambia la numeración,
            sin características o assessments el exportable sale sin esas tablas. -->
-      <b-alert v-if="failedLoadParts.length" show variant="warning" class="mt-3 d-print-none" data-test="project-load-error">
-        {{ $t('project.load_error_parts', { parts: failedLoadParts.map(p => $t('project.load_part.' + p)).join(', ') }) }}
-        <span v-if="loadErrors.categories"> {{ $t('project.load_error_numbering') }}</span>
-        <b-button size="sm" variant="outline-warning" class="ml-2" data-test="project-load-retry" @click="retryFailedLoads">
-          {{ $t('common.retry') }}
-        </b-button>
-      </b-alert>
+      <LoadErrorAlert :parts="failedLoadParts" @retry="retryFailedLoads" />
       <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
         <propertiesProject :project="project" :canEdit="isEditing"
           :highlight="$route.query.highlight" @update-project="updateDataProject">
@@ -482,6 +476,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { isAlreadyGone } from '@/utils/replayOutcome'
 import LockService from '@/services/lockService'
@@ -525,6 +520,7 @@ function categoryCatalogSignature (options) {
 export default {
   mixins: [preserveScrollMixin, projectFreshnessMixin],
   components: {
+    LoadErrorAlert,
     draggable,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,

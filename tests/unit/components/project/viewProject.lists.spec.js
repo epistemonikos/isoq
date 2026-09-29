@@ -895,20 +895,23 @@ describe('viewProject.vue — lo que no se pudo cargar del proyecto se dice', ()
     // El `$t` de este spec ignora los parámetros, así que el nombre de la parte no llega al
     // texto: se afirma sobre la lista que el aviso interpola, más que el aviso esté en el DOM.
     expect(wrapper.vm.failedLoadParts).toContain(part)
-    expect(wrapper.find('[data-test="project-load-error"]').exists()).toBe(true)
+    // LoadErrorAlert está stubbeado por shallowMount: se comprueba que le llegue la parte (su
+    // propio spec fija cómo la dibuja).
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toContain(part)
     wrapper.destroy()
   })
 
-  it('sin los grupos, avisa además que la numeración puede no coincidir', async () => {
+  // La nota de numeración la decide LoadErrorAlert (su spec lo fija); acá, que le llegue la parte.
+  it('sin los grupos, se lo pasa al aviso', async () => {
     const { wrapper } = await montado()
     await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, categories: true } })
-    expect(wrapper.find('[data-test="project-load-error"]').text()).toContain('project.load_error_numbering')
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toContain('categories')
     wrapper.destroy()
   })
 
-  it('sin errores no hay aviso', async () => {
+  it('sin errores no hay partes que avisar', async () => {
     const { wrapper } = await montado()
-    expect(wrapper.find('[data-test="project-load-error"]').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toEqual([])
     wrapper.destroy()
   })
 
@@ -928,7 +931,7 @@ describe('viewProject.vue — lo que no se pudo cargar del proyecto se dice', ()
     const refs = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
     const ass = jest.spyOn(wrapper.vm, 'getAssessmentsData').mockResolvedValue()
     const cats = jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
-    wrapper.find('[data-test="project-load-retry"]').trigger('click')
+    wrapper.findComponent({ name: 'LoadErrorAlert' }).vm.$emit('retry')
     await flushPromises()
     expect(refs).toHaveBeenCalled()
     expect(ass).toHaveBeenCalled()

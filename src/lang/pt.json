@@ -425,7 +425,11 @@
       "categories": "os grupos de achados",
       "findings": "as avaliações dos achados",
       "characteristics": "a tabela de características dos estudos",
-      "assessments": "a tabela de avaliações metodológicas"
+      "assessments": "a tabela de avaliações metodológicas",
+      "lists": "os achados",
+      "finding": "o achado",
+      "evidence": "o perfil de evidência",
+      "extracted": "os dados extraídos"
     }
   },
   "references": {
