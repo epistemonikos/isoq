@@ -82,12 +82,20 @@ describe('writeErrorMessageKey', () => {
 describe('requestFailureKey', () => {
   it('sin respuesta (o marcado offline): no se pudo conectar', () => {
     expect(requestFailureKey({ isOfflineError: true, response: { status: 0 } })).toBe('common.connection_failed')
-    expect(requestFailureKey(new Error('Network Error'))).toBe('common.connection_failed')
+    expect(requestFailureKey(Object.assign(new Error('Network Error'), { request: {} }))).toBe('common.connection_failed')
   })
 
   it('con respuesta de error: el servidor no pudo procesarla', () => {
-    expect(requestFailureKey({ response: { status: 500, data: {} } })).toBe('common.server_failed')
-    expect(requestFailureKey({ response: { status: 429, data: {} } })).toBe('common.server_failed')
+    expect(requestFailureKey({ response: { status: 500, data: { status: 'error' } } })).toBe('common.server_failed')
+    expect(requestFailureKey({ response: { status: 400, data: {} } })).toBe('common.server_failed')
+  })
+
+  it('429: demasiados intentos', () => {
+    expect(requestFailureKey({ response: { status: 429, data: '<html></html>' } })).toBe('common.too_many_attempts')
+  })
+
+  it('un error que no viene de una petición no tiene aviso de petición', () => {
+    expect(requestFailureKey(new TypeError('boom'))).toBeNull()
   })
 })
 

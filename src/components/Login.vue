@@ -7,10 +7,10 @@
             <b-card
               :header="$t('common.login')">
                 <b-alert
-                  :show="$store.state.status === 'error' && !emailNotVerified && !passwordCompromised && !loginRequestFailed"
+                  :show="credentialsRejected"
                   variant="warning"
                   dismissible
-                  @dismissed="changeStatus">
+                  @dismissed="onCredentialsAlertDismissed">
                     {{ $t('auth.login_error') }}
                 </b-alert>
                 <!-- La petición no llegó o el servidor falló: no es un error de credenciales.
@@ -178,6 +178,10 @@ export default {
       // Claves i18n del motivo, o '' sin aviso.
       resendVerificationFailed: '',
       loginRequestFailed: '',
+      // Se prende sólo cuando el servidor dijo «credenciales incorrectas». Antes el aviso colgaba
+      // de `$store.state.status === 'error'`, que el store pone en TODO fallo y antes de
+      // rechazar: con el servidor caído, el aviso de credenciales destellaba.
+      credentialsRejected: false,
       termsAccepted: false,
       newsletterAccepted: false,
       termsError: '',
@@ -199,11 +203,13 @@ export default {
       this.resendVerificationSent = false
       this.resendVerificationFailed = ''
       this.loginRequestFailed = ''
+      this.credentialsRejected = false
     },
     password () {
       this.emailNotVerified = false
       this.passwordCompromised = false
       this.loginRequestFailed = ''
+      this.credentialsRejected = false
     }
   },
   computed: {
@@ -222,6 +228,7 @@ export default {
       this.passwordCompromised = false
       this.resendVerificationSent = false
       this.loginRequestFailed = ''
+      this.credentialsRejected = false
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
@@ -272,13 +279,16 @@ export default {
           } else if (error && error.response && error.response.data &&
               error.response.data.status === 'password_compromised') {
             this.passwordCompromised = true
+          } else if (error && error.response && error.response.data &&
+              error.response.data.status === 'invalid_credentials') {
+            this.credentialsRejected = true
           } else {
             console.error(error)
-            // Sin un `status` del servidor esto no es un rechazo de credenciales: la petición
-            // no llegó o el servidor falló. Decir «usuario o contraseña incorrectos» mandaba a
-            // resetear una contraseña que estaba bien.
-            const status = error && error.response && error.response.data && error.response.data.status
-            if (!status) this.loginRequestFailed = requestFailureKey(error)
+            // Cualquier otra cosa es un fallo de la petición, no de credenciales. Es una
+            // ALLOWLIST (las tres ramas de arriba): los manejadores globales del backend
+            // responden `{status: 'error'}` en 400/403/404/500, y un chequeo de «no trae status»
+            // dejaba un 500 real sin ningún aviso. Un `status` nuevo del servidor también cae acá.
+            this.loginRequestFailed = requestFailureKey(error) || ''
           }
         })
     },
@@ -295,11 +305,15 @@ export default {
           // Se dice al lado del botón, igual que el «reenviado». Antes sólo se apagaba el
           // spinner, y la persona se quedaba esperando un correo que no había salido.
           this.isResendingVerification = false
-          this.resendVerificationFailed = requestFailureKey(error)
+          this.resendVerificationFailed = requestFailureKey(error) || 'common.server_failed'
         })
     },
     changeStatus () {
       this.$store.dispatch('changeStatus')
+    },
+    onCredentialsAlertDismissed () {
+      this.credentialsRejected = false
+      this.changeStatus()
     },
     // Va por Api.patch y no por axios como el original: Api ya inyecta el
     // Authorization en getHeaders() y encola la mutación si estamos offline.

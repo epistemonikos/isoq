@@ -110,6 +110,10 @@ export const store = new Vuex.Store({
             } else {
               commit('auth_error')
               localStorage.removeItem('token')
+              // Rechaza con su `status`, como los otros dos rechazos. Antes no resolvía ni
+              // rechazaba: Login no podía enterarse y colgaba el aviso del estado global, que
+              // también vale 'error' con el servidor caído — el aviso de credenciales destellaba.
+              reject(Object.assign(new Error('invalid_credentials'), { response: { data } }))
             }
           })
           .catch(error => {

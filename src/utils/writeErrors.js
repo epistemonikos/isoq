@@ -44,7 +44,15 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
  * sería otro aviso falso.
  */
 export function requestFailureKey (error) {
+  if (error && error.isOfflineError) return 'common.connection_failed'
   const status = error && error.response && error.response.status
-  if (!status || (error && error.isOfflineError)) return 'common.connection_failed'
-  return 'common.server_failed'
+  // `/auth/login` está limitado por Flask-Limiter, que responde HTML sin `status`. «El
+  // servidor falló» mandaba a esperar sin decir por qué ni cuánto.
+  if (status === 429) return 'common.too_many_attempts'
+  if (status) return 'common.server_failed'
+  // Sin respuesta pero con petición: la red o el servidor caído.
+  if (error && (error.request || error.isAxiosError)) return 'common.connection_failed'
+  // No viene de una petición (un error del router, por ejemplo): no es un problema de
+  // conexión, y decirlo sería falso.
+  return null
 }

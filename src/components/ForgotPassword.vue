@@ -98,7 +98,7 @@ export default {
           // Antes sólo `console.error`: la persona apretaba «Recuperar», no pasaba nada y no
           // sabía si esperar el correo.
           console.error(error)
-          this.ui.requestError = requestFailureKey(error)
+          this.ui.requestError = requestFailureKey(error) || 'common.server_failed'
         })
     }
   }

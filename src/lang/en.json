@@ -149,7 +149,8 @@
     "select_new_owner": "Select new owner",
     "enter_password_confirm": "Enter your password to confirm",
     "connection_failed": "Could not connect to the server. Please check your connection and try again.",
-    "server_failed": "The server could not process the request. Please try again in a few minutes."
+    "server_failed": "The server could not process the request. Please try again in a few minutes.",
+    "too_many_attempts": "Too many attempts. Please wait a minute and try again."
   },
   "menu": {
     "about": "About",

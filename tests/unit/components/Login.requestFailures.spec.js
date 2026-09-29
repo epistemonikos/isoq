@@ -42,7 +42,10 @@ describe('Login — un fallo del servidor no es un error de credenciales', () =>
     const wrapper = mountLogin()
     wrapper.vm.$store.dispatch.mockImplementation(() => {
       wrapper.vm.$store.state.status = 'error'
-      return Promise.reject(Object.assign(new Error('500'), { response: { status: 500, data: {} } }))
+      // La forma REAL del backend: sus manejadores globales (server.py) responden
+      // `{status: 'error'}` en 400/401/403/404/500. Con `data: {}` el test confirmaba la
+      // suposición del cliente en vez de lo que manda el servidor, y un 500 real quedaba mudo.
+      return Promise.reject(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error', message: 'Internal server error.' } } }))
     })
     wrapper.vm.login()
     await flushPromises()
@@ -51,9 +54,63 @@ describe('Login — un fallo del servidor no es un error de credenciales', () =>
   })
 
   it('credenciales incorrectas siguen diciendo eso', async () => {
-    const wrapper = mountLogin({ status: 'error' })
+    // Sin tocar `store.status`: el aviso tiene que salir del motivo que llega en el rechazo,
+    // no del estado global (que el store pone en todo fallo).
+    const wrapper = mountLogin()
+    wrapper.vm.$store.dispatch.mockImplementation(() => Promise.reject({ response: { data: { status: 'invalid_credentials' } } }))
+    wrapper.vm.login()
     await flushPromises()
     expect(visibleAlerts(wrapper).join(' ')).toContain('auth.login_error')
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('common.connection_failed')
+  })
+
+  // El destello: el store pone `status = 'error'` ANTES de rechazar. Si el aviso de
+  // credenciales colgara de ese estado, se mostraría en ese instante aunque el motivo real
+  // fuera la red. Se congela justo ahí —estado en error, promesa todavía sin resolver— y no
+  // tiene que haber ningún aviso de credenciales.
+  it('mientras el motivo no se sabe, no se muestra el aviso de credenciales', async () => {
+    const wrapper = mountLogin()
+    let rechazar
+    wrapper.vm.$store.dispatch.mockImplementation(() => {
+      wrapper.vm.$store.state.status = 'error'
+      return new Promise((resolve, reject) => { rechazar = reject })
+    })
+    wrapper.vm.login()
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('auth.login_error')
+    rechazar(Object.assign(new Error('x'), { isOfflineError: true, response: { status: 0 } }))
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).toContain('common.connection_failed')
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('auth.login_error')
+  })
+
+  it('cerrar el aviso de credenciales lo oculta y limpia el estado del store', async () => {
+    const wrapper = mountLogin()
+    wrapper.vm.$store.dispatch.mockImplementation((name) => {
+      if (name === 'login') {
+        wrapper.vm.$store.state.status = 'error'
+        return Promise.reject({ response: { data: { status: 'invalid_credentials' } } })
+      }
+      return Promise.resolve()
+    })
+    wrapper.vm.login()
+    await flushPromises()
+    wrapper.vm.onCredentialsAlertDismissed()
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('auth.login_error')
+    expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('changeStatus')
+  })
+
+  it('volver a escribir borra el aviso de credenciales', async () => {
+    const wrapper = mountLogin()
+    wrapper.vm.$store.dispatch.mockImplementation(() => Promise.reject({ response: { data: { status: 'invalid_credentials' } } }))
+    wrapper.vm.login()
+    await flushPromises()
+    // Primero tiene que verse: sin esto el test pasa aunque el aviso nunca aparezca.
+    expect(visibleAlerts(wrapper).join(' ')).toContain('auth.login_error')
+    wrapper.vm.password = 'otra'
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('auth.login_error')
   })
 
   it('volver a escribir borra el aviso de conexión', async () => {
@@ -81,3 +138,45 @@ describe('Login — reenviar la verificación que falla', () => {
     expect(wrapper.vm.isResendingVerification).toBe(false)
   })
 })
+
+describe('Login — los otros rechazos del servidor', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const rechazaCon = (wrapper, error) => wrapper.vm.$store.dispatch.mockImplementation(() => Promise.reject(error))
+
+  // Allowlist: sólo los tres `status` conocidos tienen aviso propio. Cualquier otro que mande
+  // el servidor —hoy `'error'`, mañana el que sea— es un fallo de la petición, y se ve.
+  it.each([
+    [400, { status: 'error', type: 'missing_fields' }],
+    [403, { status: 'error', message: 'Access denied.' }],
+    [500, { status: 'un_status_que_todavia_no_existe' }]
+  ])('un %s con status desconocido se ve', async (code, data) => {
+    const wrapper = mountLogin()
+    rechazaCon(wrapper, Object.assign(new Error(String(code)), { response: { status: code, data } }))
+    wrapper.vm.login()
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).toContain('common.server_failed')
+  })
+
+  // `/auth/login` está limitado a 5 por minuto y Flask-Limiter responde HTML sin `status`.
+  // A la sexta contraseña equivocada, «el servidor falló» mandaba a esperar algo que no iba a
+  // arreglarse solo antes de un minuto — ni a decir por qué.
+  it('un 429: demasiados intentos', async () => {
+    const wrapper = mountLogin()
+    rechazaCon(wrapper, Object.assign(new Error('429'), { response: { status: 429, data: '<html>Too Many Requests</html>' } }))
+    wrapper.vm.login()
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).toContain('common.too_many_attempts')
+  })
+
+  // Un error del router después de un login exitoso no es de red: decir «no se pudo
+  // conectar» sería falso. No es un fallo de petición, así que no hay aviso de petición.
+  it('un error que no es de una petición no dice que no se pudo conectar', async () => {
+    const wrapper = mountLogin()
+    rechazaCon(wrapper, new TypeError('boom en la navegación'))
+    wrapper.vm.login()
+    await flushPromises()
+    expect(visibleAlerts(wrapper).join(' ')).not.toContain('common.connection_failed')
+  })
+})
+

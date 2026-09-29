@@ -131,7 +131,7 @@ export default {
           console.error(error)
           this.requestFailed = true
           this.showBanner = true
-          this.msgBanner = this.$t(requestFailureKey(error))
+          this.msgBanner = this.$t(requestFailureKey(error) || 'common.server_failed')
           this.classBanner = 'danger'
         })
     },

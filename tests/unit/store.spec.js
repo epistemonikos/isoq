@@ -437,3 +437,38 @@ describe('update_user (GDPR: aceptación de términos)', () => {
     expect(store.state.user.access_token).toBe('tok')
   })
 })
+
+// Con credenciales incorrectas la acción hacía el commit y NUNCA resolvía ni rechazaba su
+// promesa: Login no podía enterarse por la vía normal y dependía del estado global, que el
+// store pone igual para un servidor caído. Por eso el aviso de credenciales destellaba antes
+// del de conexión. Ahora rechaza con su `status`, como los otros dos rechazos.
+describe('action: login — cada rechazo dice cuál es', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    localStorage.clear()
+    store.replaceState(emptyState())
+  })
+
+  it('credenciales incorrectas: rechaza con status invalid_credentials', async () => {
+    Api.post.mockResolvedValueOnce({ data: { status: 'invalid_credentials' } })
+    const error = await store.dispatch('login', { username: 'a@example.test', password: 'x' }).catch(e => e)
+    expect(error && error.response && error.response.data.status).toBe('invalid_credentials')
+    // El estado global no cambia de semántica: `getLogginInfo` lo sigue leyendo igual.
+    expect(store.state.status).toBe('error')
+  })
+
+  it('correo sin verificar: rechaza con su status, como antes', async () => {
+    Api.post.mockResolvedValueOnce({ data: { status: 'email_not_verified' } })
+    const error = await store.dispatch('login', { username: 'a@example.test', password: 'x' }).catch(e => e)
+    expect(error.response.data.status).toBe('email_not_verified')
+  })
+
+  it('sin respuesta: rechaza con el error tal cual, sin status', async () => {
+    const netErr = Object.assign(new Error('Network Error'), { isOfflineError: true })
+    Api.post.mockRejectedValueOnce(netErr)
+    const error = await store.dispatch('login', { username: 'a@example.test', password: 'x' }).catch(e => e)
+    expect(error).toBe(netErr)
+    expect(store.state.status).toBe('error')
+  })
+})
+

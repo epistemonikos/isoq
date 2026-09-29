@@ -149,7 +149,8 @@
     "select_new_owner": "Seleccionar nuevo dueño",
     "enter_password_confirm": "Ingresa tu contraseña para confirmar",
     "connection_failed": "No se pudo conectar con el servidor. Revise su conexión y vuelva a intentarlo.",
-    "server_failed": "El servidor no pudo procesar la solicitud. Vuelva a intentarlo en unos minutos."
+    "server_failed": "El servidor no pudo procesar la solicitud. Vuelva a intentarlo en unos minutos.",
+    "too_many_attempts": "Demasiados intentos. Espere un minuto y vuelva a intentarlo."
   },
   "menu": {
     "about": "Acerca de",
