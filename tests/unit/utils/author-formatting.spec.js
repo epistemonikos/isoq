@@ -58,6 +58,26 @@ describe('Commons.getLastName', () => {
   it('handles single-token name', () => {
     expect(Commons.getLastName('Aristotle')).toBe('Aristotle')
   })
+
+  // Con coma, el apellido es TODO lo que va antes: la primera palabra partía los apellidos
+  // compuestos y dejaba sueltas las partículas. Medido en la base (2026-09-29): 716 primeros
+  // autores (2,7 %) se mostraban así, p. ej. «de Sousa Pinto, Juliana Maria» → «de».
+  it.each([
+    ['Fathi Najafi, T.', 'Fathi Najafi'],
+    ['McMillan Boyles, C.', 'McMillan Boyles'],
+    ['de Sousa Pinto, Juliana Maria', 'de Sousa Pinto'],
+    ['van der Meer, Hedwig A', 'van der Meer'],
+    ['De Maeyer, Jessica', 'De Maeyer'],
+    ['  Van Hout ,  Marie Claire', 'Van Hout']
+  ])('con coma, todo lo anterior a la coma: %s', (author, expected) => {
+    expect(Commons.getLastName(author)).toBe(expected)
+  })
+
+  // Sin coma se mantiene la primera palabra, a propósito: es el formato «Apellido Nombres»
+  // (los dos tests de arriba) y el de PubMed «Apellido Iniciales».
+  it('sin coma, estilo PubMed, sigue siendo la primera palabra', () => {
+    expect(Commons.getLastName('Freedman R')).toBe('Freedman')
+  })
 })
 
 describe('Commons.getAuthorsFormat', () => {
@@ -67,6 +87,11 @@ describe('Commons.getAuthorsFormat', () => {
 
   it('formats two authors as "Lastname1 & Lastname2, year"', () => {
     expect(Commons.getAuthorsFormat(['Abukari Alhassan Sibdow', 'Acheampong Agela Kwartemaa'], '2021')).toBe('Abukari & Acheampong 2021')
+  })
+
+  it('un apellido compuesto llega entero al «Autor, Año»', () => {
+    expect(Commons.getAuthorsFormat(['de Sousa Pinto, Juliana Maria'], '2020')).toBe('de Sousa Pinto 2020')
+    expect(Commons.getAuthorsFormat(['van der Meer, H', 'Fathi Najafi, T.'], '2021')).toBe('van der Meer & Fathi Najafi 2021')
   })
 
   it('formats three or more authors as "Lastname et al. year"', () => {

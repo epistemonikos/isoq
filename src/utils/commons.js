@@ -23,8 +23,21 @@ export default class Commons {
     return authors
   }
 
+  /**
+   * El apellido del autor, para el «Autor, Año» de toda la app y de los exportables.
+   *
+   * - Con coma («Apellido, Nombre»): TODO lo anterior a la coma. La primera palabra partía
+   *   los apellidos compuestos y dejaba sueltas las partículas: «de Sousa Pinto, Juliana
+   *   Maria» se mostraba «de», «van der Meer, H» como «van». Medido en la base (2026-09-29):
+   *   716 primeros autores, el 2,7 %.
+   * - Sin coma: la primera palabra, a propósito. Es el formato «Apellido Nombres»
+   *   («Bicakli Derya Hopanci») y el de PubMed «Apellido Iniciales» («Freedman R»); ver
+   *   tests/unit/utils/author-formatting.spec.js.
+   */
   static getLastName (author) {
-    return author.split(',')[0].trim().split(/\s+/)[0]
+    const text = String(author).trim()
+    if (text.includes(',')) return text.split(',')[0].trim()
+    return text.split(/\s+/)[0]
   }
 
   static parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
