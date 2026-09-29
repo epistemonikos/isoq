@@ -39,6 +39,13 @@
           </b-form-group>
         </b-col>
       </b-row>
+      <!-- Antes, si fallaba la carga, `isBusy` no se apagaba y el spinner giraba para siempre. -->
+      <b-alert v-if="loadError" show variant="warning" data-test="browse-load-error">
+        {{ $t('browse.load_error') }}
+        <b-button size="sm" variant="outline-warning" class="ml-2" data-test="browse-load-retry" @click="getPublicTables">
+          {{ $t('common.retry') }}
+        </b-button>
+      </b-alert>
       <b-table
         striped
         bordered
@@ -78,6 +85,7 @@ import Api from '@/utils/Api'
 export default {
   data () {
     return {
+      loadError: false,
       public_tables: [],
       table_settings: {
         fields: [
@@ -110,13 +118,17 @@ export default {
   },
   methods: {
     getPublicTables: function () {
+      this.table_settings.isBusy = true
       Api.get('/browse')
         .then((response) => {
+          this.loadError = false
           this.public_tables = response.data
           this.table_settings.isBusy = false
         })
         .catch((error) => {
           console.error(error)
+          this.loadError = true
+          this.table_settings.isBusy = false
         })
     }
   }

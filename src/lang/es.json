@@ -753,7 +753,8 @@
     "search": "Buscar",
     "tables_per_page": "Tablas por página",
     "loading": "Cargando...",
-    "last_modification": "Última modificación"
+    "last_modification": "Última modificación",
+    "load_error": "No se pudieron cargar los proyectos publicados. No es que no haya: falló la carga."
   },
   "help": {
     "title": "Ayuda",
@@ -1842,7 +1843,8 @@
       "note6": "Si cambias de opinión, deberás crear una cuenta nueva. Las cuentas eliminadas no se pueden restaurar.",
       "noteFooter": "Para más detalles, consulta nuestra",
       "and": "y los",
-      "termsAndConditions": "Términos y Condiciones"
+      "termsAndConditions": "Términos y Condiciones",
+      "candidatesLoadError": "No se pudieron cargar algunos colaboradores, así que la lista de proyectos a transferir puede estar incompleta. No puede eliminar su cuenta hasta que cargue."
     },
     "preferences": {
       "newsletter": "Acepto recibir comunicaciones por correo sobre actualizaciones importantes del servicio y novedades (opcional)",
@@ -1860,5 +1862,9 @@
       "privacyNote": "Tus datos personales se tratan para la prestación del servicio de acuerdo con nuestra",
       "termsNote": "Al crear una cuenta, aceptas nuestros"
     }
+  },
+  "organization": {
+    "projects_load_error": "No se pudieron cargar sus proyectos. No es que no tenga: falló la carga.",
+    "projects_load_error_stale": "No se pudieron actualizar sus proyectos. Lo que ve puede estar desactualizado."
   }
 }

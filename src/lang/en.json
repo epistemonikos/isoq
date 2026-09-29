@@ -753,7 +753,8 @@
     "search": "Search",
     "tables_per_page": "Tables per pages",
     "loading": "Loading...",
-    "last_modification": "Last Modification"
+    "last_modification": "Last Modification",
+    "load_error": "The published projects could not be loaded. It is not that there are none: loading failed."
   },
   "help": {
     "title": "Help",
@@ -1842,7 +1843,8 @@
       "note6": "If you change your mind, you must create a new account. Deleted accounts cannot be restored.",
       "noteFooter": "For full details, see our",
       "and": "and",
-      "termsAndConditions": "Terms and conditions"
+      "termsAndConditions": "Terms and conditions",
+      "candidatesLoadError": "Some collaborators could not be loaded, so the list of projects to transfer may be incomplete. You cannot delete your account until it loads."
     },
     "preferences": {
       "newsletter": "I agree to receive email communications about important service updates and news (optional)",
@@ -1860,5 +1862,9 @@
       "privacyNote": "Your personal data is processed for the provision of the service according to our",
       "termsNote": "By creating an account, you accept our"
     }
+  },
+  "organization": {
+    "projects_load_error": "Your projects could not be loaded. It is not that you have none: loading failed.",
+    "projects_load_error_stale": "Your projects could not be updated. What you see may be out of date."
   }
 }

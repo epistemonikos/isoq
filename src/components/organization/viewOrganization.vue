@@ -32,9 +32,17 @@
         </b-row>
         <b-row class="mt-3">
           <b-col cols="12">
+            <!-- Si fallaba `/getProjects`, el workspace decía «no hay registros» y la persona creía
+                 que sus proyectos se habían perdido. -->
+            <b-alert v-if="projectsLoadError" show variant="warning" data-test="projects-load-error">
+              {{ projects.length ? $t('organization.projects_load_error_stale') : $t('organization.projects_load_error') }}
+              <b-button size="sm" variant="outline-warning" class="ml-2" data-test="projects-load-retry" @click="getProjects">
+                {{ $t('common.retry') }}
+              </b-button>
+            </b-alert>
             <b-table id="organizations" responsive striped hover head-variant="light" :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields" :items="filteredProjects" :per-page="ui.projectTable.perPage"
-              :current-page="ui.projectTable.currentPage" sort-by="created_at" :sort-desc="true" show-empty
+              :current-page="ui.projectTable.currentPage" sort-by="created_at" :sort-desc="true" :show-empty="!projectsLoadError"
               :empty-text="searchQuery ? $t('common.no_results_for', { query: searchQuery }) : $t('common.no_records')">
               <template v-slot:cell(private)="data">
                 <b-badge variant="light" class="publish-status" v-b-tooltip.hover
@@ -163,6 +171,8 @@ export default {
   },
   data () {
     return {
+      // La última carga de la lista falló: lo que se ve (o su ausencia) no es el estado real.
+      projectsLoadError: false,
       ui: {
         projectTable: {
           fields: [
@@ -274,6 +284,7 @@ export default {
       this.ui.projectTable.isBusy = true
       Api.get('/getProjects')
         .then((response) => {
+          this.projectsLoadError = false
           this.projects = []
           let _projects = []
           for (const project of response.data) {
@@ -298,6 +309,7 @@ export default {
           }
         }).catch((error) => {
           console.log(error)
+          this.projectsLoadError = true
         }).finally(() => {
           this.ui.projectTable.isBusy = false
         })
@@ -600,7 +612,9 @@ export default {
           }
         }
       }).catch((error) => {
+        // El acceso se quitó, pero la lista no se pudo refrescar: lo que se ve puede estar viejo.
         console.log('onUserUnshared - error:', error)
+        if (!(error && error.isOfflineError)) this.$notify.error(this.$t('notifications.load_error'))
       })
     },
     onInvitedUnshared: function (response) {

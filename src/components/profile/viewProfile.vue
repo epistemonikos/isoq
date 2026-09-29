@@ -262,6 +262,16 @@
         <b-spinner small></b-spinner>
       </div>
 
+      <!-- Un colaborador que no se pudo cargar desaparecía de los candidatos y su proyecto, de
+           la lista: el backend frena el borrado igual (transfer_required), pero sobre un
+           proyecto que la persona ni veía. -->
+      <b-alert v-if="!isLoadingSharedProjects && candidatesLoadFailed" show variant="warning" data-test="candidates-load-error">
+        {{ $t('gdpr.deleteAccount.candidatesLoadError') }}
+        <b-button size="sm" variant="outline-warning" class="ml-2" data-test="candidates-load-retry" @click="loadSharedProjects">
+          {{ $t('common.retry') }}
+        </b-button>
+      </b-alert>
+
       <div v-else-if="sharedProjects.length">
         <p>{{ $t('gdpr.deleteAccount.transferIntro') }}</p>
         <b-form-group
@@ -295,7 +305,7 @@
         <b-button variant="outline-secondary" @click="$bvModal.hide('modal-delete-account')">
           {{ $t('gdpr.deleteAccount.cancel') }}
         </b-button>
-        <b-button variant="danger" :disabled="isDeletingAccount" @click="confirmDeleteAccount">
+        <b-button variant="danger" :disabled="isDeletingAccount || candidatesLoadFailed" @click="confirmDeleteAccount">
           <b-spinner small v-if="isDeletingAccount" class="mr-1"></b-spinner>
           {{ $t('gdpr.deleteAccount.confirm') }}
         </b-button>
@@ -315,6 +325,8 @@ export default {
   name: 'viewProfile',
   data () {
     return {
+      // Algún colaborador no se pudo cargar: la lista de transferencias puede estar incompleta.
+      candidatesLoadFailed: false,
       new_password: null,
       new_password_repeat: null,
       msg: '',
@@ -591,6 +603,7 @@ export default {
     },
     loadSharedProjects: async function () {
       this.isLoadingSharedProjects = true
+      this.candidatesLoadFailed = false
       try {
         const response = await Api.get('/api/getProjects')
         const allProjects = response.data || []
@@ -613,7 +626,11 @@ export default {
         ]))]
 
         const fetched = await Promise.all(uniqueIds.map(uid =>
-          Api.get(`/users/${uid}`).then(r => [uid, r.data]).catch(() => [uid, null])
+          Api.get(`/users/${uid}`).then(r => [uid, r.data]).catch(() => {
+            // Sin esto el colaborador desaparecía de los candidatos en silencio.
+            this.candidatesLoadFailed = true
+            return [uid, null]
+          })
         ))
         const usersById = Object.fromEntries(fetched)
 
@@ -663,6 +680,7 @@ export default {
         this.deleteError = this.$t('gdpr.deleteAccount.passwordRequired')
         return
       }
+      if (this.candidatesLoadFailed) return
       if (!this.allProjectsHaveNewOwner) {
         this.deleteError = this.$t('gdpr.deleteAccount.ownersRequired')
         return

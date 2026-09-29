@@ -313,3 +313,43 @@ describe('viewProfile.vue — eliminar cuenta', () => {
     })
   })
 })
+
+// Si fallaba el GET de un colaborador, esa persona desaparecía de los candidatos, y un
+// proyecto que se quedaba sin candidatos salía de la lista de transferencias EN SILENCIO. El
+// backend lo frena igual (400 transfer_required), pero la persona veía un error sobre un
+// proyecto que ni aparecía en pantalla. Ahora se dice, y no se puede confirmar hasta resolverlo.
+describe('viewProfile.vue — colaboradores que no se pudieron cargar', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  function conUnColaboradorQueFalla () {
+    Api.get.mockImplementation(path => {
+      if (path === '/api/getProjects') return Promise.resolve({ data: [{ id: 'p1', name: 'Compartido', organization: 'org1', can_write: ['bea'] }] })
+      return Promise.reject(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } }, config: { method: 'get' } }))
+    })
+  }
+
+  it('lo dice en el modal y no deja confirmar', async () => {
+    conUnColaboradorQueFalla()
+    const { wrapper } = build()
+    await wrapper.vm.loadSharedProjects()
+    await flushPromises()
+    expect(wrapper.vm.candidatesLoadFailed).toBe(true)
+    expect(wrapper.html()).toContain(en.gdpr.deleteAccount.candidatesLoadError)
+    await wrapper.setData({ deletePassword: 'x' })
+    await wrapper.vm.confirmDeleteAccount()
+    expect(Api.delete).not.toHaveBeenCalled()
+  })
+
+  it('reintentar con éxito lo levanta', async () => {
+    conUnColaboradorQueFalla()
+    const { wrapper } = build()
+    await wrapper.vm.loadSharedProjects()
+    await flushPromises()
+    mockProjectsAndUsers([{ id: 'p1', name: 'Compartido', organization: 'org1', can_write: ['bea'] }], { bea: BEA })
+    await wrapper.vm.loadSharedProjects()
+    await flushPromises()
+    expect(wrapper.vm.candidatesLoadFailed).toBe(false)
+    expect(wrapper.html()).not.toContain(en.gdpr.deleteAccount.candidatesLoadError)
+  })
+})
+

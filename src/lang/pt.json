@@ -753,7 +753,8 @@
     "search": "Pesquisar",
     "tables_per_page": "Tabelas por página",
     "loading": "Carregando...",
-    "last_modification": "Última Modificação"
+    "last_modification": "Última Modificação",
+    "load_error": "Não foi possível carregar os projetos publicados. Não é que não existam: o carregamento falhou."
   },
   "help": {
     "title": "Ajuda",
@@ -1842,7 +1843,8 @@
       "note6": "Se mudar de ideias, terá de criar uma conta nova. As contas eliminadas não podem ser restauradas.",
       "noteFooter": "Para mais detalhes, consulte a nossa",
       "and": "e os",
-      "termsAndConditions": "Termos e Condições"
+      "termsAndConditions": "Termos e Condições",
+      "candidatesLoadError": "Não foi possível carregar alguns colaboradores, então a lista de projetos a transferir pode estar incompleta. Você não pode excluir sua conta até que carregue."
     },
     "preferences": {
       "newsletter": "Aceito receber comunicações por email sobre atualizações importantes do serviço e novidades (opcional)",
@@ -1860,5 +1862,9 @@
       "privacyNote": "Os seus dados pessoais são tratados para a prestação do serviço de acordo com a nossa",
       "termsNote": "Ao criar uma conta, aceita os nossos"
     }
+  },
+  "organization": {
+    "projects_load_error": "Não foi possível carregar seus projetos. Não é que você não tenha: o carregamento falhou.",
+    "projects_load_error_stale": "Não foi possível atualizar seus projetos. O que você vê pode estar desatualizado."
   }
 }
