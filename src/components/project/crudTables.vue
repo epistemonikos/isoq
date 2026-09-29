@@ -30,6 +30,13 @@
     </b-row>
     <b-row>
       <b-col cols="12">
+        <!-- Una tabla que no se pudo cargar se veía igual que una sin columnas: invitaba a crearlas. -->
+        <b-alert v-if="loadError" show variant="warning" class="mt-3 d-print-none" data-test="table-load-error">
+          {{ $t('characteristics.load_error') }}
+          <b-button size="sm" variant="outline-warning" class="ml-2" data-test="table-load-retry" @click="updateMyDataTables()">
+            {{ $t('common.retry') }}
+          </b-button>
+        </b-alert>
         <b-table sort-by="authors" :id="`${prefix}-table`" class="table-content-refs mt-3"
           v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)" :fields="dataTable.fieldsObj"
           :items="dataTable.items" :current-page="dataTableSettings.currentPage" :per-page="dataTableSettings.perPage"
@@ -387,6 +394,8 @@ export default {
   },
   data () {
     return {
+      // La última carga de la tabla falló: lo que se ve no es su estado real.
+      loadError: false,
       dataTable: {
         fields: [],
         items: [],
@@ -604,11 +613,13 @@ export default {
         }
         return Api.get(`/${this.type}`, params)
           .then((response) => {
+            this.loadError = false
             this.handleResponseData(response.data)
           })
-          .catch((error) => {
+          .catch(() => {
+            // El aviso está en la tabla (`loadError`); sin `print-errors`, que sería un toast encima.
             this.dataTableSettings.isBusy = false
-            this.$emit('print-errors', error)
+            this.loadError = true
           })
       }
     },
@@ -1546,6 +1557,7 @@ export default {
 
       Api.get(`/${this.type}`, params)
         .then((response) => {
+          this.loadError = false
           if (!response.data.length) {
             this.getData()
             return
@@ -1558,9 +1570,9 @@ export default {
           derivedData[0].items = items
           this.getData(derivedData)
         })
-        .catch((error) => {
+        .catch(() => {
           this.dataTableSettings.isBusy = false
-          this.$emit('print-errors', error)
+          this.loadError = true
         })
     },
     processItems: function (dataItems) {

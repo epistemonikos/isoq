@@ -571,3 +571,30 @@ describe('ViewTable.vue — no se pudo cargar no es vacío', () => {
   })
 })
 
+// Abrir el modal de referencias o resolver el finding pide datos al servidor; si fallaba, el
+// modal no se abría y nada lo decía.
+describe('ViewTable.vue — lo que no se pudo cargar al abrir un modal se dice', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('resolveFindingId', async () => {
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'findingIdOf').mockReturnValue(null)
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    const id = await wrapper.vm.resolveFindingId('list1')
+    expect(id).toBeNull()
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+
+  it('sin conexión no suma aviso: ya lo dice OfflineIndicator', async () => {
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'findingIdOf').mockReturnValue(null)
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('offline'), { isOfflineError: true, response: { status: 0 } }))
+    await wrapper.vm.resolveFindingId('list1')
+    await flush()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+

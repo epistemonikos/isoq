@@ -417,6 +417,15 @@
       "li4": "Assessing the Methodological Limitations component of GRADE-CERQual of each individual review finding.",
       "link1": "Access to detailed CAMELOT guidance <a href=\"https://www.cerqual.org/\" target=\"_blank\">here</a>.",
       "link2": "Access to guidance on assessing the Methodological Limitations component of GRADE-CERQual <a href=\"https://www.cerqual.org/\" target=\"_blank\">here</a>."
+    },
+    "load_error_parts": "Could not load: {parts}. What you see — and what you export — may be incomplete.",
+    "load_error_numbering": "Without the groups, the numbering of the findings may not match other screens.",
+    "load_part": {
+      "references": "the references",
+      "categories": "the finding groups",
+      "findings": "the finding assessments",
+      "characteristics": "the characteristics of studies table",
+      "assessments": "the methodological assessments table"
     }
   },
   "references": {
@@ -487,7 +496,8 @@
     "columns_locked_by": "{name} is editing the columns right now. Changes cannot be saved until they finish.",
     "confirm_delete_column": "Delete the column \"{name}\"? Its content will be removed from every study.",
     "confirm_delete_column_title": "Delete column",
-    "columns_autosave_hint": "Changes are saved automatically."
+    "columns_autosave_hint": "Changes are saved automatically.",
+    "load_error": "This table could not be loaded. It is not that it is empty: loading failed."
   },
   "import_modal": {
     "beware": "Beware:",

@@ -417,6 +417,15 @@
       "li4": "Avaliação do componente de Limitações Metodológicas do GRADE-CERQual de cada achado de revisão individual.",
       "link1": "Aceda ao guia detalhado do CAMELOT <a href=\"https://www.cerqual.org/\" target=\"_blank\">aqui</a>.",
       "link2": "Aceda ao guia sobre a avaliação do componente de Limitações Metodológicas do GRADE-CERQual <a href=\"https://www.cerqual.org/\" target=\"_blank\">aqui</a>."
+    },
+    "load_error_parts": "Não foi possível carregar: {parts}. O que você vê — e o que exportar — pode estar incompleto.",
+    "load_error_numbering": "Sem os grupos, a numeração dos achados pode não coincidir com a de outras telas.",
+    "load_part": {
+      "references": "as referências",
+      "categories": "os grupos de achados",
+      "findings": "as avaliações dos achados",
+      "characteristics": "a tabela de características dos estudos",
+      "assessments": "a tabela de avaliações metodológicas"
     }
   },
   "references": {
@@ -487,7 +496,8 @@
     "columns_locked_by": "{name} está editando as colunas neste momento. As alterações não poderão ser salvas até que termine.",
     "confirm_delete_column": "Excluir a coluna \"{name}\"? O conteúdo dela será removido de todos os estudos.",
     "confirm_delete_column_title": "Excluir coluna",
-    "columns_autosave_hint": "As alterações são salvas automaticamente."
+    "columns_autosave_hint": "As alterações são salvas automaticamente.",
+    "load_error": "Não foi possível carregar esta tabela. Não é que esteja vazia: o carregamento falhou."
   },
   "import_modal": {
     "beware": "Atenção:",

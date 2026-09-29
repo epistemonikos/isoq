@@ -28,6 +28,16 @@
       </div>
     </b-container>
     <b-container fluid class="mb-5">
+      <!-- Lo que no se pudo cargar del proyecto. Cada carga fallida se veía como otra cosa:
+           sin referencias la pestaña iSoQ queda deshabilitada, sin grupos cambia la numeración,
+           sin características o assessments el exportable sale sin esas tablas. -->
+      <b-alert v-if="failedLoadParts.length" show variant="warning" class="mt-3 d-print-none" data-test="project-load-error">
+        {{ $t('project.load_error_parts', { parts: failedLoadParts.map(p => $t('project.load_part.' + p)).join(', ') }) }}
+        <span v-if="loadErrors.categories"> {{ $t('project.load_error_numbering') }}</span>
+        <b-button size="sm" variant="outline-warning" class="ml-2" data-test="project-load-retry" @click="retryFailedLoads">
+          {{ $t('common.retry') }}
+        </b-button>
+      </b-alert>
       <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
         <propertiesProject :project="project" :canEdit="isEditing"
           :highlight="$route.query.highlight" @update-project="updateDataProject">
@@ -533,6 +543,8 @@ export default {
     return {
       // La última carga de findings falló (ViewTable lo dice en vez de mostrar «vacío»).
       listsLoadError: false,
+      // Qué cargas del proyecto fallaron; el aviso de arriba las nombra.
+      loadErrors: { references: false, categories: false, findings: false, characteristics: false, assessments: false },
       // Locks vigentes del proyecto, sondeados junto con la frescura (ver
       // startProjectPolling). Se los pasamos a ViewTable para que grisée los botones de
       // un finding que otro está editando antes de que alguien lo intente.
@@ -901,9 +913,11 @@ export default {
       }
       return Api.get('/isoqf_list_categories', params)
         .then((response) => {
+          this.loadErrors.categories = false
           this.processGetListCategories(response.data)
         })
         .catch((error) => {
+          this.loadErrors.categories = true
           Commons.printErrors(error)
         })
     },
@@ -914,6 +928,7 @@ export default {
       }
       return Api.get(`/isoqf_references`, params)
         .then(async (response) => {
+          this.loadErrors.references = false
           this.references = await this.processGetReferencesRaw(response.data)
           this.refs = await this.processGetReferencesWithNames(response.data)
           if (changeTab) {
@@ -937,6 +952,7 @@ export default {
           this.loadReferences = false
         })
         .catch((error) => {
+          this.loadErrors.references = true
           Commons.printErrors(error)
         })
     },
@@ -1037,6 +1053,7 @@ export default {
 
       try {
         const response = await Api.get('/isoqf_characteristics', params)
+        this.loadErrors.characteristics = false
         if (response.data && response.data.length > 0) {
           this.charsOfStudies = response.data[0]
         } else {
@@ -1056,6 +1073,7 @@ export default {
           }
         }
       } catch (error) {
+        this.loadErrors.characteristics = true
         console.error('Error cargando características:', error)
       }
     },
@@ -1067,6 +1085,7 @@ export default {
 
       try {
         const response = await Api.get('/isoqf_assessments', params)
+        this.loadErrors.assessments = false
         if (response.data && response.data.length > 0) {
           this.methodologicalTableRefs = response.data[0]
         } else {
@@ -1086,6 +1105,7 @@ export default {
           }
         }
       } catch (error) {
+        this.loadErrors.assessments = true
         console.error('Error cargando evaluaciones:', error)
       }
     },
@@ -1399,9 +1419,11 @@ export default {
           // Replace (don't append): getFindings is always called with the full set of
           // list_ids at once, so a fresh load must supersede the previous one. Appending
           // left stale/duplicate findings in memory on any re-load (open, category edit).
+          this.loadErrors.findings = false
           this.findings = [...response.data]
         })
         .catch((error) => {
+          this.loadErrors.findings = true
           Commons.printErrors(error)
         })
     },
@@ -1752,6 +1774,19 @@ export default {
      * guardar una fila, cargar la tabla… fallaban sin aviso. La regla del aviso es la de
      * `writeErrorMessageKey`; una lectura dice «no se pudo cargar», no «no se pudo guardar».
      */
+    /**
+     * Vuelve a pedir SÓLO lo que falló. Los findings cuelgan de las listas (getLists llama a
+     * getFindings con sus ids), y sin los grupos hay que rehacer la lista para que la
+     * numeración vuelva a ser la de las demás pantallas.
+     */
+    retryFailedLoads: function () {
+      const e = this.loadErrors
+      if (e.references) this.getReferences(false)
+      if (e.categories) this.getListCategories().then(() => this.getLists())
+      else if (e.findings) this.getLists()
+      if (e.characteristics) this.getCharacteristicsData()
+      if (e.assessments) this.getAssessmentsData()
+    },
     onTableError: function (error) {
       Commons.printErrors(error)
       const method = String((error && error.config && error.config.method) || '').toLowerCase()
@@ -1897,6 +1932,9 @@ export default {
     }
   },
   computed: {
+    failedLoadParts () {
+      return Object.keys(this.loadErrors).filter(part => this.loadErrors[part])
+    },
     /**
      * Aviso en vivo mientras se escribe. El chequeo que manda es el del submit.
      *

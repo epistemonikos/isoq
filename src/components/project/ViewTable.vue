@@ -644,6 +644,7 @@ export default {
         return (response.data && response.data.length) ? response.data[0].id : null
       } catch (error) {
         console.log(Commons.printErrors(error))
+        this.notifyLoadError(error)
         return null
       }
     },
@@ -950,7 +951,13 @@ export default {
         })
         .catch((error) => {
           console.log(Commons.printErrors(error))
+          this.notifyLoadError(error)
         })
+    },
+    // El modal no se abría y nada lo decía. Sin conexión ya lo dice OfflineIndicator.
+    notifyLoadError: function (error) {
+      if (error && error.isOfflineError) return
+      this.$notify.error(this.$t('notifications.load_error'))
     },
     setEditFindingNameProp: function (data) {
       return {

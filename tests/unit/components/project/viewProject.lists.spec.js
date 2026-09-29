@@ -862,3 +862,78 @@ describe('viewProject.vue — la carga de findings que falla se marca, no se mue
   })
 })
 
+// Las cinco cargas del proyecto fallaban en silencio y cada una se veía como otra cosa: sin
+// referencias la pestaña iSoQ queda DESHABILITADA y el Paso 1 invita a subirlas de nuevo; sin
+// grupos cambia la numeración de los findings; sin características o assessments el exportable
+// sale sin esas tablas. Un solo aviso a nivel de proyecto nombra lo que faltó.
+describe('viewProject.vue — lo que no se pudo cargar del proyecto se dice', () => {
+  // La reposición del mock va acá y no al final de cada test: si un test falla antes de
+  // reponerlo, el rechazo contamina al siguiente.
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+  })
+
+  async function montado () {
+    const r = createWrapper()
+    for (let i = 0; i < 6; i++) await flushPromises()
+    return r
+  }
+
+  it.each([
+    ['references', 'getReferences', '/isoqf_references'],
+    ['categories', 'getListCategories', '/isoqf_list_categories'],
+    ['findings', 'getFindings', '/findings'],
+    ['characteristics', 'getCharacteristicsData', '/isoqf_characteristics'],
+    ['assessments', 'getAssessmentsData', '/isoqf_assessments']
+  ])('%s: si falla, el aviso lo nombra', async (part, method, url) => {
+    const { wrapper } = await montado()
+    Api.get.mockImplementation((u) => u === url ? Promise.reject(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } }, config: { method: 'get' } })) : Promise.resolve({ data: [] }))
+    await wrapper.vm[method]('')
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.loadErrors[part]).toBe(true)
+    // El `$t` de este spec ignora los parámetros, así que el nombre de la parte no llega al
+    // texto: se afirma sobre la lista que el aviso interpola, más que el aviso esté en el DOM.
+    expect(wrapper.vm.failedLoadParts).toContain(part)
+    expect(wrapper.find('[data-test="project-load-error"]').exists()).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('sin los grupos, avisa además que la numeración puede no coincidir', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, categories: true } })
+    expect(wrapper.find('[data-test="project-load-error"]').text()).toContain('project.load_error_numbering')
+    wrapper.destroy()
+  })
+
+  it('sin errores no hay aviso', async () => {
+    const { wrapper } = await montado()
+    expect(wrapper.find('[data-test="project-load-error"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('una carga que sale bien apaga su marca', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, references: true } })
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+    await wrapper.vm.getReferences(false)
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.loadErrors.references).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('Reintentar vuelve a pedir SÓLO lo que falló', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, references: true, assessments: true } })
+    const refs = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+    const ass = jest.spyOn(wrapper.vm, 'getAssessmentsData').mockResolvedValue()
+    const cats = jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    wrapper.find('[data-test="project-load-retry"]').trigger('click')
+    await flushPromises()
+    expect(refs).toHaveBeenCalled()
+    expect(ass).toHaveBeenCalled()
+    expect(cats).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
