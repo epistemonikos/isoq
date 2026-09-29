@@ -832,3 +832,33 @@ describe('viewProject.vue — lo que crudTables no pudo hacer se ve', () => {
   })
 })
 
+describe('viewProject.vue — la carga de findings que falla se marca, no se muestra como vacío', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('getLists que falla prende listsLoadError y se lo pasa a la tabla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.getLists()
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.listsLoadError).toBe(true)
+    const tabla = wrapper.findComponent({ name: 'ViewTable' })
+    expect(tabla.exists()).toBe(true)
+    // `ViewTable` está stubbeado como `true` en este spec: el stub no declara props, así que
+    // el valor llega como atributo.
+    expect(tabla.attributes('loaderror')).toBe('true')
+    wrapper.destroy()
+  })
+
+  it('la siguiente carga que sale bien lo apaga', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    await wrapper.setData({ listsLoadError: true })
+    Api.get.mockResolvedValue({ data: [] })
+    wrapper.vm.getLists()
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.listsLoadError).toBe(false)
+    wrapper.destroy()
+  })
+})
+

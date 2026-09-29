@@ -313,7 +313,7 @@
             <template v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
-                :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :references="references"
+                :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :loadError="listsLoadError" :references="references"
                 :refs="refs" :filter="table_settings.filter" :findings="findings" :refLocks="activeRefLocks"
                 :presence="activePresence"
                 @get-lists="getLists" @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
@@ -531,6 +531,8 @@ export default {
   },
   data () {
     return {
+      // La última carga de findings falló (ViewTable lo dice en vez de mostrar «vacío»).
+      listsLoadError: false,
       // Locks vigentes del proyecto, sondeados junto con la frescura (ver
       // startProjectPolling). Se los pasamos a ViewTable para que grisée los botones de
       // un finding que otro está editando antes de que alguien lo intente.
@@ -1153,6 +1155,7 @@ export default {
       }
       Api.get('/isoqf_lists', params)
         .then(async (response) => {
+          this.listsLoadError = false
           this.lists = await this.processLists(response)
           const lists = response.data.map((list) => { return list.id })
           this.getFindings(lists.toString())
@@ -1164,6 +1167,8 @@ export default {
           // Reset isBusy so a parse/processing error surfaces an empty/error table instead of
           // an infinite spinner (isBusy starts true and is only cleared on the happy path).
           this.table_settings.isBusy = false
+          // La tabla lo muestra como «no se pudo cargar», no como un proyecto vacío.
+          this.listsLoadError = true
           Commons.printErrors(error)
         })
     },

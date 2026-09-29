@@ -150,7 +150,8 @@
     "enter_password_confirm": "Digite sua senha para confirmar",
     "connection_failed": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
     "server_failed": "O servidor não conseguiu processar a solicitação. Tente novamente em alguns minutos.",
-    "too_many_attempts": "Muitas tentativas. Aguarde um minuto e tente novamente."
+    "too_many_attempts": "Muitas tentativas. Aguarde um minuto e tente novamente.",
+    "retry": "Tentar novamente"
   },
   "menu": {
     "about": "Sobre",
@@ -867,7 +868,9 @@
     "print_explanation": "Explicação da avaliação GRADE-CERQual",
     "assessment_not_completed": "Avaliação não concluída",
     "edit_references": "Editar referências",
-    "view_references": "Ver referências"
+    "view_references": "Ver referências",
+    "load_error": "Não foi possível carregar os achados deste projeto. Não é que não existam: o carregamento falhou.",
+    "load_error_stale": "Não foi possível atualizar os achados. O que você vê pode estar desatualizado."
   },
   "commons": {
     "et_al": "et al.",

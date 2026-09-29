@@ -533,3 +533,41 @@ describe('ViewTable.vue — pasar a privado antes de quitar las referencias', ()
   })
 })
 
+// Si la carga de findings falla, la tabla quedaba vacía diciendo «no hay findings, agregue uno»:
+// una invitación a duplicar trabajo que ya existe. Una carga fallida no es un proyecto vacío.
+describe('ViewTable.vue — no se pudo cargar no es vacío', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sin datos: dice que falló la carga, y apaga el «agregue un finding»', async () => {
+    const { wrapper } = createWrapper({ lists: [], loadError: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('soqf_table.load_error')
+    expect(wrapper.html()).not.toContain('soqf_table.load_error_stale')
+    expect(wrapper.find('#findings').attributes('show-empty')).toBeUndefined()
+    wrapper.destroy()
+  })
+
+  it('con datos viejos: los deja a la vista y avisa que pueden estar desactualizados', async () => {
+    const { wrapper } = createWrapper({ loadError: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('soqf_table.load_error_stale')
+    wrapper.destroy()
+  })
+
+  it('Reintentar vuelve a pedir los findings', async () => {
+    const { wrapper } = createWrapper({ lists: [], loadError: true })
+    await wrapper.vm.$nextTick()
+    wrapper.find('[data-test="findings-retry"]').trigger('click')
+    expect(wrapper.emitted('get-lists')).toBeTruthy()
+    wrapper.destroy()
+  })
+
+  it('sin error no hay aviso, y el vacío de siempre sigue', async () => {
+    const { wrapper } = createWrapper({ lists: [] })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).not.toContain('soqf_table.load_error')
+    expect(wrapper.find('#findings').attributes('show-empty')).toBeTruthy()
+    wrapper.destroy()
+  })
+})
+

@@ -1,8 +1,16 @@
 <template>
   <div>
+    <!-- Una carga fallida no es un proyecto vacío. Antes la tabla decía «no hay findings,
+         agregue uno»: una invitación a duplicar trabajo que ya existe. -->
+    <b-alert v-if="loadError" show variant="warning" class="d-print-none" data-test="findings-load-error">
+      {{ lists.length ? $t('soqf_table.load_error_stale') : $t('soqf_table.load_error') }}
+      <b-button size="sm" variant="outline-warning" class="ml-2" data-test="findings-retry" @click="$emit('get-lists')">
+        {{ $t('common.retry') }}
+      </b-button>
+    </b-alert>
     <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="displayNumber"
       :fields="(list_categories.options.length) ? fields.with_categories : fields.without_categories" :items="lists"
-      show-empty :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
+      :show-empty="!loadError" :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
       @filtered="onFiltered" :filter-included-fields="table_settings.filterOn">
       <template v-slot:head(displayNumber)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
@@ -503,6 +511,11 @@ export default {
     isBusy: {
       type: Boolean,
       required: true,
+      default: false
+    },
+    // La última carga de findings falló: lo que se ve (o su ausencia) no es el estado real.
+    loadError: {
+      type: Boolean,
       default: false
     },
     filter: {

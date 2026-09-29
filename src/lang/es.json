@@ -150,7 +150,8 @@
     "enter_password_confirm": "Ingresa tu contraseña para confirmar",
     "connection_failed": "No se pudo conectar con el servidor. Revise su conexión y vuelva a intentarlo.",
     "server_failed": "El servidor no pudo procesar la solicitud. Vuelva a intentarlo en unos minutos.",
-    "too_many_attempts": "Demasiados intentos. Espere un minuto y vuelva a intentarlo."
+    "too_many_attempts": "Demasiados intentos. Espere un minuto y vuelva a intentarlo.",
+    "retry": "Reintentar"
   },
   "menu": {
     "about": "Acerca de",
@@ -867,7 +868,9 @@
     "print_explanation": "Explicación de la evaluación GRADE-CERQual",
     "assessment_not_completed": "Evaluación no completada",
     "edit_references": "Editar referencias",
-    "view_references": "Ver referencias"
+    "view_references": "Ver referencias",
+    "load_error": "No se pudieron cargar los findings de este proyecto. No es que no haya: falló la carga.",
+    "load_error_stale": "No se pudieron actualizar los findings. Lo que ve puede estar desactualizado."
   },
   "commons": {
     "et_al": "et al.",
