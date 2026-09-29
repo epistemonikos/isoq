@@ -111,4 +111,42 @@ describe('Api.syncPendingOperations — qué hace con cada rechazo', () => {
     expect(removePendingOperation).toHaveBeenCalledWith(1)
     expect(rechazos).toEqual([])
   })
+
+  // La estrategia `project-single` aplica el PATCH encolado a la caché del proyecto antes de
+  // mandarlo (tryOptimisticUpdate). Si al reproducirlo el servidor lo rechaza, la caché seguía
+  // mostrando el cambio: se volvía a servir si la red caía antes de la próxima lectura. La
+  // cola sólo corre con red, así que se vuelve a pedir el proyecto y la caché queda con lo real.
+  it('un PATCH de proyecto descartado vuelve a pedir el proyecto para corregir la caché', async () => {
+    getPendingOperations.mockResolvedValue([{ id: 1, method: 'PATCH', endpoint: '/api/isoqf_projects/p1', payload: { name: 'sin conexión' } }])
+    axios.patch.mockRejectedValueOnce(rechazo(403))
+    axios.mockResolvedValue({ data: { id: 'p1', name: 'real' } })
+
+    await Api.syncPendingOperations()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(removePendingOperation).toHaveBeenCalledWith(1)
+    const pedido = axios.mock.calls.find(([opts]) => opts && /\/isoqf_projects\/p1$/.test(opts.url) && opts.method === 'GET')
+    expect(pedido).toBeTruthy()
+  })
+
+  it('si el PATCH de proyecto sale bien, no hace falta volver a pedirlo', async () => {
+    getPendingOperations.mockResolvedValue([{ id: 1, method: 'PATCH', endpoint: '/api/isoqf_projects/p1', payload: { name: 'x' } }])
+    axios.patch.mockResolvedValueOnce({ data: {} })
+
+    await Api.syncPendingOperations()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(axios).not.toHaveBeenCalled()
+  })
+
+  it('un descarte que no es de proyecto no pide nada', async () => {
+    getPendingOperations.mockResolvedValue([op(1)])
+    axios.patch.mockRejectedValueOnce(rechazo(403))
+
+    await Api.syncPendingOperations()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(axios).not.toHaveBeenCalled()
+  })
 })
+

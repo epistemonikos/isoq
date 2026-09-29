@@ -723,6 +723,12 @@ export default class Api {
     try {
       const operations = await getPendingOperations()
       const rejected = []
+      // Proyectos cuya caché quedó con un PATCH que salió de la cola sin aplicarse (ver abajo).
+      const staleProjects = new Set()
+      const noteDiscarded = (discarded) => {
+        const match = String(discarded.endpoint).match(/\/isoqf_projects\/([a-zA-Z0-9]+)/)
+        if (match && (discarded.method === 'PATCH' || discarded.method === 'PUT')) staleProjects.add(match[1])
+      }
       // Se corta la corrida ante un fallo transitorio: lo que sigue puede depender de esa
       // operación, y si la red se cayó, todo lo demás va a fallar igual.
       let stop = false
@@ -742,6 +748,7 @@ export default class Api {
             // payload to the user through the conflict channel.
             reportRefLockConflict(op.lockRef, op.payload, result.lockedBy || '', 'replay')
             await removePendingOperation(op.id)
+            noteDiscarded(op)
             continue
           }
           heldLock = op.lockRef
@@ -779,6 +786,7 @@ export default class Api {
             // el canal propio, porque a diferencia de aquél acá el interceptor no dijo nada.
             reportDuplicateKeyConflict(op.endpoint, op.payload, 'replay')
             await removePendingOperation(op.id)
+            noteDiscarded(op)
           } else if (isVersionRejection(error)) {
             // Reintentar no puede funcionar: el payload encolado lleva por definición la
             // versión de antes de desconectarse, así que cada sincronización repetiría el
@@ -786,6 +794,7 @@ export default class Api {
             // a la persona por el canal de conflicto de versión; acá sólo hay que dejar
             // de intentarlo. Mismo trato que el lock tomado por otra persona, arriba.
             await removePendingOperation(op.id)
+            noteDiscarded(op)
           } else {
             const outcome = replayOutcome(error, op.method)
             if (outcome === 'retry') {
@@ -793,6 +802,7 @@ export default class Api {
               stop = true
             } else {
               await removePendingOperation(op.id)
+              if (outcome !== 'done') noteDiscarded(op)
               if (outcome === 'drop') {
                 const status = error.response.status
                 rejected.push({ status, method: op.method, endpoint: op.endpoint, reason: rejectionReason(status) })
@@ -807,8 +817,21 @@ export default class Api {
         }
       }
       reportReplayRejected(rejected)
+      // `project-single` aplicó cada PATCH encolado a la caché del proyecto antes de mandarlo
+      // (tryOptimisticUpdate). Si salió de la cola sin aplicarse, la caché seguía mostrando el
+      // cambio, y se servía si la red caía antes de la próxima lectura. La cola sólo corre con
+      // red: se vuelve a pedir el proyecto y la caché queda con lo del servidor.
+      staleProjects.forEach(projectId => this.refreshCachedProject(projectId))
     } catch (error) {
       console.error('Error during sync:', error)
+    }
+  }
+
+  static async refreshCachedProject (projectId) {
+    try {
+      await this.get(`/isoqf_projects/${projectId}`)
+    } catch (error) {
+      console.warn('No se pudo refrescar la caché del proyecto', projectId, error)
     }
   }
 

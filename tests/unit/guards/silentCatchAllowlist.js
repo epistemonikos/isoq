@@ -40,6 +40,7 @@ module.exports = {
   'utils/Api.js::tryOptimisticUpdate': CACHE,
   'utils/Api.js::tryOptimisticUpdate#2': CACHE,
   'utils/Api.js::tryOptimisticUpdate#3': CACHE,
+  'utils/Api.js::refreshCachedProject': CACHE + ' Es el refresco tras descartar un PATCH de proyecto de la cola: si falla, la próxima lectura con red corrige la caché igual.',
   'utils/Api.js::_syncPendingOperations': BACKGROUND + ' Falla al leer la cola misma; las operaciones siguen ahí para la próxima corrida.',
   'utils/editorPresence.js::announcePresence': TTL + ' (la presencia entre pestañas caduca por STALE).',
   'utils/editorPresence.js::clearPresence': TTL + ' (la presencia entre pestañas caduca por STALE).'
