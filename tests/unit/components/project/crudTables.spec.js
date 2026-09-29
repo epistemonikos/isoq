@@ -1,6 +1,7 @@
 
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import crudTables from '@/components/project/crudTables.vue'
+import Commons from '@/utils/commons'
 import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
 import * as xlsxExporter from '@/utils/xlsxExporter'
@@ -385,23 +386,34 @@ describe('crudTables.vue', () => {
       xlsxExporter.exportAOAToXLSX.mockClear()
     })
 
-    it('calls exportAOAToXLSX with header row and reference data rows', async () => {
-      await wrapper.setData({
-        refs: [
-          { id: '1', content: 'Smith 2020; extra info' },
-          { id: '2', content: 'Jones 2021' }
+    // La columna «Author(s), Year» sale de la misma función que el resto de la app
+    // (Commons.getAuthorsFormat), no de cortar en «;» el texto de parseReference: era una
+    // segunda implementación de la misma regla.
+    it('arma la columna Author(s), Year con getAuthorsFormat sobre las referencias', async () => {
+      await wrapper.setProps({
+        references: [
+          { id: '1', authors: ['Smith, J'], publication_year: '2020' },
+          { id: '2', authors: ['Doe, A', 'Roe, B'], publication_year: '2021' },
+          { id: '3', authors: ['Uno, A', 'Dos, B', 'Tres, C'], publication_year: '2019' }
         ]
       })
+      const format = jest.spyOn(Commons, 'getAuthorsFormat')
 
       await wrapper.vm.generateTemplate()
 
       expect(xlsxExporter.exportAOAToXLSX).toHaveBeenCalledTimes(1)
       const [rows, filename] = xlsxExporter.exportAOAToXLSX.mock.calls[0]
-
       expect(rows[0]).toHaveLength(2)
-      expect(rows[1]).toEqual(['1', 'Smith 2020'])
-      expect(rows[2]).toEqual(['2', 'Jones 2021'])
+      expect(rows.slice(1)).toEqual([
+        ['1', Commons.getAuthorsFormat(['Smith, J'], '2020')],
+        ['2', Commons.getAuthorsFormat(['Doe, A', 'Roe, B'], '2021')],
+        ['3', Commons.getAuthorsFormat(['Uno, A', 'Dos, B', 'Tres, C'], '2019')]
+      ])
+      expect(rows[1][1]).toBe('Smith 2020')
+      expect(rows[2][1]).toBe('Doe & Roe 2021')
+      expect(format).toHaveBeenCalledWith(['Smith, J'], '2020')
       expect(filename).toBe('my_data')
+      format.mockRestore()
     })
   })
 

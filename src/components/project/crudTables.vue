@@ -1346,16 +1346,17 @@ export default {
         })
     },
     generateTemplate: async function () {
-      const _refs = Commmons.deepClone(this.refs)
-
+      // «Author(s), Year» con la misma función que el resto de la app, sobre los autores y el
+      // año de cada referencia. Antes cortaba en «;» el texto de `parseReference`: una segunda
+      // implementación de la misma regla, que dejaba de coincidir en cuanto una cambiara.
       const rows = [
         [
           this.$t('table_headers.reference_id'),
           this.$t('table_headers.author_year')
         ],
-        ..._refs.map(ref => [
+        ...this.references.map(ref => [
           String(ref.id),
-          ref.content.split(';')[0]
+          Commmons.getAuthorsFormat(ref.authors, ref.publication_year)
         ])
       ]
 
