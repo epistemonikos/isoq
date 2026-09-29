@@ -920,6 +920,7 @@ export default {
         })
         .catch((error) => {
           console.log(Commons.printErrors(error))
+          this.notifyLoadError(error)
         })
     },
     modalAddList: function () {

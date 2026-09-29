@@ -714,7 +714,10 @@ export default {
           this.$emit('CallGetProject')
         })
         .catch(error => {
+          // La referencia seguía ahí y nada decía por qué.
           console.error('Error deleting reference:', error)
+          const key = writeErrorMessageKey(error, 'notifications.delete_error')
+          if (key) this.$notify.error(this.$t(key))
         })
     },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {

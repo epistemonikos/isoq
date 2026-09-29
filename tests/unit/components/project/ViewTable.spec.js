@@ -598,3 +598,17 @@ describe('ViewTable.vue — lo que no se pudo cargar al abrir un modal se dice',
   })
 })
 
+describe('ViewTable.vue — abrir el modal de borrar un finding que no carga', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('lo dice: el modal no se abre y antes no pasaba nada visible', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.removeModalFinding({ index: 0, item: { id: 'list1' } })
+    await flush()
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+})
+

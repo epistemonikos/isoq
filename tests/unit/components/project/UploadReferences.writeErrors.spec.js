@@ -96,3 +96,27 @@ describe('UploadReferences — si no se importan, lo dice', () => {
     expect($notify.error).not.toHaveBeenCalled()
   })
 })
+
+// Borrar una referencia que fallaba terminaba en `console.error`: la referencia seguía ahí y
+// nadie decía por qué.
+describe('UploadReferences — borrar una referencia que falla', () => {
+  beforeEach(() => { jest.clearAllMocks(); _lsStore = {} })
+
+  it('lo dice', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Api.post.mockRejectedValueOnce(error500())
+    wrapper.vm.confirmRemoveReferenceById('ref1')
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('notifications.delete_error')
+    expect(wrapper.emitted('CallGetReferences')).toBeFalsy()
+  })
+
+  it('sin conexión no suma aviso: ya lo dio OfflineIndicator', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Api.post.mockRejectedValueOnce(offline())
+    wrapper.vm.confirmRemoveReferenceById('ref1')
+    await flushPromises()
+    expect($notify.error).not.toHaveBeenCalled()
+  })
+})
+

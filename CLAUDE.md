@@ -20,6 +20,11 @@ Vue 2.7.16 (package.json pide ^2.6.12) · Vuex 3.6.2 · Vue Router 3.6.5 hash ·
 - Options API only — no `<script setup>`, no Composition API in components
 - Icons: `@fortawesome/vue-fontawesome` registered in main.js
 - i18n files: `src/lang/{en,es,pt}.json`
+- Errores: `Commons.printErrors` NO muestra nada. Una escritura que falla avisa con `writeErrorMessageKey()`
+  (`src/utils/writeErrors.js`: calla sólo lo que otro canal ya avisó); una carga que falla no se muestra como
+  vacío (`LoadErrorAlert.vue` o el `b-alert` + Reintentar de la pantalla). Seguir el patrón de aviso que la
+  pantalla ya tenga (toast, `b-alert`, feedback de campo). `tests/unit/guards/silentCatches.spec.js` falla ante
+  un `catch` nuevo que sólo loguea: si callar es correcto, va a su allowlist CON el motivo.
 
 ---
 
