@@ -78,8 +78,11 @@
       </template>
     </b-card>
 
+    <!-- `return-focus` gana sobre el elemento que bootstrap-vue capturó al abrir (el botón Save)
+         y se aplica en `onAfterLeave`, cuando ya nadie pisa el cursor: mismo arreglo que el
+         aviso de StepFour. Sin él, «Do it now» dejaba el cursor en el botón. -->
     <b-modal :id="'warning-explanation-modal-' + modalStage + '-' + selectedMeta" :title="$t('common.warning')"
-      :hide-footer="true">
+      :hide-footer="true" :return-focus="returnFocusTarget">
       <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
       <b-container>
         <b-row align-h="between">
@@ -142,6 +145,8 @@ export default {
        * auto-guardado.
        */
       hydratedLeaf: { option: null, text: '', notes: '' },
+      // Selector al que el aviso de explicación devuelve el foco; null = el de siempre.
+      returnFocusTarget: null,
       isSaving: false,
       autoSaveStatus: null,
       options: [
@@ -427,7 +432,9 @@ export default {
         this.notes !== saved.notes
     },
     checkChanges () {
-      const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+      // Sin la celda en el documento (items vacío, aún no sembrado) se compara contra la
+      // última hidratación: antes `items[i].stages` lanzaba un TypeError en cada tecla.
+      const item = this.leafAt(this.assessments, this.modalIndex, this.modalStage, this.selectedMeta) || this.hydratedLeaf
       const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
       this.button.disabled = !hasChanges
       if (hasChanges && this.autoSaveDebounced) {
@@ -457,6 +464,7 @@ export default {
       this.$emit('request-close')
     },
     doItNow () {
+      this.returnFocusTarget = `#${this.textareaId}`
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.$nextTick(() => {
         const el = document.getElementById(this.textareaId)
@@ -469,6 +477,7 @@ export default {
     },
     save () {
       if (this.isIncomplete) {
+        this.returnFocusTarget = null
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return
       }
@@ -555,8 +564,11 @@ export default {
           this.$notify.success(this.$t('notifications.saved'))
         }
       }
+      // Deshace el pintado anticipado de la grilla (ver `localLeaf` abajo).
+      let revertLocalLeaf = null
       const onError = (error) => {
         console.error('Error saving assessment data:', error)
+        if (revertLocalLeaf) revertLocalLeaf()
         this.isSaving = false
         // The lock channel already told the user who took the entry and that their text
         // was kept locally. Adding "please try again" on top contradicts it: retrying
@@ -583,7 +595,19 @@ export default {
         ? currentItem.stages[this.modalStage].options[this.selectedMeta]
         : null
       const optionChanged = this.baselineOption !== this.selected
-      if (localLeaf) Object.assign(localLeaf, leaf)
+      if (localLeaf) {
+        // Si el servidor rechaza, la celda vuelve a lo que tenía: antes quedaba pintada con un
+        // juicio que no se guardó. El formulario conserva lo escrito, para reintentar. Sólo se
+        // restaura si la celda sigue mostrando ESTE intento: si otro guardado la cambió
+        // mientras tanto, lo suyo es más nuevo y no se pisa.
+        const before = { option: localLeaf.option, text: localLeaf.text, notes: localLeaf.notes }
+        Object.assign(localLeaf, leaf)
+        revertLocalLeaf = () => {
+          if (localLeaf.option === leaf.option && localLeaf.text === leaf.text && localLeaf.notes === leaf.notes) {
+            Object.assign(localLeaf, before)
+          }
+        }
+      }
 
       // `assessments.id` en blanco no significa "no existe": también significa que el GET
       // falló o que todavía no llegó. Crear en esos casos parte el proyecto en dos
