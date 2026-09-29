@@ -203,6 +203,33 @@ export default class Commons {
     }
   }
 
+  /**
+   * Catálogo de categorías listo para mostrar. `text` queda tal cual (normalizado a '' si falta):
+   * es lo que usan `sortFindings`, la detección de duplicados y el campo de edición. Para pantalla
+   * está `label`: las categorías sin nombre —las hay en producción, veinte en un solo proyecto—
+   * se verían como opciones en blanco indistinguibles, así que reciben `unnamedLabel(n)`, con `n`
+   * según el orden del `id` para que el mismo grupo tenga el mismo número en todas las vistas.
+   * El label nunca se escribe en la base: `text` sigue vacío y la persona puede ponerle nombre.
+   */
+  static categoryOptions (categories, unnamedLabel) {
+    const hasName = (c) => typeof c.text === 'string' && c.text.trim() !== ''
+    const unnamedIds = categories.filter(c => !hasName(c)).map(c => String(c.id)).sort()
+    const options = categories.map((c) => {
+      const named = hasName(c)
+      return {
+        ...c,
+        text: typeof c.text === 'string' ? c.text : '',
+        label: named ? c.text : unnamedLabel(unnamedIds.indexOf(String(c.id)) + 1),
+        unnamed: !named
+      }
+    })
+    return options.sort((a, b) => {
+      if (a.unnamed !== b.unnamed) return a.unnamed ? -1 : 1
+      if (a.unnamed) return unnamedIds.indexOf(String(a.id)) - unnamedIds.indexOf(String(b.id))
+      return a.text.localeCompare(b.text)
+    })
+  }
+
   static sortFindings (findings, categories) {
     const options = Array.isArray(categories) ? categories : (categories.options || [])
 

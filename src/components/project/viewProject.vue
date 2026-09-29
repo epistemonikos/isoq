@@ -350,7 +350,7 @@
               </b-form-group>
               <b-form-group v-if="list_categories.options.length" :label="$t('soqf_table.select_group')"
                 :description="$t('soqf_table.group_optional')">
-                <b-form-select v-model="list_categories.selected" value-field="id" text-field="text"
+                <b-form-select v-model="list_categories.selected" value-field="id" text-field="label"
                   :options="list_categories.options"></b-form-select>
               </b-form-group>
             </b-modal>
@@ -403,6 +403,7 @@
                 </p>
                 <b-form-group :label="$t('common.edit_group_name') || 'Edit group name'">
                   <b-form-input v-model="modal_edit_list_categories.text"
+                    :placeholder="modal_edit_list_categories.label"
                     :state="categoryNameIsDuplicate ? false : null"></b-form-input>
                   <p v-if="categoryNameIsDuplicate" class="text-danger mt-1 mb-0">
                     {{ $t('categories.duplicate_name') }}
@@ -415,7 +416,7 @@
               </template>
               <template class="mt-3" v-if="modal_edit_list_categories.remove">
                 <p>
-                  {{ $t('modals.confirm_delete_group') }} <b>{{ modal_edit_list_categories.text }}</b>?
+                  {{ $t('modals.confirm_delete_group') }} <b>{{ modal_edit_list_categories.label }}</b>?
                 </p>
               </template>
               <template v-slot:modal-footer>
@@ -629,6 +630,9 @@ export default {
         edit: false,
         remove: false,
         text: '',
+        // Lo que se muestra de la categoría abierta: su nombre, o «(Grupo sin nombre N)» si
+        // no tiene. `text` es lo que se guarda y para una sin nombre sigue vacío.
+        label: '',
         extra_info: '',
         // El nombre NORMALIZADO que el servidor rechazó por duplicado, o null. Guarda el
         // nombre y no un booleano a propósito: así el aviso se borra solo en cuanto la
@@ -1124,15 +1128,11 @@ export default {
       this.list_categories.options = []
       this.modal_edit_list_categories.options = []
       if (data.length) {
-        let options = JSON.parse(JSON.stringify(data))
-        for (let option of options) {
-          if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
-            option.text = ''
-          }
-        }
-        options.sort((a, b) => a.text.localeCompare(b.text))
+        let options = Commons.categoryOptions(JSON.parse(JSON.stringify(data)),
+          (n) => this.$t('categories.unnamed_group', { n }))
         let modalOptions = JSON.parse(JSON.stringify(options))
-        options.splice(0, 0, { id: null, text: this.$t('categories.no_group') })
+        const noGroup = this.$t('categories.no_group')
+        options.splice(0, 0, { id: null, text: noGroup, label: noGroup })
         this.list_categories.options = options
         this.modal_edit_list_categories.options = modalOptions
       }
@@ -1313,9 +1313,9 @@ export default {
             if (this.list_categories.options.length) {
               for (let category of this.list_categories.options) {
                 if (list.category === category.id) {
-                  list.category_name = category.text
-                  // clean from special chars the category.text and store under list.category_name_filtered
-                  list.category_name_filtered = category.text.replace(/[^a-zA-Z0-9]/g, '')
+                  list.category_name = category.label
+                  // clean from special chars the category.label and store under list.category_name_filtered
+                  list.category_name_filtered = category.label.replace(/[^a-zA-Z0-9]/g, '')
                   list.category_extra_info = category.extra_info
                 }
               }
@@ -1350,7 +1350,7 @@ export default {
           for (let category of this.list_categories.options) {
             if (category.id !== null) {
               categories.push({
-                'name': category.text,
+                'name': category.label,
                 'id': category.id,
                 'value': category.id,
                 'items': [],
@@ -1627,6 +1627,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.text = _options[index].text
+      this.modal_edit_list_categories.label = _options[index].label
       this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.edit = true
       this.modal_edit_list_categories.index = index
@@ -1660,6 +1661,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.text = _options[index].text
+      this.modal_edit_list_categories.label = _options[index].label
       this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.remove = true
       this.modal_edit_list_categories.index = index
@@ -1756,7 +1758,7 @@ export default {
       let _category = ''
       for (let category of _categories.options) {
         if (category.id === id) {
-          _category = category.text
+          _category = category.label
         }
       }
       return _category
@@ -1996,7 +1998,7 @@ export default {
     },
     translatedModalFields: function () {
       return [
-        { key: 'text', label: this.$t('modals.group_name_label') },
+        { key: 'label', label: this.$t('modals.group_name_label') },
         { key: 'actions', label: '' }
       ]
     },

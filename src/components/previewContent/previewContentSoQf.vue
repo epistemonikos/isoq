@@ -368,6 +368,15 @@ export default {
     }
   },
   methods: {
+    // El catálogo para mostrar, con «Sin grupo» delante. La regla de las categorías sin nombre
+    // vive en Commons.categoryOptions: la misma que en el proyecto, para que coincidan.
+    categoryOptions: function (raw) {
+      const options = Commons.categoryOptions(JSON.parse(JSON.stringify(raw)),
+        (n) => this.$t('categories.unnamed_group', { n }))
+      const noGroup = this.$t('categories.no_group') || 'No group'
+      options.splice(0, 0, { id: null, text: noGroup, label: noGroup })
+      return options
+    },
     printDoc: function () {
       window.print()
     },
@@ -458,7 +467,7 @@ export default {
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
                     if (list.category === category.id) {
-                      list.category_name = category.text
+                      list.category_name = category.label
                       list.category_extra_info = category.extra_info
                     }
                   }
@@ -492,7 +501,7 @@ export default {
               for (let category of this.list_categories.options) {
                 if (category.id !== null) {
                   categories.push({
-                    'name': category.text,
+                    'name': category.label,
                     'id': category.id,
                     'value': category.id,
                     'items': [],
@@ -596,14 +605,7 @@ export default {
           this.loadErrors.categories = false
           this.list_categories.options = []
           if (response.data.length) {
-            let options = JSON.parse(JSON.stringify(response.data))
-            for (let option of options) {
-              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
-                option.text = ''
-              }
-            }
-            options.sort((a, b) => a.text.localeCompare(b.text))
-            options.splice(0, 0, {id: null, text: this.$t('categories.no_group') || 'No group'})
+            let options = this.categoryOptions(response.data)
             this.list_categories.options = options
           }
         })
@@ -748,14 +750,7 @@ export default {
 
           const rawCats = bundle.list_categories || []
           if (rawCats.length) {
-            const catOptions = JSON.parse(JSON.stringify(rawCats))
-            for (let option of catOptions) {
-              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
-                option.text = ''
-              }
-            }
-            catOptions.sort((a, b) => a.text.localeCompare(b.text))
-            catOptions.splice(0, 0, { id: null, text: this.$t('categories.no_group') || 'No group' })
+            const catOptions = this.categoryOptions(rawCats)
             this.list_categories.options = catOptions
           }
 
@@ -793,7 +788,7 @@ export default {
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
                     if (list.category === category.id) {
-                      list.category_name = category.text
+                      list.category_name = category.label
                       list.category_extra_info = category.extra_info
                     }
                   }
@@ -825,7 +820,7 @@ export default {
               for (let category of this.list_categories.options) {
                 if (category.id !== null) {
                   categories.push({
-                    'name': category.text,
+                    'name': category.label,
                     'id': category.id,
                     'value': category.id,
                     'items': [],

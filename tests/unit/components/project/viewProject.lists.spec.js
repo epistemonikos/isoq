@@ -658,8 +658,8 @@ describe('viewProject.vue — processLists() lists_print_version numbering (prin
       references: [],
       list_categories: {
         options: [
-          { id: CAT_A, text: 'Alpha', extra_info: '' },
-          { id: CAT_Z, text: 'Zeta', extra_info: '' }
+          { id: CAT_A, text: 'Alpha', label: 'Alpha', extra_info: '' },
+          { id: CAT_Z, text: 'Zeta', label: 'Zeta', extra_info: '' }
         ],
         selected: null
       }

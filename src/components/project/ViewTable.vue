@@ -22,7 +22,7 @@
         {{ data.label }}
         <b-dropdown id="dropdown-categories" text="" class="finding-filter" :no-caret="false" size="sm">
           <b-dropdown-item v-for="(category, index) of list_categories.options" :key="index"
-            @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text
+            @click="tableFilter(category.label, 1)" :active="isFilterActive(category.label)">{{ category.label
             }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
@@ -219,7 +219,7 @@
       </b-form-group>
       <b-form-group v-if="list_categories.options.length" :label="$t('soqf_table.select_group')"
         :description="$t('soqf_table.group_optional')">
-        <b-form-select v-model="editFindingName.category" value-field="id" text-field="text"
+        <b-form-select v-model="editFindingName.category" value-field="id" text-field="label"
           :options="list_categories.options"></b-form-select>
       </b-form-group>
       <b-form-group label-for="finding-note" :description="$t('soqf_table.notes_placeholder')">

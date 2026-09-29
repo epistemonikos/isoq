@@ -66,7 +66,7 @@ describe('viewProject.vue — processGetListCategories()', () => {
 
   it('prepends no_group entry to list_categories.options', () => {
     wrapper.vm.processGetListCategories([{ id: 'c1', text: 'Cat 1' }])
-    expect(wrapper.vm.list_categories.options[0]).toEqual({ id: null, text: 'categories.no_group' })
+    expect(wrapper.vm.list_categories.options[0]).toEqual({ id: null, text: 'categories.no_group', label: 'categories.no_group' })
   })
 
   it('does NOT prepend no_group to modal_edit_list_categories.options', () => {
@@ -88,6 +88,41 @@ describe('viewProject.vue — processGetListCategories()', () => {
   it('adds empty text property to options that lack it', () => {
     wrapper.vm.processGetListCategories([{ id: 'c1' }])
     expect(wrapper.vm.modal_edit_list_categories.options[0].text).toBe('')
+  })
+
+  // Producción tiene un proyecto con 20 categorías sin `text`: sin un label se veían como
+  // 20 opciones en blanco que no había cómo distinguir.
+  describe('categorías sin nombre', () => {
+    const raw = [{ id: 'b' }, { id: 'n', text: 'Named' }, { id: 'a', text: '' }]
+
+    it('el selector y el gestor las muestran numeradas, y el text sigue vacío', () => {
+      wrapper.vm.processGetListCategories(raw)
+      const byId = (opts) => Object.fromEntries(opts.map(o => [o.id, o.label]))
+      const expected = { a: 'categories.unnamed_group', b: 'categories.unnamed_group', n: 'Named' }
+      expect(byId(wrapper.vm.modal_edit_list_categories.options)).toEqual(expected)
+      expect(wrapper.vm.modal_edit_list_categories.options.filter(o => o.unnamed).map(o => o.text)).toEqual(['', ''])
+    })
+
+    it('los findings de una categoría sin nombre muestran su label, no un vacío', () => {
+      wrapper.vm.processGetListCategories(raw)
+      expect(wrapper.vm.getCategoryName('b')).toBe('categories.unnamed_group')
+      expect(wrapper.vm.getCategoryName('n')).toBe('Named')
+    })
+
+    // Los selectores viven dentro de b-modal, que shallowMount no dibuja: esos se verifican
+    // en navegador. La columna del gestor sí se puede fijar acá.
+    it('la tabla del gestor dibuja la columna label, no text', () => {
+      expect(wrapper.vm.translatedModalFields.map(f => f.key)).toContain('label')
+      expect(wrapper.vm.translatedModalFields.map(f => f.key)).not.toContain('text')
+    })
+
+    it('editar una sin nombre deja el campo vacío, con el label de guía', () => {
+      wrapper.vm.processGetListCategories(raw)
+      const index = wrapper.vm.modal_edit_list_categories.options.findIndex(o => o.id === 'a')
+      wrapper.vm.editListCategoryName(index)
+      expect(wrapper.vm.modal_edit_list_categories.text).toBe('')
+      expect(wrapper.vm.modal_edit_list_categories.label).toBe('categories.unnamed_group')
+    })
   })
 })
 
@@ -562,16 +597,10 @@ describe('viewProject.vue — getCategoryName()', () => {
     jest.clearAllMocks()
     wrapper = createWrapper().wrapper
     await flushPromises()
-    await wrapper.setData({
-      list_categories: {
-        options: [
-          { id: null, text: 'categories.no_group' },
-          { id: 'cat1', text: 'Intervention A' },
-          { id: 'cat2', text: 'Intervention B' }
-        ],
-        selected: null
-      }
-    })
+    wrapper.vm.processGetListCategories([
+      { id: 'cat1', text: 'Intervention A' },
+      { id: 'cat2', text: 'Intervention B' }
+    ])
   })
 
   afterEach(() => wrapper.destroy())

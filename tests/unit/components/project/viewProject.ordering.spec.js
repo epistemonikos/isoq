@@ -62,9 +62,9 @@ describe('viewProject.vue ordering logic', () => {
     wrapper.setData({
       list_categories: {
         options: [
-          { id: null, text: 'No group' },
-          { id: 'cat-b', text: 'B Category' },
-          { id: 'cat-a', text: 'A Category' }
+          { id: null, text: 'No group', label: 'No group' },
+          { id: 'cat-b', text: 'B Category', label: 'B Category' },
+          { id: 'cat-a', text: 'A Category', label: 'A Category' }
         ]
       },
       references: [],

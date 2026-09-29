@@ -1132,7 +1132,8 @@
   "categories": {
     "no_group": "Sem grupo",
     "uncategorised_findings": "Descobertas não categorizadas",
-    "duplicate_name": "Já existe um grupo com esse nome neste projeto. Escolha outro nome ou use o grupo existente."
+    "duplicate_name": "Já existe um grupo com esse nome neste projeto. Escolha outro nome ou use o grupo existente.",
+    "unnamed_group": "(Grupo sem nome {n})"
   },
   "yes_no": {
     "yes": "sim",
