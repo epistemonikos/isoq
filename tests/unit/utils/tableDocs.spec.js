@@ -75,4 +75,15 @@ describe('resolveTableDoc', () => {
 
     expect(await resolveTableDoc({ ...base, knownId: null })).toEqual({ id: null })
   })
+
+  // La tabla de datos extraídos se busca por finding, no por proyecto.
+  it('acepta sus propios parámetros de búsqueda', async () => {
+    Api.get.mockResolvedValue({ data: [{ id: 'ed1' }] })
+
+    const resultado = await resolveTableDoc({ collection: '/isoqf_extracted_data', params: { finding_id: 'f1' } })
+
+    expect(resultado).toEqual({ id: 'ed1' })
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_extracted_data', { finding_id: 'f1' }, { networkOnly: true })
+  })
 })
+

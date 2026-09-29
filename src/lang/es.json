@@ -1631,8 +1631,9 @@
     "references_import_error": "No se pudieron importar las referencias. Lo que eligió sigue ahí; vuelva a intentarlo.",
     "leave_project_error": "No se pudo salir del proyecto. Sigue teniendo acceso.",
     "make_private_error": "No se pudo pasar el proyecto a privado, así que no se quitaron sus referencias. No cambió nada.",
-    "extracted_data_create_error": "El finding se creó, pero no se pudo crear su tabla de datos extraídos.",
-    "references_check_error": "No se pudo comprobar si otros findings tienen referencias, así que no se cambió nada. Vuelva a intentarlo."
+    "extracted_data_create_error": "El finding se creó, pero no su tabla de datos extraídos. Se creará cuando abra el finding.",
+    "references_check_error": "No se pudo comprobar si otros findings tienen referencias, así que no se cambió nada. Vuelva a intentarlo.",
+    "extracted_data_missing": "Este finding no tiene tabla de datos extraídos y no se pudo crear ahora. Se volverá a intentar la próxima vez que abra el finding."
   },
   "admin": {
     "panel_link": "Panel de administración",

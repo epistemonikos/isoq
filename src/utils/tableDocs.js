@@ -30,12 +30,13 @@ import Api from '@/utils/Api'
  *   crear nada: un guardado perdido con aviso es preferible a los datos partidos en
  *   silencio.
  */
-export async function resolveTableDoc ({ knownId, collection, organization, projectId }) {
+export async function resolveTableDoc ({ knownId, collection, organization, projectId, params }) {
   if (knownId) return { id: knownId }
   try {
     // Sólo vale la respuesta del servidor: sin red, la caché contestaría lo último que vio,
     // y una lista vacía vieja se leería como «no existe» y encolaría un alta que duplica.
-    const response = await Api.get(collection, {
+    // `params` para las tablas que no cuelgan del proyecto (datos extraídos: `finding_id`).
+    const response = await Api.get(collection, params || {
       organization: organization,
       project_id: projectId
     }, { networkOnly: true })

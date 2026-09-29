@@ -130,6 +130,8 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { resolveTableDoc } from '@/utils/tableDocs'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
 import Commons from '../../utils/commons'
@@ -736,6 +738,7 @@ export default {
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.getExtractedData()
+          this.ensureExtractedData()
 
           this.evidence_profile_table_settings.isBusy = false
 
@@ -1026,6 +1029,51 @@ export default {
           })
       }
       this.processExtractedData(extractedData)
+    },
+    /**
+     * Crea la tabla de datos extraídos del finding si falta.
+     *
+     * Se crea al crear el finding (viewProject.createExtractedData), pero si eso fallaba el
+     * finding quedaba sin ella para siempre: nada la volvía a crear, y cada fila editada
+     * apuntaba a un documento `null`. Antes de crear se le pregunta al servidor —la lista
+     * embebida puede venir vieja— con la misma regla que las otras tablas, y si no se puede
+     * comprobar no se crea nada. Sin filas: se derivan de las referencias, y el endpoint por
+     * ítem es un upsert. Sólo quien puede editar escribe.
+     */
+    ensureExtractedData: async function () {
+      if (this.extracted_data && this.extracted_data.id) return
+      if (!this.findings || !this.findings.id) return
+      if (!this.checkPermissions(this.list.organization)) return
+      // Dos getList() seguidos (guardar, refrescar) no deben crear dos tablas.
+      if (this.$_ensuringExtractedData) return this.$_ensuringExtractedData
+      this.$_ensuringExtractedData = (async () => {
+        const findingId = this.findings.id
+        const destino = await resolveTableDoc({ collection: '/isoqf_extracted_data', params: { finding_id: findingId } })
+        if (destino.failed) {
+          this.$notify.warning(this.$t('notifications.extracted_data_missing'))
+          return
+        }
+        if (!destino.id) {
+          try {
+            await Api.post('/isoqf_extracted_data', {
+              organization: this.list.organization,
+              finding_id: findingId,
+              fields: [
+                { key: 'ref_id', label: this.$t('table_headers.reference_id') },
+                { key: 'authors', label: this.$t('table_headers.author_year') },
+                { key: 'column_0', label: this.$t('table_headers.extracted_data') }
+              ],
+              items: []
+            })
+          } catch (error) {
+            const key = writeErrorMessageKey(error, 'notifications.extracted_data_missing')
+            if (key) this.$notify.warning(this.$t(key))
+            return
+          }
+        }
+        this.getExtractedData(true)
+      })().finally(() => { this.$_ensuringExtractedData = null })
+      return this.$_ensuringExtractedData
     },
     processExtractedData: function (extractedData) {
       let localData = { id: null, fields: [], items: [] }
