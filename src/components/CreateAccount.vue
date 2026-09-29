@@ -44,9 +44,15 @@
                   :placeholder="$t('account.email_placeholder')"
                   v-model.trim="user.username">
                 </b-form-input>
+                <!-- La comprobación no llegó: el botón quedaba deshabilitado sin explicación. -->
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation && ui.username_validation !== null">{{ $t('account.email_exists_error') }}</b-form-text>
+                  v-if="ui.username_check_failed" class="text-danger">
+                  {{ $t('account.email_check_failed') }} {{ $t(ui.username_check_failed) }}
+                </b-form-text>
+                <b-form-text
+                  id="input-live-feedback"
+                  v-else-if="!ui.username_validation && ui.username_validation !== null">{{ $t('account.email_exists_error') }}</b-form-text>
                 <b-form-text
                   id="input-live-help">{{ $t('account.email_username_hint') }}</b-form-text>
               </b-form-group>
@@ -129,6 +135,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import { TERMS_VERSION } from '@/constants/terms'
 import { isGdprEnabled } from '@/constants/gdpr'
@@ -138,6 +145,8 @@ export default {
     return {
       ui: {
         username_validation: null,
+        // Clave i18n del motivo si la comprobación del correo no llegó; '' si no.
+        username_check_failed: '',
         password_validation: false,
         isProcessing: false
       },
@@ -301,6 +310,7 @@ export default {
     checkEmailExist () {
       if (!this.user.username) return
       const email = this.user.username.trim()
+      this.ui.username_check_failed = ''
       Api.get('/users/check_email', { email })
         .then((response) => {
           this.ui.username_validation = response.data.error === false
@@ -314,6 +324,7 @@ export default {
         })
         .catch((error) => {
           console.error(error)
+          this.ui.username_check_failed = requestFailureKey(error) || 'common.connection_failed'
         })
     },
     comparePassword () {

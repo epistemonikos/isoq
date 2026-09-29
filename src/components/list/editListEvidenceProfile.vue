@@ -798,9 +798,12 @@ export default {
           }
         })
         .catch((error) => {
+          // Antes mostraba el modal estándar «por seguridad», y era lo contrario: si éste era
+          // el último finding con referencias, correspondía el de «el proyecto pasará a
+          // privado», y la persona confirmaba sin saberlo. Sin poder comprobarlo, no se sigue.
           console.log('Error checking other lists:', error)
-          // En caso de error, mostrar el modal estándar por seguridad
-          this.$refs['modal-no-references-warning'].show()
+          this.cancelNoReferencesWarning()
+          if (!(error && error.isOfflineError)) this.$notify.error(this.$t('notifications.references_check_error'))
         })
     },
 

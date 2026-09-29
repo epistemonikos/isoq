@@ -395,3 +395,29 @@ describe('editListEvidenceProfile.vue — pasar a privado antes de quitar las re
   })
 })
 
+// Si no se podía comprobar si quedaban otros findings con referencias, mostraba el modal
+// estándar «por seguridad». Era lo contrario: si éste era el último, el modal correcto era
+// «el proyecto pasará a privado», y la persona confirmaba sin saberlo. Ahora no sigue.
+describe('editListEvidenceProfile.vue — la comprobación de referencias que falla', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+
+  it('no muestra ningún modal, restaura las referencias y avisa', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: ['ref1'] } })
+    const privado = { show: jest.fn(), hide: jest.fn() }
+    const estandar = { show: jest.fn(), hide: jest.fn() }
+    wrapper.vm.$refs['modal-private-project-warning'] = privado
+    wrapper.vm.$refs['modal-no-references-warning'] = estandar
+    await wrapper.setData({ localReferences: [], pendingSaveReferences: true })
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.checkOtherListsWithReferences()
+    await flush()
+    expect(privado.show).not.toHaveBeenCalled()
+    expect(estandar.show).not.toHaveBeenCalled()
+    expect(wrapper.vm.localReferences).toEqual(['ref1'])
+    expect(wrapper.vm.pendingSaveReferences).toBe(false)
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.references_check_error')
+    wrapper.destroy()
+  })
+})
+

@@ -64,12 +64,32 @@ describe('VerifyEmail.vue', () => {
     expect(wrapper.vm.status).toBe('failed')
   })
 
-  it('sets status to failed on API error', async () => {
-    Api.get.mockRejectedValue(new Error('Network error'))
+  // Un token inválido llega como 200 {status: 'invalid_token'} (core.py verify_email): lo que cae
+  // en el catch es que la petición no llegó o el servidor falló. Decir «la verificación falló»
+  // ahí mandaba a pedir otro correo cuando el enlace estaba bien.
+  it('un error de la petición no es un enlace inválido: lo dice y deja reintentar', async () => {
+    Api.get.mockRejectedValue(Object.assign(new Error('Network error'), { request: {} }))
     const wrapper = mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
-    expect(wrapper.vm.status).toBe('failed')
+    expect(wrapper.vm.status).toBe('request_failed')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('common.connection_failed')
+    expect(wrapper.html()).not.toContain('account.verification_failed')
+  })
+
+  it('reintentar vuelve a verificar', async () => {
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    const wrapper = mountVerifyEmail()
+    await Promise.resolve()
+    await Promise.resolve()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('common.server_failed')
+    Api.get.mockResolvedValueOnce({ data: { status: 'verified' } })
+    wrapper.vm.verifyToken()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(wrapper.vm.status).toBe('verified')
   })
 
   it('does not redirect if verification fails', async () => {

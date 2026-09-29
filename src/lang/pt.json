@@ -258,7 +258,8 @@
     "verification_failed": "O link de verificação é inválido ou expirou.",
     "email_not_verified": "Seu endereço de e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada.",
     "resend_verification_btn": "Reenviar e-mail de verificação",
-    "resend_email_failed": "Não foi possível reenviar o e-mail."
+    "resend_email_failed": "Não foi possível reenviar o e-mail.",
+    "email_check_failed": "Não foi possível verificar o e-mail."
   },
   "subscribe": {
     "title": "Boletim informativo",
@@ -1630,7 +1631,8 @@
     "references_import_error": "Não foi possível importar as referências. Sua seleção continua lá; tente novamente.",
     "leave_project_error": "Não foi possível sair do projeto. Você ainda tem acesso a ele.",
     "make_private_error": "Não foi possível tornar o projeto privado, então suas referências não foram removidas. Nada mudou.",
-    "extracted_data_create_error": "O achado foi criado, mas não foi possível criar sua tabela de dados extraídos."
+    "extracted_data_create_error": "O achado foi criado, mas não foi possível criar sua tabela de dados extraídos.",
+    "references_check_error": "Não foi possível verificar se outros achados têm referências, então nada foi alterado. Tente novamente."
   },
   "admin": {
     "panel_link": "Painel de administração",

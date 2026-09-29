@@ -258,7 +258,8 @@
     "verification_failed": "El enlace de verificación no es válido o ha expirado.",
     "email_not_verified": "Tu dirección de correo electrónico aún no ha sido verificada. Por favor revisa tu bandeja de entrada.",
     "resend_verification_btn": "Reenviar correo de verificación",
-    "resend_email_failed": "No se pudo reenviar el correo."
+    "resend_email_failed": "No se pudo reenviar el correo.",
+    "email_check_failed": "No se pudo comprobar el correo."
   },
   "subscribe": {
     "title": "Boletín informativo",
@@ -1630,7 +1631,8 @@
     "references_import_error": "No se pudieron importar las referencias. Lo que eligió sigue ahí; vuelva a intentarlo.",
     "leave_project_error": "No se pudo salir del proyecto. Sigue teniendo acceso.",
     "make_private_error": "No se pudo pasar el proyecto a privado, así que no se quitaron sus referencias. No cambió nada.",
-    "extracted_data_create_error": "El finding se creó, pero no se pudo crear su tabla de datos extraídos."
+    "extracted_data_create_error": "El finding se creó, pero no se pudo crear su tabla de datos extraídos.",
+    "references_check_error": "No se pudo comprobar si otros findings tienen referencias, así que no se cambió nada. Vuelva a intentarlo."
   },
   "admin": {
     "panel_link": "Panel de administración",

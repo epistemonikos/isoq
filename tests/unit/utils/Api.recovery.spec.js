@@ -142,6 +142,28 @@ describe('Api — sale sola del modo offline cuando la red vuelve', () => {
     expect(Api.isOnline()).toBe(true)
   })
 
+  // Un GET sin caché a la que caer (las rutas /auth/ no se cachean) fallaba al instante con el
+  // flag offline, sin salir: el Reintentar de VerifyEmail no servía hasta el próximo sondeo.
+  it('un GET sin caché a la que caer intenta la red aunque el flag diga offline', async () => {
+    await caerPorRed()
+    axios.mockResolvedValueOnce({ data: { status: 'verified' } })
+
+    const response = await Api.get('/auth/verify_email/t', {})
+
+    expect(response.data).toEqual({ status: 'verified' })
+    expect(Api.isOnline()).toBe(true)
+  })
+
+  it('con el navegador sin red, ese GET falla sin intentar', async () => {
+    await caerPorRed()
+    navegadorConRed(false)
+
+    const error = await Api.get('/auth/verify_email/t', {}).catch(e => e)
+
+    expect(error.isOfflineError).toBe(true)
+    expect(axios).toHaveBeenCalledTimes(1) // sólo el de `caerPorRed`
+  })
+
   it('una escritura normal con el flag offline se sigue encolando sin tocar la red', async () => {
     await caerPorRed()
 

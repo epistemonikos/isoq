@@ -427,3 +427,37 @@ describe('CreateAccount.vue — invalid_terms_version con GDPR encendido', () =>
     expect(wrapper.vm.errorMessage).toBe('account.create_error')
   })
 })
+
+// Si fallaba la comprobación del correo, el botón «Crear cuenta» quedaba deshabilitado sin
+// ninguna explicación. Ahora se dice en el propio campo, como el «ya existe».
+describe('CreateAccount.vue — la comprobación del correo que falla', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+  })
+
+  it('lo dice en el campo, con el motivo', async () => {
+    const wrapper = mountCreateAccount()
+    await wrapper.setData({ user: { ...wrapper.vm.user, username: 'ana@example.test' } })
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.checkEmailExist()
+    await flushPromises()
+    expect(wrapper.html()).toContain('account.email_check_failed')
+    expect(wrapper.html()).toContain('common.server_failed')
+    // No lo confunde con «ese correo ya existe».
+    expect(wrapper.html()).not.toContain('account.email_exists_error')
+  })
+
+  it('la siguiente comprobación que sale bien lo quita', async () => {
+    const wrapper = mountCreateAccount()
+    await wrapper.setData({ user: { ...wrapper.vm.user, username: 'ana@example.test' } })
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('x'), { request: {} }))
+    wrapper.vm.checkEmailExist()
+    await flushPromises()
+    Api.get.mockResolvedValueOnce({ data: { error: false } })
+    wrapper.vm.checkEmailExist()
+    await flushPromises()
+    expect(wrapper.html()).not.toContain('account.email_check_failed')
+  })
+})
+

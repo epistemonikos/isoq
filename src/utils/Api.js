@@ -424,12 +424,14 @@ export default class Api {
       return null
     }
 
-    // Si sabemos que estamos offline, intentar cache primero. `networkOnly` no tiene caché a
-    // la que caer: no intentar la red sería fallar seguro, y si responde, la red volvió.
-    if (!isOnline && (!networkOnly || browserSaysOffline())) {
+    // Con el flag offline, primero la caché. Si no hay caché a la que caer —`networkOnly`, una
+    // ruta que no se cachea (/auth/), o un dato que nunca se cacheó— no intentar la red es fallar
+    // seguro: se intenta, y si responde, la red volvió. Sólo si el navegador dice que no hay red
+    // se falla sin intentar. Antes el Reintentar de VerifyEmail no servía hasta el próximo sondeo.
+    if (!isOnline) {
       const cached = await tryServeFromCache('offline')
       if (cached) return cached
-      throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      if (browserSaysOffline()) throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
     }
 
     // Intentar la red

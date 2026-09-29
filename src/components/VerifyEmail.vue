@@ -11,6 +11,14 @@
             <b-alert v-else-if="status === 'verified'" show variant="success">
               {{ $t('account.email_verified') }}
             </b-alert>
+            <!-- La petición no llegó o el servidor falló: el enlace puede estar bien. Un token
+                 inválido llega como 200 {status: 'invalid_token'} y cae en la rama de abajo. -->
+            <b-alert v-else-if="status === 'request_failed'" show variant="warning">
+              {{ $t(requestError) }}
+              <div class="mt-2">
+                <b-button size="sm" variant="outline-warning" data-test="verify-retry" @click="verifyToken">{{ $t('common.retry') }}</b-button>
+              </div>
+            </b-alert>
             <b-alert v-else-if="status === 'failed'" show variant="danger">
               {{ $t('account.verification_failed') }}
               <div class="mt-2">
@@ -26,11 +34,13 @@
 
 <script>
 import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 
 export default {
   data () {
     return {
-      status: 'verifying'
+      status: 'verifying',
+      requestError: ''
     }
   },
   created () {
@@ -39,6 +49,7 @@ export default {
   methods: {
     verifyToken () {
       const token = this.$route.params.token
+      this.status = 'verifying'
       Api.get(`/auth/verify_email/${token}`)
         .then((response) => {
           if (response.data.status === 'verified') {
@@ -50,8 +61,9 @@ export default {
             this.status = 'failed'
           }
         })
-        .catch(() => {
-          this.status = 'failed'
+        .catch((error) => {
+          this.requestError = requestFailureKey(error) || 'common.connection_failed'
+          this.status = 'request_failed'
         })
     }
   }
