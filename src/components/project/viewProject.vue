@@ -33,7 +33,8 @@
            sin características o assessments el exportable sale sin esas tablas. -->
       <LoadErrorAlert :parts="failedLoadParts" @retry="retryFailedLoads" />
       <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
-        <propertiesProject :project="project" :canEdit="isEditing"
+        <propertiesProject :project="project" :canEdit="isEditing" :active="tabOpened === 0"
+          :refresh="refreshProjectForPropertiesLock"
           :highlight="$route.query.highlight" @update-project="updateDataProject">
         </propertiesProject>
       </div>
@@ -905,6 +906,16 @@ export default {
     },
     updateDataProject: function (data) {
       this.getProject()
+    },
+    /**
+     * `getProject` se traga sus errores (los avisa y resuelve igual), pero el lock de
+     * Propiedades necesita saber si de verdad refrescó: habilitar sobre datos viejos deja
+     * pisar lo que otra persona acaba de guardar. Un éxito siempre asigna un objeto nuevo.
+     */
+    refreshProjectForPropertiesLock: async function () {
+      const before = this.project
+      await this.getProject()
+      if (this.project === before) throw new Error('project refresh failed')
     },
     getListCategories: async function () {
       const params = {
