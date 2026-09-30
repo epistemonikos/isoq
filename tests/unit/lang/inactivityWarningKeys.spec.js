@@ -17,6 +17,9 @@ const FILES = [
 ]
 
 const KEY_RE = /\$t\(\s*'(lock\.[a-z0-9_]+)'/g
+// El mensaje del aviso ya no es un literal `$t('…')`: es el default del prop `messageKey`
+// de InactivityWarning (Propiedades pasa el suyo). Se lo captura por ahí.
+const DEFAULT_KEY_RE = /default:\s*'(lock\.[a-z0-9_]+)'/g
 
 function usedKeys () {
   const found = new Set()
@@ -24,6 +27,7 @@ function usedKeys () {
     const source = fs.readFileSync(path.resolve(rel), 'utf8')
     let m
     while ((m = KEY_RE.exec(source)) !== null) found.add(m[1])
+    while ((m = DEFAULT_KEY_RE.exec(source)) !== null) found.add(m[1])
   })
   return [...found].sort()
 }

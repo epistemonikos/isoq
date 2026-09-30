@@ -301,7 +301,14 @@
     "locked_at_another_granularity": "{user} está editando outra parte deste estudo, então você ainda não pode abri-lo. Poderá fazê-lo assim que a pessoa terminar, ou em alguns minutos se a página dela fechou de repente.",
     "cerqual_locked_by": "{user} está a terminar a avaliação GRADE-CERQual de confiança, portanto esta alteração ainda não pode ser aplicada — apagaria o trabalho dessa pessoa. Tente novamente num instante.",
     "evaluating_section": "{user} está a avaliar {section}",
-    "editing_references": "{user} está editando as referências deste achado. O achado não pode ser editado até que termine."
+    "editing_references": "{user} está editando as referências deste achado. O achado não pode ser editado até que termine.",
+    "properties_locked_by": "{user} está editando as propriedades ou a publicação deste projeto. Você poderá editar assim que terminar; esta visualização será atualizada sozinha.",
+    "properties_unavailable": "As propriedades deste projeto não podem ser editadas neste momento. Tentaremos novamente automaticamente.",
+    "properties_lost_to": "{user} assumiu a edição das propriedades, então elas ficaram somente leitura e o que você não salvou não foi salvo. Você poderá continuar assim que terminar.",
+    "properties_lost": "Seu bloqueio de edição das propriedades expirou, então elas ficaram somente leitura. Tentaremos novamente automaticamente.",
+    "properties_released_idle": "Você ficou inativo, então as propriedades foram liberadas para que outras pessoas possam editá-las.",
+    "properties_resume": "Continuar editando",
+    "properties_inactivity_message": "Ninguém mais pode editar as propriedades enquanto você as mantém abertas. Em {countdown} elas serão liberadas e o que você não salvou será perdido."
   },
   "presence": {
     "reviewing_one": "{users} está a rever esta descoberta",
