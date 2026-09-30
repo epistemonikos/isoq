@@ -217,10 +217,42 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       await openEditRow(wrapper)
       LockService.releaseRef.mockClear()
 
+      // Cerrar (el `hide` es síncrono) y reabrir antes de que llegue el `hidden`.
+      wrapper.vm.onRowEditorHide({ defaultPrevented: false })
       await openEditRow(wrapper)
       wrapper.vm.onRowEditorHidden()
 
       expect(LockService.releaseRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('abrir dos veces sin cerrar y después cerrar una vez sí libera el lock', async () => {
+      // Un doble clic en «editar»: el segundo `show()` sobre un modal que ya se está
+      // abriendo es un no-op de BootstrapVue, así que no hay un `hidden` viejo en
+      // camino. Tomar el único `hidden` por viejo dejaba el lock colgado hasta salir.
+      const { wrapper } = createWrapper()
+      await openEditRow(wrapper)
+      await openEditRow(wrapper)
+      LockService.releaseRef.mockClear()
+
+      wrapper.vm.onRowEditorHide({ defaultPrevented: false })
+      wrapper.vm.onRowEditorHidden()
+
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
+      wrapper.destroy()
+    })
+
+    it('un cierre cancelado no deja armada la guarda', async () => {
+      const { wrapper } = createWrapper()
+      await openEditRow(wrapper)
+      wrapper.vm.onRowEditorHide({ defaultPrevented: true })
+      await openEditRow(wrapper)
+      LockService.releaseRef.mockClear()
+
+      wrapper.vm.onRowEditorHide({ defaultPrevented: false })
+      wrapper.vm.onRowEditorHidden()
+
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
       wrapper.destroy()
     })
 

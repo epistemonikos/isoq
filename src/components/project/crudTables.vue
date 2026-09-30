@@ -183,7 +183,7 @@
       </b-modal>
 
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
-        @ok="saveContentDataTable" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
+        @ok="saveContentDataTable" @hide="onEditModalHide" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
         cancel-variant="outline-secondary" :ok-disabled="isRowReadOnly">
         <!-- El conflicto de versión va primero y aparte del de lock: acá la persona sí
              tiene permiso de escribir, y lo que necesita para decidir es ver el valor que
@@ -443,6 +443,9 @@ export default {
       rowEditorOpen: false,
       // True when a `hidden` from a previous editor session is still on its way.
       staleHiddenPending: false,
+      // Un cierre empezado (`hide` no cancelado) cuyo `hidden` todavía no llegó. Es lo
+      // único que anuncia un `hidden` en camino; ver `onEditModalHide`.
+      closingInFlight: false,
       dataTableFieldsModal: {
         nroColumns: 1,
         fields: [],
@@ -1112,7 +1115,13 @@ export default {
       this.isRowReadOnly = false
       this.getData()
     },
+    // BootstrapVue emits `hide` synchronously when a close starts, and every `hidden`
+    // follows a `hide` that was not cancelled. A cancelled one never gets its `hidden`.
+    onEditModalHide: function (bvEvent) {
+      if (!bvEvent || !bvEvent.defaultPrevented) this.closingInFlight = true
+    },
     onEditModalHidden: function () {
+      this.closingInFlight = false
       // BootstrapVue emits `hidden` asynchronously (~300ms of animation). If the editor
       // was reopened in the meantime, this event belongs to the previous session and
       // releasing now would leave the open editor without a lock — every save would 409.
@@ -1154,8 +1163,11 @@ export default {
       // finished opening) would stay held while we move to another row.
       if (this.lockedRowRef && this.lockedRowRef !== nextRef) this.releaseRowLock()
       // Opening while another session is still closing means its `hidden` is still
-      // in flight and must not be mistaken for the closing of this one.
-      this.staleHiddenPending = this.rowEditorOpen
+      // in flight and must not be mistaken for the closing of this one. «Closing», not
+      // «open»: a second click on a modal that is still open or opening is a no-op for
+      // BootstrapVue, no `hidden` is coming for it, and arming the guard then made the
+      // one real `hidden` look stale — the lock stayed held until leaving the view.
+      this.staleHiddenPending = this.closingInFlight
       this.rowEditorOpen = true
 
       this.dataTableFieldsModal.editingRefId = nextRef

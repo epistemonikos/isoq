@@ -89,6 +89,7 @@
         ref="modal-extracted-data-remove-data-item"
         :title="$t('characteristics.remove_content')"
         @ok="extractedDataRemoveDataItem"
+        @hide="onRowEditorHide"
         @hidden="onRowEditorHidden"
         :ok-disabled="isRowReadOnly"
         ok-variant="outline-success"
@@ -104,6 +105,7 @@
         id="modal-extracted-data-data"
         ref="modal-extracted-data-data"
         @ok="saveDataExtractedData"
+        @hide="onRowEditorHide"
         @hidden="onRowEditorHidden"
         :ok-disabled="isRowReadOnly"
         cancel-variant="outline-secondary"
@@ -188,6 +190,9 @@ export default {
       rowEditorOpen: false,
       // True when a `hidden` from a previous editor session is still on its way.
       staleHiddenPending: false,
+      // Un cierre empezado (`hide` no cancelado) cuyo `hidden` todavía no llegó. Es lo
+      // único que anuncia un `hidden` en camino; ver `onRowEditorHide`.
+      closingInFlight: false,
       buffer_extracted_data_items: {},
       buffer_extracted_data: {
         fields: [],
@@ -234,8 +239,11 @@ export default {
       // finished opening) would stay held while we move to another row.
       if (this.lockedRowRef && this.lockedRowRef !== this.rowLockKeyOf(refId)) this.releaseRowLock()
       // Opening while another session is still closing means its `hidden` is still in
-      // flight and must not be mistaken for the closing of this one.
-      this.staleHiddenPending = this.rowEditorOpen
+      // flight and must not be mistaken for the closing of this one. «Closing», not
+      // «open»: a second click on a modal that is still open or opening is a no-op for
+      // BootstrapVue, no `hidden` is coming for it, and arming the guard then made the
+      // one real `hidden` look stale — the lock stayed held until leaving the view.
+      this.staleHiddenPending = this.closingInFlight
       this.rowEditorOpen = true
       this.acquireRowLock(this.rowLockKeyOf(refId))
     },
@@ -294,7 +302,13 @@ export default {
       this.isRowReadOnly = true
       this.rowLockedBy = detail.lockedBy || null
     },
+    // BootstrapVue emits `hide` synchronously when a close starts, and every `hidden`
+    // follows a `hide` that was not cancelled. A cancelled one never gets its `hidden`.
+    onRowEditorHide: function (bvEvent) {
+      if (!bvEvent || !bvEvent.defaultPrevented) this.closingInFlight = true
+    },
     onRowEditorHidden: function () {
+      this.closingInFlight = false
       // BootstrapVue emits `hidden` asynchronously: a late one belongs to the previous
       // session, and releasing now would leave the open editor without its lock.
       if (this.staleHiddenPending) {

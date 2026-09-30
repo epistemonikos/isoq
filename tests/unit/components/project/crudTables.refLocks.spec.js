@@ -203,12 +203,47 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
 
       // Real sequence when the user closes and reopens the same row quickly:
       // hide() → addContentDataTable() → [async] hidden of the previous session.
+      wrapper.vm.onEditModalHide({ defaultPrevented: false })
       wrapper.vm.addContentDataTable(0)
       await flushPromises()
       wrapper.vm.onEditModalHidden()
 
       expect(LockService.releaseRef).not.toHaveBeenCalled()
       expect(wrapper.vm.dataTableFieldsModal.editingRefId).toBe('R1')
+      wrapper.destroy()
+    })
+
+    it('abrir dos veces sin cerrar y después cerrar una vez sí libera el lock', async () => {
+      // Un doble clic en «editar»: el segundo `show()` sobre un modal que ya se está
+      // abriendo es un no-op de BootstrapVue, así que no hay un `hidden` viejo en
+      // camino. Tomar el único `hidden` por viejo dejaba el lock colgado hasta salir.
+      const { wrapper } = createWrapper()
+      await openRow(wrapper)
+      wrapper.vm.addContentDataTable(0)
+      await flushPromises()
+      LockService.releaseRef.mockClear()
+
+      wrapper.vm.onEditModalHide({ defaultPrevented: false })
+      wrapper.vm.onEditModalHidden()
+
+      expect(LockService.releaseRef).toHaveBeenCalledWith('R1')
+      wrapper.destroy()
+    })
+
+    it('un cierre cancelado no deja armada la guarda', async () => {
+      // Un `hide` cancelado no emite `hidden`: si marcara «cierre en curso», la próxima
+      // apertura se comería el `hidden` real.
+      const { wrapper } = createWrapper()
+      await openRow(wrapper)
+      wrapper.vm.onEditModalHide({ defaultPrevented: true })
+      wrapper.vm.addContentDataTable(0)
+      await flushPromises()
+      LockService.releaseRef.mockClear()
+
+      wrapper.vm.onEditModalHide({ defaultPrevented: false })
+      wrapper.vm.onEditModalHidden()
+
+      expect(LockService.releaseRef).toHaveBeenCalledWith('R1')
       wrapper.destroy()
     })
 
