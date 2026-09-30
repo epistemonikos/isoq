@@ -286,7 +286,10 @@ describe('editListEvidenceProfile — bloqueo visible de los assessments', () =>
       })
       const deshabilitados = wrapper.findAll('#assessments button').wrappers
         .filter(b => b.attributes('disabled') !== undefined)
-      expect(deshabilitados).toHaveLength(1)
+      // Coherence y References: `/identity` toma `<fid>` pelado, y el servidor lo hace
+      // chocar con cualquier sección tomada. Las otras cuatro secciones siguen libres.
+      expect(deshabilitados).toHaveLength(2)
+      expect(wrapper.find('[data-testid="ep-references-button"]').attributes('disabled')).toBeDefined()
       wrapper.destroy()
     })
 
@@ -335,20 +338,20 @@ describe('editListEvidenceProfile — bloqueo visible de los assessments', () =>
       const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
       const deshabilitados = wrapper.findAll('#assessments button').wrappers
         .filter(b => b.attributes('disabled') !== undefined)
-      expect(deshabilitados).toHaveLength(EVIDENCE_PROFILE_SECTIONS.length)
+      // Las cinco secciones más References.
+      expect(deshabilitados).toHaveLength(EVIDENCE_PROFILE_SECTIONS.length + 1)
       wrapper.destroy()
     })
 
-    it('el botón de References NO se grisa, y es correcto que no', () => {
-      // Su modal guarda por `Api.patch('/isoqf_lists/<id>')`, la ruta genérica, que
-      // no pasa por @verify_ref_lock: el servidor no exige ningún ref-lock ahí. Es
-      // Last-Write-Wins, un eje distinto y preexistente. Grisarlo inventaría una
-      // restricción que el servidor no aplica — y este test está para que la cuenta
-      // de arriba no se "arregle" grisándolo.
+    it('el botón de References también se grisa: guarda por /identity, que exige el lock', () => {
+      // Antes guardaba por `PATCH /isoqf_lists/<id>`, la ruta genérica sin
+      // @verify_ref_lock, y este test afirmaba lo contrario. Desde que guarda por
+      // `/identity` —la misma ruta que el listado de findings— el servidor exige el
+      // lock del documento, así que el botón tiene que decirlo igual que los otros.
       const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
       const habilitados = wrapper.findAll('#assessments button').wrappers
         .filter(b => b.attributes('disabled') === undefined)
-      expect(habilitados).toHaveLength(1)
+      expect(habilitados).toHaveLength(0)
       wrapper.destroy()
     })
 
@@ -421,3 +424,222 @@ describe('editListEvidenceProfile.vue — la comprobación de referencias que fa
   })
 })
 
+// Reporte de uso: mientras A editaba nombre o referencias desde el listado de findings,
+// B entraba a la worksheet de ese mismo finding y cambiaba las referencias sin traba. El
+// modal escribía por las rutas genéricas, que no exigen lock, y el botón no miraba el
+// sondeo. Ahora sigue el mismo contrato que `ViewTable`: lock `<findingId>` al abrir,
+// guardado por `/identity`.
+describe('editListEvidenceProfile.vue — el modal de referencias respeta el lock del finding', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  const refsButton = (wrapper) => wrapper.find('[data-testid="ep-references-button"]')
+
+  beforeEach(() => {
+    LockService.refLocks.clear()
+    LockService.acquireRef.mockReset().mockResolvedValue({ success: true })
+    LockService.releaseRef.mockReset()
+    Api.patch.mockReset().mockResolvedValue({ data: {} })
+  })
+
+  describe('grisado por sondeo', () => {
+    it('el lock pelado del finding (nombre o referencias en el listado) lo grisa con el nombre visible', () => {
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
+      expect(refsButton(wrapper).attributes('disabled')).toBeDefined()
+      const aviso = wrapper.find('[data-testid="ep-locked-references"]')
+      expect(aviso.exists()).toBe(true)
+      expect(aviso.text()).toContain('Ana Pérez')
+      wrapper.destroy()
+    })
+
+    it('una sección tomada TAMBIÉN lo grisa: el servidor hace chocar <fid> con <fid>::ep::X', () => {
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(`${FINDING_ID}::ep::coherence`)] })
+      expect(refsButton(wrapper).attributes('disabled')).toBeDefined()
+      wrapper.destroy()
+    })
+
+    it('una sección que este cliente no enumera también lo ocupa', () => {
+      // La pregunta acá es «¿cuelga del finding?» (lockKeyBelongsTo), no la del botón por sección.
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(`${FINDING_ID}::ep::algo_nuevo`)] })
+      expect(refsButton(wrapper).attributes('disabled')).toBeDefined()
+      wrapper.destroy()
+    })
+
+    it('el lock propio, de esta pestaña o de otra, no lo grisa', () => {
+      LockService.refLocks.set(FINDING_ID, 'proj1')
+      const deEsta = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID, 'Cualquiera')] })
+      expect(refsButton(deEsta).attributes('disabled')).toBeUndefined()
+      deEsta.destroy()
+      LockService.refLocks.clear()
+      const deOtra = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID, 'Yo Mismo')] })
+      expect(refsButton(deOtra).attributes('disabled')).toBeUndefined()
+      deOtra.destroy()
+    })
+
+    it('el lock de otro finding no lo grisa', () => {
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock('otro')] })
+      expect(refsButton(wrapper).attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-testid="ep-locked-references"]').exists()).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('sin permiso de escritura no lo grisa: dice View y ver no molesta', () => {
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)], permission: false })
+      expect(refsButton(wrapper).attributes('disabled')).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    it('openModalReferences no abre si el sondeo ya lo muestra tomado', async () => {
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
+      const show = jest.spyOn(wrapper.vm.$refs.modalReferences, 'show')
+      await wrapper.vm.openModalReferences()
+      expect(show).not.toHaveBeenCalled()
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+  })
+
+  describe('lock al abrir', () => {
+    it('pide el lock <findingId> del proyecto antes de mostrar el modal', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: ['r1'] } })
+      await wrapper.vm.openModalReferences()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', FINDING_ID)
+      expect(wrapper.vm.referencesReadOnly).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('sin permiso de escritura no pide lock: sólo mira', async () => {
+      const wrapper = createWrapper({ permission: false })
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('rechazado: abre en solo lectura, nombra a quien lo tiene y lo avisa al padre', async () => {
+      LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana Pérez' })
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: ['r1'] } })
+      await wrapper.vm.openModalReferences()
+      expect(wrapper.vm.referencesReadOnly).toBe(true)
+      expect(wrapper.vm.referencesReadOnlyNotice).toContain('Ana Pérez')
+      expect(wrapper.emitted('lock-denied')).toBeTruthy()
+      wrapper.destroy()
+    })
+
+    it('rechazado por permisos (403) no inventa un dueño', async () => {
+      LockService.acquireRef.mockResolvedValueOnce({ success: false, permissionDenied: true, lockedBy: 'X' })
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      expect(wrapper.vm.referencesReadOnly).toBe(true)
+      expect(wrapper.vm.referencesReadOnlyNotice).toBe('lock.ref_locked_by_no_user')
+      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      wrapper.destroy()
+    })
+
+    it('en solo lectura el guardado no escribe nada', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setData({ referencesReadOnly: true, localReferences: ['r1'] })
+      wrapper.vm.saveReferencesList()
+      await flush()
+      expect(Api.patch).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+  })
+
+  describe('guardado', () => {
+    it('un solo PATCH a /identity con las referencias, y suelta el lock al terminar', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      await wrapper.setData({ localReferences: ['r1', 'r2'] })
+      await wrapper.vm.saveReferencesList()
+      await flush()
+      expect(Api.patch).toHaveBeenCalledTimes(1)
+      expect(Api.patch).toHaveBeenCalledWith(`/isoqf_findings/${FINDING_ID}/identity`, { references: ['r1', 'r2'] })
+      expect(LockService.releaseRef).toHaveBeenCalledWith(FINDING_ID)
+      expect(wrapper.emitted('update-list-data')).toBeTruthy()
+      wrapper.destroy()
+    })
+
+    it('un rechazo de lock (409) no se encima con el error genérico de guardado', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('409'), {
+        response: { status: 409, data: { status: 'error', reason: 'locked_by_other_user' } },
+        config: { url: `/isoqf_findings/${FINDING_ID}/identity`, method: 'patch' }
+      }))
+      await wrapper.vm.saveReferencesList()
+      await flush()
+      expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+      expect(LockService.releaseRef).toHaveBeenCalledWith(FINDING_ID)
+      wrapper.destroy()
+    })
+
+    it('otro error de guardado se avisa', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), {
+        response: { status: 500, data: { status: 'error' } },
+        config: { url: `/isoqf_findings/${FINDING_ID}/identity`, method: 'patch' }
+      }))
+      await wrapper.vm.saveReferencesList()
+      await flush()
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
+      wrapper.destroy()
+    })
+  })
+
+  describe('liberación y pérdida', () => {
+    it('cerrar el modal sin guardar suelta el lock', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      wrapper.vm.handleReferencesModalHidden()
+      expect(LockService.releaseRef).toHaveBeenCalledWith(FINDING_ID)
+      wrapper.destroy()
+    })
+
+    it('con la advertencia de «sin referencias» pendiente NO lo suelta: el guardado sigue en juego', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      await wrapper.setData({ pendingSaveReferences: true })
+      wrapper.vm.handleReferencesModalHidden()
+      expect(LockService.releaseRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('destruir el componente con el modal abierto suelta el lock', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      wrapper.destroy()
+      expect(LockService.releaseRef).toHaveBeenCalledWith(FINDING_ID)
+    })
+
+    it('perder el lock (ref-lock-lost) pasa el modal a solo lectura con el aviso de pérdida', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: FINDING_ID, lockedBy: 'Ana Pérez' } }))
+      expect(wrapper.vm.referencesReadOnly).toBe(true)
+      expect(wrapper.vm.referencesReadOnlyNotice).toBe('lock.lost_while_editing:{"user":"Ana Pérez"}')
+      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
+      wrapper.vm.handleReferencesModalHidden()
+      expect(LockService.releaseRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('un ref-lock-lost de otra clave no lo toca', async () => {
+      const wrapper = createWrapper()
+      await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+      await wrapper.vm.openModalReferences()
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: 'otro' } }))
+      expect(wrapper.vm.referencesReadOnly).toBe(false)
+      wrapper.destroy()
+    })
+  })
+})

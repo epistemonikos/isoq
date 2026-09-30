@@ -449,10 +449,19 @@
             block
             class="d-print-none mb-3"
             variant="outline-info"
+            data-testid="ep-references-button"
+            :disabled="isReferencesDisabled"
             @click="openModalReferences">
             <template v-if="permission">{{ $t('soqf_table.edit_references') }}</template>
             <template v-else>{{ $t('soqf_table.view_references') }}</template>
           </b-button>
+          <small
+            v-if="isReferencesDisabled"
+            class="lock-notice d-block mb-2"
+            data-testid="ep-locked-references">
+            <font-awesome-icon icon="user"></font-awesome-icon>
+            {{ $t('lock.ref_locked_by', { user: referencesLockHolder }) }}
+          </small>
         </template>
         <span v-html="$t('soqf_table.refs_count', {count: data.item.references.length})"></span>
       </template>
@@ -552,7 +561,15 @@
       @hidden="handleReferencesModalHidden"
       :no-close-on-backdrop="pendingSaveReferences"
       :no-close-on-esc="pendingSaveReferences"
-      :ok-disabled="!permission">
+      :ok-disabled="!permission || referencesReadOnly">
+      <b-alert
+        v-if="referencesReadOnly"
+        show
+        variant="warning"
+        class="read-only-notice"
+        data-testid="ep-references-read-only">
+        {{ referencesReadOnlyNotice }}
+      </b-alert>
       <b-alert
         v-if="list.cerqual.option"
         show
@@ -576,7 +593,7 @@
             v-model="localReferences"
             :name="`checkbox-${data.index}`"
             :value="data.item.id"
-            :disabled="!permission">
+            :disabled="!permission || referencesReadOnly">
             <span class="ml-2">{{ data.item.content }}</span>
           </b-form-checkbox>
         </template>
@@ -650,9 +667,11 @@
 <script>
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { isLockRejection } from '@/utils/lockErrors'
+import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
-import { sectionOfType, blockedSectionsOf } from '@/utils/evidenceProfileLockKeys'
+import { sectionOfType, blockedSectionsOf, lockKeyBelongsTo } from '@/utils/evidenceProfileLockKeys'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
@@ -697,6 +716,14 @@ export default {
   },
   mounted: function () {
     this.localExtractedData = this.extractedData
+    window.addEventListener('ref-lock-lost', this.onReferencesLockLost)
+  },
+  beforeDestroy: function () {
+    window.removeEventListener('ref-lock-lost', this.onReferencesLockLost)
+    // El releaseRef() global de editList también lo cubriría, pero este componente
+    // puede desmontarse por su propio v-if sin que se salga de la hoja.
+    this.savingReferences = false
+    this.releaseReferencesLock()
   },
   watch: {
     extractedData: {
@@ -710,6 +737,14 @@ export default {
     return {
       localReferences: [],
       pendingSaveReferences: false,
+      // Lock `<findingId>` que sostiene el modal de referencias. Va aparte de
+      // `findings.id` porque ése es lo que se MUESTRA, y un lock perdido deja de ser
+      // nuestro aunque el finding en pantalla siga siendo el mismo.
+      lockedReferencesRef: null,
+      referencesReadOnly: false,
+      referencesLockedBy: null,
+      referencesLockLost: false,
+      savingReferences: false,
       localExtractedData: {
         fields: [],
         items: []
@@ -717,6 +752,41 @@ export default {
     }
   },
   computed: {
+    /**
+     * Quién ocupa el finding según el último sondeo, para el botón de References.
+     *
+     * Es la pregunta «por finding» (`lockKeyBelongsTo`), no la «por sección» de
+     * `blockedSections`: el modal guarda por `/identity`, que toma `<fid>` pelado, y
+     * el servidor lo hace chocar con CUALQUIER clave que cuelgue del finding —incluida
+     * una sección que este cliente no enumera—. Misma regla y mismo orden estable que
+     * `polledHolderOf` de `ViewTable`, que pinta el mismo botón en el listado.
+     */
+    referencesLockHolder () {
+      const findingId = this.findings && this.findings.id
+      if (!findingId) return null
+      const holders = this.foreignRefLocks
+        .filter(lock => lockKeyBelongsTo(lock.ref_id, findingId) &&
+          lock.user_name && lock.user_name !== this.currentUserName)
+        .map(lock => lock.user_name)
+        .sort((a, b) => a.localeCompare(b))
+      return holders.length ? holders[0] : null
+    },
+    // Con `permission` por el mismo motivo que `isSectionDisabled`: sin escritura el
+    // botón dice «View», y ver no molesta a nadie.
+    isReferencesDisabled () {
+      return Boolean(this.permission && this.referencesLockHolder)
+    },
+    referencesReadOnlyNotice () {
+      if (!this.referencesReadOnly) return ''
+      if (this.referencesLockLost) {
+        return this.referencesLockedBy
+          ? this.$t('lock.lost_while_editing', { user: this.referencesLockedBy })
+          : this.$t('lock.lost_while_editing_no_user')
+      }
+      return this.referencesLockedBy
+        ? this.$t('lock.ref_locked_by', { user: this.referencesLockedBy })
+        : this.$t('lock.ref_locked_by_no_user')
+    },
     // Computed y no método: la plantilla lo consulta dos veces por cada uno de los diez
     // sitios de botón, y así el Map se arma una vez por cambio de los locks en vez de
     // veinte veces por render.
@@ -811,6 +881,9 @@ export default {
       // Solo limpiar si no hay una operación pendiente
       if (!this.pendingSaveReferences) {
         this.cleanReferencesList()
+        // Con una advertencia en pantalla el guardado todavía puede confirmarse:
+        // soltar acá lo dejaría viajando sin lock.
+        this.releaseReferencesLock()
       }
     },
 
@@ -880,33 +953,93 @@ export default {
       this.pendingSaveReferences = false
     },
 
+    /**
+     * Un único PATCH a `/identity`, la misma ruta que usa el listado de findings.
+     *
+     * Antes eran dos PATCH genéricos (`/isoqf_lists/<id>` y `/isoqf_findings/<id>`) que
+     * no pasan por `@verify_ref_lock`: mientras alguien editaba las referencias desde
+     * el listado, acá se podían pisar sin traba. `/identity` exige el lock `<fid>` y el
+     * servidor espeja `references` a la lista, que es donde lo leen el gate de
+     * publicación y `detach_references`.
+     */
     saveReferencesList: function () {
+      const findingId = this.findings && this.findings.id
+      if (!this.permission || this.referencesReadOnly || !findingId) return
+      this.savingReferences = true
       this.busyEvidenceProfileTable(true)
-      const params = {
+      return Api.patch(`/isoqf_findings/${findingId}/identity`, {
         references: this.localReferences
-      }
-      Api.patch(`/isoqf_lists/${this.list.id}`, params)
+      })
         .then(() => {
-          this.updateReferencesInFindings()
+          this.finishReferencesSave()
           this.cleanReferencesList()
-        })
-    },
-    updateReferencesInFindings: function () {
-      // Persist to the top-level finding field (source of truth). The old
-      // 'evidence_profile.references' dot-notation write was silently flattened
-      // to a garbage field by the backend sanitizer.
-      let params = {
-        references: this.localReferences
-      }
-      Api.patch(`/isoqf_findings/${this.findings.id}`, params)
-        .then((response) => {
           this.$emit('update-list-data')
-          // this.getList()
         })
         .catch((error) => {
-          this.$emit('printErrors', error)
-          // this.printErrors(error)
+          console.error(error)
+          this.finishReferencesSave()
+          this.busyEvidenceProfileTable(false)
+          this.$emit('update-list-data')
+          // El 409/403 ya se anunció por el canal de conflicto: «intente nuevamente»
+          // sería un consejo falso mientras el lock sea de otra persona.
+          if (isLockRejection(error)) return
+          const key = writeErrorMessageKey(error, 'notifications.save_error')
+          if (key) this.$notify.error(this.$t(key))
         })
+    },
+    finishReferencesSave: function () {
+      this.savingReferences = false
+      this.releaseReferencesLock()
+    },
+    /**
+     * Se pide al abrir y no al guardar, para que el rechazo llegue antes de que la
+     * persona marque nada. Rechazado no impide abrir: deja ver la selección, en solo
+     * lectura. Mismo contrato que `acquireFindingLock` de `ViewTable`.
+     */
+    acquireReferencesLock: async function () {
+      this.referencesReadOnly = false
+      this.referencesLockedBy = null
+      this.referencesLockLost = false
+      const findingId = this.findings && this.findings.id
+      if (!findingId || !this.permission) return
+      const result = await LockService.acquireRef(this.project.id, findingId)
+      if (result && result.success) {
+        this.lockedReferencesRef = findingId
+        return
+      }
+      this.lockedReferencesRef = null
+      this.referencesReadOnly = true
+      // Un 403 no tiene a quién culpar: nombrar a un dueño ahí sería inventarlo.
+      this.referencesLockedBy = (result && !result.permissionDenied && result.lockedBy) || null
+      this.$notify.warning(result && result.permissionDenied
+        ? this.$t('lock.permissions_revoked')
+        : this.referencesReadOnlyNotice)
+      // El padre sondea cada pocos segundos; este rechazo es motivo para no esperarlo.
+      this.$emit('lock-denied')
+    },
+    releaseReferencesLock: function () {
+      // Con un guardado en vuelo, soltarlo dejaría al PATCH sin lock detrás; lo suelta
+      // el propio guardado al terminar.
+      if (this.savingReferences) return
+      if (this.lockedReferencesRef) LockService.releaseRef(this.lockedReferencesRef)
+      this.lockedReferencesRef = null
+      this.referencesReadOnly = false
+      this.referencesLockedBy = null
+      this.referencesLockLost = false
+    },
+    /**
+     * El lock puede evaporarse con el modal abierto (un latido perdido, una concesión
+     * offline que perdió la carrera). Dejarlo marcable sólo llevaría a elegir algo que
+     * nadie va a guardar.
+     */
+    onReferencesLockLost: function (event) {
+      const detail = (event && event.detail) || {}
+      if (!detail.refId || detail.refId !== this.lockedReferencesRef) return
+      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
+      this.lockedReferencesRef = null
+      this.referencesReadOnly = true
+      this.referencesLockedBy = detail.lockedBy || null
+      this.referencesLockLost = true
     },
     displaySelectedOption: function (option) {
       if (option === null) {
@@ -975,7 +1108,11 @@ export default {
           return false
       }
     },
-    openModalReferences: function () {
+    openModalReferences: async function () {
+      // Defensa en profundidad: el botón ya está `disabled`, pero el sondeo puede ir
+      // atrasado; la garantía real es el acquire de abajo.
+      if (this.isReferencesDisabled) return
+      await this.acquireReferencesLock()
       // Copiar las referencias a la variable local para edición
       this.localReferences = [...this.list.references]
       this.$refs['modalReferences'].show()
