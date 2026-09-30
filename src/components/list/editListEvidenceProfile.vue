@@ -660,6 +660,7 @@
       :selectOptions="selectOptions"
       :permission="permission"
       :modePrintFieldObject="modePrintFieldObject"
+      :activeRefLocks="activeRefLocks"
       @update-list-data="getList"
       @lock-denied="$emit('lock-denied')"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"

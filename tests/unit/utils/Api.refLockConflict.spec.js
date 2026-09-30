@@ -137,7 +137,8 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     await expect(errorHandler(err)).rejects.toBe(err)
     const event = dispatched.find(e => e.type === 'ref-lock-conflict')
     expect(event).toBeTruthy()
-    expect(event.detail.refId).toBe('ref3')
+    // La clave de la fila de ESTE documento, que es la que sostiene el editor.
+    expect(event.detail.refId).toBe('ed1::ed::ref3')
     expect(event.detail.lockedBy).toBe('Carol')
   })
 

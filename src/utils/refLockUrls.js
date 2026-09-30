@@ -6,6 +6,7 @@
  */
 import { leafLockKey } from '@/utils/camelotAssessmentKeys'
 import { EP_SECTION_INFIX } from '@/utils/evidenceProfileLockKeys'
+import { extractedDataRowLockKey } from '@/utils/extractedDataLockKeys'
 
 // Endpoint D nests the cell position under /item/, so the raw split would yield
 // '<ref_id>/stage/0/option/2' — a string that matches no lock the client holds.
@@ -34,6 +35,10 @@ const SECTION_URL_RE = /\/(?:isoqf_findings|isoqf_lists)\/([^/]+)\/section\/([^/
 // `isoqf_lists`, así que acá va un solo PATCH y un solo lock.
 const IDENTITY_URL_RE = /\/isoqf_findings\/([^/]+)\/identity(?:[/?]|$)/
 const ITEM_URL_RE = /\/(?:isoqf_characteristics|isoqf_assessments|isoqf_extracted_data)\/[^/]+\/item\//
+// El endpoint C bloquea la FILA DE ESTE DOCUMENTO (`<doc_id>::ed::<ref_id>`), no el
+// estudio: ver `extractedDataLockKeys.js`. Se prueba antes que `ITEM_URL_RE`, que para
+// esta colección daría el `ref_id` pelado — una clave que el servidor ya no acepta.
+const ED_ITEM_URL_RE = /\/isoqf_extracted_data\/([^/]+)\/item\/([^/?]+)/
 // The four column endpoints lock the table DOCUMENT rather than a row, so their key is
 // `<doc_id>::fields`. Keeping it apart from the row key is the point: whoever edits
 // columns must not block whoever edits a study.
@@ -71,7 +76,8 @@ function refLockKeyFromItemUrl (url) {
 
 /**
  * Lock key a granular write needs, or null when the URL is not a granular endpoint.
- * Endpoints B/C/D lock a row/cell (`ref_id`, `ref::sK::oI`); el endpoint A bloquea una
+ * Endpoints B/D lock a row/cell (`ref_id`, `ref::sK::oI`); el C, la fila de SU documento
+ * (`<doc_id>::ed::<ref_id>`); el endpoint A bloquea una
  * SECCIÓN del evidence profile (`<doc_id>::ep::<name>`) y el de identidad el documento
  * entero (`finding_id` / `list_id`) — son claves distintas a propósito: la del documento
  * es más amplia y el servidor la hace chocar con cualquier sección suya, que es lo que
@@ -85,6 +91,8 @@ export function refLockKeyFromUrl (url = '') {
   if (identity) return identity[1]
   const field = FIELD_URL_RE.exec(url)
   if (field) return fieldsLockKey(field[1])
+  const edRow = ED_ITEM_URL_RE.exec(url)
+  if (edRow) return extractedDataRowLockKey(edRow[1], edRow[2])
   if (ITEM_URL_RE.test(url)) return refLockKeyFromItemUrl(url) || null
   return null
 }

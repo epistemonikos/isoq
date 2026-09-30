@@ -16,8 +16,10 @@
  * de dato: es lo exacto. La clave del ref lock es `(project_id, ref_id)` sin colección, y
  * eso no es una omisión del esquema sino LA GRANULARIDAD — la unidad de bloqueo es el
  * estudio, no su fila en una tabla. Quien edita `R1` en `isoqf_characteristics` bloquea
- * también `R1` en `isoqf_assessments` y en `isoqf_extracted_data`; el servidor verifica
- * `(project_id, <ref>)` para las tres (`verify_ref_lock`, `libs/decorators.py`).
+ * también `R1` en `isoqf_assessments`; el servidor verifica `(project_id, <ref>)` para
+ * las dos (`verify_ref_lock`, `libs/decorators.py`). `isoqf_extracted_data` salió de ese
+ * grupo: su fila se bloquea por documento (`<doc>::ed::<ref>`, ver
+ * `extractedDataLockKeys.js`) y este import no la toca.
  *
  * Así que cada lock que contamos SÍ afecta a este import, esté la persona en la tabla que
  * esté: no hay falsos positivos que disculpar. Y «de esta tabla» habría sido falso en el
@@ -39,6 +41,7 @@
 // nadie suelta. Se mantiene aparte de la clave de fila a propósito, para que quien edita
 // columnas no bloquee a quien edita un estudio.
 import { docIdFromFieldsLockKey } from '@/utils/refLockUrls'
+import { isExtractedDataRowLockKey } from '@/utils/extractedDataLockKeys'
 
 // `R1::s0::o2` — la celda del endpoint D. Para quien va a importar es el mismo estudio que
 // `R1`, porque el import se lleva la fila entera.
@@ -66,6 +69,11 @@ export function summarizeImportLocks (locks = [], tableId = '') {
       if (tableId && fieldsDocId === tableId) columnsLockedBy = lock.user_name || null
       continue
     }
+
+    // Una fila de datos extraídos (`<doc>::ed::<ref>`) no la toca este import: se bloquea
+    // por su documento y no por el estudio, así que el servidor no ve conflicto con él.
+    // Es una forma CONOCIDA que se descarta con fundamento, no un eje desconocido.
+    if (isExtractedDataRowLockKey(key)) continue
 
     // Una clave de forma desconocida cae del lado que avisa. Es la decisión inversa a la
     // allowlist de `lockErrors.js`, y a propósito: allá un motivo nuevo debe caer en el

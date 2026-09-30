@@ -118,6 +118,19 @@ describe('summarizeImportLocks()', () => {
     expect(resumen.names).toEqual(['Ana'])
   })
 
+  it('una fila de datos extraídos no es un estudio que el import se lleve', () => {
+    // Desde que el endpoint C bloquea `<doc>::ed::<ref>` y no el `ref_id` pelado, quien
+    // edita datos extraídos ya no choca con el import de una tabla de los Pasos 3/4.
+    // Contarla sería avisar de un conflicto que el servidor no tiene.
+    const locks = [{ ref_id: 'ed1::ed::R1', user_name: 'Ana' }]
+
+    expect(summarizeImportLocks(locks, TABLA)).toEqual({
+      studyCount: 0,
+      names: [],
+      columnsLockedBy: null
+    })
+  })
+
   it('tolera un lock sin nombre sin dejar un hueco en la lista', () => {
     const locks = [
       { ref_id: 'R1' },

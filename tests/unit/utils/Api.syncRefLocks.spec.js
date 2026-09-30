@@ -181,12 +181,13 @@ describe('Api.patch() — guarda el contexto de lock al encolar', () => {
   afterEach(() => Api.setOnline(true))
 
   it('guarda lockRef y lockProjectId de un PATCH granular usando el permiso offline', async () => {
-    LockService.offlineRefs.set('ref1', 'proj1')
+    // La fila de datos extraídos se bloquea por su documento: `<doc>::ed::<ref>`.
+    LockService.offlineRefs.set('ed1::ed::ref1', 'proj1')
 
     await Api.patch('/isoqf_extracted_data/ed1/item/ref1', { ref_id: 'ref1', column_0: 'v' })
 
     expect(addPendingOperation).toHaveBeenCalledWith(expect.objectContaining({
-      lockRef: 'ref1',
+      lockRef: 'ed1::ed::ref1',
       lockProjectId: 'proj1'
     }))
   })

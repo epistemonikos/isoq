@@ -75,7 +75,7 @@ async function openEditRow (wrapper, index = 0) {
 }
 
 // Endpoint C (`PATCH /isoqf_extracted_data/<id>/item/<ref_id>`) is guarded by
-// @verify_ref_lock: the unit of the lock is the row's ref_id, and a write without
+// @verify_ref_lock: the unit of the lock is THIS document's row, `<doc>::ed::<ref_id>`, and a write without
 // it is a 409 `lock_not_held` even with nobody else editing.
 describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
   beforeEach(() => {
@@ -87,7 +87,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
     it('adquiere el lock del ref_id de la fila usando el project_id de la lista', async () => {
       const { wrapper } = createWrapper()
       await openEditRow(wrapper, 1)
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref2')
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref2')
       wrapper.destroy()
     })
 
@@ -133,7 +133,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       const { wrapper } = createWrapper()
       wrapper.vm.openModalExtractedDataRemoveDataItem({ index: 0, item: ROWS[0] })
       await flushPromises()
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref1')
       wrapper.destroy()
     })
 
@@ -156,7 +156,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       const { wrapper } = createWrapper()
       await openEditRow(wrapper)
       wrapper.vm.onRowEditorHidden()
-      expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
       wrapper.destroy()
     })
 
@@ -177,7 +177,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       await openEditRow(wrapper)
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
       }))
       await flushPromises()
 
@@ -191,7 +191,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       await openEditRow(wrapper)
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ref2', lockedBy: 'Ana Pérez' }
+        detail: { refId: 'ed1::ed::ref2', lockedBy: 'Ana Pérez' }
       }))
       await flushPromises()
 
@@ -209,7 +209,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
 
       wrapper.destroy()
 
-      expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
     })
 
     it('un hidden que llega después de reabrir el editor no suelta el lock vigente', async () => {
@@ -231,7 +231,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
 
       wrapper.vm.onRowEditorHidden()
 
-      expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
       wrapper.destroy()
     })
 
@@ -242,8 +242,8 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
 
       await openEditRow(wrapper, 1)
 
-      expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
-      expect(LockService.acquireRef).toHaveBeenLastCalledWith('proj1', 'ref2')
+      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
+      expect(LockService.acquireRef).toHaveBeenLastCalledWith('proj1', 'ed1::ed::ref2')
       wrapper.destroy()
     })
   })

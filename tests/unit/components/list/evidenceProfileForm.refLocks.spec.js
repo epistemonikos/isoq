@@ -225,7 +225,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       await flushPromises()
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
       }))
       await flushPromises()
 
@@ -308,7 +308,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       await flushPromises()
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
       }))
       await flushPromises()
 
@@ -402,7 +402,7 @@ describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C
     wrapper.vm.editExtractedDataInPlace(0)
     await flushPromises()
 
-    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref1')
     expect(LockService.releaseRef).not.toHaveBeenCalled()
     wrapper.destroy()
   })
@@ -415,7 +415,7 @@ describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C
 
     wrapper.vm.cancelExtractedDataInPlace()
 
-    expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+    expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
     expect(LockService.releaseRef).not.toHaveBeenCalledWith('finding1')
     wrapper.destroy()
   })
@@ -432,7 +432,7 @@ describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C
     await flushPromises()
 
     expect(Api.patch).toHaveBeenCalledWith('/isoqf_extracted_data/ed1/item/ref1', expect.any(Object))
-    expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+    expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
     wrapper.destroy()
   })
 
@@ -450,6 +450,63 @@ describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C
     await flushPromises()
 
     expect(Api.patch).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+// Grisar ANTES del clic: el sondeo de la worksheet baja hasta el modal.
+describe('evidenceProfileForm.vue — filas de datos extraídos tomadas por otra persona', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  it('le pasa el sondeo a la tabla embebida de methodological limitations y coherence', async () => {
+    const locks = [{ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' }]
+    for (const type of ['methodological-limitations', 'coherence']) {
+      const { wrapper } = createWrapper({ activeRefLocks: locks })
+      await wrapper.setData({ selectedOptions: { ...makeModalData(), type } })
+      const table = wrapper.find('table-extracted-data-stub')
+      expect(table.exists()).toBe(true)
+      expect(table.vm.$attrs.activeRefLocks).toEqual(locks)
+      wrapper.destroy()
+    }
+  })
+
+  it('reenvía el lock-denied de la tabla embebida para que el sondeo corra ya', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ selectedOptions: { ...makeModalData(), type: 'coherence' } })
+    wrapper.find('table-extracted-data-stub').vm.$emit('lock-denied')
+    expect(wrapper.emitted('lock-denied')).toBeTruthy()
+    wrapper.destroy()
+  })
+
+  it('en adequacy, sabe qué fila tiene otra persona', () => {
+    const { wrapper } = createWrapper({
+      activeRefLocks: [{ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' }]
+    })
+    expect(wrapper.vm.inPlaceRowTakenBy('ref1')).toEqual({ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' })
+    expect(wrapper.vm.inPlaceRowTakenBy('ref2')).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('en adequacy, mi propio lock de la fila no cuenta como ajeno', () => {
+    LockService.refLocks.set('ed1::ed::ref1', 'proj1')
+    const { wrapper } = createWrapper({
+      activeRefLocks: [{ ref_id: 'ed1::ed::ref1', user_name: 'Yo' }]
+    })
+    expect(wrapper.vm.inPlaceRowTakenBy('ref1')).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('en adequacy, un rechazo del lock de la fila avisa al padre', async () => {
+    const { wrapper } = createWrapper()
+    await openModal(wrapper)
+    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
+    wrapper.vm.editExtractedDataInPlace(0)
+    await flushPromises()
+    expect(wrapper.emitted('lock-denied')).toBeTruthy()
     wrapper.destroy()
   })
 })

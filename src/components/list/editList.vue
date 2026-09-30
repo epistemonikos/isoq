@@ -114,6 +114,7 @@
           <table-extracted-data :ui="ui" :show="show" :mode="mode" :list="list"
             :permission="checkPermissions(list.organization)" :extractedData="extracted_data"
             :modePrintFieldObject="mode_print_fieldsObj" :refsWithTitle="refsWithTitle" :showParagraph="true"
+            :activeRefLocks="activeRefLocks" @lock-denied="fetchAndUpdateRefLocks"
             @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
 
           <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
@@ -375,15 +376,18 @@ export default {
   computed: {
     // Todo documento cuyo candado afecta a lo que esta hoja PINTA: el hallazgo (de él
     // cuelgan sus cinco secciones del evidence profile y su `/identity`), sus
-    // referencias (de ellas cuelgan las filas de datos extraídos, de características y
-    // de assessments) y los documentos de esas dos tablas (de ellos cuelgan las
-    // columnas). `worksheetLockKeys` filtra por base, así que un eje nuevo no obliga a
+    // referencias (de ellas cuelgan las filas de características y de assessments), el
+    // documento de datos extraídos (de él cuelgan sus filas) y los documentos de las
+    // otras dos tablas (de ellos cuelgan las columnas). `worksheetLockKeys` filtra por base, así que un eje nuevo no obliga a
     // tocar esta lista — sólo a agregar el documento del que cuelgue.
     worksheetLockBases () {
       return [
         this.findings && this.findings.id,
         this.characteristics_studies && this.characteristics_studies.id,
         this.meth_assessments && this.meth_assessments.id,
+        // De él cuelgan las filas de datos extraídos (`<doc>::ed::<ref>`): sin esto, que
+        // otra persona suelte una fila no recargaría la hoja.
+        this.extracted_data && this.extracted_data.id,
         ...(this.list && this.list.references ? this.list.references : [])
       ]
     },

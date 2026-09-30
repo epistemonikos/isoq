@@ -479,7 +479,8 @@
                   <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
                     :list="list" :permission="permission" :extractedData="extractedData"
                     :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
-                    @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
+                    @printErrors="printErrors" @getExtractedData="getExtractedData"
+                :activeRefLocks="activeRefLocks" @lock-denied="$emit('lock-denied')"></table-extracted-data>
                 </b-tab>
               </b-tabs>
             </div>
@@ -496,7 +497,8 @@
               <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
                 :list="list" :permission="permission" :extractedData="extractedData"
                 :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
-                @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
+                @printErrors="printErrors" @getExtractedData="getExtractedData"
+                :activeRefLocks="activeRefLocks" @lock-denied="$emit('lock-denied')"></table-extracted-data>
             </div>
 
             <div v-if="selectedOptions.type === 'adequacy'">
@@ -552,8 +554,16 @@
                           {{ $t('common.cancel') }}
                         </b-button>
                       </template>
-                      <template v-else>
-                        <b-button v-if="permission" variant="outline-success"
+                      <template v-else-if="permission">
+                        <!-- Tooltip en el span: un botón deshabilitado no emite eventos de mouse. -->
+                        <span v-if="inPlaceRowTakenBy(data.item.ref_id)" class="d-inline-block"
+                          :data-testid="`ed-inplace-locked-${data.item.ref_id}`" v-b-tooltip.hover
+                          :title="$t('lock.ref_locked_by', { user: inPlaceRowTakenBy(data.item.ref_id).user_name || '' })">
+                          <b-button variant="outline-success" disabled :style="{ pointerEvents: 'none' }">
+                            <font-awesome-icon icon="user" />
+                          </b-button>
+                        </span>
+                        <b-button v-else variant="outline-success"
                           @click="editExtractedDataInPlace(data.index)">
                           <font-awesome-icon icon="edit" :title="$t('common.edit')" />
                         </b-button>
@@ -833,9 +843,13 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 // pinta los botones y con `refLockUrls`, y el string de la clave tiene que escribirse
 // una sola vez por repo (el servidor compone el mismo en libs/evidence_profile.py).
 import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
+import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 
 export default {
   name: 'evidenceProfileForm',
+  // `foreignRefLocks`: el sondeo de la worksheet sin los locks de esta pestaña.
+  mixins: [refLockStateMixin],
   components: {
     videoHelp: () => import('@/components/videoHelp.vue'),
     'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
@@ -859,7 +873,13 @@ export default {
     selectOptions: Array,
     permission: Boolean,
     show: Object,
-    modePrintFieldObject: Array
+    modePrintFieldObject: Array,
+    // El sondeo de `GET /refs` de la worksheet: grisa las filas de datos extraídos que
+    // otra persona tiene, acá y en la tabla embebida.
+    activeRefLocks: {
+      type: Array,
+      default: () => []
+    }
   },
   data () {
     return {
@@ -1207,14 +1227,21 @@ export default {
       this.$emit('lock-denied')
       return false
     },
-    async acquireRowLock (refId) {
-      if (!refId || !this.permission) return
-      const result = await LockService.acquireRef(this.list.project_id, refId)
+    /** El lock de otra persona sobre esa fila de datos extraídos, o null. */
+    inPlaceRowTakenBy: function (refId) {
+      return foreignRowLock(this.foreignRefLocks, this.extractedData && this.extractedData.id, refId)
+    },
+    async acquireRowLock (lockKey) {
+      if (!lockKey || !this.permission) return
+      const result = await LockService.acquireRef(this.list.project_id, lockKey)
       if (result.success) {
-        this.lockedRowRef = refId
+        this.lockedRowRef = lockKey
         this.isRowReadOnly = false
         return
       }
+      // Mismo motivo que en `acquireSectionLock`: sin esto el botón de esta fila sigue
+      // invitando al clic hasta el próximo tick del sondeo.
+      this.$emit('lock-denied')
       this.lockedRowRef = null
       this.isRowReadOnly = true
       if (this.$notify) {
@@ -1511,7 +1538,8 @@ export default {
     },
     editExtractedDataInPlace: function (index) {
       const item = JSON.parse(JSON.stringify(this.extractedData.items[index]))
-      this.acquireRowLock(item.ref_id)
+      // La fila de ESTE documento, no el estudio: ver `extractedDataLockKeys.js`.
+      this.acquireRowLock(extractedDataRowLockKey(this.extractedData.id, item.ref_id))
       const data = {
         display: true,
         item: item

@@ -39,22 +39,49 @@
         <template
           v-if="mode==='edit' && permission"
           v-slot:cell(actions)="data">
-          <b-button
-            class="d-print-none"
-            @click="openModalExtractedDataEditDataItem(data)"
-            variant="outline-success">
-            <font-awesome-icon
-              icon="edit"
-              :title="$t('common.edit')" />
-          </b-button>
-          <b-button
-            class="d-print-none"
-            @click="openModalExtractedDataRemoveDataItem(data)"
-            variant="outline-danger">
-            <font-awesome-icon
-              icon="trash"
-              :title="$t('common.remove')" />
-          </b-button>
+          <!-- El tooltip va en un span y no en el botón: un botón deshabilitado no emite
+               eventos de mouse, así que su propio `title` no se mostraría nunca. -->
+          <span
+            v-if="rowTakenBy(data.item.ref_id)"
+            class="d-print-none d-inline-block"
+            :data-testid="`ed-locked-${data.item.ref_id}`"
+            v-b-tooltip.hover
+            :title="$t('lock.ref_locked_by', { user: rowTakenBy(data.item.ref_id).user_name || '' })">
+            <b-button
+              :data-testid="`ed-edit-${data.item.ref_id}`"
+              disabled
+              :style="{ pointerEvents: 'none' }"
+              variant="outline-success">
+              <font-awesome-icon icon="user" />
+            </b-button>
+            <b-button
+              :data-testid="`ed-remove-${data.item.ref_id}`"
+              disabled
+              :style="{ pointerEvents: 'none' }"
+              variant="outline-danger">
+              <font-awesome-icon icon="trash" />
+            </b-button>
+          </span>
+          <template v-else>
+            <b-button
+              class="d-print-none"
+              :data-testid="`ed-edit-${data.item.ref_id}`"
+              @click="openModalExtractedDataEditDataItem(data)"
+              variant="outline-success">
+              <font-awesome-icon
+                icon="edit"
+                :title="$t('common.edit')" />
+            </b-button>
+            <b-button
+              class="d-print-none"
+              :data-testid="`ed-remove-${data.item.ref_id}`"
+              @click="openModalExtractedDataRemoveDataItem(data)"
+              variant="outline-danger">
+              <font-awesome-icon
+                icon="trash"
+                :title="$t('common.remove')" />
+            </b-button>
+          </template>
         </template>
       </b-table>
       <b-modal
@@ -110,12 +137,16 @@
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import { copyItemMetadata } from '@/utils/itemMetadata'
+import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 
 export default {
   name: 'editListExtractedData',
+  // `foreignRefLocks`: el sondeo de la worksheet sin los locks de esta pestaña.
+  mixins: [refLockStateMixin],
   props: {
     ui: Object,
     show: Object,
@@ -133,6 +164,13 @@ export default {
     showTitle: {
       type: Boolean,
       default: true
+    },
+    // El sondeo de `GET /refs` de la worksheet. Con él los botones de una fila que otra
+    // persona está editando o borrando se grisan ANTES del clic, en vez de enterarse al
+    // abrir el modal.
+    activeRefLocks: {
+      type: Array,
+      default: () => []
     }
   },
   components: {
@@ -194,12 +232,20 @@ export default {
     beginRowEditor: function (refId) {
       // A lock the modal never released (its `hidden` never arrived, or it never
       // finished opening) would stay held while we move to another row.
-      if (this.lockedRowRef && this.lockedRowRef !== refId) this.releaseRowLock()
+      if (this.lockedRowRef && this.lockedRowRef !== this.rowLockKeyOf(refId)) this.releaseRowLock()
       // Opening while another session is still closing means its `hidden` is still in
       // flight and must not be mistaken for the closing of this one.
       this.staleHiddenPending = this.rowEditorOpen
       this.rowEditorOpen = true
-      this.acquireRowLock(refId)
+      this.acquireRowLock(this.rowLockKeyOf(refId))
+    },
+    // La fila de ESTE documento, no el estudio: ver `extractedDataLockKeys.js`.
+    rowLockKeyOf: function (refId) {
+      return extractedDataRowLockKey(this.localExtractedData && this.localExtractedData.id, refId)
+    },
+    /** El lock de otra persona sobre esa fila, o null. */
+    rowTakenBy: function (refId) {
+      return foreignRowLock(this.foreignRefLocks, this.localExtractedData && this.localExtractedData.id, refId)
     },
     releaseRowLock: function () {
       if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
@@ -212,28 +258,33 @@ export default {
     // Mirrors StepFour.vue's acquireStudyLock: ask on open so the rejection lands
     // before the user types. The project id comes from the list prop — the route
     // param of this view is the list id.
-    async acquireRowLock (refId) {
-      if (!refId) return
+    async acquireRowLock (lockKey) {
+      if (!lockKey) return
       if (!this.permission) {
         this.isRowReadOnly = true
         this.rowLockedBy = null
         return
       }
-      const result = await LockService.acquireRef(this.list.project_id, refId)
+      const result = await LockService.acquireRef(this.list.project_id, lockKey)
       if (result.success) {
-        this.lockedRowRef = refId
+        this.lockedRowRef = lockKey
         this.isRowReadOnly = false
         this.rowLockedBy = null
       } else if (result.permissionDenied) {
         this.isRowReadOnly = true
         this.rowLockedBy = null
         if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+        this.$emit('lock-denied')
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
         }
+        // Que el padre repida el sondeo ya: `emitRefLocksChanged` sólo se dispara en un
+        // acquire exitoso y en el release, así que sin esto los botones de esta fila
+        // seguirían invitando al clic hasta el próximo ciclo.
+        this.$emit('lock-denied')
       }
     },
     // See crudTables.onRefLockLost: the lock can be lost while the editor is open.
