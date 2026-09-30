@@ -256,3 +256,49 @@ export function findingLockDetailsOf (foreignLocks, findingId, myUserName) {
     .sort((a, b) => a.holder.localeCompare(b.holder) ||
       EVIDENCE_PROFILE_SECTIONS.indexOf(a.section) - EVIDENCE_PROFILE_SECTIONS.indexOf(b.section))
 }
+
+/**
+ * Sufijo de la clave ETIQUETA de «está en el modal de referencias».
+ *
+ * El bloqueo de las referencias es `<fid>` pelado —lo exige `/identity`— y es la misma
+ * clave que toma «editar nombre». Con una sola clave nadie puede saber cuál de las dos
+ * cosas está haciendo la otra persona, y las referencias son el dato del que cuelga
+ * toda la hoja: merecen un aviso propio. Por eso quien abre ese modal toma ADEMÁS esta
+ * clave, que no protege nada por sí sola.
+ *
+ * Para el servidor es una clave independiente: `base_ref_of` no la reconoce (no es
+ * `::ep::` ni `::sK::oI`) y no choca con nada. Por el mismo motivo NO cuelga del
+ * finding para `lockKeyBelongsTo` ni para `blockedSectionsOf`: si una etiqueta quedara
+ * huérfana, grisaría botones que el servidor autoriza.
+ */
+export const REFERENCES_LOCK_SUFFIX = '::references'
+
+/** `<findingId>::references`, o `null` sin finding (misma razón que `sectionLockKey`). */
+export function referencesLockKey (findingId) {
+  return findingId ? `${findingId}${REFERENCES_LOCK_SUFFIX}` : null
+}
+
+/**
+ * Quién está en el modal de referencias de este finding, según el sondeo.
+ *
+ * Exige que la MISMA persona tenga también `<fid>` pelado. La etiqueta sola no bloquea
+ * nada, así que una huérfana —el `<fid>` se perdió o caducó y la etiqueta todavía no—
+ * anunciaría «no se puede editar» con los botones habilitados. El aviso tiene que decir
+ * lo mismo que el bloqueo, o la gente deja de creerle.
+ *
+ * Descarta el nombre propio (otra pestaña de la misma persona); `foreignLocks` ya viene
+ * sin los de esta pestaña. Orden estable por nombre, como `findingLockDetailsOf`:
+ * `GET /refs` no garantiza orden.
+ */
+export function referencesEditorOf (foreignLocks, findingId, myUserName) {
+  const key = referencesLockKey(findingId)
+  if (!key || !Array.isArray(foreignLocks)) return null
+  const namesHolding = (refId) => new Set(foreignLocks
+    .filter(lock => lock && lock.ref_id === refId && lock.user_name && lock.user_name !== myUserName)
+    .map(lock => lock.user_name))
+  const holdingFinding = namesHolding(findingId)
+  const holders = [...namesHolding(key)]
+    .filter(name => holdingFinding.has(name))
+    .sort((a, b) => a.localeCompare(b))
+  return holders.length ? holders[0] : null
+}

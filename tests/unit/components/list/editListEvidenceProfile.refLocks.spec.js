@@ -627,9 +627,11 @@ describe('editListEvidenceProfile.vue — el modal de referencias respeta el loc
       window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: FINDING_ID, lockedBy: 'Ana Pérez' } }))
       expect(wrapper.vm.referencesReadOnly).toBe(true)
       expect(wrapper.vm.referencesReadOnlyNotice).toBe('lock.lost_while_editing:{"user":"Ana Pérez"}')
-      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
+      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro. La
+      // etiqueta `::references` sí se suelta: seguiría anunciando una edición que no hay.
       wrapper.vm.handleReferencesModalHidden()
-      expect(LockService.releaseRef).not.toHaveBeenCalled()
+      expect(LockService.releaseRef).not.toHaveBeenCalledWith(FINDING_ID)
+      expect(LockService.releaseRef).toHaveBeenCalledWith(`${FINDING_ID}::references`)
       wrapper.destroy()
     })
 
@@ -641,5 +643,86 @@ describe('editListEvidenceProfile.vue — el modal de referencias respeta el loc
       expect(wrapper.vm.referencesReadOnly).toBe(false)
       wrapper.destroy()
     })
+  })
+})
+
+describe('editListEvidenceProfile.vue — aviso de «editando las referencias»', () => {
+  beforeEach(() => {
+    LockService.refLocks.clear()
+    LockService.acquireRef.mockReset().mockResolvedValue({ success: true })
+    LockService.releaseRef.mockReset()
+  })
+  const editingRefs = (user = 'Ana Pérez') => [
+    foreignLock(FINDING_ID, user), foreignLock(`${FINDING_ID}::references`, user)
+  ]
+
+  it('dibuja un b-alert sobre la tabla con el nombre de quien edita las referencias', () => {
+    const wrapper = createWrapper({ activeRefLocks: editingRefs() })
+    const alerta = wrapper.find('[data-testid="ep-references-editing"]')
+    expect(alerta.exists()).toBe(true)
+    // En jsdom la transición de b-alert queda como stub y los atributos van al envoltorio.
+    expect(alerta.html()).toContain('alert-warning')
+    expect(alerta.text()).toContain('lock.editing_references')
+    expect(alerta.text()).toContain('Ana Pérez')
+    // El cartel chico del botón queda genérico: repetir el b-alert sería ruido.
+    expect(wrapper.find('[data-testid="ep-locked-references"]').text()).toContain('lock.ref_locked_by')
+    wrapper.destroy()
+  })
+
+  it('desaparece en cuanto el sondeo deja de traer los locks', async () => {
+    // En el navegador, con la pestaña OCULTA, el nodo tarda en irse: Vue espera un
+    // requestAnimationFrame para cerrar la transición de b-alert, y Chrome no los corre
+    // en segundo plano. Se va al volver al frente. Medido; no es un bug de esta lógica.
+    const wrapper = createWrapper({ activeRefLocks: editingRefs() })
+    await wrapper.setProps({ activeRefLocks: [] })
+    expect(wrapper.find('[data-testid="ep-references-editing"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('sólo <fid> (alguien renombrando) no muestra el b-alert de referencias', () => {
+    const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
+    expect(wrapper.find('[data-testid="ep-references-editing"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('la propia etiqueta no se anuncia', () => {
+    const wrapper = createWrapper({ activeRefLocks: editingRefs('Yo Mismo') })
+    expect(wrapper.find('[data-testid="ep-references-editing"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('también lo ve quien sólo puede leer', () => {
+    const wrapper = createWrapper({ activeRefLocks: editingRefs(), permission: false })
+    expect(wrapper.find('[data-testid="ep-references-editing"]').exists()).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('abrir el modal toma el finding y después la etiqueta; cerrar suelta las dos', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+    await wrapper.vm.openModalReferences()
+    expect(LockService.acquireRef.mock.calls.map(c => c[1])).toEqual([FINDING_ID, `${FINDING_ID}::references`])
+    wrapper.vm.handleReferencesModalHidden()
+    expect(LockService.releaseRef.mock.calls.map(c => c[0]))
+      .toEqual(expect.arrayContaining([FINDING_ID, `${FINDING_ID}::references`]))
+    wrapper.destroy()
+  })
+
+  it('rechazado el finding, no pide la etiqueta', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana Pérez' })
+    const wrapper = createWrapper()
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+    await wrapper.vm.openModalReferences()
+    expect(LockService.acquireRef).toHaveBeenCalledTimes(1)
+    wrapper.destroy()
+  })
+
+  it('al guardar suelta también la etiqueta', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
+    await wrapper.vm.openModalReferences()
+    await wrapper.vm.saveReferencesList()
+    expect(LockService.releaseRef.mock.calls.map(c => c[0])).toContain(`${FINDING_ID}::references`)
+    wrapper.destroy()
   })
 })

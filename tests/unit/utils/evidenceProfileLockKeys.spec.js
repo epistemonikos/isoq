@@ -7,7 +7,9 @@ import {
   lockKeyBelongsTo,
   sectionLockKey,
   parseSectionLockKey,
-  blockedSectionsOf
+  blockedSectionsOf,
+  referencesLockKey,
+  referencesEditorOf
 } from '@/utils/evidenceProfileLockKeys'
 
 const FID = 'f1'
@@ -394,5 +396,60 @@ describe('evidenceProfileLockKeys', () => {
       expect(blockedSectionsOf([lock('f1::ep::coherence')], undefined, 'Yo').size).toBe(0)
       expect(blockedSectionsOf([null, undefined, {}], FID, 'Yo').size).toBe(0)
     })
+  })
+})
+
+// Etiqueta de «está en el modal de referencias». No protege nada por sí sola —el bloqueo
+// lo da `<fid>` pelado, que se toma junto—: sólo le dice a los demás QUÉ está haciendo.
+describe('referencesLockKey / referencesEditorOf', () => {
+  it('compone <fid>::references', () => {
+    expect(referencesLockKey('f1')).toBe('f1::references')
+  })
+
+  it('sin finding no emite una clave a medio construir', () => {
+    expect(referencesLockKey(null)).toBeNull()
+    expect(referencesLockKey('')).toBeNull()
+  })
+
+  it('la etiqueta NO cuelga del finding para las preguntas de bloqueo', () => {
+    // Para el servidor es una clave independiente (base_ref_of da None): el bloqueo real
+    // sigue siendo `<fid>`. Si este cliente la contara como del finding, un lock de
+    // etiqueta huérfano grisaría botones que el servidor autoriza.
+    expect(lockKeyBelongsTo('f1::references', 'f1')).toBe(false)
+    expect(blockedSectionsOf([lock('f1::references')], 'f1', 'Yo').size).toBe(0)
+  })
+
+  const both = (user = 'Ana Pérez', fid = 'f1') => [lock(fid, user), lock(`${fid}::references`, user)]
+
+  it('devuelve quién está en el modal de referencias de ESE finding', () => {
+    expect(referencesEditorOf(both(), 'f1', 'Yo')).toBe('Ana Pérez')
+  })
+
+  it('una etiqueta huérfana (sin <fid> de la misma persona) no se anuncia', () => {
+    // Anunciaría «no se puede editar» con los botones habilitados.
+    expect(referencesEditorOf([lock('f1::references')], 'f1', 'Yo')).toBeNull()
+    expect(referencesEditorOf([lock('f1::references', 'Ana'), lock('f1', 'Beto')], 'f1', 'Yo')).toBeNull()
+  })
+
+  it('el lock pelado del finding solo no dice que sea por referencias', () => {
+    expect(referencesEditorOf([lock('f1')], 'f1', 'Yo')).toBeNull()
+  })
+
+  it('ignora otro finding, el nombre propio y los locks sin nombre', () => {
+    expect(referencesEditorOf(both('Ana Pérez', 'f2'), 'f1', 'Yo')).toBeNull()
+    expect(referencesEditorOf(both('Yo'), 'f1', 'Yo')).toBeNull()
+    expect(referencesEditorOf([{ ref_id: 'f1', user_name: null }, { ref_id: 'f1::references', user_name: null }], 'f1', 'Yo')).toBeNull()
+  })
+
+  it('con dos titulares el nombre no depende del orden del sondeo', () => {
+    const a = [...both('Zoe'), ...both('Ana')]
+    expect(referencesEditorOf(a, 'f1', 'Yo')).toBe('Ana')
+    expect(referencesEditorOf([...a].reverse(), 'f1', 'Yo')).toBe('Ana')
+  })
+
+  it('entradas inválidas no lanzan', () => {
+    expect(referencesEditorOf(null, 'f1', 'Yo')).toBeNull()
+    expect(referencesEditorOf([null, {}], 'f1', 'Yo')).toBeNull()
+    expect(referencesEditorOf(both(), null, 'Yo')).toBeNull()
   })
 })

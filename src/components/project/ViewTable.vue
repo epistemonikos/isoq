@@ -163,6 +163,13 @@
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
       </template>
       <template v-slot:cell(ref_list)="data">
+        <!-- Fuera de las dos ramas: quien sólo lee también tiene que saber que las
+             referencias que está viendo pueden cambiar en cualquier momento. -->
+        <b-alert v-if="referencesEditorFor(data.item.id)" show variant="warning"
+          class="references-editing-notice mb-2 p-2 small" data-testid="finding-references-editing">
+          <font-awesome-icon icon="user"></font-awesome-icon>
+          {{ $t('lock.editing_references', { user: referencesEditorFor(data.item.id) }) }}
+        </b-alert>
         <template v-if="!(mode === 'edit' && canEdit)">
           {{ data.item.ref_list }}
         </template>
@@ -314,7 +321,9 @@ import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
-import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
+import {
+  lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS, referencesLockKey, referencesEditorOf
+} from '@/utils/evidenceProfileLockKeys'
 import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
 
 export default {
@@ -426,6 +435,9 @@ export default {
       // `isoqf_findings`: la MISMA que toma evidenceProfileForm al abrir la hoja de
       // evidence profile, porque los dos editores escriben ese mismo documento.
       lockedFindingRef: null,
+      // Clave etiqueta `<fid>::references` (ver `referencesLockKey`): sólo la toma el
+      // modal de referencias, y sólo después de tener `lockedFindingRef`.
+      lockedReferencesLabel: null,
       // Rechazo conocido de primera mano, antes de que el próximo sondeo lo confirme.
       findingLockedBy: null,
       isFindingReadOnly: false,
@@ -677,6 +689,22 @@ export default {
       this.$emit('lock-denied')
     },
     /**
+     * Anuncia a los demás que este modal es el de REFERENCIAS y no el de nombre, que toma
+     * la misma clave `<fid>`. Sólo con el lock del finding en mano: sin él anunciaría
+     * algo que esta persona no está haciendo. Si falla no cambia nada —el bloqueo real
+     * es el del finding—, así que no se avisa ni pasa a solo lectura.
+     */
+    acquireReferencesLabel: async function () {
+      const key = referencesLockKey(this.lockedFindingRef)
+      if (!key) return
+      const result = await LockService.acquireRef(this.$route.params.id, key)
+      if (result && result.success) this.lockedReferencesLabel = key
+    },
+    releaseReferencesLabel: function () {
+      if (this.lockedReferencesLabel) LockService.releaseRef(this.lockedReferencesLabel)
+      this.lockedReferencesLabel = null
+    },
+    /**
      * Fin del guardado. El modal ya se cerró para cuando el PATCH aterriza (bootstrap-vue
      * emite `hidden` enseguida después de `ok`), así que el release real pasa acá.
      */
@@ -688,6 +716,7 @@ export default {
       // Con un guardado en vuelo soltarlo dejaría al PATCH viajando sin lock detrás; lo
       // suelta el propio guardado al terminar.
       if (this.savingFinding) return
+      this.releaseReferencesLabel()
       if (this.lockedFindingRef) LockService.releaseRef(this.lockedFindingRef)
       this.lockedFindingRef = null
       this.isFindingReadOnly = false
@@ -702,8 +731,10 @@ export default {
     onRefLockLost: function (event) {
       const detail = (event && event.detail) || {}
       if (!detail.refId || detail.refId !== this.lockedFindingRef) return
-      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
+      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro. La
+      // etiqueta sí es nuestra, y dejarla seguiría anunciando una edición que ya no hay.
       this.lockedFindingRef = null
+      this.releaseReferencesLabel()
       this.isFindingReadOnly = true
       this.findingLockedBy = detail.lockedBy || null
       this.lockLostWhileEditing = true
@@ -781,16 +812,24 @@ export default {
           ? [{ key: 'finding-locked', text: this.$t('lock.ref_locked_by', { user: holder }) }]
           : []
       }
-      return detalles.map(({ section, holder }) => (
-        section
-          ? {
+      const editorDeReferencias = this.referencesEditorFor(listId)
+      return detalles.map(({ section, holder }) => {
+        if (section) {
+          return {
             key: `finding-locked-${section}`,
             text: this.$t('lock.evaluating_section', {
               user: holder, section: this.$t(SECTION_LABEL_KEYS[section])
             })
           }
-          : { key: 'finding-locked', text: this.$t('lock.ref_locked_by', { user: holder }) }
-      ))
+        }
+        // `<fid>` pelado lo toman nombre y referencias por igual; la etiqueta dice cuál.
+        const key = holder === editorDeReferencias ? 'lock.editing_references' : 'lock.ref_locked_by'
+        return { key: 'finding-locked', text: this.$t(key, { user: holder }) }
+      })
+    },
+    /** Quién está en el modal de referencias de esta fila, si alguien. */
+    referencesEditorFor: function (listId) {
+      return referencesEditorOf(this.foreignLocks(), this.findingIdOf(listId), this.currentUserName)
     },
     /**
      * Quiénes están dentro de este hallazgo sin estar editando nada.
@@ -945,6 +984,7 @@ export default {
               this.showBanner = true
             }
             await this.acquireFindingLock(this.finding.id)
+            await this.acquireReferencesLabel()
             // Sin `await`: ver el comentario de `editModalFindingName`.
             this.refreshPresenceFor(this.finding.id)
             this.$refs['modal-references-list'].show()

@@ -300,7 +300,8 @@
     "lock_expired": "Tu bloqueo de edición caducó, así que esto quedó en solo lectura. Vuelve a abrirlo para seguir editando.",
     "locked_at_another_granularity": "{user} está editando otra parte de este estudio, así que todavía no puedes abrirlo. Podrás hacerlo en cuanto termine, o en unos minutos si cerró la página de golpe.",
     "cerqual_locked_by": "{user} está terminando la evaluación GRADE-CERQual de confianza, así que este cambio no se puede aplicar todavía: borraría su trabajo. Probá de nuevo en un momento.",
-    "evaluating_section": "{user} está evaluando {section}"
+    "evaluating_section": "{user} está evaluando {section}",
+    "editing_references": "{user} está editando las referencias de este hallazgo. No se puede editar el hallazgo hasta que termine."
   },
   "presence": {
     "reviewing_one": "{users} está revisando este hallazgo",

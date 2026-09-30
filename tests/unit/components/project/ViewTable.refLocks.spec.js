@@ -629,3 +629,106 @@ describe('ViewTable — quién edita se ve sin pasar el mouse', () => {
     wrapper.destroy()
   })
 })
+
+// Quien está en el modal de referencias lo anuncia con una clave etiqueta
+// `<fid>::references`, además de `<fid>` pelado (que es lo que bloquea). Así los demás
+// ven QUÉ está haciendo y no un genérico «siendo editado».
+describe('ViewTable — aviso de «editando las referencias»', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks = new Map()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  const REFS_FIELDS = {
+    with_categories: [{ key: 'name', label: 'Finding' }, { key: 'ref_list', label: 'Refs' }],
+    without_categories: [{ key: 'name', label: 'Finding' }, { key: 'ref_list', label: 'Refs' }]
+  }
+  const editingRefs = (user = 'Ana Pérez') => [
+    { ref_id: 'finding1', user_name: user },
+    { ref_id: 'finding1::references', user_name: user }
+  ]
+
+  it('abrir referencias toma el lock del finding Y la etiqueta', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.vm.openModalReferences({ index: 0, item: LISTS[0] })
+    await flushPromises()
+    const claves = LockService.acquireRef.mock.calls.map(c => c[1])
+    expect(claves).toEqual(['finding1', 'finding1::references'])
+    wrapper.destroy()
+  })
+
+  it('el modal de nombre NO toma la etiqueta', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.vm.editModalFindingName({ index: 0, item: LISTS[0] })
+    await flushPromises()
+    expect(LockService.acquireRef.mock.calls.map(c => c[1])).toEqual(['finding1'])
+    wrapper.destroy()
+  })
+
+  it('sin el lock del finding no pide la etiqueta: anunciaría algo que no está haciendo', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana Pérez' })
+    const { wrapper } = createWrapper()
+    await wrapper.vm.openModalReferences({ index: 0, item: LISTS[0] })
+    await flushPromises()
+    expect(LockService.acquireRef).toHaveBeenCalledTimes(1)
+    wrapper.destroy()
+  })
+
+  it('si la etiqueta falla, el modal sigue editable: el bloqueo real es el del finding', async () => {
+    LockService.acquireRef
+      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: false })
+    const { wrapper } = createWrapper()
+    await wrapper.vm.openModalReferences({ index: 0, item: LISTS[0] })
+    await flushPromises()
+    expect(wrapper.vm.isFindingReadOnly).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('al cerrar suelta las dos claves', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.vm.openModalReferences({ index: 0, item: LISTS[0] })
+    await flushPromises()
+    wrapper.vm.handleReferencesModalHidden()
+    const sueltas = LockService.releaseRef.mock.calls.map(c => c[0])
+    expect(sueltas).toEqual(expect.arrayContaining(['finding1', 'finding1::references']))
+    wrapper.destroy()
+  })
+
+  it('dibuja un b-alert en la celda de referencias con el nombre', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs() })
+    const alerta = wrapper.find('[data-testid="finding-references-editing"]')
+    expect(alerta.exists()).toBe(true)
+    // En jsdom la transición de b-alert queda como stub y los atributos van al envoltorio.
+    expect(alerta.html()).toContain('alert-warning')
+    expect(alerta.text()).toContain('lock.editing_references')
+    expect(alerta.text()).toContain('Ana Pérez')
+    wrapper.destroy()
+  })
+
+  it('el aviso de la fila también dice que son las referencias', () => {
+    const { wrapper } = createWrapper({ refLocks: editingRefs() })
+    expect(wrapper.vm.findingLockNotices('list1').map(a => a.text))
+      .toEqual(['lock.editing_references:{"user":"Ana Pérez"}'])
+    wrapper.destroy()
+  })
+
+  it('renombrar (sólo <fid>) no muestra el aviso de referencias', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: [{ ref_id: 'finding1', user_name: 'Ana Pérez' }] })
+    expect(wrapper.find('[data-testid="finding-references-editing"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('la propia etiqueta, de esta pestaña o de otra, no se anuncia', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs('Yo Mismo') })
+    expect(wrapper.find('[data-testid="finding-references-editing"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('también lo ve quien sólo puede leer', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs(), canEdit: false })
+    expect(wrapper.find('[data-testid="finding-references-editing"]').exists()).toBe(true)
+    wrapper.destroy()
+  })
+})

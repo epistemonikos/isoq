@@ -10,6 +10,17 @@
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
+    <!-- Arriba y no sólo en la celda: las referencias son el dato del que cuelga toda la
+         hoja, y la persona tiene que enterarse al entrar, no al llegar a la columna. -->
+    <b-alert
+      v-if="mode==='edit' && referencesEditor"
+      show
+      variant="warning"
+      class="d-print-none"
+      data-testid="ep-references-editing">
+      <font-awesome-icon icon="user"></font-awesome-icon>
+      {{ $t('lock.editing_references', { user: referencesEditor }) }}
+    </b-alert>
     <b-table
       class="d-print-none"
       v-if="mode==='edit'"
@@ -460,6 +471,8 @@
             class="lock-notice d-block mb-2"
             data-testid="ep-locked-references">
             <font-awesome-icon icon="user"></font-awesome-icon>
+            <!-- Genérico a propósito: si es por referencias, el b-alert de arriba ya lo
+                 dice con todas las letras, y repetirlo acá es ruido. -->
             {{ $t('lock.ref_locked_by', { user: referencesLockHolder }) }}
           </small>
         </template>
@@ -671,7 +684,9 @@ import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
-import { sectionOfType, blockedSectionsOf, lockKeyBelongsTo } from '@/utils/evidenceProfileLockKeys'
+import {
+  sectionOfType, blockedSectionsOf, lockKeyBelongsTo, referencesLockKey, referencesEditorOf
+} from '@/utils/evidenceProfileLockKeys'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
@@ -741,6 +756,9 @@ export default {
       // `findings.id` porque ése es lo que se MUESTRA, y un lock perdido deja de ser
       // nuestro aunque el finding en pantalla siga siendo el mismo.
       lockedReferencesRef: null,
+      // Clave etiqueta `<fid>::references`: dice a los demás que esto es el modal de
+      // referencias y no el de nombre, que toma el mismo `<fid>`.
+      lockedReferencesLabel: null,
       referencesReadOnly: false,
       referencesLockedBy: null,
       referencesLockLost: false,
@@ -770,6 +788,10 @@ export default {
         .map(lock => lock.user_name)
         .sort((a, b) => a.localeCompare(b))
       return holders.length ? holders[0] : null
+    },
+    /** Quién está en el modal de referencias de este finding, según el sondeo. */
+    referencesEditor () {
+      return referencesEditorOf(this.foreignRefLocks, this.findings && this.findings.id, this.currentUserName)
     },
     // Con `permission` por el mismo motivo que `isSectionDisabled`: sin escritura el
     // botón dice «View», y ver no molesta a nadie.
@@ -1005,6 +1027,11 @@ export default {
       const result = await LockService.acquireRef(this.project.id, findingId)
       if (result && result.success) {
         this.lockedReferencesRef = findingId
+        // Sólo con el lock del finding en mano: sin él anunciaría algo que esta
+        // persona no está haciendo. Si falla no cambia nada, el bloqueo real es `<fid>`.
+        const label = referencesLockKey(findingId)
+        const labelResult = await LockService.acquireRef(this.project.id, label)
+        if (labelResult && labelResult.success) this.lockedReferencesLabel = label
         return
       }
       this.lockedReferencesRef = null
@@ -1021,11 +1048,16 @@ export default {
       // Con un guardado en vuelo, soltarlo dejaría al PATCH sin lock detrás; lo suelta
       // el propio guardado al terminar.
       if (this.savingReferences) return
+      this.releaseReferencesLabel()
       if (this.lockedReferencesRef) LockService.releaseRef(this.lockedReferencesRef)
       this.lockedReferencesRef = null
       this.referencesReadOnly = false
       this.referencesLockedBy = null
       this.referencesLockLost = false
+    },
+    releaseReferencesLabel: function () {
+      if (this.lockedReferencesLabel) LockService.releaseRef(this.lockedReferencesLabel)
+      this.lockedReferencesLabel = null
     },
     /**
      * El lock puede evaporarse con el modal abierto (un latido perdido, una concesión
@@ -1035,8 +1067,10 @@ export default {
     onReferencesLockLost: function (event) {
       const detail = (event && event.detail) || {}
       if (!detail.refId || detail.refId !== this.lockedReferencesRef) return
-      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
+      // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro. La
+      // etiqueta sí es nuestra, y dejarla seguiría anunciando una edición que ya no hay.
       this.lockedReferencesRef = null
+      this.releaseReferencesLabel()
       this.referencesReadOnly = true
       this.referencesLockedBy = detail.lockedBy || null
       this.referencesLockLost = true

@@ -300,7 +300,8 @@
     "lock_expired": "Seu bloqueio de edição expirou, então isto ficou somente leitura. Abra novamente para continuar editando.",
     "locked_at_another_granularity": "{user} está editando outra parte deste estudo, então você ainda não pode abri-lo. Poderá fazê-lo assim que a pessoa terminar, ou em alguns minutos se a página dela fechou de repente.",
     "cerqual_locked_by": "{user} está a terminar a avaliação GRADE-CERQual de confiança, portanto esta alteração ainda não pode ser aplicada — apagaria o trabalho dessa pessoa. Tente novamente num instante.",
-    "evaluating_section": "{user} está a avaliar {section}"
+    "evaluating_section": "{user} está a avaliar {section}",
+    "editing_references": "{user} está editando as referências deste achado. O achado não pode ser editado até que termine."
   },
   "presence": {
     "reviewing_one": "{users} está a rever esta descoberta",
