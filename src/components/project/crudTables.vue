@@ -150,13 +150,23 @@
           {{ $t('characteristics.columns_autosave_hint') }}
           <b-spinner small v-if="dataTableSettings.isBusy" class="ml-1"></b-spinner>
         </p>
+        <!-- Arriba, junto a donde aparece la columna nueva. -->
+        <b-button class="mb-2" @click="dataTableNewColumn" variant="outline-success">
+          {{ $t('characteristics.add_new_column') }}
+        </b-button>
         <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true"
           @end="onColumnsOrderChanged">
-          <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="index"
+          <!-- Por identidad y no por índice: la columna nueva entra con `unshift`, y una key
+               por índice le daría a cada campo el DOM de su vecino. `id` primero: la columna
+               nueva lo conserva cuando recibe su `key`, así el input no se vuelve a montar. -->
+          <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="field.id || field.key"
             :label="$t('characteristics.column_n', { n: index })" :state="fieldState('edit', index)"
             :invalid-feedback="$t('common.field_required')">
             <b-input-group>
+              <!-- `autofocus` y no un focus() por id: `draggable` reordena sus hijos DESPUÉS del
+                   $nextTick, así que `column_0` todavía es el input anterior (medido). -->
               <b-form-input :id="`column_${index}`" v-model="field.label" type="text" :state="fieldState('edit', index)"
+                :autofocus="!field.key"
                 @blur="onEditFieldBlur(index)"></b-form-input>
               <b-input-group-append>
                 <b-button v-if="dataTableFieldsModalEdit.fields.length > 1" :id="`drag-button-chars-${index}`"
@@ -170,9 +180,6 @@
             </b-input-group>
           </b-form-group>
         </draggable>
-        <b-button class="mb-2" @click="dataTableNewColumn" variant="outline-success">
-          {{ $t('characteristics.add_new_column') }}
-        </b-button>
       </b-modal>
 
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
@@ -325,6 +332,10 @@ import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { summarizeImportLocks } from '@/utils/importLockWarning'
+
+// Identidad local de una columna que todavía no tiene clave del servidor. Un contador y no
+// `Date.now()`: dos clics en el mismo milisegundo darían la misma.
+let newColumnSeq = 0
 
 export default {
   name: 'crudTables',
@@ -864,7 +875,7 @@ export default {
       if (!field || !this.canEdit) return
 
       const label = (field.label || '').trim()
-      if (!label || label === this.committedColumnLabels[field.key || `idx_${index}`]) return
+      if (!label || (field.key && label === this.committedColumnLabels[field.key])) return
       if (!(await this.ensureColumnsLock())) return
 
       this.dataTableSettings.isBusy = true
@@ -878,6 +889,24 @@ export default {
           // column and a second blur would create it all over again.
           this.$set(field, 'key', key)
           this.committedColumnLabels[key] = label
+          // El servidor la agrega al final (`$push`) y el modal la muestra arriba, donde el
+          // usuario la creó. Se corrige EN EL ACTO y no al cerrar: diferirlo deja la columna
+          // al fondo de la tabla mientras el modal sigue abierto, y en la base si el cierre
+          // no llega a mandar el orden. Mismo criterio que `ManageColumnsButton`.
+          //
+          // Este envío lleva el orden completo del modal, arrastres previos incluidos, así
+          // que baja el pendiente: repetirlo al cerrar sería un request de más.
+          const order = this.columnsOrderFromModal()
+          this.pendingColumnsOrder = false
+          if (order.length) {
+            try {
+              await columnService.reorderColumns(this.type, this.dataTable.id, order)
+            } catch (error) {
+              // La columna ya existe, al final. El cierre del modal lo reintenta.
+              this.pendingColumnsOrder = true
+              throw error
+            }
+          }
         }
         this.getData()
       } catch (error) {
@@ -926,6 +955,15 @@ export default {
         this.dataTableSettings.isBusy = false
       }
     },
+    /**
+     * Orden que el usuario tiene a la vista. Sólo las columnas con clave: una sin título
+     * todavía no existe en el servidor, y nombrarla sería un 400 por clave desconocida.
+     */
+    columnsOrderFromModal: function () {
+      return this.dataTableFieldsModalEdit.fields
+        .filter(field => field.key)
+        .map(field => field.key)
+    },
     onColumnsOrderChanged: function () {
       this.drag = false
       // Only flagged: the reorder is the one commutative operation of the set now that
@@ -946,9 +984,7 @@ export default {
 
       try {
         if (pendiente && this.dataTable.id) {
-          const order = this.dataTableFieldsModalEdit.fields
-            .filter(field => field.key)
-            .map(field => field.key)
+          const order = this.columnsOrderFromModal()
 
           if (order.length && await this.ensureColumnsLock()) {
             await columnService.reorderColumns(this.type, this.dataTable.id, order)
@@ -1025,9 +1061,10 @@ export default {
      * personas agregando a la vez, porque las dos leían el mismo máximo.
      */
     dataTableNewColumn: function () {
-      this.dataTableFieldsModalEdit.fields.push({ label: '' })
+      // Arriba, igual que en el Paso 3 CAMELOT: queda ahí hasta que el usuario la mueva.
+      this.dataTableFieldsModalEdit.fields.unshift({ id: `new_column_${++newColumnSeq}`, label: '' })
       this.dataTableFieldsModalEdit.nroColumns = this.dataTableFieldsModalEdit.fields.length
-      this.dataTableFieldsModalEdit.touched.push(false)
+      this.dataTableFieldsModalEdit.touched.unshift(false)
     },
     getReferenceInfo: function (refId) {
       for (const ref of this.refs) {

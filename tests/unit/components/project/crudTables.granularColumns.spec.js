@@ -192,6 +192,115 @@ describe('crudTables — alta y renombrado de columna al salir del campo', () =>
   })
 })
 
+// Una columna nueva nace arriba, igual que en el Paso 3 CAMELOT. El servidor la agrega al
+// final (`$push`), así que el cliente corrige la posición con un reorden EN EL ACTO: si se
+// esperara al cierre del modal, entre medio la tabla la mostraría al fondo — y si el cierre
+// no llega a disparar el envío, también la base.
+describe('crudTables — la columna nueva nace al inicio', () => {
+  let wrapper
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    wrapper = createWrapper()
+    await conTablaYColumnas(wrapper)
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  it('el botón de agregar la inserta primera, con su touched alineado', () => {
+    wrapper.vm.dataTableNewColumn()
+
+    const { fields, touched } = wrapper.vm.dataTableFieldsModalEdit
+    expect(fields).toHaveLength(3)
+    expect(fields[0].key).toBeUndefined()
+    expect(fields[0].label).toBe('')
+    expect(fields[1].key).toBe('column_0')
+    expect(touched).toEqual([false, false, false])
+  })
+
+  // Sin una identidad propia, el `:key` del v-for sería el índice y el `unshift` le
+  // reasignaría el DOM de otro campo al que el usuario está escribiendo.
+  it('le da una identidad local distinta a cada columna sin clave', () => {
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableNewColumn()
+
+    const [a, b] = wrapper.vm.dataTableFieldsModalEdit.fields
+    expect(a.id).toBeTruthy()
+    expect(b.id).toBeTruthy()
+    expect(a.id).not.toBe(b.id)
+  })
+
+  it('al crearla manda el orden en el acto, con ella primera', async () => {
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+
+    await wrapper.vm.onEditFieldBlur(0)
+
+    expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
+    expect(columnService.reorderColumns).toHaveBeenCalledWith(
+      'isoqf_characteristics', 'tabla-1', ['column_nueva', 'column_0', 'column_1']
+    )
+  })
+
+  it('una columna sin título todavía no viaja en el orden', async () => {
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableFieldsModalEdit.fields[1].label = 'Nueva'
+
+    await wrapper.vm.onEditFieldBlur(1)
+
+    expect(columnService.reorderColumns.mock.calls[0][2])
+      .toEqual(['column_nueva', 'column_0', 'column_1'])
+  })
+
+  // El envío inmediato ya lleva el orden completo del modal: repetirlo al cerrar sería un
+  // request de más.
+  it('no vuelve a mandar el orden al cerrar si no se arrastró después', async () => {
+    wrapper.vm.onColumnsOrderChanged()
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+    await wrapper.vm.onEditFieldBlur(0)
+
+    await wrapper.vm.onColumnsEditModalHidden()
+
+    expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
+  })
+
+  it('renombrar no reordena', async () => {
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Contexto del estudio'
+
+    await wrapper.vm.onEditFieldBlur(0)
+
+    expect(columnService.reorderColumns).not.toHaveBeenCalled()
+  })
+
+  // La columna quedó creada al final: el cierre del modal tiene que volver a intentarlo, y
+  // el fallo tiene que verse.
+  it('si el reorden falla, lo reintenta al cerrar y lo avisa', async () => {
+    columnService.reorderColumns.mockRejectedValueOnce(new Error('500'))
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+
+    await wrapper.vm.onEditFieldBlur(0)
+    expect(wrapper.emitted('print-errors')).toHaveLength(1)
+
+    await wrapper.vm.onColumnsEditModalHidden()
+    expect(columnService.reorderColumns).toHaveBeenCalledTimes(2)
+    expect(columnService.reorderColumns.mock.calls[1][2])
+      .toEqual(['column_nueva', 'column_0', 'column_1'])
+  })
+
+  it('si el alta falla no reordena', async () => {
+    columnService.addColumn.mockRejectedValueOnce(new Error('500'))
+    wrapper.vm.dataTableNewColumn()
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+
+    await wrapper.vm.onEditFieldBlur(0)
+
+    expect(columnService.reorderColumns).not.toHaveBeenCalled()
+  })
+})
+
 describe('crudTables — borrado de columna con confirmación', () => {
   let wrapper
 
