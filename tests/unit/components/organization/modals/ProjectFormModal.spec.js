@@ -88,8 +88,20 @@ describe('ProjectFormModal.vue', () => {
     Api.get.mockResolvedValue({ data: { id: 'test-id', name: 'Nuevo' } })
     mountModal()
     await wrapper.vm.refreshBeforePropertiesLock()
-    expect(Api.get).toHaveBeenCalledWith('/isoqf_projects/test-id', { organization: 'org-123' })
+    // networkOnly: una respuesta de la caché nunca muestra el cambio del otro.
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_projects/test-id', { organization: 'org-123' }, { networkOnly: true })
     expect(wrapper.emitted('project-refreshed')[0][0]).toEqual({ id: 'test-id', name: 'Nuevo' })
+  })
+
+  it('un refresco que llega cuando el modal ya muestra OTRO proyecto no lo pisa y rechaza', async () => {
+    let answer
+    Api.get.mockReturnValue(new Promise(resolve => { answer = resolve }))
+    mountModal()
+    const refreshing = wrapper.vm.refreshBeforePropertiesLock()
+    await wrapper.setProps({ project: { id: 'otro-id', name: 'Q' } })
+    answer({ data: { id: 'test-id', name: 'Viejo' } })
+    await expect(refreshing).rejects.toThrow()
+    expect(wrapper.emitted('project-refreshed')).toBeFalsy()
   })
 
   it('refrescar que falla rechaza (para que el mixin no tome el lock)', async () => {

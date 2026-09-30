@@ -1,15 +1,17 @@
 import { shallowMount } from '@vue/test-utils'
+import Vue from 'vue'
 import LockService from '@/services/lockService'
 import propertiesLockMixin, { PROPERTIES_WAIT_POLL_MS } from '@/mixins/propertiesLockMixin'
 
 jest.mock('@/services/lockService', () => ({
   __esModule: true,
-  default: { acquireRef: jest.fn(), releaseRef: jest.fn(), fetchRefLocks: jest.fn() }
+  default: { acquireRef: jest.fn(), releaseRef: jest.fn(), probeRefLocks: jest.fn() }
 }))
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 const KEY = 'project_properties'
+const listing = (locks, reachable = true) => ({ locks, reachable, enabled: true })
 
 function makeHost (calls, refresh) {
   return {
@@ -26,9 +28,10 @@ function makeHost (calls, refresh) {
 }
 
 let wrappers = []
+let store
 function mountHost (calls = [], refresh) {
   const w = shallowMount(makeHost(calls, refresh), {
-    mocks: { $store: { state: { user: { id: 'u-me' } } } }
+    mocks: { $store: { state: store } }
   })
   wrappers.push(w)
   return w
@@ -36,7 +39,8 @@ function mountHost (calls = [], refresh) {
 
 beforeEach(() => {
   jest.clearAllMocks()
-  LockService.fetchRefLocks.mockResolvedValue([])
+  store = Vue.observable({ user: { id: 'u-me' }, isOnline: true })
+  LockService.probeRefLocks.mockResolvedValue(listing([]))
   LockService.releaseRef.mockResolvedValue()
 })
 afterEach(() => {
@@ -109,7 +113,7 @@ describe('propertiesLockMixin — esperar a que se libere', () => {
   it('si sigue tomado no refresca y actualiza el nombre', async () => {
     const calls = []
     const w = await deniedHost(calls)
-    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: KEY, user_id: 'u-beto', user_name: 'Beto' }])
+    LockService.probeRefLocks.mockResolvedValue(listing([{ ref_id: KEY, user_id: 'u-beto', user_name: 'Beto' }]))
     await w.vm.checkPropertiesLockFree()
     expect(calls).toEqual([])
     expect(w.vm.propertiesLock).toEqual({ status: 'denied', lockedBy: 'Beto' })
@@ -118,7 +122,7 @@ describe('propertiesLockMixin — esperar a que se libere', () => {
   it('mi propio lock en otra pestaña cuenta como libre', async () => {
     const calls = []
     const w = await deniedHost(calls)
-    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: KEY, user_id: 'u-me', user_name: 'Yo' }])
+    LockService.probeRefLocks.mockResolvedValue(listing([{ ref_id: KEY, user_id: 'u-me', user_name: 'Yo' }]))
     LockService.acquireRef.mockResolvedValue({ success: true })
     await w.vm.checkPropertiesLockFree()
     await flushPromises()
@@ -153,10 +157,10 @@ describe('propertiesLockMixin — esperar a que se libere', () => {
     const calls = []
     const w = await deniedHost(calls)
     let answer
-    LockService.fetchRefLocks.mockReturnValue(new Promise(resolve => { answer = resolve }))
+    LockService.probeRefLocks.mockReturnValue(new Promise(resolve => { answer = resolve }))
     const checking = w.vm.checkPropertiesLockFree()
     w.vm.leavePropertiesLock()
-    answer([])
+    answer(listing([]))
     await checking
     expect(calls).toEqual([])
     expect(w.vm.propertiesLock.status).toBe('idle')
@@ -236,5 +240,75 @@ describe('propertiesLockMixin — inactividad', () => {
     await w.vm.resumePropertiesLock()
     expect(calls).toEqual(['refresh', 'acquire'])
     expect(w.vm.propertiesLock.status).toBe('held')
+  })
+})
+
+describe('propertiesLockMixin — sin red o sin respuesta no se da por libre', () => {
+  async function deniedHost (calls) {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana' })
+    const w = mountHost(calls)
+    await w.vm.enterPropertiesLock()
+    return w
+  }
+
+  it('si el listado no respondió, sigue esperando sin refrescar ni tomar', async () => {
+    const calls = []
+    const w = await deniedHost(calls)
+    LockService.acquireRef.mockClear()
+    LockService.probeRefLocks.mockResolvedValue(listing([], false))
+    await w.vm.checkPropertiesLockFree()
+    await flushPromises()
+    expect(calls).toEqual([])
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(w.vm.propertiesLock).toEqual({ status: 'denied', lockedBy: 'Ana' })
+  })
+
+  it('sin red sigue esperando aunque el listado diga libre (el grant offline no es un lock)', async () => {
+    const calls = []
+    const w = await deniedHost(calls)
+    LockService.acquireRef.mockClear()
+    store.isOnline = false
+    await w.vm.checkPropertiesLockFree()
+    await flushPromises()
+    expect(calls).toEqual([])
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(w.vm.propertiesLock.status).toBe('denied')
+  })
+
+  it('si la red se cae durante el refresco, no toma el lock', async () => {
+    const calls = []
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana' })
+    const w = mountHost(calls, () => { store.isOnline = false; return Promise.resolve() })
+    await w.vm.enterPropertiesLock()
+    LockService.acquireRef.mockClear()
+    await w.vm.checkPropertiesLockFree()
+    await flushPromises()
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(w.vm.propertiesLock.status).toBe('denied')
+  })
+})
+
+describe('propertiesLockMixin — sesiones', () => {
+  it('un refresco de una sesión anterior no toma el lock en la sesión nueva', async () => {
+    const calls = []
+    let finishOldRefresh
+    let refreshes = 0
+    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana' })
+    const w = mountHost(calls, () => {
+      refreshes++
+      return refreshes === 1 ? new Promise(resolve => { finishOldRefresh = resolve }) : Promise.resolve()
+    })
+    await w.vm.enterPropertiesLock()
+    const oldChain = w.vm.checkPropertiesLockFree()
+    await flushPromises()
+    // Sale y vuelve a entrar (otro proyecto, en el modal de la lista) mientras refrescaba.
+    w.vm.leavePropertiesLock()
+    await w.vm.enterPropertiesLock()
+    LockService.acquireRef.mockClear()
+    finishOldRefresh()
+    await oldChain
+    await flushPromises()
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(w.vm.propertiesLock).toEqual({ status: 'denied', lockedBy: 'Ana' })
   })
 })

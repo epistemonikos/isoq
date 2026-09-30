@@ -101,7 +101,7 @@ describe('PublishModal — lock de propiedades', () => {
     Api.get.mockResolvedValueOnce({ data: { id: '123', public_type: 'fully', license_type: 'CC-BY' } })
     const w = mountModal()
     await w.vm.refreshBeforePropertiesLock()
-    expect(Api.get).toHaveBeenCalledWith('/isoqf_projects/123', { organization: '1' })
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_projects/123', { organization: '1' }, { networkOnly: true })
     expect(w.vm.modalProject.public_type).toBe('fully')
     expect(w.vm.modalProject.license_type).toBe('CC-BY')
     expect(w.emitted('getProject')).toBeTruthy()

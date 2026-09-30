@@ -177,9 +177,10 @@ export default {
       return this.project.id
     },
 
-    // Rechaza si falla: el mixin no toma el lock sobre datos viejos.
+    // Rechaza si falla: el mixin no toma el lock sobre datos viejos. `networkOnly` por lo
+    // mismo: una respuesta de la caché nunca trae lo que el otro acaba de guardar.
     refreshBeforePropertiesLock () {
-      return Api.get(`/isoqf_projects/${this.project.id}`, { organization: this.$route.params.org_id })
+      return Api.get(`/isoqf_projects/${this.project.id}`, { organization: this.$route.params.org_id }, { networkOnly: true })
         .then((response) => {
           this.loadModalProject(response.data)
           // La vista de atrás también quedó vieja: que la recargue.

@@ -914,7 +914,8 @@ export default {
      */
     refreshProjectForPropertiesLock: async function () {
       const before = this.project
-      await this.getProject()
+      // networkOnly: una respuesta de la caché nunca trae lo que el otro acaba de guardar.
+      await this.getProject({ networkOnly: true })
       if (this.project === before) throw new Error('project refresh failed')
     },
     getListCategories: async function () {
@@ -967,11 +968,11 @@ export default {
           Commons.printErrors(error)
         })
     },
-    getProject: async function () {
+    getProject: async function (config = {}) {
       const params = {
         organization: this.$route.params.org_id
       }
-      return Api.get(`/isoqf_projects/${this.$route.params.id}`, params)
+      return Api.get(`/isoqf_projects/${this.$route.params.id}`, params, config)
         .then((response) => {
           let _project = JSON.parse(JSON.stringify(response.data))
           if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {

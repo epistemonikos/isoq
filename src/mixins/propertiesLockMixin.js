@@ -37,6 +37,11 @@ export default {
     // En `$_`: no se dibujan.
     this.$_propsLockActive = false
     this.$_propsLockTimer = null
+    // Cada entrada y cada salida abren una sesión nueva. Un sondeo o un refresco en vuelo
+    // de una sesión anterior NO debe actuar sobre la actual: en el modal de la lista la
+    // sesión nueva puede ser de otro proyecto, y un refresco viejo lo cambiaría por el
+    // anterior. `$_propsLockActive` no alcanza para eso: vuelve a ser true al re-entrar.
+    this.$_propsLockSession = 0
     window.addEventListener('ref-lock-lost', this.onPropertiesLockLost)
   },
   beforeDestroy () {
@@ -47,12 +52,14 @@ export default {
     async enterPropertiesLock () {
       if (this.$_propsLockActive) return
       this.$_propsLockActive = true
+      this.$_propsLockSession++
       await this.acquirePropertiesLock()
     },
 
     leavePropertiesLock () {
       const wasActive = this.$_propsLockActive
       this.$_propsLockActive = false
+      this.$_propsLockSession++
       this.stopPropertiesLockWait()
       holders.delete(this._uid)
       this.propertiesLock = { status: 'idle', lockedBy: null }
@@ -60,9 +67,10 @@ export default {
     },
 
     async acquirePropertiesLock () {
+      const session = this.$_propsLockSession
       this.propertiesLock = { status: 'acquiring', lockedBy: null }
       const result = await LockService.acquireRef(this.propertiesLockProjectId(), PROPERTIES_LOCK_KEY)
-      if (!this.$_propsLockActive) {
+      if (session !== this.$_propsLockSession) {
         // Se fue mientras esperaba la respuesta: nadie más soltaría este lock.
         if (result.success && holders.size === 0) LockService.releaseRef(PROPERTIES_LOCK_KEY)
         return
@@ -92,11 +100,16 @@ export default {
     },
 
     async checkPropertiesLockFree () {
-      const locks = await LockService.fetchRefLocks(this.propertiesLockProjectId())
+      const session = this.$_propsLockSession
+      const listing = await LockService.probeRefLocks(this.propertiesLockProjectId())
       // Salió, o ya lo consiguió por otro camino, mientras el sondeo estaba en vuelo.
-      if (!this.$_propsLockActive || !this.$_propsLockTimer) return
+      if (session !== this.$_propsLockSession || !this.$_propsLockTimer) return
+      // Un listado que no respondió dice `[]`, y sin red `acquireRef` concede un grant
+      // offline que no es un lock: los dos se leerían como «libre» y habilitarían a quien
+      // espera mientras otra persona sigue editando. Se sigue esperando.
+      if (!listing.reachable || !this.$store.state.isOnline) return
       const user = this.$store.state.user || {}
-      const other = findPropertiesLock(locks, user.id)
+      const other = findPropertiesLock(listing.locks, user.id)
       if (other) {
         this.propertiesLock = { ...this.propertiesLock, lockedBy: other.user_name || this.propertiesLock.lockedBy }
         return
@@ -106,6 +119,7 @@ export default {
     },
 
     async refreshThenAcquirePropertiesLock () {
+      const session = this.$_propsLockSession
       try {
         await this.refreshBeforePropertiesLock()
       } catch (error) {
@@ -115,7 +129,12 @@ export default {
         this.startPropertiesLockWait()
         return
       }
-      if (!this.$_propsLockActive) return
+      if (session !== this.$_propsLockSession) return
+      if (!this.$store.state.isOnline) {
+        // Se cayó la red durante el refresco: el grant offline no es un lock.
+        this.startPropertiesLockWait()
+        return
+      }
       await this.acquirePropertiesLock()
     },
 

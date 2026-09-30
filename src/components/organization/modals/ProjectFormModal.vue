@@ -94,10 +94,17 @@ export default {
     propertiesLockProjectId () {
       return this.project.id
     },
-    // Rechaza si falla: el mixin no toma el lock sobre datos viejos.
+    // Rechaza si falla: el mixin no toma el lock sobre datos viejos. `networkOnly` por lo
+    // mismo: una respuesta de la caché nunca trae lo que el otro acaba de guardar.
     refreshBeforePropertiesLock () {
-      return Api.get(`/isoqf_projects/${this.project.id}`, { organization: this.$route.params.id })
-        .then((response) => { this.$emit('project-refreshed', response.data) })
+      const projectId = this.project.id
+      return Api.get(`/isoqf_projects/${projectId}`, { organization: this.$route.params.id }, { networkOnly: true })
+        .then((response) => {
+          // Se cerró y se abrió otro proyecto mientras refrescaba: pisarlo con éste mostraría
+          // y bloquearía el proyecto equivocado.
+          if (this.project.id !== projectId) throw new Error('project changed while refreshing')
+          this.$emit('project-refreshed', response.data)
+        })
     },
     modalNotification: function () {
       this.hide()
