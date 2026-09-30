@@ -126,7 +126,7 @@
       </div>
 
       <ProjectFormModal ref="projectFormModal" :project="buffer_project" :canEditProject="canEditProject"
-        :lockedByUser="lockedByUser" @cancel="cleanProject" @project-saved="onProjectSaved" />
+        @cancel="cleanProject" @project-saved="onProjectSaved" @project-refreshed="onProjectRefreshed" />
 
       <RemoveProjectModal ref="removeProjectModal" :project="buffer_project" :usersAllowed="users_allowed"
         @processing="setProcessing" @cancel="cleanProject" @project-removed="onProjectRemoved" />
@@ -150,7 +150,6 @@
 <script>
 /* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
-import LockService from '@/services/lockService'
 import ProjectFormModal from './modals/ProjectFormModal'
 import RemoveProjectModal from './modals/RemoveProjectModal'
 import ShareProjectModal from './modals/ShareProjectModal'
@@ -239,7 +238,6 @@ export default {
       searchQuery: '',
       hashId: null,
       canEditProject: false,
-      lockedByUser: null,
       camelotLogo: require('@/assets/camelot-logo.svg')
     }
   },
@@ -414,35 +412,20 @@ export default {
       this.canEditProject = true
       this.$refs.projectFormModal.show()
     },
-    openModalEditProject: async function (project) {
-      let _project = JSON.parse(JSON.stringify(project))
-      if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
-        _project.license_type = 'CC-BY-NC-ND'
-      }
-      if (Object.prototype.hasOwnProperty.call(_project, 'license_type') && _project.license_type === '') {
-        _project.license_type = 'CC-BY-NC-ND'
-      }
-
-      this.buffer_project = _project
-
-      let basePermission = (this.$store.state.user.personal_organization === this.$route.params.id) ||
-        (project.allow_to_write)
-
-      if (basePermission) {
-        const res = await LockService.acquire(project.id)
-        if (res.success) {
-          this.canEditProject = true
-          this.lockedByUser = null
-        } else {
-          this.canEditProject = false
-          if (res.lockedBy) {
-            this.lockedByUser = res.lockedBy
-          }
-        }
-      } else {
-        this.canEditProject = false
-      }
+    openModalEditProject: function (project) {
+      this.buffer_project = this.withDefaultLicense(JSON.parse(JSON.stringify(project)))
+      // Sólo el permiso: el lock de propiedades lo toma el modal al abrirse. Antes se tomaba
+      // acá el lock de PROYECTO, que congelaba los pasos 1–4 para todo el equipo.
+      this.canEditProject = (this.$store.state.user.personal_organization === this.$route.params.id) ||
+        !!project.allow_to_write
       this.$refs.projectFormModal.show()
+    },
+    onProjectRefreshed: function (fresh) {
+      this.buffer_project = this.withDefaultLicense(JSON.parse(JSON.stringify(fresh)))
+    },
+    withDefaultLicense: function (project) {
+      if (!project.license_type) project.license_type = 'CC-BY-NC-ND'
+      return project
     },
     onProjectSaved: function () {
       this.getProjects()
