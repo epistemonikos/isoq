@@ -3,6 +3,12 @@ import PublishModal from '@/components/project/PublishModal.vue'
 import Api from '@/utils/Api'
 import Vue from 'vue'
 
+// El modal ahora sostiene el lock de propiedades (propertiesLockMixin). Estos tests prueban el
+// guardado, no el lock: arrancan con el lock tomado (ver PublishModal.lock.spec.js).
+jest.mock('@/services/lockService', () => ({
+  __esModule: true,
+  default: { acquireRef: jest.fn(() => Promise.resolve({ success: true })), releaseRef: jest.fn(), fetchRefLocks: jest.fn(() => Promise.resolve([])) }
+}))
 jest.mock('@/utils/Api', () => ({
   get: jest.fn(() => Promise.resolve({ data: { status: true, message: '' } })),
   post: jest.fn(() => Promise.resolve({ data: {} })),
@@ -38,6 +44,7 @@ function createWrapper () {
     }
   })
   wrapper.vm.$refs['modal-change-status'] = { hide: jest.fn(), show: jest.fn() }
+  wrapper.vm.propertiesLock = { status: 'held', lockedBy: null }
   return { wrapper, $notify }
 }
 

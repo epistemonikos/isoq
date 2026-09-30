@@ -7,6 +7,7 @@
     :ok-title="$t('actionButtons.modal.save')"
     ok-variant="outline-success"
     @ok="savePublicStatus"
+    @hidden="onHidden"
     cancel-variant="outline-secondary"
     hide-header-close
     no-close-on-backdrop
@@ -25,32 +26,38 @@
       </b-alert>
     </template>
 
-    <p class="font-weight-light">
-      {{ $t('actionButtons.modal.publish_info') }}
-    </p>
-    <b-form-group>
-      <b-form-radio-group
-      id="modal-publish-status"
-      v-model="modalProject.public_type"
-      :options="global_status"
-      name="modal-radio-status"
-      ></b-form-radio-group>
-    </b-form-group>
+    <PropertiesLockAlert
+      :status="propertiesLock.status"
+      :lockedBy="propertiesLock.lockedBy" />
 
-    <template v-if="modalProject.public_type !== 'private'">
-      <h5>{{ $t('actionButtons.modal.choose_license') }}</h5>
-      <p class="font-weight-light">{{ $t('actionButtons.modal.license_info') }} <a href="https://creativecommons.org/about/cclicenses/" target="_blank">{{ $t('actionButtons.modal.license_info_link_text') }}</a>.</p>
-      <p class="font-weight-light">{{ $t('actionButtons.modal.license_responsibility') }}</p>
+    <template v-if="propertiesLockHeld">
+      <p class="font-weight-light">
+        {{ $t('actionButtons.modal.publish_info') }}
+      </p>
       <b-form-group>
         <b-form-radio-group
-        id="modal-publish-license"
-        v-model="modalProject.license_type"
-        :options="global_licenses"
-        @change="state.license_type = null"
-        name="modal-radio-license"
+        id="modal-publish-status"
+        v-model="modalProject.public_type"
+        :options="global_status"
+        name="modal-radio-status"
         ></b-form-radio-group>
-        <b-form-invalid-feedback :state="state.license_type">{{ $t('actionButtons.modal.must_select_license') }}</b-form-invalid-feedback>
       </b-form-group>
+
+      <template v-if="modalProject.public_type !== 'private'">
+        <h5>{{ $t('actionButtons.modal.choose_license') }}</h5>
+        <p class="font-weight-light">{{ $t('actionButtons.modal.license_info') }} <a href="https://creativecommons.org/about/cclicenses/" target="_blank">{{ $t('actionButtons.modal.license_info_link_text') }}</a>.</p>
+        <p class="font-weight-light">{{ $t('actionButtons.modal.license_responsibility') }}</p>
+        <b-form-group>
+          <b-form-radio-group
+          id="modal-publish-license"
+          v-model="modalProject.license_type"
+          :options="global_licenses"
+          @change="state.license_type = null"
+          name="modal-radio-license"
+          ></b-form-radio-group>
+          <b-form-invalid-feedback :state="state.license_type">{{ $t('actionButtons.modal.must_select_license') }}</b-form-invalid-feedback>
+        </b-form-group>
+      </template>
     </template>
 
     <template #modal-footer>
@@ -58,7 +65,7 @@
         <b-button
           variant="outline-success"
           class="float-right ml-3"
-          :disabled="!isOnline"
+          :disabled="!isOnline || !propertiesLockHeld"
           @click="savePublicStatus">
           <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
           {{ $t('actionButtons.modal.save') }}
@@ -79,11 +86,15 @@
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import videoHelp from '@/components/videoHelp'
+import propertiesLockMixin from '@/mixins/propertiesLockMixin'
+import PropertiesLockAlert from '@/components/project/PropertiesLockAlert.vue'
 
 export default {
   name: 'PublishModal',
+  mixins: [propertiesLockMixin],
   components: {
-    videoHelp
+    videoHelp,
+    PropertiesLockAlert
   },
   props: {
     project: {
@@ -141,20 +152,45 @@ export default {
   },
   methods: {
     openModal () {
-      this.modalProject = JSON.parse(JSON.stringify(this.project))
-      this.modalProject.isModal = true
-      if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
-        this.modalProject.license_type = 'CC-BY-NC-ND'
-      }
+      this.loadModalProject(this.project)
       this.errorsResponse = {
         message: '',
         items: []
       }
       this.$refs['modal-change-status'].show()
+      if (this.project.id) this.enterPropertiesLock()
+    },
+
+    loadModalProject (project) {
+      this.modalProject = JSON.parse(JSON.stringify(project))
+      this.modalProject.isModal = true
+      if (!Object.prototype.hasOwnProperty.call(project, 'license_type')) {
+        this.modalProject.license_type = 'CC-BY-NC-ND'
+      }
+    },
+
+    onHidden () {
+      this.leavePropertiesLock()
+    },
+
+    propertiesLockProjectId () {
+      return this.project.id
+    },
+
+    // Rechaza si falla: el mixin no toma el lock sobre datos viejos.
+    refreshBeforePropertiesLock () {
+      return Api.get(`/isoqf_projects/${this.project.id}`, { organization: this.$route.params.org_id })
+        .then((response) => {
+          this.loadModalProject(response.data)
+          // La vista de atrás también quedó vieja: que la recargue.
+          this.$emit('getProject')
+        })
     },
 
     async savePublicStatus (event) {
       event.preventDefault()
+      // Defensa además del botón deshabilitado: el `@ok` del b-modal también llega acá.
+      if (!this.propertiesLockHeld) return
       this.$emit('uiPublishShowLoader', true)
 
       let params = {}
