@@ -24,6 +24,10 @@ class LockService {
     // tick share one request instead of racing (the Step 4 modal does exactly
     // that on open: an explicit call plus the activeLeafRef watcher).
     this.pendingRefAcquires = new Map() // refId -> Promise
+    // DELETEs de ref-locks en vuelo. Cerrar y reabrir un editor manda el DELETE y el POST
+    // de la misma clave casi juntos; si el DELETE llegara último borraría el lock recién
+    // tomado y el editor quedaría habilitado sin lock detrás. requestRefLock espera acá.
+    this.pendingRefReleases = new Map() // refId -> Promise
     // Refs whose editor was opened while offline: granted locally, with no server
     // lock behind them. On reconnect each one is retried (see retryOfflineRefs).
     this.offlineRefs = new Map() // refId -> projectId
@@ -249,6 +253,8 @@ class LockService {
   }
 
   async requestRefLock (projectId, refId) {
+    const releasing = this.pendingRefReleases.get(refId)
+    if (releasing) await releasing
     try {
       const response = await axios.post(
         `/api/lock/${projectId}/ref/${refId}`, {},
@@ -329,13 +335,17 @@ class LockService {
     if (!this.refLocks.size) this.stopRefHeartbeat()
 
     if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
-      await Promise.all(toRelease.map(([ref, project]) => (
-        fetch(`/api/lock/${project}/ref/${ref}`, {
+      await Promise.all(toRelease.map(([ref, project]) => {
+        const deleting = fetch(`/api/lock/${project}/ref/${ref}`, {
           method: 'DELETE',
           headers: Api.getHeaders(),
           keepalive: true
         }).catch(e => console.error('Error releasing ref lock', e))
-      )))
+        this.pendingRefReleases.set(ref, deleting)
+        return deleting.finally(() => {
+          if (this.pendingRefReleases.get(ref) === deleting) this.pendingRefReleases.delete(ref)
+        })
+      }))
     }
 
     // Notify same-tab listeners (StepThree/StepFour) so they refresh their lock
