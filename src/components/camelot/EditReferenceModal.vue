@@ -138,6 +138,8 @@ import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import { copyItemMetadata } from '@/utils/itemMetadata'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import { withoutVirtualMark } from '@/utils/camelotFields'
+import { persistableOrder, isStoredOrder } from '@/utils/columnOrder'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
@@ -614,10 +616,19 @@ export default {
      * cliente, PATCH-upsert— así que si el alta falló a mitad de camino, reintentar no
      * duplica lo que ya se creó.
      */
-    async patchItemAfterColumns (item, generatedKeys) {
+    async patchItemAfterColumns (item, generatedKeys, wantedOrder = []) {
       const nuevas = Object.entries(generatedKeys)
 
-      if (nuevas.length) {
+      // Las columnas son del documento: el orden de esta lista es el de toda la tabla,
+      // igual que en «Add or edit columns». Dos cosas lo cambian acá: «Move», y el alta,
+      // que el modal muestra arriba pero el servidor agrega al final (`$push`, detrás de las
+      // 24 claves CAMELOT). Se manda sólo si difiere del guardado — este modal guarda por
+      // tecleo, y sin esa comparación cada pulsación tomaría el lock del documento.
+      const storedFields = this.charsData.fields || []
+      const order = persistableOrder(wantedOrder, storedFields, Object.values(generatedKeys))
+      const reordenar = order.length > 0 && !isStoredOrder(order, storedFields)
+
+      if (nuevas.length || reordenar) {
         // El lock se toma sólo si hay algo que crear, y se suelta enseguida. Sostenerlo
         // mientras alguien tiene un estudio abierto —que puede ser un rato largo—
         // bloquearía a cualquiera que quisiera renombrar una columna, y la unidad de este
@@ -646,6 +657,7 @@ export default {
               'isoqf_characteristics', this.charsData.id, (field && field.label) || '', key
             )
           }
+          if (reordenar) await this.reorderColumnsSoftly(order)
         } finally {
           // En el `finally` a propósito: un alta rechazada aborta el guardado, pero dejar
           // el lock del documento colgado castigaría a todos los demás por ese rechazo.
@@ -654,6 +666,20 @@ export default {
       }
 
       return Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, item)
+    },
+    /**
+     * Un reorden rechazado NO aborta el guardado, al revés que el alta. Sin la columna el
+     * valor quedaría bajo una clave invisible; sin el orden, la columna sólo queda en otro
+     * lugar. Perder el texto del estudio por eso sería cambiar lo importante por lo
+     * accesorio — pero el fallo se avisa.
+     */
+    async reorderColumnsSoftly (order) {
+      try {
+        await columnService.reorderColumns('isoqf_characteristics', this.charsData.id, order)
+      } catch (error) {
+        const key = writeErrorMessageKey(error, 'camelot.step_three.columns_modal.error_update')
+        if (key) this.$notify.warning(this.$t(key))
+      }
     },
     /**
      * El servidor rechazó el guardado porque la fila cambió desde que se leyó.
@@ -826,7 +852,7 @@ export default {
       if (destino.id && !this.charsData.id) this.$set(this.charsData, 'id', destino.id)
 
       const apiCall = destino.id
-        ? this.patchItemAfterColumns(item, generatedKeys)
+        ? this.patchItemAfterColumns(item, generatedKeys, newFieldsArray.map(field => field.key))
         : Api.post('/isoqf_characteristics/', {
           organization: this.$route.params.org_id || '',
           project_id: this.$route.params.id || '',

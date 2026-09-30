@@ -44,6 +44,7 @@
 import columnService from '@/services/columnService'
 import LockService from '@/services/lockService'
 import { fieldsLockKey } from '@/utils/refLockUrls'
+import { persistableOrder } from '@/utils/columnOrder'
 
 const COLLECTION = 'isoqf_characteristics'
 
@@ -236,25 +237,16 @@ export default {
      * separaría el par.
      */
     orderFromDefinitions () {
-      // `virtual` = repuesta por el cliente y ausente de la base. Mencionarla en `order`
-      // es un 400 del backend por clave desconocida, así que no cuenta como guardada.
-      const known = this.serverFields || this.charsData.fields || []
-      const stored = new Set([
-        ...known.filter(field => !field.virtual).map(field => field.key),
-        ...this.createdKeys
-      ])
-      const order = []
-
+      // Qué claves cuentan como guardadas (sin las `virtual`, sin las de sistema) lo decide
+      // `persistableOrder`, la misma regla que usa el editor del estudio.
+      const wanted = []
       for (const col of this.columnDefinitions) {
-        if (!col.key || !stored.has(col.key)) continue
-        order.push(col.key)
-
-        if (col.isCamelot) {
-          const commentsKey = col.key.replace('_extractedData', '_comments')
-          if (stored.has(commentsKey)) order.push(commentsKey)
-        }
+        if (!col.key) continue
+        wanted.push(col.key)
+        if (col.isCamelot) wanted.push(col.key.replace('_extractedData', '_comments'))
       }
-      return order
+      const known = this.serverFields || this.charsData.fields || []
+      return persistableOrder(wanted, known, this.createdKeys)
     },
     /**
      * Manda el orden acumulado. Se deriva recién acá contra `charsData.fields`, así que una

@@ -15,11 +15,7 @@ import Api from '@/utils/Api'
 import { i18n } from '@/plugins/i18n'
 import { newCustomFieldKey } from '@/utils/customFieldsHelper'
 import { resolveTableDoc } from '@/utils/tableDocs'
-
-// Claves que el backend conserva en su posición y que rechaza si viajan en `order`.
-// Las 24 claves CAMELOT NO están acá a propósito: no se pueden crear ni borrar, pero sí
-// se reordenan.
-const SYSTEM_FIELD_KEYS = ['ref_id', 'authors', 'actions', 'edit']
+import { movableKeys } from '@/utils/columnOrder'
 
 function fieldPath (collection, docId, key) {
   return `/${collection}/${docId}/field/${key}`
@@ -118,15 +114,8 @@ export async function ensureTableDocument (collection, organization, projectId, 
   return data ? (data.id || data._id || null) : null
 }
 
-/**
- * Claves reordenables de un `fields`, en su orden actual: todo menos los campos de
- * sistema. Es lo que puede viajar en `order`.
- */
-export function movableKeys (fields) {
-  return (fields || [])
-    .filter(field => field && field.key && !SYSTEM_FIELD_KEYS.includes(field.key))
-    .map(field => field.key)
-}
+// La regla vive en `columnOrder.js`; se reexporta para quien ya la tomaba de acá.
+export { movableKeys }
 
 export default {
   addColumn,
