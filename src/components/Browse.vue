@@ -59,7 +59,12 @@
         :sort-desc.sync="table_settings.sortDesc"
         :busy="table_settings.isBusy">
         <template v-slot:cell(name)="data">
-          <b-link :to="{ name: 'previewContentSoQf', params: { org_id: data.item.organization, isoqf_id: data.item.id, token: 'public' }}">{{data.item.name}}</b-link>
+          <b-link :to="{ name: 'previewContentSoQf', params: { org_id: data.item.organization, isoqf_id: data.item.id, token: 'public' }}">
+            {{data.item.name}}
+            <img v-if="data.item.use_camelot" :src="camelotLogo" class="ml-2" width="16" height="16"
+              style="vertical-align: text-bottom;" v-b-tooltip.hover="$t('project.uses_camelot')"
+              data-test="browse-camelot-badge" />
+          </b-link>
         </template>
         <!-- spinner -->
         <div slot="table-busy" class="text-center text-primary my-2">
@@ -86,6 +91,7 @@ export default {
   data () {
     return {
       loadError: false,
+      camelotLogo: require('@/assets/camelot-logo.svg'),
       public_tables: [],
       table_settings: {
         fields: [
