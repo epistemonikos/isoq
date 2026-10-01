@@ -253,18 +253,34 @@
                   $t('common.reorder_findings') || 'Re-order your review findings' }}</b-button>
 
                 <b-modal ref="modal-sort-findings" id="modal-sort-findings" size="xl" :ok-title="$t('common.save')"
-                  ok-variant="outline-success" cancel-variant="outline-danger" scrollable @ok="saveSortedLists"
-                  @show="onProjectEditorOpen(true)" @hidden="onProjectEditorOpen(false)">
+                  ok-variant="outline-success" cancel-variant="outline-danger" scrollable
+                  :ok-disabled="!canReorderFindings || savingFindingsOrder" @ok="onSortModalOk"
+                  @show="onSortModalShow" @hidden="onSortModalHidden">
                   <template v-slot:modal-title>
                     <videoHelp :txt="$t('modals.reorder_findings_title')" tag="none" urlId="462176102"></videoHelp>
                   </template>
+                  <b-alert v-if="findingsOrderLockMessage" show role="status" data-testid="findings-order-lock-alert"
+                    :variant="findingsOrderLock.status === 'released_idle' ? 'info' : 'warning'">
+                    <span>{{ findingsOrderLockMessage }}</span>
+                    <b-button v-if="findingsOrderLock.status === 'released_idle'" size="sm" variant="outline-primary"
+                      class="ml-2" data-testid="findings-order-lock-resume" @click="resumeFindingsOrderLock">
+                      {{ $t('lock.findings_order_resume') }}
+                    </b-button>
+                  </b-alert>
+                  <InactivityWarning :visible="inactivityWarning" :seconds-left="inactivitySecondsLeft"
+                    message-key="lock.findings_order_inactivity_message" @keep-working="keepWorkingOnInactivity" />
+                  <b-alert v-if="findingsOrderChanged" show variant="warning" role="status"
+                    data-testid="findings-order-changed">
+                    {{ $t('lock.findings_order_changed') }}
+                  </b-alert>
                   <p class="font-weight-light">
                     {{ $t('modals.drag_drop_instruction') }}
                   </p>
                   <b-list-group>
-                    <draggable v-model="sorted_lists" group="columns" @start="drag = true" @end="drag = false">
+                    <draggable v-model="sorted_lists" group="columns" :disabled="!canReorderFindings"
+                      @start="drag = true" @end="drag = false">
                       <b-list-group-item v-for="(item, index) of sorted_lists" :key="index"
-                        class="flex-column align-items-start" style="cursor: move">
+                        class="flex-column align-items-start" :style="{ cursor: canReorderFindings ? 'move' : 'default' }">
                         <div class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
@@ -486,8 +502,11 @@ import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import categoriesLockMixin from '@/mixins/categoriesLockMixin'
+import findingsOrderLockMixin from '@/mixins/findingsOrderLockMixin'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { categoriesLockMessageKey, isCategoriesLockRejection } from '@/utils/categoriesLock'
+import { findingsOrderLockMessageKey, reconcileFindingsOrder } from '@/utils/findingsOrderLock'
+import { isFixedLockRejection } from '@/utils/fixedRefLock'
 import { isDuplicateKeyRejection } from '@/utils/lockErrors'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
@@ -521,7 +540,7 @@ function categoryCatalogSignature (options) {
 }
 
 export default {
-  mixins: [preserveScrollMixin, projectFreshnessMixin, categoriesLockMixin, editorInactivityMixin],
+  mixins: [preserveScrollMixin, projectFreshnessMixin, categoriesLockMixin, findingsOrderLockMixin, editorInactivityMixin],
   components: {
     LoadErrorAlert,
     InactivityWarning: () => import('@/components/common/InactivityWarning.vue'),
@@ -747,6 +766,10 @@ export default {
       episte_error: false,
       finding: {},
       sorted_lists: [],
+      // El modal de reordenar no guarda si la lista de findings cambió desde que se abrió:
+      // reconcilia, muestra este aviso y espera a que la persona revise y vuelva a guardar.
+      findingsOrderChanged: false,
+      savingFindingsOrder: false,
       changeTxtProjectProperties: '+',
       btnSearchPubMed: false,
       findings: [],
@@ -929,7 +952,45 @@ export default {
     // escribir queda a la vista, en solo lectura, con un botón para retomar. El texto del
     // aviso lo dice.
     onInactivityExpired: function () {
+      // Sólo uno está activo; el otro es un no-op.
       this.expireCategoriesLock()
+      this.expireFindingsOrderLock()
+    },
+    /** Contrato de findingsOrderLockMixin. */
+    findingsOrderLockProjectId: function () {
+      return this.$route.params.id
+    },
+    /**
+     * Los findings tal como están ahora en el servidor, en el orden en que se muestran.
+     * Pasa por la red siempre: una respuesta de la caché nunca trae lo que el otro acaba de
+     * reordenar. No toca `this.lists`: la tabla de abajo tiene su propio ciclo de refresco.
+     */
+    fetchFreshLists: async function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      const response = await Api.get('/isoqf_lists', params, { networkOnly: true })
+      return this.processLists(response)
+    },
+    /** Al liberarse el lock, el modal muestra el orden que dejó la otra persona. */
+    refreshBeforeFindingsOrderLock: async function () {
+      const fresh = await this.fetchFreshLists()
+      this.sorted_lists = JSON.parse(JSON.stringify(fresh))
+      this.findingsOrderChanged = false
+    },
+    onSortModalShow: function () {
+      this.onProjectEditorOpen(true)
+      this.enterFindingsOrderLock()
+    },
+    onSortModalHidden: function () {
+      this.leaveFindingsOrderLock()
+      this.onProjectEditorOpen(false)
+    },
+    /** El modal se cierra sólo si guardó: un aviso de lista cambiada o un rechazo lo dejan abierto. */
+    onSortModalOk: function (bvModalEvent) {
+      bvModalEvent.preventDefault()
+      return this.saveSortedLists()
     },
     onCategoriesModalShow: function () {
       this.onProjectEditorOpen(true)
@@ -1752,30 +1813,56 @@ export default {
       // table it is meant to reorder, and that reordered view is what saveSortedLists writes
       // back as the new 1..N sort.
       this.sorted_lists = JSON.parse(JSON.stringify(this.lists))
+      this.findingsOrderChanged = false
       this.$refs['modal-sort-findings'].show()
     },
-    saveSortedLists: function () {
-      let cnt = 1
-      let requests = []
-      this.table_settings.isBusy = true
-      for (const list of this.sorted_lists) {
-        const sortValue = cnt++
-        // El número visible se deriva de este orden, así que no hay espejo que
-        // actualizar en isoqf_findings. Antes esto costaba 2N escrituras.
-        requests.push(Api.patch(`/isoqf_lists/${list.id}`, { 'sort': sortValue }))
-      }
-
-      Promise.all(requests)
-        .then(() => {
-          this.getLists()
-          this.$refs['modal-sort-findings'].hide()
-          this.$notify.success(this.$t('notifications.saved'))
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
+    saveSortedLists: async function () {
+      if (!this.canReorderFindings || this.savingFindingsOrder) return
+      this.savingFindingsOrder = true
+      try {
+        let fresh
+        try {
+          fresh = await this.fetchFreshLists()
+        } catch (error) {
+          // Sin la lista actual no se puede saber si alguien creó o borró findings: no se
+          // guarda a ciegas, y nada se escribió todavía.
           Commons.printErrors(error)
           this.$notify.error(this.$t('notifications.save_error'))
-        })
+          return
+        }
+        const reconciled = reconcileFindingsOrder(this.sorted_lists, fresh)
+        if (reconciled.changed) {
+          this.sorted_lists = JSON.parse(JSON.stringify(reconciled.lists))
+          this.findingsOrderChanged = true
+          return
+        }
+        // La persona ya revisó la lista actualizada: el aviso dejó de ser cierto.
+        this.findingsOrderChanged = false
+
+        this.table_settings.isBusy = true
+        // El número visible se deriva de este orden, así que no hay espejo que actualizar en
+        // isoqf_findings. Un finding borrado entre la relectura y el PATCH responde 404: ya
+        // no está, y su hueco en `sort` es válido.
+        const requests = this.sorted_lists.map((list, index) => (
+          Api.patch(`/isoqf_lists/${list.id}`, { sort: index + 1 })
+            .catch((error) => { if (!isAlreadyGone(error)) throw error })
+        ))
+        await Promise.all(requests)
+        this.getLists()
+        this.$refs['modal-sort-findings'].hide()
+        this.$notify.success(this.$t('notifications.saved'))
+      } catch (error) {
+        this.table_settings.isBusy = false
+        // Otra persona tiene el orden: el cartel del modal lo dice y nombra a quién.
+        if (isFixedLockRejection(error)) {
+          this.markFindingsOrderLockLost(error.response.data.locked_by)
+          return
+        }
+        Commons.printErrors(error)
+        this.$notify.error(this.$t('notifications.save_error'))
+      } finally {
+        this.savingFindingsOrder = false
+      }
     },
     getCategoryName: function (id) {
       const _categories = JSON.parse(JSON.stringify(this.list_categories))
@@ -1905,9 +1992,10 @@ export default {
     }
   },
   watch: {
-    // El reloj de inactividad corre sólo mientras el modal de grupos tiene el lock: es lo
-    // único de esta vista que retiene algo para el resto del equipo.
-    categoriesLockHeld: function (held) {
+    // El reloj de inactividad corre sólo mientras uno de los dos modales tiene su lock: es
+    // lo único de esta vista que retiene algo para el resto del equipo. Un solo reloj para
+    // los dos porque no se pueden tener abiertos a la vez.
+    editorLockHeld: function (held) {
       if (held) this.startInactivityWatch()
       else this.stopInactivityWatch()
     },
@@ -1970,6 +2058,16 @@ export default {
      * categoría que choca —el servidor normaliza y nosotros también, pero no tienen por
      * qué coincidir carácter por carácter— y entonces la única autoridad es su 409.
      */
+    editorLockHeld: function () {
+      return this.categoriesLockHeld || this.findingsOrderLockHeld
+    },
+    canReorderFindings: function () {
+      return this.findingsOrderLockHeld && this.isOnline
+    },
+    findingsOrderLockMessage: function () {
+      const key = findingsOrderLockMessageKey(this.findingsOrderLock.status, this.findingsOrderLock.lockedBy)
+      return key ? this.$t(key, { user: this.findingsOrderLock.lockedBy }) : ''
+    },
     /** Escribir en el modal de grupos exige tener su lock: si no, se mira y no se toca. */
     canEditCategories: function () {
       return this.categoriesLockHeld && this.isOnline

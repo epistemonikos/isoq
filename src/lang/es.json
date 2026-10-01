@@ -308,7 +308,15 @@
     "categories_lost": "Tu bloqueo de edición de los grupos de hallazgos de revisión caducó, así que están en solo lectura. Lo volveremos a intentar automáticamente.",
     "categories_released_idle": "Estuviste inactivo, así que los grupos de hallazgos de revisión quedaron liberados para que otras personas puedan editarlos.",
     "categories_resume": "Seguir editando",
-    "categories_inactivity_message": "Nadie más puede editar los grupos de hallazgos de revisión mientras los tienes abiertos. En {countdown} quedarán liberados y lo que no hayas guardado se perderá."
+    "categories_inactivity_message": "Nadie más puede editar los grupos de hallazgos de revisión mientras los tienes abiertos. En {countdown} quedarán liberados y lo que no hayas guardado se perderá.",
+    "findings_order_locked_by": "{user} está reordenando los hallazgos de revisión. Puedes ver el orden actual, y podrás cambiarlo en cuanto termine; esta vista se actualizará sola.",
+    "findings_order_unavailable": "El orden de los hallazgos de revisión no se puede cambiar en este momento, así que está en solo lectura. Lo volveremos a intentar automáticamente.",
+    "findings_order_lost_to": "{user} está reordenando ahora los hallazgos de revisión, así que el orden quedó en solo lectura y tu cambio no se guardó. Podrás seguir en cuanto termine.",
+    "findings_order_lost": "Tu bloqueo de edición del orden de los hallazgos de revisión caducó, así que está en solo lectura. Lo volveremos a intentar automáticamente.",
+    "findings_order_released_idle": "Estuviste inactivo, así que el orden de los hallazgos de revisión quedó liberado para que otras personas puedan cambiarlo.",
+    "findings_order_resume": "Seguir editando",
+    "findings_order_inactivity_message": "Nadie más puede reordenar los hallazgos de revisión mientras tienes esto abierto. En {countdown} quedará liberado y el orden que no hayas guardado se perderá.",
+    "findings_order_changed": "Mientras tenías esto abierto se agregaron o eliminaron hallazgos de revisión, así que todavía no se guardó nada. La lista de abajo está actualizada (los nuevos quedaron al final): revisa el orden y vuelve a guardar."
   },
   "presence": {
     "reviewing_one": "{users} está revisando este hallazgo",

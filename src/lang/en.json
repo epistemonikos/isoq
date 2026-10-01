@@ -308,7 +308,15 @@
     "categories_lost": "Your edit lock on the review finding groups expired, so they are read-only. We'll try again automatically.",
     "categories_released_idle": "You were inactive, so the review finding groups were released for others to edit.",
     "categories_resume": "Keep editing",
-    "categories_inactivity_message": "Nobody else can edit the review finding groups while you have them open. In {countdown} they will be released and anything you haven't saved will be lost."
+    "categories_inactivity_message": "Nobody else can edit the review finding groups while you have them open. In {countdown} they will be released and anything you haven't saved will be lost.",
+    "findings_order_locked_by": "{user} is re-ordering the review findings. You can look at the current order, and change it as soon as they finish; this view will update on its own.",
+    "findings_order_unavailable": "The order of the review findings can't be changed right now, so it is read-only. We'll try again automatically.",
+    "findings_order_lost_to": "{user} is re-ordering the review findings now, so the order is read-only and your change was not saved. You can continue as soon as they finish.",
+    "findings_order_lost": "Your edit lock on the order of the review findings expired, so it is read-only. We'll try again automatically.",
+    "findings_order_released_idle": "You were inactive, so the order of the review findings was released for others to change.",
+    "findings_order_resume": "Keep editing",
+    "findings_order_inactivity_message": "Nobody else can re-order the review findings while you have this open. In {countdown} it will be released and the order you haven't saved will be lost.",
+    "findings_order_changed": "Review findings were added or removed while you had this open, so nothing was saved yet. The list below is up to date (new findings are at the end): check the order and save again."
   },
   "presence": {
     "reviewing_one": "{users} is reviewing this finding",

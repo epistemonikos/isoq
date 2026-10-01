@@ -38,7 +38,8 @@ function createWrapper () {
       $route: { params: { id: 'proj1', org_id: 'org1' }, query: {} },
       $router: { push: jest.fn() },
       $store: { state: { user: { personal_organization: 'org1', id: 1 } } },
-      $notify
+      $notify,
+      isOnline: true
     },
     stubs
   })
@@ -232,11 +233,20 @@ describe('viewProject.vue — createFinding()', () => {
 describe('viewProject.vue — saveSortedLists()', () => {
   beforeEach(() => jest.clearAllMocks())
 
+  // Guardar exige el lock del orden y releer la lista: acá la persona lo tiene, está en
+  // línea, y nadie creó ni borró findings desde que abrió el modal. Los casos de lock y de
+  // lista cambiada viven en viewProject.findingsOrderLock.spec.js.
+  function listoParaGuardar (wrapper, lists) {
+    wrapper.vm.findingsOrderLock = { status: 'held', lockedBy: null }
+    jest.spyOn(wrapper.vm, 'fetchFreshLists').mockResolvedValue(lists.map(l => ({ ...l })))
+    wrapper.vm.sorted_lists = lists
+  }
+
   it('patches each list with incremental sort values starting at 1', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper } = createWrapper()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }]
+    listoParaGuardar(wrapper, [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }])
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     wrapper.vm.saveSortedLists()
     await flushPromises()
@@ -262,7 +272,7 @@ describe('viewProject.vue — saveSortedLists()', () => {
     })
     const { wrapper } = createWrapper()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }]
+    listoParaGuardar(wrapper, [{ id: 'l1' }, { id: 'l2' }])
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     wrapper.vm.saveSortedLists()
     await flushPromises()
@@ -277,7 +287,7 @@ describe('viewProject.vue — saveSortedLists()', () => {
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     const hideMock = jest.fn()
     wrapper.vm.$refs['modal-sort-findings'] = { hide: hideMock }
-    wrapper.vm.sorted_lists = [{ id: 'l1' }]
+    listoParaGuardar(wrapper, [{ id: 'l1' }])
     wrapper.vm.saveSortedLists()
     await flushPromises()
     expect($notify.success).toHaveBeenCalledWith('notifications.saved')
@@ -289,7 +299,7 @@ describe('viewProject.vue — saveSortedLists()', () => {
     Api.patch.mockRejectedValue(new Error('network'))
     const { wrapper, $notify } = createWrapper()
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
-    wrapper.vm.sorted_lists = [{ id: 'l1' }]
+    listoParaGuardar(wrapper, [{ id: 'l1' }])
     wrapper.vm.saveSortedLists()
     await flushPromises()
     expect($notify.error).toHaveBeenCalledWith('notifications.save_error')

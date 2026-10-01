@@ -308,7 +308,15 @@
     "categories_lost": "Seu bloqueio de edição dos grupos de descobertas de revisão expirou, então eles estão somente para leitura. Tentaremos novamente automaticamente.",
     "categories_released_idle": "Você ficou inativo, então os grupos de descobertas de revisão foram liberados para que outras pessoas possam editá-los.",
     "categories_resume": "Continuar editando",
-    "categories_inactivity_message": "Ninguém mais pode editar os grupos de descobertas de revisão enquanto você os mantém abertos. Em {countdown} eles serão liberados e o que você não salvou será perdido."
+    "categories_inactivity_message": "Ninguém mais pode editar os grupos de descobertas de revisão enquanto você os mantém abertos. Em {countdown} eles serão liberados e o que você não salvou será perdido.",
+    "findings_order_locked_by": "{user} está reordenando as descobertas de revisão. Você pode ver a ordem atual e poderá alterá-la assim que terminar; esta visualização será atualizada sozinha.",
+    "findings_order_unavailable": "A ordem das descobertas de revisão não pode ser alterada agora, então está somente para leitura. Tentaremos novamente automaticamente.",
+    "findings_order_lost_to": "{user} está reordenando as descobertas de revisão agora, então a ordem está somente para leitura e sua alteração não foi salva. Você poderá continuar assim que terminar.",
+    "findings_order_lost": "Seu bloqueio de edição da ordem das descobertas de revisão expirou, então ela está somente para leitura. Tentaremos novamente automaticamente.",
+    "findings_order_released_idle": "Você ficou inativo, então a ordem das descobertas de revisão foi liberada para que outras pessoas possam alterá-la.",
+    "findings_order_resume": "Continuar editando",
+    "findings_order_inactivity_message": "Ninguém mais pode reordenar as descobertas de revisão enquanto você mantém isto aberto. Em {countdown} será liberado e a ordem que você não salvou será perdida.",
+    "findings_order_changed": "Descobertas de revisão foram adicionadas ou removidas enquanto você tinha isto aberto, então nada foi salvo ainda. A lista abaixo está atualizada (as novas ficaram no final): verifique a ordem e salve novamente."
   },
   "presence": {
     "reviewing_one": "{users} está a rever esta descoberta",

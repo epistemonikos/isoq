@@ -76,8 +76,14 @@ esquema ni whitelist, y la relación finding→proyecto se resuelve siempre por 
 limpiarlo de la base. Hay un motivo para hacerlo: la clonación de proyectos copia el finding entero y
 sólo remapea `list_id`, así que un `isoqf_id` residual queda apuntando al proyecto original.
 
-`POST /finding/remove` renumera `isoqf_lists.sort` denso 1..N tras borrar. `isoqf_findings` no tiene
-campo `sort`.
+`POST /finding/remove` **no** renumera `isoqf_lists.sort`: el hueco que deja es válido, la densidad no es
+parte del contrato. `isoqf_findings` no tiene campo `sort`.
+
+`sort` lo escriben sólo dos caminos: el alta (máximo + 1) y el modal de reordenar. Ninguna otra edición
+del finding lo toca (`/identity` lo rechaza por whitelist; el PATCH genérico es `$set` parcial), así que
+editar título, grupo, referencias o worksheet no pisa el orden. El modal de reordenar toma el ref-lock
+`findings_order` y, antes de guardar, relee la lista y reconcilia (`reconcileFindingsOrder`) si alguien
+creó o borró findings mientras estaba abierto.
 
 Antecedente de por qué la regla es tan tajante: hubo **cuatro** atributos compitiendo por este número, y
 tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) mostrando vacío o `NaN`.
@@ -130,9 +136,11 @@ este intervalo, no contra el literal 180.
 El lock de proyecto **se retiró** en los dos repos (2026-10-01). Las propiedades usan el
 ref-lock `project_properties` (`src/utils/propertiesLock.js`, `src/mixins/propertiesLockMixin.js`),
 compartido por la pestaña Propiedades, el modal de la lista y el modal Publicar; el servidor lo
-exige en `PATCH /api/publish` y `toggle_camelot`. El modal «Review finding groups» usa otra clave
-fija, `list_categories` (`src/utils/categoriesLock.js`, `src/mixins/categoriesLockMixin.js`); el
-servidor la exige en las rutas genéricas de `isoqf_list_categories`. **No reintroducir un lock de proyecto**: el
+exige en `PATCH /api/publish` y `toggle_camelot`. Dos modales del Paso 2 usan sus propias claves
+fijas, con la fábrica `src/mixins/fixedRefLockMixin.js` (un anfitrión, temporizador de inactividad):
+`list_categories` («Review finding groups»; el servidor la exige en `isoqf_list_categories`) y
+`findings_order` («Re-order your review findings»; el servidor la exige en los PATCH/PUT de
+`isoqf_lists` que traen `sort`). **No reintroducir un lock de proyecto**: el
 viejo hacía que el backend rechazara escrituras ajenas en siete colecciones y congelaba los pasos
 1–4 para todo el equipo.
 
