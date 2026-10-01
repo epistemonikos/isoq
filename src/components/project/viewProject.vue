@@ -357,10 +357,20 @@
             </b-modal>
 
             <b-modal size="xl" id="modalEditListCategories" ref="modalEditListCategories" scrollable
-              @show="onProjectEditorOpen(true)" @hidden="onProjectEditorOpen(false)">
+              @show="onCategoriesModalShow" @hidden="onCategoriesModalHidden">
               <template v-slot:modal-title>
                 <videoHelp :txt="$t('modals.review_finding_groups')" tag="none" urlId="451100564"></videoHelp>
               </template>
+              <b-alert v-if="categoriesLockMessage" show role="status" data-testid="categories-lock-alert"
+                :variant="categoriesLock.status === 'released_idle' ? 'info' : 'warning'">
+                <span>{{ categoriesLockMessage }}</span>
+                <b-button v-if="categoriesLock.status === 'released_idle'" size="sm" variant="outline-primary"
+                  class="ml-2" data-testid="categories-lock-resume" @click="resumeCategoriesLock">
+                  {{ $t('lock.categories_resume') }}
+                </b-button>
+              </b-alert>
+              <InactivityWarning :visible="inactivityWarning" :seconds-left="inactivitySecondsLeft"
+                message-key="lock.categories_inactivity_message" @keep-working="keepWorkingOnInactivity" />
               <template
                 v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                 <p class="font-weight-light">
@@ -375,10 +385,12 @@
                 <b-table head-variant="highlight" striped :fields="translatedModalFields"
                   :items="modal_edit_list_categories.options">
                   <template v-slot:cell(actions)="data">
-                    <b-button block variant="outline-success" @click="editListCategoryName(data.index)">{{
-                      $t('common.edit') }}</b-button>
-                    <b-button block variant="outline-danger" class="mt-1" @click="removeListCategory(data)">{{
-                      $t('common.remove') }}</b-button>
+                    <template v-if="canEditCategories">
+                      <b-button block variant="outline-success" @click="editListCategoryName(data.index)">{{
+                        $t('common.edit') }}</b-button>
+                      <b-button block variant="outline-danger" class="mt-1" @click="removeListCategory(data)">{{
+                        $t('common.remove') }}</b-button>
+                    </template>
                   </template>
                 </b-table>
               </template>
@@ -424,20 +436,21 @@
                 <div v-if="modal_edit_list_categories.remove">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
-                  <b-button variant="outline-danger" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
+                  <b-button variant="outline-danger" :disabled="!canEditCategories" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
                     }}</b-button>
                 </div>
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
                   <b-button variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
+                    :disabled="!canEditCategories || modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
                 <div v-if="!modal_edit_list_categories.new">
                   <b-button
-                    v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                    variant="outline-primary" :disabled="!isOnline" @click="modal_edit_list_categories.new = true">
+                    v-if="canEditCategories && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                    variant="outline-primary"
+                    @click="modal_edit_list_categories.new = true">
                     {{ $t('common.add_new_finding_group') }}
                   </b-button>
                 </div>
@@ -445,7 +458,7 @@
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
                   <b-button variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
+                    :disabled="!canEditCategories || modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
               </template>
@@ -472,6 +485,9 @@ import draggable from 'vuedraggable'
 import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import categoriesLockMixin from '@/mixins/categoriesLockMixin'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import { categoriesLockMessageKey, isCategoriesLockRejection } from '@/utils/categoriesLock'
 import { isDuplicateKeyRejection } from '@/utils/lockErrors'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
@@ -505,9 +521,10 @@ function categoryCatalogSignature (options) {
 }
 
 export default {
-  mixins: [preserveScrollMixin, projectFreshnessMixin],
+  mixins: [preserveScrollMixin, projectFreshnessMixin, categoriesLockMixin, editorInactivityMixin],
   components: {
     LoadErrorAlert,
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue'),
     draggable,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
@@ -895,6 +912,32 @@ export default {
       // networkOnly: una respuesta de la caché nunca trae lo que el otro acaba de guardar.
       await this.getProject({ networkOnly: true })
       if (this.project === before) throw new Error('project refresh failed')
+    },
+    /** Contrato de categoriesLockMixin. */
+    categoriesLockProjectId: function () {
+      return this.$route.params.id
+    },
+    /**
+     * `getListCategories` se traga sus errores, pero el lock necesita saber si de verdad
+     * refrescó: habilitar sobre un catálogo viejo deja pisar lo que el otro acaba de guardar.
+     */
+    refreshBeforeCategoriesLock: async function () {
+      await this.getListCategories()
+      if (this.loadErrors.categories) throw new Error('categories refresh failed')
+    },
+    // El modal de grupos no autoguarda: al expirar se suelta el lock y lo que estaba a medio
+    // escribir queda a la vista, en solo lectura, con un botón para retomar. El texto del
+    // aviso lo dice.
+    onInactivityExpired: function () {
+      this.expireCategoriesLock()
+    },
+    onCategoriesModalShow: function () {
+      this.onProjectEditorOpen(true)
+      this.enterCategoriesLock()
+    },
+    onCategoriesModalHidden: function () {
+      this.leaveCategoriesLock()
+      this.onProjectEditorOpen(false)
     },
     getListCategories: async function () {
       const params = {
@@ -1573,6 +1616,12 @@ export default {
      * pierde en el camino (ver CLAUDE.md, «lo que el servidor puede atrapar, y lo que no»).
      */
     handleCategorySaveError: function (error) {
+      // Otra persona tiene el modal: el cartel de arriba lo dice y nombra a quién. Un
+      // «no se pudo guardar» encima sería un segundo mensaje sobre el mismo evento.
+      if (isCategoriesLockRejection(error)) {
+        this.markCategoriesLockLost(error.response.data.locked_by)
+        return
+      }
       // Todo lo que no sea un nombre repetido queda exactamente como estaba. No es que
       // este silencio esté bien —un 500 al guardar tampoco se ve— pero es un camino
       // aparte y ponerle acá el «no se pudo guardar, intente nuevamente» genérico sería
@@ -1664,6 +1713,7 @@ export default {
             // Si otra persona la borró primero, el backend responde 404: ya no está, que es
             // lo que se pidió. «Error al borrar» dejaría en pantalla una categoría que no existe.
             if (isAlreadyGone(error)) return onDeleted()
+            if (isCategoriesLockRejection(error)) return this.markCategoriesLockLost(error.response.data.locked_by)
             Commons.printErrors(error)
             this.$notify.error(this.$t('notifications.delete_error'))
           })
@@ -1855,6 +1905,12 @@ export default {
     }
   },
   watch: {
+    // El reloj de inactividad corre sólo mientras el modal de grupos tiene el lock: es lo
+    // único de esta vista que retiene algo para el resto del equipo.
+    categoriesLockHeld: function (held) {
+      if (held) this.startInactivityWatch()
+      else this.stopInactivityWatch()
+    },
     'list_categories.options': function (newVal, oldVal) {
       // NOTE: getProject() already calls getLists() on the initial mount, so firing here too
       // duplicates GET /isoqf_lists + GET /findings (and, before the reset fix, duplicated
@@ -1914,6 +1970,14 @@ export default {
      * categoría que choca —el servidor normaliza y nosotros también, pero no tienen por
      * qué coincidir carácter por carácter— y entonces la única autoridad es su 409.
      */
+    /** Escribir en el modal de grupos exige tener su lock: si no, se mira y no se toca. */
+    canEditCategories: function () {
+      return this.categoriesLockHeld && this.isOnline
+    },
+    categoriesLockMessage: function () {
+      const key = categoriesLockMessageKey(this.categoriesLock.status, this.categoriesLock.lockedBy)
+      return key ? this.$t(key, { user: this.categoriesLock.lockedBy }) : ''
+    },
     categoryNameIsDuplicate: function () {
       if (this.findCollidingCategory() !== null) return true
       const rejected = this.modal_edit_list_categories.rejected_name

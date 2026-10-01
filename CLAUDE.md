@@ -130,7 +130,9 @@ este intervalo, no contra el literal 180.
 El lock de proyecto **se retiró** en los dos repos (2026-10-01). Las propiedades usan el
 ref-lock `project_properties` (`src/utils/propertiesLock.js`, `src/mixins/propertiesLockMixin.js`),
 compartido por la pestaña Propiedades, el modal de la lista y el modal Publicar; el servidor lo
-exige en `PATCH /api/publish` y `toggle_camelot`. **No reintroducir un lock de proyecto**: el
+exige en `PATCH /api/publish` y `toggle_camelot`. El modal «Review finding groups» usa otra clave
+fija, `list_categories` (`src/utils/categoriesLock.js`, `src/mixins/categoriesLockMixin.js`); el
+servidor la exige en las rutas genéricas de `isoqf_list_categories`. **No reintroducir un lock de proyecto**: el
 viejo hacía que el backend rechazara escrituras ajenas en siete colecciones y congelaba los pasos
 1–4 para todo el equipo.
 

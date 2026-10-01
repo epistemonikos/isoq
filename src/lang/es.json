@@ -301,7 +301,14 @@
     "properties_lost": "Tu bloqueo de edición de las propiedades caducó, así que quedaron en solo lectura. Se volverá a intentar automáticamente.",
     "properties_released_idle": "Estuviste inactivo, así que las propiedades quedaron liberadas para que otras personas puedan editarlas.",
     "properties_resume": "Seguir editando",
-    "properties_inactivity_message": "Nadie más puede editar las propiedades mientras las tienes abiertas. En {countdown} quedarán liberadas y lo que no hayas guardado se perderá."
+    "properties_inactivity_message": "Nadie más puede editar las propiedades mientras las tienes abiertas. En {countdown} quedarán liberadas y lo que no hayas guardado se perderá.",
+    "categories_locked_by": "{user} está editando los grupos de hallazgos de revisión. Puedes verlos, y podrás editar en cuanto termine; esta vista se actualizará sola.",
+    "categories_unavailable": "Los grupos de hallazgos de revisión no se pueden editar en este momento, así que están en solo lectura. Lo volveremos a intentar automáticamente.",
+    "categories_lost_to": "{user} está editando ahora los grupos de hallazgos de revisión, así que quedaron en solo lectura y tu último cambio no se guardó. Podrás seguir en cuanto termine.",
+    "categories_lost": "Tu bloqueo de edición de los grupos de hallazgos de revisión caducó, así que están en solo lectura. Lo volveremos a intentar automáticamente.",
+    "categories_released_idle": "Estuviste inactivo, así que los grupos de hallazgos de revisión quedaron liberados para que otras personas puedan editarlos.",
+    "categories_resume": "Seguir editando",
+    "categories_inactivity_message": "Nadie más puede editar los grupos de hallazgos de revisión mientras los tienes abiertos. En {countdown} quedarán liberados y lo que no hayas guardado se perderá."
   },
   "presence": {
     "reviewing_one": "{users} está revisando este hallazgo",

@@ -301,7 +301,14 @@
     "properties_lost": "Seu bloqueio de edição das propriedades expirou, então elas ficaram somente leitura. Tentaremos novamente automaticamente.",
     "properties_released_idle": "Você ficou inativo, então as propriedades foram liberadas para que outras pessoas possam editá-las.",
     "properties_resume": "Continuar editando",
-    "properties_inactivity_message": "Ninguém mais pode editar as propriedades enquanto você as mantém abertas. Em {countdown} elas serão liberadas e o que você não salvou será perdido."
+    "properties_inactivity_message": "Ninguém mais pode editar as propriedades enquanto você as mantém abertas. Em {countdown} elas serão liberadas e o que você não salvou será perdido.",
+    "categories_locked_by": "{user} está editando os grupos de descobertas de revisão. Você pode vê-los e poderá editar assim que terminar; esta visualização será atualizada sozinha.",
+    "categories_unavailable": "Os grupos de descobertas de revisão não podem ser editados agora, então estão somente para leitura. Tentaremos novamente automaticamente.",
+    "categories_lost_to": "{user} está editando os grupos de descobertas de revisão agora, então eles estão somente para leitura e sua última alteração não foi salva. Você poderá continuar assim que terminar.",
+    "categories_lost": "Seu bloqueio de edição dos grupos de descobertas de revisão expirou, então eles estão somente para leitura. Tentaremos novamente automaticamente.",
+    "categories_released_idle": "Você ficou inativo, então os grupos de descobertas de revisão foram liberados para que outras pessoas possam editá-los.",
+    "categories_resume": "Continuar editando",
+    "categories_inactivity_message": "Ninguém mais pode editar os grupos de descobertas de revisão enquanto você os mantém abertos. Em {countdown} eles serão liberados e o que você não salvou será perdido."
   },
   "presence": {
     "reviewing_one": "{users} está a rever esta descoberta",
