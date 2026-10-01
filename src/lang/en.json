@@ -301,7 +301,14 @@
     "properties_lost": "Your edit lock on the properties expired, so they are now read-only. We'll try again automatically.",
     "properties_released_idle": "You were inactive, so the properties were released for others to edit.",
     "properties_resume": "Keep editing",
-    "properties_inactivity_message": "Nobody else can edit the properties while you have them open. In {countdown} they will be released and anything you haven't saved will be lost."
+    "properties_inactivity_message": "Nobody else can edit the properties while you have them open. In {countdown} they will be released and anything you haven't saved will be lost.",
+    "categories_locked_by": "{user} is editing the review finding groups. You can look at them, and edit as soon as they finish; this view will update on its own.",
+    "categories_unavailable": "The review finding groups can't be edited right now, so they are read-only. We'll try again automatically.",
+    "categories_lost_to": "{user} is editing the review finding groups now, so they are read-only and your last change was not saved. You can continue as soon as they finish.",
+    "categories_lost": "Your edit lock on the review finding groups expired, so they are read-only. We'll try again automatically.",
+    "categories_released_idle": "You were inactive, so the review finding groups were released for others to edit.",
+    "categories_resume": "Keep editing",
+    "categories_inactivity_message": "Nobody else can edit the review finding groups while you have them open. In {countdown} they will be released and anything you haven't saved will be lost."
   },
   "presence": {
     "reviewing_one": "{users} is reviewing this finding",
