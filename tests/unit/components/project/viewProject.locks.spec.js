@@ -15,8 +15,6 @@ jest.mock('@/utils/Api', () => ({
 
 jest.mock('@/services/lockService', () => ({
   fetchRefLocks: jest.fn().mockResolvedValue([]),
-  acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn(),
   releaseRef: jest.fn()
 }))
 
@@ -55,8 +53,8 @@ function createWrapper () {
 // Granular ref-level locking (Step 3/4) replaced the project-wide lock here: this
 // view never acquires one, so attemptLock() and everything downstream of it
 // (lockInfo -> isLockedByOther -> the :isLocked prop actionButtons never declared)
-// was wiring that could not fire. The project lock is still acquired/released by
-// editList.vue — that half is alive and stays until the product decision on it.
+// was wiring that could not fire. The project lock itself was later retired
+// everywhere (2026-10-01): see lockService.noProjectLock.spec.js.
 describe('viewProject.vue — el cableado muerto del lock de proyecto no vuelve', () => {
   beforeEach(() => jest.clearAllMocks())
 
@@ -71,21 +69,6 @@ describe('viewProject.vue — el cableado muerto del lock de proyecto no vuelve'
     expect(wrapper.vm.lockInfo).toBeUndefined()
     expect(wrapper.vm.isLockedByOther).toBeUndefined()
     expect(wrapper.vm.lockDataRecovery).toBeUndefined()
-    wrapper.destroy()
-  })
-})
-
-describe('viewProject.vue — lock automático al abrir proyecto', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('NO llama LockService.acquire automáticamente al cargar el proyecto en modo edit', async () => {
-    const { wrapper } = createWrapper()
-    // El usuario pertenece a la misma personal_organization → checkPermissions('can_write') = true
-    // por lo que getProject fija mode='edit'. El lock ya NO debe adquirirse automáticamente.
-    await wrapper.vm.getProject()
-    await flushPromises()
-    expect(wrapper.vm.mode).toBe('edit')
-    expect(LockService.acquire).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 })

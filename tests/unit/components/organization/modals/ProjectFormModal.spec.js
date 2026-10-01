@@ -9,7 +9,7 @@ localVue.use(BootstrapVue)
 
 jest.mock('@/services/lockService', () => ({
   __esModule: true,
-  default: { acquire: jest.fn(), release: jest.fn(), acquireRef: jest.fn(), releaseRef: jest.fn(), fetchRefLocks: jest.fn(() => Promise.resolve([])) }
+  default: { acquireRef: jest.fn(), releaseRef: jest.fn(), fetchRefLocks: jest.fn(() => Promise.resolve([])) }
 }))
 jest.mock('@/utils/Api', () => ({ __esModule: true, default: { get: jest.fn() } }))
 
@@ -45,7 +45,6 @@ describe('ProjectFormModal.vue', () => {
     wrapper.vm.show()
     await flushPromises()
     expect(LockService.acquireRef).toHaveBeenCalledWith('test-id', KEY)
-    expect(LockService.acquire).not.toHaveBeenCalled()
     expect(wrapper.vm.canEdit).toBe(true)
   })
 
@@ -80,7 +79,6 @@ describe('ProjectFormModal.vue', () => {
     await flushPromises()
     wrapper.vm.closeModalProject()
     expect(LockService.releaseRef).toHaveBeenCalledWith(KEY)
-    expect(LockService.release).not.toHaveBeenCalled()
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
 

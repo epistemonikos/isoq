@@ -14,8 +14,6 @@ jest.mock('@/utils/Api', () => ({
 }))
 
 jest.mock('@/services/lockService', () => ({
-  acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn(),
   releaseRef: jest.fn(),
   // El registro de candados que sostiene ESTA pestaña. Lo lee `refLockStateMixin` para
   // descartarlos del sondeo, así que su ausencia no rompe ningún test —muere en una
@@ -118,42 +116,6 @@ describe('editList.vue — checkPermissions()', () => {
 describe('editList.vue — no adquiere el lock de proyecto', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('no llama LockService.acquire al cargar la hoja teniendo permisos de escritura', async () => {
-    // getList() ends with a scroll into an element that does not exist in jsdom.
-    const originalGetElementsByName = document.getElementsByName
-    document.getElementsByName = () => [{ offsetParent: { offsetTop: 0 } }]
-    window.scrollTo = jest.fn()
-    Api.get.mockResolvedValue({
-      data: [{
-        id: 'list1', organization: 'org1', project_id: 'proj1',
-        // The template reads list.cerqual.option while rendering the progress bar.
-        cerqual: { option: null, explanation: '' }
-      }]
-    })
-
-    const wrapper = shallowMount(editList, {
-      localVue,
-      mocks: {
-        $t: (key) => key,
-        $route: { params: { id: 'list1' } },
-        $store: { state: { user: { personal_organization: 'org1', id: 42 } } }
-      },
-      stubs,
-      // Downstream loaders are out of scope here; the assertion is about the lock.
-      methods: {
-        getProject: jest.fn(), syncOrderWithProject: jest.fn(), getAllReferences: jest.fn(),
-        getFinding: jest.fn(), getCharsOfStudies: jest.fn(), getMethAssessments: jest.fn(),
-        getExtractedData: jest.fn()
-      }
-    })
-    await flushPromises()
-
-    expect(wrapper.vm.checkPermissions('org1')).toBe(true)
-    expect(LockService.acquire).not.toHaveBeenCalled()
-    wrapper.destroy()
-    document.getElementsByName = originalGetElementsByName
-  })
-
   it('no expone attemptLock ni lockInfo', () => {
     const { wrapper } = createWrapper()
     expect(wrapper.vm.attemptLock).toBeUndefined()
@@ -161,8 +123,6 @@ describe('editList.vue — no adquiere el lock de proyecto', () => {
     wrapper.destroy()
   })
 })
-
-// ─── handleLockLost ──────────────────────────────────────────────────────────
 
 describe('editList.vue — beforeDestroy', () => {
   beforeEach(() => jest.clearAllMocks())

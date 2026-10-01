@@ -10,8 +10,6 @@ jest.mock('@/utils/Api', () => ({
 }))
 
 jest.mock('@/services/lockService', () => ({
-  acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn(),
   releaseRef: jest.fn(),
   // El registro de candados que sostiene ESTA pestaña. Lo lee `refLockStateMixin` para
   // descartarlos del sondeo, así que su ausencia no rompe ningún test —muere en una
