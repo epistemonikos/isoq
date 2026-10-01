@@ -48,11 +48,15 @@ describe('viewProject — no se escribe más el espejo isoqf_id', () => {
         $router: { push: jest.fn() },
         $store: { state: { user: { id: 1, personal_organization: '66b1ff000000000000000002' } } },
         $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() },
-        $bvModal: { show: jest.fn(), hide: jest.fn(), msgBoxConfirm: jest.fn() }
+        $bvModal: { show: jest.fn(), hide: jest.fn(), msgBoxConfirm: jest.fn() },
+        isOnline: true
       },
       stubs: ['b-modal', 'b-table', 'b-button', 'b-tabs', 'b-tab', 'draggable', 'router-link']
     })
 
+    // Con el lock del orden, y sin findings creados ni borrados desde que se abrió el modal.
+    wrapper.vm.findingsOrderLock = { status: 'held', lockedBy: null }
+    jest.spyOn(wrapper.vm, 'fetchFreshLists').mockResolvedValue([{ id: L1 }, { id: L2 }])
     wrapper.vm.sorted_lists = [{ id: L1 }, { id: L2 }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     Api.patch.mockResolvedValue({ data: {} })
