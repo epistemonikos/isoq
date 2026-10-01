@@ -1,24 +1,5 @@
 <template>
   <div>
-    <!-- Lock Modals -->
-    <b-modal id="modal-lock-lost-sheet" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage"
-      no-close-on-backdrop no-close-on-esc hide-header-close>
-      <div class="text-center">
-        <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
-        <p>
-          {{ $t('lock.lock_lost_message') }}
-        </p>
-      </div>
-    </b-modal>
-    <b-modal id="modal-lock-idle-sheet" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage"
-      no-close-on-backdrop no-close-on-esc hide-header-close>
-      <div class="text-center">
-        <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
-        <p>
-          {{ $t('lock.idle_message') }}
-        </p>
-      </div>
-    </b-modal>
     <edit-header-list :organizationId="project.organization" :projectId="project.id" :name="list.name" :mode="mode"
       :list="list"></edit-header-list>
     <b-container fluid>
@@ -412,9 +393,6 @@ export default {
   mounted () {
     this.updateTranslations()
     this.getList()
-    window.addEventListener('lock-lost', this.handleLockLost)
-    window.addEventListener('lock-idle', this.handleIdle)
-    window.addEventListener('axios-refresh-lock', this.handleLockLost)
     window.addEventListener('permission-denied', this.refreshPermissions)
     // El sondeo no arranca acá con un fetch inmediato: en este punto todavía no
     // conocemos el project_id (ver fetchAndUpdateRefLocks).
@@ -428,7 +406,6 @@ export default {
     // destruyendo.
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
-    LockService.release()
     // SPA navigation fires no pagehide, so a modal left open (evidence profile, an
     // extracted_data row) would leak its ref lock until the server TTL. No argument
     // releases every ref this tab still holds — all of them belong to this view.
@@ -437,9 +414,6 @@ export default {
     // nada, pero si no se suelta la persona sigue apareciendo como presente después de
     // salir.
     PresenceService.leave()
-    window.removeEventListener('lock-lost', this.handleLockLost)
-    window.removeEventListener('lock-idle', this.handleIdle)
-    window.removeEventListener('axios-refresh-lock', this.handleLockLost)
     window.removeEventListener('permission-denied', this.refreshPermissions)
   },
   methods: {
@@ -1184,22 +1158,6 @@ export default {
     },
     returnTo: function () {
       this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
-    },
-
-    handleLockLost (e) {
-      if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
-        this.mode = 'view'
-        this.$bvModal.show('modal-lock-lost-sheet')
-      }
-    },
-    handleIdle (e) {
-      if (e.detail && e.detail.projectId === this.list.project_id) {
-        this.mode = 'view'
-        this.$bvModal.show('modal-lock-idle-sheet')
-      }
-    },
-    reloadPage () {
-      window.location.reload()
     },
 
     modalDataChanged: function (data) {

@@ -221,15 +221,10 @@ axios.interceptors.response.use(
   response => response,
   error => {
     if (error.response && (error.response.status === 409 || error.response.status === 403)) {
-      // Verificar si es un error de bloqueo
-      // Excluir la petición de adquisición de bloqueo explícita, ya que esa se maneja en el componente
       const url = error.config && error.config.url ? error.config.url : ''
       const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
 
-      // Check for '/api/lock/' but ensure it's not heartbeat
-      const isLockAcquisition = (error.config && error.config.headers && error.config.headers['X-Suppress-Lock-Error']) || (url.includes('/api/lock/') && method === 'post' && !url.includes('/heartbeat'))
-
-      console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
+      console.log('Api.js Interceptor 409:', { url, method })
 
       // Detect a conflict on any granular write (a ref lock held by another user, or
       // no lock at all after the offline queue replays). Surface it via a
@@ -262,15 +257,6 @@ axios.interceptors.response.use(
         }
         const lockedBy = (error.response.data && error.response.data.locked_by) || ''
         reportRefLockConflict(refId, failedData, lockedBy, isReplay ? 'replay' : 'live')
-      }
-
-      if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
-        if (typeof window !== 'undefined') {
-          console.log('Dispatching axios-refresh-lock event')
-          // Disparar evento para que viewProject lo capture y actualice la UI
-          // Esto es util para cuando user A pierde el lock (e.g. heartbeat falla o guarda sin lock)
-          window.dispatchEvent(new CustomEvent('axios-refresh-lock'))
-        }
       }
 
       // A 403 on any write request means the user's can_write/can_read may have

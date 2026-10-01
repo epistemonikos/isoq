@@ -164,63 +164,6 @@ describe('editList.vue — no adquiere el lock de proyecto', () => {
 
 // ─── handleLockLost ──────────────────────────────────────────────────────────
 
-describe('editList.vue — handleLockLost()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('sets mode=view and shows modal-lock-lost-sheet when projectId matches', async () => {
-    const { wrapper, bvModalShow } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' }, mode: 'edit' })
-    wrapper.vm.handleLockLost({ detail: { projectId: 'proj1' } })
-    expect(wrapper.vm.mode).toBe('view')
-    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-lost-sheet')
-    wrapper.destroy()
-  })
-
-  it('does nothing when projectId does not match', async () => {
-    const { wrapper, bvModalShow } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' }, mode: 'edit' })
-    wrapper.vm.handleLockLost({ detail: { projectId: 'other-proj' } })
-    expect(wrapper.vm.mode).toBe('edit')
-    expect(bvModalShow).not.toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('sets mode=view when event.type is "axios-refresh-lock"', async () => {
-    const { wrapper, bvModalShow } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' }, mode: 'edit' })
-    wrapper.vm.handleLockLost({ type: 'axios-refresh-lock', detail: null })
-    expect(wrapper.vm.mode).toBe('view')
-    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-lost-sheet')
-    wrapper.destroy()
-  })
-})
-
-// ─── handleIdle ──────────────────────────────────────────────────────────────
-
-describe('editList.vue — handleIdle()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('sets mode=view and shows modal-lock-idle-sheet when projectId matches', async () => {
-    const { wrapper, bvModalShow } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' }, mode: 'edit' })
-    wrapper.vm.handleIdle({ detail: { projectId: 'proj1' } })
-    expect(wrapper.vm.mode).toBe('view')
-    expect(bvModalShow).toHaveBeenCalledWith('modal-lock-idle-sheet')
-    wrapper.destroy()
-  })
-
-  it('does nothing when projectId does not match', async () => {
-    const { wrapper, bvModalShow } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' }, mode: 'edit' })
-    wrapper.vm.handleIdle({ detail: { projectId: 'other-proj' } })
-    expect(wrapper.vm.mode).toBe('edit')
-    expect(bvModalShow).not.toHaveBeenCalled()
-    wrapper.destroy()
-  })
-})
-
-// ─── beforeDestroy ───────────────────────────────────────────────────────────
-
 describe('editList.vue — beforeDestroy', () => {
   beforeEach(() => jest.clearAllMocks())
 
@@ -233,15 +176,15 @@ describe('editList.vue — beforeDestroy', () => {
     expect(LockService.releaseRef).toHaveBeenCalledWith()
   })
 
-  it('calls LockService.release and removes all window event listeners', () => {
+  it('quita el listener de permission-denied y ya no escucha los eventos del lock de proyecto (retirado)', () => {
     const { wrapper } = createWrapper()
     const removeSpy = jest.spyOn(window, 'removeEventListener')
     wrapper.destroy()
-    expect(LockService.release).toHaveBeenCalled()
-    expect(removeSpy).toHaveBeenCalledWith('lock-lost', expect.any(Function))
-    expect(removeSpy).toHaveBeenCalledWith('lock-idle', expect.any(Function))
-    expect(removeSpy).toHaveBeenCalledWith('axios-refresh-lock', expect.any(Function))
     expect(removeSpy).toHaveBeenCalledWith('permission-denied', expect.any(Function))
+    const removed = removeSpy.mock.calls.map(c => c[0])
+    expect(removed).not.toContain('lock-lost')
+    expect(removed).not.toContain('lock-idle')
+    expect(removed).not.toContain('axios-refresh-lock')
     removeSpy.mockRestore()
   })
 })

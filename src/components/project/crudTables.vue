@@ -1581,8 +1581,9 @@ export default {
     },
     noteImportSaveError: function (error) {
       const status = error && error.response && error.response.status
-      // Un 409 es el lock de proyecto: el interceptor de Api ya mostró quién lo tiene, y un
-      // segundo cartel diciendo "vuelva a intentarlo" sería un consejo falso.
+      // Un 409 es un conflicto de lock o de versión, y cada uno ya tiene su canal en el
+      // interceptor de Api: un segundo cartel diciendo "vuelva a intentarlo" sería un
+      // consejo falso.
       if (status === 409) return
       this.importSaveError = error && error.isOfflineError
         ? 'import_modal.save_offline'

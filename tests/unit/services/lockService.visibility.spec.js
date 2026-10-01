@@ -17,8 +17,6 @@ beforeEach(() => {
   jest.clearAllMocks()
   jest.spyOn(LockService, 'isEnabled', 'get').mockReturnValue(true)
   LockService.refLocks.clear()
-  LockService.projectId = null
-  LockService.isLocked = false
 })
 
 afterEach(() => jest.restoreAllMocks())
@@ -38,17 +36,6 @@ describe('LockService — revalidación al volver la pestaña al frente', () => 
     expect(refSpy).toHaveBeenCalled()
   })
 
-  it('late el lock de proyecto apenas la pestaña vuelve a estar visible', () => {
-    const beat = jest.spyOn(LockService, 'heartbeat').mockResolvedValue(undefined)
-    LockService.projectId = 'proj1'
-    LockService.isLocked = true
-    setVisibility('visible')
-
-    document.dispatchEvent(new Event('visibilitychange'))
-
-    expect(beat).toHaveBeenCalled()
-  })
-
   it('no late al esconderse la pestaña: ahí no hay nada que revalidar', () => {
     const refSpy = jest.spyOn(LockService, 'refHeartbeat').mockResolvedValue(undefined)
     LockService.refLocks.set('ref1', 'proj1')
@@ -61,12 +48,10 @@ describe('LockService — revalidación al volver la pestaña al frente', () => 
 
   it('no llama al servidor si no sostenemos ningún lock', () => {
     const refSpy = jest.spyOn(LockService, 'refHeartbeat').mockResolvedValue(undefined)
-    const beat = jest.spyOn(LockService, 'heartbeat').mockResolvedValue(undefined)
     setVisibility('visible')
 
     document.dispatchEvent(new Event('visibilitychange'))
 
     expect(refSpy).not.toHaveBeenCalled()
-    expect(beat).not.toHaveBeenCalled()
   })
 })

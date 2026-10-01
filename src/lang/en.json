@@ -267,10 +267,6 @@
     "description": "You will receive three newsletters a year that include the latest news about iSoQ."
   },
   "lock": {
-    "project_locked_by": "Project is currently being edited by {user}. Read-only mode.",
-    "locked_title": "Project Locked",
-    "lock_lost_message": "The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.",
-    "idle_message": "You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.",
     "ref_locked_by": "Being edited by {user}",
     "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
     "ref_lock_offline": "No connection — editing unavailable",
@@ -288,9 +284,6 @@
     "ref_conflict_close": "Close",
     "permissions_revoked": "Your access to this project changed to read-only.",
     "permissions_granted": "You now have edit access to this project.",
-    "connection_lost": "Connection Lost",
-    "session_timeout": "Session Timeout",
-    "reload": "Reload",
     "live_conflict_title": "Change not saved",
     "live_conflict": "{user} is editing this entry now, so your change was not saved. Your text was kept locally so you can copy it.",
     "live_conflict_no_user": "Your change was not saved because you no longer hold the edit lock on this entry. Your text was kept locally so you can copy it.",
