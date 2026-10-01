@@ -71,3 +71,44 @@ describe('LockService — soltar y volver a tomar la misma clave', () => {
     expect(axios.post).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * StepFour y EditReferenceModal sueltan con `releaseRef()` todo lo que tienen al cerrar —y
+ * StepFour lo hace después de esperar la escritura en vuelo—. Si en esa ventana la persona
+ * ya entró a Propiedades, el global le quitaba el lock al formulario sin que nadie se
+ * enterara. El lock de propiedades tiene dueño propio (propertiesLockMixin).
+ */
+describe('LockService — releaseRef() global y el lock de propiedades', () => {
+  beforeEach(() => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
+  })
+
+  it('sin argumentos suelta todo menos project_properties', async () => {
+    LockService.refLocks.set('R1', 'p1')
+    LockService.refLocks.set('project_properties', 'p1')
+    await LockService.releaseRef()
+    expect(LockService.heldRefs()).toEqual(['project_properties'])
+    expect(global.fetch).toHaveBeenCalledTimes(1)
+    expect(global.fetch.mock.calls[0][0]).toBe('/api/lock/p1/ref/R1')
+  })
+
+  it('con { all: true } suelta también project_properties', async () => {
+    LockService.refLocks.set('R1', 'p1')
+    LockService.refLocks.set('project_properties', 'p1')
+    await LockService.releaseRef(null, { all: true })
+    expect(LockService.heldRefs()).toEqual([])
+  })
+
+  it('cerrar la pestaña del navegador (pagehide) suelta project_properties', async () => {
+    LockService.refLocks.set('project_properties', 'p1')
+    window.dispatchEvent(new Event('pagehide'))
+    await Promise.resolve()
+    expect(global.fetch.mock.calls.map(c => c[0])).toContain('/api/lock/p1/ref/project_properties')
+  })
+
+  it('pedirlo por nombre lo suelta', async () => {
+    LockService.refLocks.set('project_properties', 'p1')
+    await LockService.releaseRef('project_properties')
+    expect(LockService.heldRefs()).toEqual([])
+  })
+})

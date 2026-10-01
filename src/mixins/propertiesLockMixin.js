@@ -10,6 +10,15 @@ export const PROPERTIES_WAIT_POLL_MS = 15000
 // `@hidden` del modal llega DESPUÉS de que la pestaña ya lo tomó. Sin este registro el
 // modal soltaría el lock de la pestaña.
 const holders = new Set()
+// Anfitriones adentro (entre enter y leave), tengan ya el lock o no. `holders` no alcanza
+// para decidir si soltar: un anfitrión todavía en `acquiring` espera la MISMA promesa que
+// el que se va (lockService deduplica los acquire en vuelo), y soltar en ese momento le
+// quitaría el lock que está por recibir, dejándolo `held` sin lock ni latido.
+const activeHosts = new Set()
+
+function nobodyNeedsTheLock () {
+  return holders.size === 0 && activeHosts.size === 0
+}
 
 /**
  * Protocolo del lock de Propiedades, compartido por la pestaña, el modal de la lista y el
@@ -53,6 +62,9 @@ export default {
       if (this.$_propsLockActive) return
       this.$_propsLockActive = true
       this.$_propsLockSession++
+      activeHosts.add(this._uid)
+      // Un sondeo armado por una sesión anterior no tiene nada que hacer en ésta.
+      this.stopPropertiesLockWait()
       await this.acquirePropertiesLock()
     },
 
@@ -62,8 +74,9 @@ export default {
       this.$_propsLockSession++
       this.stopPropertiesLockWait()
       holders.delete(this._uid)
+      activeHosts.delete(this._uid)
       this.propertiesLock = { status: 'idle', lockedBy: null }
-      if (wasActive && holders.size === 0) LockService.releaseRef(PROPERTIES_LOCK_KEY)
+      if (wasActive && nobodyNeedsTheLock()) LockService.releaseRef(PROPERTIES_LOCK_KEY)
     },
 
     async acquirePropertiesLock () {
@@ -72,7 +85,7 @@ export default {
       const result = await LockService.acquireRef(this.propertiesLockProjectId(), PROPERTIES_LOCK_KEY)
       if (session !== this.$_propsLockSession) {
         // Se fue mientras esperaba la respuesta: nadie más soltaría este lock.
-        if (result.success && holders.size === 0) LockService.releaseRef(PROPERTIES_LOCK_KEY)
+        if (result.success && nobodyNeedsTheLock()) LockService.releaseRef(PROPERTIES_LOCK_KEY)
         return
       }
       if (result.success) {
@@ -123,6 +136,9 @@ export default {
       try {
         await this.refreshBeforePropertiesLock()
       } catch (error) {
+        // Una sesión que ya terminó no arma nada: su sondeo quedaría huérfano y, al re-entrar,
+        // refrescaría encima de lo que la persona está escribiendo.
+        if (session !== this.$_propsLockSession) return
         // Sin refresco no hay lock: se sigue esperando, y el cartel deja de nombrar a nadie
         // porque ya no sabemos quién está.
         this.propertiesLock = { status: 'denied', lockedBy: null }

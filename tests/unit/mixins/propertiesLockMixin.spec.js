@@ -312,3 +312,53 @@ describe('propertiesLockMixin — sesiones', () => {
     expect(w.vm.propertiesLock).toEqual({ status: 'denied', lockedBy: 'Ana' })
   })
 })
+
+describe('propertiesLockMixin — ronda 2: caminos de sesiones viejas', () => {
+  it('un refresco que rechaza después de salir no arma el sondeo ni cambia el estado', async () => {
+    let failRefresh
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana' })
+    const w = mountHost([], () => new Promise((resolve, reject) => { failRefresh = reject }))
+    await w.vm.enterPropertiesLock()
+    const chain = w.vm.checkPropertiesLockFree()
+    await flushPromises()
+    w.vm.leavePropertiesLock()
+    const spy = jest.spyOn(window, 'setInterval')
+    failRefresh(new Error('project changed while refreshing'))
+    await chain
+    expect(spy).not.toHaveBeenCalled()
+    expect(w.vm.$_propsLockTimer).toBeNull()
+    expect(w.vm.propertiesLock.status).toBe('idle')
+    spy.mockRestore()
+  })
+
+  it('salir y re-entrar con el acquire en vuelo (promesa compartida) no suelta el lock de la sesión nueva', async () => {
+    let grant
+    const shared = new Promise(resolve => { grant = resolve })
+    LockService.acquireRef.mockReturnValue(shared) // lockService deduplica: ambas sesiones esperan la misma
+    const w = mountHost()
+    const first = w.vm.enterPropertiesLock()
+    w.vm.leavePropertiesLock()
+    const second = w.vm.enterPropertiesLock()
+    LockService.releaseRef.mockClear()
+    grant({ success: true })
+    await first
+    await second
+    expect(LockService.releaseRef).not.toHaveBeenCalled()
+    expect(w.vm.propertiesLock.status).toBe('held')
+  })
+
+  it('otro anfitrión todavía en acquiring impide que el que sale suelte', async () => {
+    let grant
+    LockService.acquireRef.mockReturnValue(new Promise(resolve => { grant = resolve }))
+    const modal = mountHost()
+    const tab = mountHost()
+    const entering = modal.vm.enterPropertiesLock()
+    const tabEntering = tab.vm.enterPropertiesLock()
+    modal.vm.leavePropertiesLock()
+    grant({ success: true })
+    await entering
+    await tabEntering
+    expect(LockService.releaseRef).not.toHaveBeenCalled()
+    expect(tab.vm.propertiesLock.status).toBe('held')
+  })
+})

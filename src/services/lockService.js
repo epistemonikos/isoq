@@ -2,6 +2,7 @@ import axios from 'axios'
 import { store } from '../store'
 import Api from '@/utils/Api'
 import { baseRefOf } from '@/utils/camelotAssessmentKeys'
+import { PROPERTIES_LOCK_KEY } from '@/utils/propertiesLock'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 const IDLE_TIMEOUT = 15 * 60 * 1000 // 15 minutes
@@ -55,7 +56,7 @@ class LockService {
       // requires a server-side heartbeat TTL.
       window.addEventListener('pagehide', () => {
         if (this.isLocked) this.release()
-        if (this.refLocked) this.releaseRef()
+        if (this.refLocked) this.releaseRef(null, { all: true })
       })
 
       // Offline grants are promises, not locks: turn them into real ones as soon as
@@ -313,20 +314,31 @@ class LockService {
     }))
   }
 
-  /** Releases one ref, or every held ref when called with no argument. */
-  async releaseRef (refId = null) {
+  /**
+   * Releases one ref, or every held ref when called with no argument — except the
+   * Properties lock, unless `{ all: true }`.
+   *
+   * StepFour and EditReferenceModal release everything they hold with the bare call when
+   * they close, and StepFour does it only after the in-flight write settles. If the person
+   * walked into the Properties tab (or opened Publish) in that window, the bare call took
+   * the Properties lock away from a form that kept looking editable, with no heartbeat
+   * left to report the loss. That lock has its own owner (propertiesLockMixin), which
+   * releases it by name; only closing the page (`pagehide`) sweeps it with the rest.
+   */
+  async releaseRef (refId = null, { all = false } = {}) {
     if (!this.isEnabled) return
 
     // An editor closed while offline has nothing to release, but its pending retry
     // must go: reconnecting should not lock an entity nobody is editing any more.
+    const swept = ref => all || ref !== PROPERTIES_LOCK_KEY
     if (refId === null) {
-      this.offlineRefs.clear()
+      [...this.offlineRefs.keys()].filter(swept).forEach(ref => this.offlineRefs.delete(ref))
     } else {
       this.offlineRefs.delete(refId)
     }
 
     const toRelease = refId === null
-      ? [...this.refLocks.entries()]
+      ? [...this.refLocks.entries()].filter(([ref]) => swept(ref))
       : (this.refLocks.has(refId) ? [[refId, this.refLocks.get(refId)]] : [])
 
     if (!toRelease.length) return
