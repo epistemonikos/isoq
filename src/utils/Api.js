@@ -221,8 +221,6 @@ axios.interceptors.response.use(
   response => response,
   error => {
     if (error.response && (error.response.status === 409 || error.response.status === 403)) {
-      // Verificar si es un error de bloqueo
-      // Excluir la petición de adquisición de bloqueo explícita, ya que esa se maneja en el componente
       const url = error.config && error.config.url ? error.config.url : ''
       const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
 

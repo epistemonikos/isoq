@@ -132,7 +132,7 @@ class LockService {
     try {
       const response = await axios.post(
         `/api/lock/${projectId}/ref/${refId}`, {},
-        { headers: { ...Api.getHeaders(), 'X-Suppress-Lock-Error': 'true' } }
+        { headers: Api.getHeaders() }
       )
       if (response.data.status) {
         this.refLocks.set(refId, projectId)
