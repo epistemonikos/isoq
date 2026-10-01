@@ -89,7 +89,7 @@ tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) 
 src/utils/Api.js               HTTP client + offline queue + 409 lock interceptor
 src/utils/project.js           Project.validations() for publish
 src/store/store.js             Vuex · getLogginInfo action · isOnline state
-src/services/lockService.js    concurrency — acquire/release/heartbeat(30s)/idle(15min)
+src/services/lockService.js    concurrency — ref-locks: acquireRef/releaseRef/heartbeat(30s)
 src/services/db.js             Dexie schema for offline cache
 src/strategies/exportStrategies.js  CSV/Word export (45KB)
 src/services/wordExportService.js / risExportService.js
@@ -111,8 +111,8 @@ actionButtons.vue
 ---
 
 ## CONCURRENCY
-409 from any endpoint → Api.js interceptor → "locked by user X" modal
-lockService: acquire on viewProject enter, release on leave, heartbeat POST /api/lock/:id/heartbeat every 30s (`HEARBEAT_INTERVAL`, lockService.js:6), idle timeout 15min
+409 de una escritura granular → Api.js interceptor → canal `ref-lock-conflict` (cartel en el editor)
+lockService: sólo ref-locks (`acquireRef`/`releaseRef`), latido POST /api/lock/:id/ref/:ref/heartbeat cada 30s (`HEARBEAT_INTERVAL`, lockService.js:7). **El lock de proyecto se retiró** (2026-10-01): no existe `acquire()`, ni `IDLE_TIMEOUT`, ni los eventos `lock-lost`/`lock-idle`/`axios-refresh-lock`
 
 ### El TTL del servidor y el latido del cliente son UN SOLO contrato
 
@@ -127,11 +127,11 @@ editor abierto y la persona dentro de la sesión, y otro usuario lo tomaba legí
 **Si alguna vez cambiás `HEARBEAT_INTERVAL`, avisale a backend**: sus tests miden el margen contra
 este intervalo, no contra el literal 180.
 
-No hay liberación por inactividad para los ref-locks. El lock de proyecto (`acquire()` / `IDLE_TIMEOUT`) ya no tiene consumidores en el cliente.
-Las propiedades usan el ref-lock `project_properties` (`src/utils/propertiesLock.js`,
-`src/mixins/propertiesLockMixin.js`), compartido por la pestaña Propiedades, el modal de la
-lista y el modal Publicar. **No volver a usar el lock de proyecto para esto**:
-`@verify_project_lock` rechaza escrituras ajenas en siete colecciones y congela los pasos
+El lock de proyecto **se retiró** en los dos repos (2026-10-01). Las propiedades usan el
+ref-lock `project_properties` (`src/utils/propertiesLock.js`, `src/mixins/propertiesLockMixin.js`),
+compartido por la pestaña Propiedades, el modal de la lista y el modal Publicar; el servidor lo
+exige en `PATCH /api/publish` y `toggle_camelot`. **No reintroducir un lock de proyecto**: el
+viejo hacía que el backend rechazara escrituras ajenas en siete colecciones y congelaba los pasos
 1–4 para todo el equipo.
 
 `revalidateLocks()` late apenas la pestaña vuelve al frente (`visibilitychange`): es el momento en

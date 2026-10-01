@@ -1,9 +1,9 @@
 /**
  * El lock de las propiedades del proyecto.
  *
- * Un ref-lock con clave fija y no el lock de proyecto: `@verify_project_lock` del backend
- * rechaza las escrituras ajenas sobre siete colecciones, así que el lock de proyecto
- * congelaba los pasos 1–4 para todo el equipo mientras alguien miraba las propiedades.
+ * Un ref-lock con clave fija, y no el lock de proyecto que se usaba antes (ya retirado):
+ * aquél hacía que el backend rechazara las escrituras ajenas sobre siete colecciones, así
+ * que congelaba los pasos 1–4 para todo el equipo mientras alguien miraba las propiedades.
  *
  * Una sola clave para la pestaña Propiedades, el modal de la lista y el modal Publicar:
  * Publicar escribe `public_type` y `license_type`, que también son campos de Propiedades.

@@ -451,21 +451,6 @@
               </template>
             </b-modal>
             <back-to-top></back-to-top>
-            <!-- Lock Modals -->
-            <b-modal id="modal-lock-lost" :title="$t('lock.connection_lost')" ok-only :ok-title="$t('lock.reload')" @ok="reloadPage"
-              no-close-on-backdrop no-close-on-esc hide-header-close>
-              <div class="text-center">
-                <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
-                <p>{{ $t('lock.lock_lost_message') }}</p>
-              </div>
-            </b-modal>
-            <b-modal id="modal-lock-idle" :title="$t('lock.session_timeout')" ok-only :ok-title="$t('lock.reload')" @ok="reloadPage"
-              no-close-on-backdrop no-close-on-esc hide-header-close>
-              <div class="text-center">
-                <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
-                <p>{{ $t('lock.idle_message') }}</p>
-              </div>
-            </b-modal>
           </b-col>
         </b-row>
       </div>
@@ -762,9 +747,6 @@ export default {
     this.$_pendingAnchorScroll = true
   },
   async mounted () {
-    window.addEventListener('lock-lost', this.handleLockLost)
-    window.addEventListener('lock-idle', this.handleIdle)
-    window.addEventListener('axios-refresh-lock', this.handleLockLost)
     // A write was rejected with 403 somewhere in the app (project properties,
     // a finding save, a ref-lock attempt, etc.) — re-check this user's permission
     // right away instead of waiting for them to navigate to a different tab/step.
@@ -789,15 +771,11 @@ export default {
     this.startProjectPolling()
   },
   beforeDestroy () {
-    LockService.release()
     // Same net as editList.vue: SPA navigation fires no pagehide, so a ref lock held by
     // a child (a crudTables row, a camelot study) would survive leaving the project and
     // stay held until the server TTL. Verified live before this was added.
     this.$_alive = false
     LockService.releaseRef()
-    window.removeEventListener('lock-lost', this.handleLockLost)
-    window.removeEventListener('lock-idle', this.handleIdle)
-    window.removeEventListener('axios-refresh-lock', this.handleLockLost)
     window.removeEventListener('permission-denied', this.refreshPermissions)
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     this.stopProjectPolling()
@@ -1005,9 +983,8 @@ export default {
             this.mode = ''
           }
 
-          // Granular per-ref locking replaces the project-wide lock here: this view
-          // never acquires one. The project lock survives only in viewOrganization.vue,
-          // around the Properties modal — the one write that is still project-scoped.
+          // No hay lock de proyecto: lo reemplazaron los ref-locks granulares, y las
+          // propiedades usan su propio ref-lock (`project_properties`, propertiesLockMixin).
 
           this.ui.project.show_criteria = true
           this.getLists()
@@ -1120,21 +1097,6 @@ export default {
         this.loadErrors.assessments = true
         console.error('Error cargando evaluaciones:', error)
       }
-    },
-    handleLockLost (e) {
-      if ((e.detail && e.detail.projectId === this.project.id) || e.type === 'axios-refresh-lock') {
-        this.mode = 'view'
-        this.$bvModal.show('modal-lock-lost')
-      }
-    },
-    handleIdle (e) {
-      if (e.detail && e.detail.projectId === this.project.id) {
-        this.mode = 'view'
-        this.$bvModal.show('modal-lock-idle')
-      }
-    },
-    reloadPage () {
-      window.location.reload()
     },
     processGetListCategories: function (data) {
       this.list_categories.options = []
@@ -1614,8 +1576,8 @@ export default {
       // Todo lo que no sea un nombre repetido queda exactamente como estaba. No es que
       // este silencio esté bien —un 500 al guardar tampoco se ve— pero es un camino
       // aparte y ponerle acá el «no se pudo guardar, intente nuevamente» genérico sería
-      // meterlo donde ya hay dos canales que hablan: el 403 dispara `permission-denied`
-      // y el lock de proyecto tiene su propio modal. Queda anotado como deuda; el test
+      // meterlo donde ya hay otro canal que habla: el 403 dispara `permission-denied`.
+      // Queda anotado como deuda; el test
       // del 500 fija que este aviso no se lo apropie.
       if (!isDuplicateKeyRejection(error)) {
         return Commons.printErrors(error)

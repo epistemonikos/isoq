@@ -206,26 +206,12 @@ describe('Vuex store', () => {
       Api.get.mockResolvedValue({ data: {} })
     })
 
-    it('releases the project lock before the auth token is cleared', async () => {
-      let tokenAtReleaseTime
-      LockService.release.mockImplementation(() => {
-        tokenAtReleaseTime = localStorage.getItem('l_s')
-        return Promise.resolve()
-      })
-
+    it('cierra sesión directo: ya no hay lock de proyecto que soltar antes', async () => {
       await store.dispatch('logout')
 
-      expect(LockService.release).toHaveBeenCalled()
-      expect(tokenAtReleaseTime).toBe('some-token')
-      expect(localStorage.getItem('l_s')).toBeNull()
-    })
-
-    it('still logs out even if releasing the lock fails', async () => {
-      LockService.release.mockRejectedValue(new Error('network error'))
-
-      await store.dispatch('logout')
-
+      expect(Api.get).toHaveBeenCalledWith('/auth/logout')
       expect(store.state.token).toBeNull()
+      expect(localStorage.getItem('l_s')).toBeNull()
     })
   })
 

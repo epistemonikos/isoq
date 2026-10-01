@@ -56,8 +56,8 @@ describe('writeErrorMessageKey', () => {
     })
 
 
-    it('el proyecto bloqueado por otra persona: el modal del interceptor', () => {
-      expect(writeErrorMessageKey(conStatus(409, { data: { message: 'Project is locked by Ana' } }))).toBeNull()
+    it('«Project is locked» ya no se calla: el lock de proyecto se retiró y nadie más lo anuncia', () => {
+      expect(writeErrorMessageKey(conStatus(409, { data: { message: 'Project is locked by Ana' } }))).not.toBeNull()
     })
   })
 

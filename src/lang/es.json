@@ -267,10 +267,6 @@
     "description": "Recibirás tres boletines al año con las últimas noticias sobre iSoQ."
   },
   "lock": {
-    "project_locked_by": "El proyecto está siendo editado por {user}. Modo solo lectura.",
-    "locked_title": "Proyecto Bloqueado",
-    "lock_lost_message": "Se perdió la conexión con el servidor o otro usuario ha tomado el control de edición. Para evitar pérdida de datos, por favor recarga la página.",
-    "idle_message": "Has estado inactivo por un tiempo. Para permitir que otros editen, se ha liberado tu acceso de escritura. Por favor recarga para resumir la edición.",
     "ref_locked_by": "Siendo editado por {user}",
     "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
     "ref_lock_offline": "Sin conexión — edición no disponible",
@@ -288,9 +284,6 @@
     "ref_conflict_close": "Cerrar",
     "permissions_revoked": "Tu acceso a este proyecto cambió a solo lectura.",
     "permissions_granted": "Ahora tienes acceso de edición a este proyecto.",
-    "connection_lost": "Conexión perdida",
-    "session_timeout": "Sesión expirada",
-    "reload": "Recargar",
     "live_conflict_title": "Cambio no guardado",
     "live_conflict": "{user} está editando esta entrada ahora, así que tu cambio no se guardó. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "live_conflict_no_user": "Tu cambio no se guardó porque ya no tienes el bloqueo de edición de esta entrada. Tu texto quedó guardado localmente para que puedas copiarlo.",

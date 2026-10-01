@@ -24,9 +24,6 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
 
   const response = error && error.response
   const status = response && response.status
-  const message = (response && response.data && response.data.message) || ''
-  // El proyecto lo tiene otra persona: el interceptor muestra el modal «bloqueado por X».
-  if (status === 409 && String(message).includes('Project is locked')) return null
 
   if (isDuplicateKeyRejection(error)) return 'notifications.write_duplicate'
   if (!status) return fallbackKey
