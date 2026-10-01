@@ -9,16 +9,9 @@ jest.mock('@/utils/Api', () => ({
   }
 }))
 
-jest.mock('@/services/lockService', () => ({
-  __esModule: true,
-  default: {
-    release: jest.fn(() => Promise.resolve())
-  }
-}))
 
 import { store, parseUserFromResponse } from '@/store'
 import Api from '@/utils/Api'
-import LockService from '@/services/lockService'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 

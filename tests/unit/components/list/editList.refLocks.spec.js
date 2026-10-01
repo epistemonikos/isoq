@@ -11,8 +11,6 @@ jest.mock('@/utils/Api', () => ({
 }))
 
 jest.mock('@/services/lockService', () => ({
-  acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn(),
   releaseRef: jest.fn(),
   // El registro de locks que sostiene ESTA pestaña. Lo lee `refLockStateMixin` para
   // descartarlos del sondeo; sin él el mock no representa al servicio real.

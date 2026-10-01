@@ -26,8 +26,6 @@ jest.mock('@/utils/Api', () => ({
 }))
 
 jest.mock('@/services/lockService', () => ({
-  acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn(),
   releaseRef: jest.fn(),
   fetchRefLocks: jest.fn().mockResolvedValue([])
 }))
