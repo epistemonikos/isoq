@@ -164,3 +164,60 @@ describe('LockService — misma clave, otro proyecto', () => {
     expect(axios.post).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * Un grant offline se convierte en lock real al reconectar. Si la persona sale del editor
+ * mientras ese POST está en vuelo, `releaseRef(key)` no encuentra nada que soltar y el 200
+ * deja el lock tomado. Para `project_properties` eso es hasta cerrar la página, porque el
+ * `releaseRef()` global ya no la barre: los demás ven «X está editando» con X en otra parte.
+ */
+describe('LockService — salir con el reintento offline en vuelo', () => {
+  const { store } = require('@/store')
+
+  afterEach(() => { store.state.isOnline = true })
+
+  it('el 200 que llega después de soltar suelta en el acto', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
+    let grant
+    axios.post.mockImplementation(() => new Promise(resolve => { grant = () => resolve({ data: { status: true } }) }))
+    store.state.isOnline = false
+    await LockService.acquireRef('p1', 'project_properties') // grant offline
+    store.state.isOnline = true
+
+    const retrying = LockService.retryOfflineRefs()
+    await Promise.resolve()
+    await LockService.releaseRef('project_properties') // sale con el POST en vuelo
+    grant()
+    await retrying
+
+    expect(LockService.heldRefs()).toEqual([])
+    expect(global.fetch.mock.calls.map(c => c[0])).toContain('/api/lock/p1/ref/project_properties')
+  })
+
+  it('salir y volver a entrar antes del 200 conserva el lock', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
+    let grant
+    axios.post.mockImplementationOnce(() => new Promise(resolve => { grant = () => resolve({ data: { status: true } }) }))
+    axios.post.mockResolvedValue({ data: { status: true } })
+    store.state.isOnline = false
+    await LockService.acquireRef('p1', 'project_properties')
+    store.state.isOnline = true
+
+    const retrying = LockService.retryOfflineRefs()
+    await Promise.resolve()
+    await LockService.releaseRef('project_properties')
+    await LockService.acquireRef('p1', 'project_properties') // vuelve a entrar y lo obtiene
+    grant() // recién ahora llega el 200 del reintento viejo
+    await retrying
+    expect(LockService.heldRefs()).toEqual(['project_properties'])
+  })
+
+  it('sin salir, el reintento deja el lock tomado', async () => {
+    axios.post.mockResolvedValue({ data: { status: true } })
+    store.state.isOnline = false
+    await LockService.acquireRef('p1', 'project_properties')
+    store.state.isOnline = true
+    await LockService.retryOfflineRefs()
+    expect(LockService.heldRefs()).toEqual(['project_properties'])
+  })
+})

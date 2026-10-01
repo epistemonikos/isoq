@@ -32,6 +32,12 @@ class LockService {
     // Refs whose editor was opened while offline: granted locally, with no server
     // lock behind them. On reconnect each one is retried (see retryOfflineRefs).
     this.offlineRefs = new Map() // refId -> projectId
+    // Offline grants whose reconnect POST is in flight, and the ones released meanwhile.
+    // Leaving the editor during that POST finds nothing to release; without this the 200
+    // would leave the lock held with nobody to let it go (for `project_properties`, until
+    // the page closes, since the bare releaseRef() no longer sweeps it).
+    this.retryingRefs = new Set()
+    this.cancelledRetries = new Set()
     this.refLockedBy = null
     this.refHeartbeatTimer = null
 
@@ -245,6 +251,9 @@ class LockService {
     // across projects, but a fixed key like `project_properties` is the same everywhere:
     // closing project A's modal and opening B's must not hand B the lock (or the pending
     // request) of A — B would look held while the server lock sits on A.
+    // Asking again means someone wants it: a release made while its reconnect POST was in
+    // flight no longer applies.
+    this.cancelledRetries.delete(refId)
     if (this.refLocks.get(refId) === projectId) return { success: true }
     const inFlight = this.pendingRefAcquires.get(refId)
     if (inFlight && inFlight.projectId === projectId) return inFlight.promise
@@ -313,7 +322,18 @@ class LockService {
     this.offlineRefs.clear()
 
     await Promise.all(pending.map(async ([refId, projectId]) => {
-      const result = await this.requestRefLock(projectId, refId)
+      this.retryingRefs.add(refId)
+      let result
+      try {
+        result = await this.requestRefLock(projectId, refId)
+      } finally {
+        this.retryingRefs.delete(refId)
+      }
+      if (this.cancelledRetries.delete(refId)) {
+        // The editor closed while this was in flight: nobody wants the lock any more.
+        if (result.success) await this.releaseRef(refId, { all: true })
+        return
+      }
       if (result.success) return
       // El motivo viaja también acá: el editor sigue abierto, así que su cartel merece poder
       // decir si esto se destraba solo. El acquire ya lo trae; perderlo en el camino dejaba
@@ -343,7 +363,9 @@ class LockService {
     const swept = ref => all || ref !== PROPERTIES_LOCK_KEY
     if (refId === null) {
       [...this.offlineRefs.keys()].filter(swept).forEach(ref => this.offlineRefs.delete(ref))
+      this.retryingRefs.forEach((ref) => { if (swept(ref)) this.cancelledRetries.add(ref) })
     } else {
+      if (this.retryingRefs.has(refId)) this.cancelledRetries.add(refId)
       this.offlineRefs.delete(refId)
     }
 
