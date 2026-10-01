@@ -362,3 +362,27 @@ describe('propertiesLockMixin — ronda 2: caminos de sesiones viejas', () => {
     expect(tab.vm.propertiesLock.status).toBe('held')
   })
 })
+
+describe('propertiesLockMixin — expirar con otro anfitrión entrando', () => {
+  it('no suelta si otro anfitrión está en acquiring', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: true })
+    const tab = mountHost()
+    await tab.vm.enterPropertiesLock()
+    let grant
+    LockService.acquireRef.mockReturnValue(new Promise(resolve => { grant = resolve }))
+    const modal = mountHost()
+    const entering = modal.vm.enterPropertiesLock()
+    tab.vm.expirePropertiesLock()
+    expect(LockService.releaseRef).not.toHaveBeenCalled()
+    grant({ success: true })
+    await entering
+  })
+
+  it('solo, sí suelta', async () => {
+    LockService.acquireRef.mockResolvedValue({ success: true })
+    const tab = mountHost()
+    await tab.vm.enterPropertiesLock()
+    tab.vm.expirePropertiesLock()
+    expect(LockService.releaseRef).toHaveBeenCalledWith(KEY)
+  })
+})

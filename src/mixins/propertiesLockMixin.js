@@ -167,7 +167,10 @@ export default {
       this.stopPropertiesLockWait()
       holders.delete(this._uid)
       this.propertiesLock = { status: 'released_idle', lockedBy: null }
-      if (holders.size === 0) LockService.releaseRef(PROPERTIES_LOCK_KEY)
+      // Sigue adentro (puede retomar), así que no cuenta como alguien que necesite el lock;
+      // otro anfitrión que esté entrando sí.
+      const othersInside = [...activeHosts].some(uid => uid !== this._uid)
+      if (holders.size === 0 && !othersInside) LockService.releaseRef(PROPERTIES_LOCK_KEY)
     },
 
     /** Botón «Seguir editando» del cartel. */
