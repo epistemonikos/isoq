@@ -241,15 +241,25 @@ class LockService {
       return { success: true, offline: true }
     }
 
-    if (this.refLocks.has(refId)) return { success: true }
-    if (this.pendingRefAcquires.has(refId)) return this.pendingRefAcquires.get(refId)
+    // Held and in-flight entries are keyed by ref AND project. Reference ids are unique
+    // across projects, but a fixed key like `project_properties` is the same everywhere:
+    // closing project A's modal and opening B's must not hand B the lock (or the pending
+    // request) of A — B would look held while the server lock sits on A.
+    if (this.refLocks.get(refId) === projectId) return { success: true }
+    const inFlight = this.pendingRefAcquires.get(refId)
+    if (inFlight && inFlight.projectId === projectId) return inFlight.promise
 
-    const pending = this.requestRefLock(projectId, refId)
-    this.pendingRefAcquires.set(refId, pending)
+    const pending = (async () => {
+      if (inFlight) await inFlight.promise
+      if (this.refLocks.has(refId)) await this.releaseRef(refId)
+      return this.requestRefLock(projectId, refId)
+    })()
+    const entry = { projectId, promise: pending }
+    this.pendingRefAcquires.set(refId, entry)
     try {
       return await pending
     } finally {
-      this.pendingRefAcquires.delete(refId)
+      if (this.pendingRefAcquires.get(refId) === entry) this.pendingRefAcquires.delete(refId)
     }
   }
 

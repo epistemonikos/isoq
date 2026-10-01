@@ -89,6 +89,9 @@ export default {
         return
       }
       if (result.success) {
+        // Un `ref-lock-lost` llegado con el acquire en vuelo pudo armar el sondeo: sobre un
+        // `held` vería libre (el lock es propio) y refrescaría encima de lo que se escribe.
+        this.stopPropertiesLockWait()
         holders.add(this._uid)
         this.propertiesLock = { status: 'held', lockedBy: null }
         return

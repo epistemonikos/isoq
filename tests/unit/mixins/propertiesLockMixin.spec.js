@@ -386,3 +386,17 @@ describe('propertiesLockMixin — expirar con otro anfitrión entrando', () => {
     expect(LockService.releaseRef).toHaveBeenCalledWith(KEY)
   })
 })
+
+describe('propertiesLockMixin — ronda 3', () => {
+  it('un ref-lock-lost con el acquire en vuelo no deja el sondeo armado sobre held', async () => {
+    let grant
+    LockService.acquireRef.mockReturnValue(new Promise(resolve => { grant = resolve }))
+    const w = mountHost()
+    const entering = w.vm.enterPropertiesLock()
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: KEY, lockedBy: null } }))
+    grant({ success: true })
+    await entering
+    expect(w.vm.propertiesLock.status).toBe('held')
+    expect(w.vm.$_propsLockTimer).toBeNull()
+  })
+})
