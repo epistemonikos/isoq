@@ -236,6 +236,11 @@ class LockService {
   async acquireRef (projectId, refId) {
     if (!this.isEnabled) return { success: true }
 
+    // Asking again means someone wants it: a release made while its reconnect POST was in
+    // flight no longer applies — also when asking again offline, so it goes BEFORE the
+    // offline branch below.
+    this.cancelledRetries.delete(refId)
+
     // Offline-first wins over the lock. Without this branch the POST below would fail
     // on the network and fall through to `{ success: false }`, which every caller
     // reads as "read-only" — so turning the flag on would freeze editing offline,
@@ -251,9 +256,6 @@ class LockService {
     // across projects, but a fixed key like `project_properties` is the same everywhere:
     // closing project A's modal and opening B's must not hand B the lock (or the pending
     // request) of A — B would look held while the server lock sits on A.
-    // Asking again means someone wants it: a release made while its reconnect POST was in
-    // flight no longer applies.
-    this.cancelledRetries.delete(refId)
     if (this.refLocks.get(refId) === projectId) return { success: true }
     const inFlight = this.pendingRefAcquires.get(refId)
     if (inFlight && inFlight.projectId === projectId) return inFlight.promise

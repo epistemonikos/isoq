@@ -22,6 +22,9 @@ beforeEach(() => {
   LockService.refLocks.clear()
   LockService.pendingRefReleases.clear()
   LockService.pendingRefAcquires.clear()
+  LockService.offlineRefs.clear()
+  LockService.retryingRefs.clear()
+  LockService.cancelledRetries.clear()
 })
 
 /**
@@ -208,6 +211,24 @@ describe('LockService — salir con el reintento offline en vuelo', () => {
     await LockService.releaseRef('project_properties')
     await LockService.acquireRef('p1', 'project_properties') // vuelve a entrar y lo obtiene
     grant() // recién ahora llega el 200 del reintento viejo
+    await retrying
+    expect(LockService.heldRefs()).toEqual(['project_properties'])
+  })
+
+  it('salir, perder la red y volver a entrar offline antes del 200 conserva el lock', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
+    let grant
+    axios.post.mockImplementationOnce(() => new Promise(resolve => { grant = () => resolve({ data: { status: true } }) }))
+    store.state.isOnline = false
+    await LockService.acquireRef('p1', 'project_properties')
+    store.state.isOnline = true
+
+    const retrying = LockService.retryOfflineRefs()
+    await Promise.resolve()
+    await LockService.releaseRef('project_properties') // sale con el POST en vuelo
+    store.state.isOnline = false
+    await LockService.acquireRef('p1', 'project_properties') // vuelve a entrar sin red
+    grant()
     await retrying
     expect(LockService.heldRefs()).toEqual(['project_properties'])
   })
