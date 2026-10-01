@@ -2,6 +2,7 @@ import axios from 'axios'
 import { store } from '../store'
 import Api from '@/utils/Api'
 import { baseRefOf } from '@/utils/camelotAssessmentKeys'
+import { PROPERTIES_LOCK_KEY } from '@/utils/propertiesLock'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 const IDLE_TIMEOUT = 15 * 60 * 1000 // 15 minutes
@@ -24,9 +25,19 @@ class LockService {
     // tick share one request instead of racing (the Step 4 modal does exactly
     // that on open: an explicit call plus the activeLeafRef watcher).
     this.pendingRefAcquires = new Map() // refId -> Promise
+    // DELETEs de ref-locks en vuelo. Cerrar y reabrir un editor manda el DELETE y el POST
+    // de la misma clave casi juntos; si el DELETE llegara último borraría el lock recién
+    // tomado y el editor quedaría habilitado sin lock detrás. requestRefLock espera acá.
+    this.pendingRefReleases = new Map() // refId -> Promise
     // Refs whose editor was opened while offline: granted locally, with no server
     // lock behind them. On reconnect each one is retried (see retryOfflineRefs).
     this.offlineRefs = new Map() // refId -> projectId
+    // Offline grants whose reconnect POST is in flight, and the ones released meanwhile.
+    // Leaving the editor during that POST finds nothing to release; without this the 200
+    // would leave the lock held with nobody to let it go (for `project_properties`, until
+    // the page closes, since the bare releaseRef() no longer sweeps it).
+    this.retryingRefs = new Set()
+    this.cancelledRetries = new Set()
     this.refLockedBy = null
     this.refHeartbeatTimer = null
 
@@ -51,7 +62,7 @@ class LockService {
       // requires a server-side heartbeat TTL.
       window.addEventListener('pagehide', () => {
         if (this.isLocked) this.release()
-        if (this.refLocked) this.releaseRef()
+        if (this.refLocked) this.releaseRef(null, { all: true })
       })
 
       // Offline grants are promises, not locks: turn them into real ones as soon as
@@ -225,6 +236,11 @@ class LockService {
   async acquireRef (projectId, refId) {
     if (!this.isEnabled) return { success: true }
 
+    // Asking again means someone wants it: a release made while its reconnect POST was in
+    // flight no longer applies — also when asking again offline, so it goes BEFORE the
+    // offline branch below.
+    this.cancelledRetries.delete(refId)
+
     // Offline-first wins over the lock. Without this branch the POST below would fail
     // on the network and fall through to `{ success: false }`, which every caller
     // reads as "read-only" — so turning the flag on would freeze editing offline,
@@ -236,19 +252,31 @@ class LockService {
       return { success: true, offline: true }
     }
 
-    if (this.refLocks.has(refId)) return { success: true }
-    if (this.pendingRefAcquires.has(refId)) return this.pendingRefAcquires.get(refId)
+    // Held and in-flight entries are keyed by ref AND project. Reference ids are unique
+    // across projects, but a fixed key like `project_properties` is the same everywhere:
+    // closing project A's modal and opening B's must not hand B the lock (or the pending
+    // request) of A — B would look held while the server lock sits on A.
+    if (this.refLocks.get(refId) === projectId) return { success: true }
+    const inFlight = this.pendingRefAcquires.get(refId)
+    if (inFlight && inFlight.projectId === projectId) return inFlight.promise
 
-    const pending = this.requestRefLock(projectId, refId)
-    this.pendingRefAcquires.set(refId, pending)
+    const pending = (async () => {
+      if (inFlight) await inFlight.promise
+      if (this.refLocks.has(refId)) await this.releaseRef(refId)
+      return this.requestRefLock(projectId, refId)
+    })()
+    const entry = { projectId, promise: pending }
+    this.pendingRefAcquires.set(refId, entry)
     try {
       return await pending
     } finally {
-      this.pendingRefAcquires.delete(refId)
+      if (this.pendingRefAcquires.get(refId) === entry) this.pendingRefAcquires.delete(refId)
     }
   }
 
   async requestRefLock (projectId, refId) {
+    const releasing = this.pendingRefReleases.get(refId)
+    if (releasing) await releasing
     try {
       const response = await axios.post(
         `/api/lock/${projectId}/ref/${refId}`, {},
@@ -296,7 +324,18 @@ class LockService {
     this.offlineRefs.clear()
 
     await Promise.all(pending.map(async ([refId, projectId]) => {
-      const result = await this.requestRefLock(projectId, refId)
+      this.retryingRefs.add(refId)
+      let result
+      try {
+        result = await this.requestRefLock(projectId, refId)
+      } finally {
+        this.retryingRefs.delete(refId)
+      }
+      if (this.cancelledRetries.delete(refId)) {
+        // The editor closed while this was in flight: nobody wants the lock any more.
+        if (result.success) await this.releaseRef(refId, { all: true })
+        return
+      }
       if (result.success) return
       // El motivo viaja también acá: el editor sigue abierto, así que su cartel merece poder
       // decir si esto se destraba solo. El acquire ya lo trae; perderlo en el camino dejaba
@@ -307,20 +346,33 @@ class LockService {
     }))
   }
 
-  /** Releases one ref, or every held ref when called with no argument. */
-  async releaseRef (refId = null) {
+  /**
+   * Releases one ref, or every held ref when called with no argument — except the
+   * Properties lock, unless `{ all: true }`.
+   *
+   * StepFour and EditReferenceModal release everything they hold with the bare call when
+   * they close, and StepFour does it only after the in-flight write settles. If the person
+   * walked into the Properties tab (or opened Publish) in that window, the bare call took
+   * the Properties lock away from a form that kept looking editable, with no heartbeat
+   * left to report the loss. That lock has its own owner (propertiesLockMixin), which
+   * releases it by name; only closing the page (`pagehide`) sweeps it with the rest.
+   */
+  async releaseRef (refId = null, { all = false } = {}) {
     if (!this.isEnabled) return
 
     // An editor closed while offline has nothing to release, but its pending retry
     // must go: reconnecting should not lock an entity nobody is editing any more.
+    const swept = ref => all || ref !== PROPERTIES_LOCK_KEY
     if (refId === null) {
-      this.offlineRefs.clear()
+      [...this.offlineRefs.keys()].filter(swept).forEach(ref => this.offlineRefs.delete(ref))
+      this.retryingRefs.forEach((ref) => { if (swept(ref)) this.cancelledRetries.add(ref) })
     } else {
+      if (this.retryingRefs.has(refId)) this.cancelledRetries.add(refId)
       this.offlineRefs.delete(refId)
     }
 
     const toRelease = refId === null
-      ? [...this.refLocks.entries()]
+      ? [...this.refLocks.entries()].filter(([ref]) => swept(ref))
       : (this.refLocks.has(refId) ? [[refId, this.refLocks.get(refId)]] : [])
 
     if (!toRelease.length) return
@@ -329,13 +381,17 @@ class LockService {
     if (!this.refLocks.size) this.stopRefHeartbeat()
 
     if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
-      await Promise.all(toRelease.map(([ref, project]) => (
-        fetch(`/api/lock/${project}/ref/${ref}`, {
+      await Promise.all(toRelease.map(([ref, project]) => {
+        const deleting = fetch(`/api/lock/${project}/ref/${ref}`, {
           method: 'DELETE',
           headers: Api.getHeaders(),
           keepalive: true
         }).catch(e => console.error('Error releasing ref lock', e))
-      )))
+        this.pendingRefReleases.set(ref, deleting)
+        return deleting.finally(() => {
+          if (this.pendingRefReleases.get(ref) === deleting) this.pendingRefReleases.delete(ref)
+        })
+      }))
     }
 
     // Notify same-tab listeners (StepThree/StepFour) so they refresh their lock

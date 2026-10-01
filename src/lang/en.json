@@ -301,7 +301,14 @@
     "locked_at_another_granularity": "{user} is editing another part of this study, so you cannot open it yet. You will be able to as soon as they finish, or in a few minutes if their page closed unexpectedly.",
     "cerqual_locked_by": "{user} is finishing the GRADE-CERQual assessment of confidence, so this change cannot be applied yet — it would clear their work. Try again in a moment.",
     "evaluating_section": "{user} is assessing {section}",
-    "editing_references": "{user} is editing this finding's references. The finding can't be edited until they finish."
+    "editing_references": "{user} is editing this finding's references. The finding can't be edited until they finish.",
+    "properties_locked_by": "{user} is editing this project's properties or publication settings. You can edit as soon as they finish; this view will update on its own.",
+    "properties_unavailable": "This project's properties can't be edited right now. We'll try again automatically.",
+    "properties_lost_to": "{user} took over editing the properties, so they are now read-only and anything you hadn't saved was not saved. You can continue as soon as they finish.",
+    "properties_lost": "Your edit lock on the properties expired, so they are now read-only. We'll try again automatically.",
+    "properties_released_idle": "You were inactive, so the properties were released for others to edit.",
+    "properties_resume": "Keep editing",
+    "properties_inactivity_message": "Nobody else can edit the properties while you have them open. In {countdown} they will be released and anything you haven't saved will be lost."
   },
   "presence": {
     "reviewing_one": "{users} is reviewing this finding",

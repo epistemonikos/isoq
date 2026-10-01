@@ -12,7 +12,7 @@
       <div class="mr-3">
         <font-awesome-icon icon="exclamation-triangle" class="mr-1" />
         <strong>{{ $t('lock.inactivity_title') }}</strong>
-        <span class="ml-1">{{ $t('lock.inactivity_message', { countdown: countdownLabel }) }}</span>
+        <span class="ml-1">{{ $t(messageKey, { countdown: countdownLabel }) }}</span>
       </div>
       <b-button
         size="sm"
@@ -41,7 +41,10 @@ export default {
   name: 'InactivityWarning',
   props: {
     visible: { type: Boolean, default: false },
-    secondsLeft: { type: Number, default: 0 }
+    secondsLeft: { type: Number, default: 0 },
+    // El texto por defecto promete que los cambios se guardan, que es lo que hacen los
+    // editores de los pasos 3 y 4. Propiedades no autoguarda: necesita el suyo.
+    messageKey: { type: String, default: 'lock.inactivity_message' }
   },
   computed: {
     countdownLabel () {

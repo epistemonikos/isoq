@@ -127,8 +127,12 @@ editor abierto y la persona dentro de la sesión, y otro usuario lo tomaba legí
 **Si alguna vez cambiás `HEARBEAT_INTERVAL`, avisale a backend**: sus tests miden el margen contra
 este intervalo, no contra el literal 180.
 
-No hay liberación por inactividad para los ref-locks. El `IDLE_TIMEOUT` de 15 min sólo cuelga de
-`acquire()` (lock de proyecto, hoy únicamente en Propiedades / viewOrganization).
+No hay liberación por inactividad para los ref-locks. El lock de proyecto (`acquire()` / `IDLE_TIMEOUT`) ya no tiene consumidores en el cliente.
+Las propiedades usan el ref-lock `project_properties` (`src/utils/propertiesLock.js`,
+`src/mixins/propertiesLockMixin.js`), compartido por la pestaña Propiedades, el modal de la
+lista y el modal Publicar. **No volver a usar el lock de proyecto para esto**:
+`@verify_project_lock` rechaza escrituras ajenas en siete colecciones y congela los pasos
+1–4 para todo el equipo.
 
 `revalidateLocks()` late apenas la pestaña vuelve al frente (`visibilitychange`): es el momento en
 que la persona va a escribir, y sin eso el aviso de pérdida podía tardar hasta un ciclo entero.
