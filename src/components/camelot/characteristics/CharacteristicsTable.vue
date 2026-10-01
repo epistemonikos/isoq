@@ -1,9 +1,13 @@
 <template>
     <div>
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-end mb-3 d-print-none" data-testid="chars-toolbar">
+            <table-column-filter :all-columns="filterableColumns" v-model="visibleColumnKeys" />
             <b-button
+                class="ml-2"
                 size="sm"
                 variant="outline-info"
+                data-testid="toggle-comments"
+                :disabled="!hasVisibleCamelotFields"
                 @click="showComments = !showComments">
                 <template v-if="showComments">
                     {{ $t('worksheet.actions.hide_concerns') }}
@@ -61,10 +65,14 @@
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
 import Commons from '@/utils/commons'
+import TableColumnFilter from '@/components/common/TableColumnFilter.vue'
 
 export default {
   name: 'CharacteristicsTable',
   mixins: [camelotMixin],
+  components: {
+    'table-column-filter': TableColumnFilter
+  },
   props: {
     charsOfStudies: {
       type: Object,
@@ -74,11 +82,13 @@ export default {
   data () {
     return {
       showComments: false,
+      // Se guardan las ocultas y no las visibles: una columna que aparece después entra visible sola.
+      hiddenColumnKeys: [],
       expandedCells: {}
     }
   },
   computed: {
-    unifiedHeaders () {
+    allHeaders () {
       const headers = []
       if (!this.charsOfStudies.fields) return headers
 
@@ -124,6 +134,24 @@ export default {
         }
       }
       return headers
+    },
+    unifiedHeaders () {
+      // Ocultar un dominio CAMELOT saca también sus comments: cuelgan de su encabezado.
+      return this.allHeaders.filter(h => !this.hiddenColumnKeys.includes(h.key))
+    },
+    filterableColumns () {
+      return this.allHeaders.map(h => ({ key: h.key, label: h.label }))
+    },
+    visibleColumnKeys: {
+      get () {
+        return this.unifiedHeaders.map(h => h.key)
+      },
+      set (visibleKeys) {
+        this.hiddenColumnKeys = this.allHeaders.map(h => h.key).filter(k => !visibleKeys.includes(k))
+      }
+    },
+    hasVisibleCamelotFields () {
+      return this.unifiedHeaders.some(h => h.type === 'camelot')
     },
     subHeaders () {
       const subH = []

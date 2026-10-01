@@ -51,7 +51,7 @@ describe('CharacteristicsTable.vue - Toggle Concerns', () => {
       mocks
     })
 
-    const toggleBtn = wrapper.find('button')
+    const toggleBtn = wrapper.find('[data-testid="toggle-comments"]')
     expect(toggleBtn.exists()).toBe(true)
     expect(toggleBtn.text()).toBe('worksheet.actions.show_concerns')
   })
@@ -63,7 +63,7 @@ describe('CharacteristicsTable.vue - Toggle Concerns', () => {
       mocks
     })
 
-    const toggleBtn = wrapper.find('button')
+    const toggleBtn = wrapper.find('[data-testid="toggle-comments"]')
     await toggleBtn.trigger('click')
 
     expect(toggleBtn.text()).toBe('worksheet.actions.hide_concerns')
