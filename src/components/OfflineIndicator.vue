@@ -22,6 +22,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { REFERENCE_DELETED_EVENT, referenceDeletedMessageKey } from '@/utils/referenceDeleted'
 
 const getOnlineStatus = () => Api.isOnline()
 const setOnlineStatus = (status) => Api.setOnline(status)
@@ -84,6 +85,8 @@ export default {
     window.addEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
     // Lo hecho sin conexión que el servidor no aceptó al volver.
     window.addEventListener('offline-replay-rejected', this.handleReplayRejected)
+    // Un estudio que otra persona borró mientras acá estaba abierto (ver referenceDeleted.js).
+    window.addEventListener(REFERENCE_DELETED_EVENT, this.handleReferenceDeleted)
 
     // Verificar estado y operaciones pendientes periódicamente
     this.checkInterval = setInterval(() => {
@@ -99,6 +102,7 @@ export default {
     window.removeEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
     window.removeEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
     window.removeEventListener('offline-replay-rejected', this.handleReplayRejected)
+    window.removeEventListener(REFERENCE_DELETED_EVENT, this.handleReferenceDeleted)
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
     }
@@ -182,6 +186,28 @@ export default {
           solid: true,
           noAutoHide: true
         })
+      })
+    },
+    /**
+     * Otra persona borró en el Paso 1 un estudio que acá estaba abierto o se estaba
+     * guardando. Un solo aviso por estudio y por momento: el mismo borrado llega por el
+     * latido de cada lock que se tenía de ese estudio (`R1` y `R1::s0::o2` en el Paso 4) y,
+     * si justo había un guardado en vuelo, también por su rechazo. No se oculta solo: lo que
+     * no se guardó se perdió, y la persona tiene que enterarse aunque no esté mirando.
+     */
+    handleReferenceDeleted (event) {
+      const detail = (event && event.detail) || {}
+      if (!detail.refId) return
+      const now = Date.now()
+      const shown = this.referenceDeletedShownAt || (this.referenceDeletedShownAt = {})
+      if (shown[detail.refId] && now - shown[detail.refId] < 5000) return
+      shown[detail.refId] = now
+      const key = referenceDeletedMessageKey(detail.source, detail.deletedBy)
+      this.$bvToast.toast(this.$t(key, { name: detail.deletedBy }), {
+        title: this.$t('reference_deleted.title'),
+        variant: 'warning',
+        solid: true,
+        noAutoHide: true
       })
     },
     checkOnlineStatus () {

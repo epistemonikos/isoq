@@ -680,6 +680,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
@@ -922,7 +923,7 @@ export default {
 
     cancelNoReferencesWarning: function () {
       // El usuario canceló - restaurar localReferences al estado original
-      this.localReferences = [...this.list.references]
+      this.localReferences = this.selectableReferences()
       this.pendingSaveReferences = false
     },
 
@@ -950,7 +951,7 @@ export default {
 
     cancelPrivateProjectWarning: function () {
       // El usuario canceló - restaurar localReferences al estado original
-      this.localReferences = [...this.list.references]
+      this.localReferences = this.selectableReferences()
       this.pendingSaveReferences = false
     },
 
@@ -993,7 +994,9 @@ export default {
       return Api.patch(`/isoqf_findings/${findingId}/identity`, {
         references: this.localReferences
       })
-        .then(() => {
+        .then((response) => {
+          // Un estudio que se borró con el modal abierto: el servidor guardó el resto.
+          announceDroppedReferences(response && response.data)
           this.finishReferencesSave()
           this.cleanReferencesList()
           this.$emit('update-list-data')
@@ -1143,13 +1146,20 @@ export default {
           return false
       }
     },
+    /**
+     * Las referencias de la lista sin los estudios que otra persona borró: no se ven
+     * como checkbox, y guardar las reenviaría.
+     */
+    selectableReferences: function () {
+      return existingReferenceIds(this.list.references, this.references)
+    },
     openModalReferences: async function () {
       // Defensa en profundidad: el botón ya está `disabled`, pero el sondeo puede ir
       // atrasado; la garantía real es el acquire de abajo.
       if (this.isReferencesDisabled) return
       await this.acquireReferencesLock()
       // Copiar las referencias a la variable local para edición
-      this.localReferences = [...this.list.references]
+      this.localReferences = this.selectableReferences()
       this.$refs['modalReferences'].show()
     },
     // ── Bloqueo visible de los assessments ─────────────────────────────

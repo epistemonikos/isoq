@@ -11,6 +11,7 @@ import { strategies } from '@/utils/OfflineStrategies'
 import { refLockKeyFromUrl } from '@/utils/refLockUrls'
 import { isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 import { replayOutcome, rejectionReason } from '@/utils/replayOutcome'
+import { isReferenceDeletedRejection, announceReferenceDeleted, studyOfLockKey } from '@/utils/referenceDeleted'
 export { refLockKeyFromUrl }
 
 // Estado de conexión
@@ -242,6 +243,16 @@ axios.interceptors.response.use(
           const source = (error.config && error.config.isOfflineReplay) ? 'replay' : 'live'
           reportVersionConflict(versionRef, error, source)
         }
+        return Promise.reject(error)
+      }
+
+      // El estudio de esta escritura lo borró otra persona: el servidor ya no deja que el
+      // upsert lo resucite. Tampoco es un conflicto de lock —anunciarlo acá nombraría a un
+      // titular que no existe—, así que sale por su canal, con quién lo borró.
+      if (isReferenceDeletedRejection(error)) {
+        const data = error.response.data || {}
+        const studyId = data.ref_id || studyOfLockKey(refLockKeyFromUrl(url))
+        announceReferenceDeleted({ refId: studyId, deletedBy: data.deleted_by, source: 'write' })
         return Promise.reject(error)
       }
 

@@ -162,6 +162,9 @@
             <b-row>
               <b-col cols="12">
                 <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
+                <b-alert v-if="referencesInUse.count" show variant="warning" data-test="refs-in-use">
+                  {{ $t('references.delete_all_in_use', { count: referencesInUse.count, names: referencesInUse.names.join(', ') }) }}
+                </b-alert>
               </b-col>
             </b-row>
             <b-row align-h="center">
@@ -189,6 +192,9 @@
                 <b-card>
                   <p>{{ $t('references.exclude_study_warning') }}</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
+                  <b-alert v-if="holdersOf(data.item.id).length" show variant="warning" data-test="ref-in-use">
+                    {{ $t('references.in_use_by', { names: holdersOf(data.item.id).join(', ') }) }}
+                  </b-alert>
                   <p>{{ $t('references.confirm_delete') }}</p>
                   <div>
                     <b-row align-h="center">
@@ -219,6 +225,8 @@
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '@/utils/commons'
+import LockService from '@/services/lockService'
+import { studyHolders } from '@/utils/referenceDeleted'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -234,6 +242,11 @@ export default {
     useCamelot: {
       type: Boolean,
       default: false
+    },
+    // El sondeo de locks de viewProject (cada 15 s): quién está usando cada estudio.
+    activeRefLocks: {
+      type: Array,
+      default: () => []
     }
   },
   components: {
@@ -268,6 +281,18 @@ export default {
     this.checkIncompleteOperations()
   },
   computed: {
+    /** Para «Borrar todas»: cuántos estudios están en uso ahora y por quiénes. */
+    referencesInUse: function () {
+      let count = 0
+      const names = []
+      ;(this.references || []).forEach(ref => {
+        const holders = this.holdersOf(ref.id)
+        if (!holders.length) return
+        count++
+        holders.forEach(name => { if (!names.includes(name)) names.push(name) })
+      })
+      return { count, names }
+    },
     translatedReferencesTableFields: function () {
       return [
         {
@@ -659,6 +684,15 @@ export default {
         this.disableBtnRemoveAllRefs = false
         this.$refs['modal-references'].show()
       }
+    },
+    /**
+     * Quién está trabajando ahora con este estudio. Borrar igual se puede —el servidor
+     * no deja que su guardado lo resucite y a esa persona se le avisa—, pero quien borra
+     * tiene que saber que le va a cerrar el editor a alguien.
+     */
+    holdersOf: function (refId) {
+      const user = this.$store && this.$store.state && this.$store.state.user
+      return studyHolders(this.activeRefLocks, refId, user && user.id, LockService.refLocks)
     },
     findRelatedFindings: function (refId = null) {
       if (!refId) return

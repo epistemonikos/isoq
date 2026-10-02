@@ -115,6 +115,7 @@ import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import LockService from '@/services/lockService'
+import { REFERENCE_DELETED_EVENT } from '@/utils/referenceDeleted'
 import PresenceService from '@/services/presenceService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
@@ -398,8 +399,12 @@ export default {
     // conocemos el project_id (ver fetchAndUpdateRefLocks).
     this.startRefLocksPolling()
     window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    // Otra persona borró un estudio de esta hoja mientras se usaba: la fila se va ya,
+    // sin esperar a otra señal. Mismo criterio que `refreshIfSomebodyReleased`.
+    window.addEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeleted)
   },
   beforeDestroy () {
+    window.removeEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeleted)
     this.$_alive = false
     // Antes del releaseRef de abajo: ese release emite `ref-locks-changed`, y con
     // el listener todavía puesto dispararía un fetch sobre la vista que se está
@@ -679,6 +684,9 @@ export default {
      * termina llamando a `fetchAndUpdateRefLocks()`, así que compararlo contra la
      * instantánea vieja volvería a ver la misma liberación y recargaría para siempre.
      */
+    onReferenceDeleted: function () {
+      if (this.$_alive !== false) this.getList()
+    },
     refreshIfSomebodyReleased: function () {
       const current = worksheetLockKeys(this.foreignRefLocks, this.worksheetLockBases)
       const released = releasedKeys(this.$_worksheetLockKeys, current)

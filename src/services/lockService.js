@@ -3,6 +3,7 @@ import { store } from '../store'
 import Api from '@/utils/Api'
 import { baseRefOf } from '@/utils/camelotAssessmentKeys'
 import { PROPERTIES_LOCK_KEY } from '@/utils/propertiesLock'
+import { REFERENCE_DELETED, announceReferenceDeleted, studyOfLockKey } from '@/utils/referenceDeleted'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 
@@ -151,6 +152,13 @@ class LockService {
       // they never got it. Same underlying clash, two different things to tell them.
       if (error.response && error.response.status === 409) {
         const data = error.response.data || {}
+        // El estudio lo borró otra persona (por ejemplo, la lista de esta pestaña todavía
+        // no se refrescó). No hay a quién esperar: se avisa por el canal propio, que
+        // cierra el editor y refresca la vista.
+        if (data.reason === REFERENCE_DELETED) {
+          announceReferenceDeleted({ refId: studyOfLockKey(refId), deletedBy: data.deleted_by, source: 'lock' })
+          return { success: false, lockedBy: null, reason: REFERENCE_DELETED }
+        }
         this.refLockedBy = data.locked_by
         return { success: false, lockedBy: this.refLockedBy, reason: data.reason || null }
       }
@@ -283,6 +291,14 @@ class LockService {
           // it, not retryable) and `lock_expired` (nobody to name). A server without that
           // deploy, or a 401/403, sends none: the banner falls back to its old wording.
           const data = error.response.data || {}
+          // Desde 2026-10-02: el estudio de este lock lo borró otra persona. No es una
+          // pérdida de turno —no hay nadie del otro lado ni nada que esperar—, así que no
+          // sale por `ref-lock-lost`, cuyos carteles dirían «lo tiene X». Sale por su canal,
+          // que cierra el editor de ese estudio, refresca la vista y nombra a quien lo borró.
+          if (data.reason === REFERENCE_DELETED) {
+            announceReferenceDeleted({ refId: studyOfLockKey(refId), deletedBy: data.deleted_by, source: 'lock' })
+            return
+          }
           const lockedBy = data.locked_by || null
           const reason = data.reason || null
           window.dispatchEvent(new CustomEvent('ref-lock-lost', {

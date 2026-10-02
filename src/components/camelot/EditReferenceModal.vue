@@ -142,6 +142,8 @@ import { persistableOrder, isStoredOrder } from '@/utils/columnOrder'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
+import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 
 export default {
@@ -151,7 +153,7 @@ export default {
     RefLockConflictModal: () => import('./RefLockConflictModal.vue'),
     InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
-  mixins: [editorInactivityMixin],
+  mixins: [editorInactivityMixin, referenceDeletedMixin],
   props: {
     reference: {
       type: Object,
@@ -328,10 +330,22 @@ export default {
       } else {
         this.isReadOnly = true
         this.lockedByUser = result.lockedBy || null
+        // Estudio borrado: no hay titular que nombrar; el modal se cierra por su canal.
+        if (result.reason === REFERENCE_DELETED) return
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
         }
       }
+    },
+    referenceDeletedOpenStudy () {
+      return (this.localReference && this.localReference.id) || null
+    },
+    closeForDeletedReference () {
+      // Sin flush: lo pendiente no tiene adónde ir, el servidor lo rechazaría igual.
+      this.isReadOnly = true
+      this.hide()
+      // `resetModal` es idempotente; acá va siempre, como en el cierre por inactividad.
+      this.resetModal()
     },
     handleRefLockLost (event) {
       const detail = (event && event.detail) || {}

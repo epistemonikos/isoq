@@ -315,6 +315,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
@@ -977,8 +978,10 @@ export default {
           if (response.data.length) {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
             await this.$emit('get-references', false)
-            this.selected_references = data.item.references
-            this.original_references = [...data.item.references]
+            // Sin los estudios que otra persona borró: no se ven como checkbox, y guardar
+            // los reenviaría.
+            this.selected_references = existingReferenceIds(data.item.references, this.refs)
+            this.original_references = [...this.selected_references]
             this.showBanner = false
             if (data.item.cerqual_option !== '') {
               this.showBanner = true
@@ -1195,7 +1198,9 @@ export default {
       return Api.patch(`/isoqf_findings/${this.finding.id}/identity`, {
         references: this.selected_references
       })
-        .then(() => {
+        .then((response) => {
+          // Un estudio que se borró con el modal abierto: el servidor guardó el resto.
+          announceDroppedReferences(response && response.data)
           this.finishFindingSave()
           this.cleanReferencesList()
           this.$emit('get-lists')

@@ -358,10 +358,12 @@ import { resolveTableDoc } from '@/utils/tableDocs'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
+import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 
 export default {
   name: 'StepFour',
-  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin],
+  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin, referenceDeletedMixin],
   props: {
     type: {
       type: String,
@@ -1060,6 +1062,7 @@ export default {
         return
       }
 
+      if (result.reason === REFERENCE_DELETED) return
       const holder = result.lockedBy || null
       this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder)
       if (this.$notify) {
@@ -1381,6 +1384,8 @@ export default {
       }
       this.studyFieldsReadOnly = true
       this.studyFieldsLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
+      // Estudio borrado: no hay titular que nombrar; el modal se cierra por su canal.
+      if (result.reason === REFERENCE_DELETED) return false
       if (this.$notify) {
         this.$notify.warning(result.permissionDenied
           ? this.$t('lock.permissions_revoked')
@@ -1416,6 +1421,7 @@ export default {
       } else {
         this.isRefReadOnly = true
         this.refLockedBy = result.lockedBy || null
+        if (result.reason === REFERENCE_DELETED) return
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.refLockedBy }))
         }
@@ -1454,6 +1460,20 @@ export default {
       // vivos en el servidor. Apostar la única razón de ser de este mecanismo a un evento
       // que esta base de código ya tiene documentado como poco confiable no se sostiene.
       // `onAssessmentModalClosed` es idempotente: si el `hidden` llega después, no molesta.
+      this.onAssessmentModalClosed()
+    },
+    referenceDeletedOpenStudy () {
+      return this.isModalOpen ? this.refId : null
+    },
+    /**
+     * Otra persona borró el estudio. Mismo cierre que el de otra pestaña en
+     * `onInactivityExpired`: sin `flushBeforeLeaving` —lo pendiente no tiene adónde ir— y
+     * con `onAssessmentModalClosed` a mano, porque `hidden` no llega con la pestaña oculta.
+     * El cierre es programático, así que el guard de explicación no lo intercepta.
+     */
+    closeForDeletedReference () {
+      this.stopInactivityWatch()
+      this.$bvModal.hide('modal-1')
       this.onAssessmentModalClosed()
     },
     onAssessmentModalClosed () {

@@ -141,6 +141,8 @@ import LockService from '@/services/lockService'
 import { copyItemMetadata } from '@/utils/itemMetadata'
 import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
+import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -148,7 +150,7 @@ const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableAc
 export default {
   name: 'editListExtractedData',
   // `foreignRefLocks`: el sondeo de la worksheet sin los locks de esta pestaña.
-  mixins: [refLockStateMixin],
+  mixins: [refLockStateMixin, referenceDeletedMixin],
   props: {
     ui: Object,
     show: Object,
@@ -188,6 +190,9 @@ export default {
       rowLockedBy: null,
       lockedRowRef: null,
       rowEditorOpen: false,
+      // El estudio de la fila abierta. Aparte de `lockedRowRef` porque ése queda en null
+      // cuando el acquire se negó, y un estudio borrado se niega justamente así.
+      rowEditorStudy: null,
       // True when a `hidden` from a previous editor session is still on its way.
       staleHiddenPending: false,
       // Un cierre empezado (`hide` no cancelado) cuyo `hidden` todavía no llegó. Es lo
@@ -245,6 +250,7 @@ export default {
       // one real `hidden` look stale — the lock stayed held until leaving the view.
       this.staleHiddenPending = this.closingInFlight
       this.rowEditorOpen = true
+      this.rowEditorStudy = refId
       this.acquireRowLock(this.rowLockKeyOf(refId))
     },
     // La fila de ESTE documento, no el estudio: ver `extractedDataLockKeys.js`.
@@ -286,6 +292,8 @@ export default {
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
+        // Estudio borrado: no hay titular que nombrar; el editor se cierra por su canal.
+        if (result.reason === REFERENCE_DELETED) return
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
         }
@@ -307,6 +315,15 @@ export default {
     onRowEditorHide: function (bvEvent) {
       if (!bvEvent || !bvEvent.defaultPrevented) this.closingInFlight = true
     },
+    referenceDeletedOpenStudy: function () {
+      return this.rowEditorOpen ? this.rowEditorStudy : null
+    },
+    closeForDeletedReference: function () {
+      this.isRowReadOnly = true
+      this.$refs['modal-extracted-data-data'].hide()
+      this.$refs['modal-extracted-data-remove-data-item'].hide()
+      if (this.hiddenWontArrive()) this.onRowEditorHidden()
+    },
     onRowEditorHidden: function () {
       this.closingInFlight = false
       // BootstrapVue emits `hidden` asynchronously: a late one belongs to the previous
@@ -316,6 +333,7 @@ export default {
         return
       }
       this.rowEditorOpen = false
+      this.rowEditorStudy = null
       this.releaseRowLock()
       this.isRowReadOnly = false
       this.rowLockedBy = null

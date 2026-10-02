@@ -1,4 +1,5 @@
 import { refLockKeyFromUrl } from '@/utils/refLockUrls'
+import { isReferenceDeletedRejection } from '@/utils/referenceDeleted'
 
 // A rejection on a granular write that the concurrency layer already explains on its
 // own: 409 goes out as `ref-lock-conflict` (with the holder's name and the text kept
@@ -30,6 +31,9 @@ export function isLockRejection (error) {
   if (!ANNOUNCED_STATUSES.includes(status)) return false
   if (isVersionRejection(error)) return false
   if (isDuplicateKeyRejection(error)) return false
+  // El estudio ya no existe: no hay lock de nadie que explicar. Lo anuncia su propio canal
+  // (`reference-deleted`), con quién lo borró.
+  if (isReferenceDeletedRejection(error)) return false
   const url = (error.config && error.config.url) || ''
   return Boolean(refLockKeyFromUrl(url))
 }

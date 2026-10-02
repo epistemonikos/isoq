@@ -482,7 +482,9 @@
     "refs_processed": "{count} references processed locally",
     "upload_result": "{saved} references added. {duplicates} duplicates skipped.",
     "reference_id": "Reference ID",
-    "author_year": "Author(s), Year"
+    "author_year": "Author(s), Year",
+    "in_use_by": "{names} is working with this study right now. If you delete it, their editor will close and they will lose anything not yet saved.",
+    "delete_all_in_use": "{count} of these studies are being worked on right now by {names}. If you delete them, their editors will close and they will lose anything not yet saved."
   },
   "inclusion": {
     "step_title": "STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)",
@@ -1890,5 +1892,14 @@
   "organization": {
     "projects_load_error": "Your projects could not be loaded. It is not that you have none: loading failed.",
     "projects_load_error_stale": "Your projects could not be updated. What you see may be out of date."
+  },
+  "reference_deleted": {
+    "title": "Study deleted",
+    "editor_closed": "This study was deleted from the project, so its editor was closed. Anything not yet saved was lost.",
+    "editor_closed_by": "{name} deleted this study from the project, so its editor was closed. Anything not yet saved was lost.",
+    "not_saved": "Not saved: this study was deleted from the project.",
+    "not_saved_by": "Not saved: {name} deleted this study from the project.",
+    "saved_without": "Saved without one of the selected studies, because it was deleted from the project.",
+    "saved_without_by": "Saved without one of the selected studies, because {name} deleted it from the project."
   }
 }
