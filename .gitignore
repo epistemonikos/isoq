@@ -7,9 +7,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
-# Environment variables
-config/dev.env.js
-config/prod.env.js
+# Configuración propia de cada servidor (plantilla commiteada: .env.example).
+# config/*.env.js NO va acá: es código trackeado; los valores se pisan desde .env.
+.env
 
 # Editor directories and files
 .idea

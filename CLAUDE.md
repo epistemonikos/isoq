@@ -249,13 +249,18 @@ No se puede testear en jsdom que la posición aterrice (no hay layout, `scrollTo
 ---
 
 ## GOTCHAS
-- **`SENTRY_DSN` sale del entorno del build**, no de editar `config/prod.env.js`. Ese archivo está
-  trackeado (aunque `.gitignore` lo liste — no aplica a lo ya trackeado), así que editarlo en un host
-  hace que `git pull` aborte en cuanto un commit toque ese mismo archivo. Pasó: `2d6185e9` lo modificó
-  el 2026-08-20 y el checkout de `isoqf-test` quedó clavado once días mientras los builds seguían.
-  Los feature flags SÍ se quedan en el archivo: tienen que viajar con el código. Sin la variable el DSN
-  queda vacío y `main.js:120` no arranca Sentry, que es lo correcto — el marcador de posición anterior
-  era truthy y arrancaba con un DSN inválido.
+- **La configuración propia de cada servidor va en `.env`** (raíz, no se versiona; plantilla
+  `.env.example`), nunca editando `config/*.env.js`. Esos archivos son código trackeado: editarlos en un
+  host deja el checkout sucio, el sello del build sale `-dirty` y `git pull` aborta en cuanto un commit
+  toca el mismo archivo. Pasó: `2d6185e9` lo modificó el 2026-08-20 y el checkout de `isoqf-test` quedó
+  clavado once días mientras los builds seguían. Que estuvieran en `.gitignore` no hacía nada: no aplica
+  a lo ya trackeado.
+  Precedencia (`config/entorno.js`): variable de la shell > `.env` > default commiteado. El default
+  vive en el código para que un flag nuevo llegue a todos los servidores con el pull; por eso no se
+  descommitean los `config/*.env.js` (además, el pull que los des-trackea los BORRA en cada servidor).
+  Un valor vacío cae al default, no apaga. Sin `SENTRY_DSN` Sentry no arranca (`main.js:120`).
+  `SENTRY_AUTH_TOKEN` va en `.env` pero NUNCA en `config/*.env.js`: todo lo que está ahí termina en el
+  bundle público.
 - **Qué código sirve un host**: `curl -s <host>/ | grep build-commit`. El `<meta>` lo estampa
   `build/buildInfo.js` desde los tres configs de webpack. Existe porque `dist/` NO lo dice: sus
   timestamps cuentan cuándo corrió webpack, y un build de hoy sobre un checkout viejo los deja todos
