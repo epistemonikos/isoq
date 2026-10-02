@@ -1,6 +1,6 @@
 <template>
   <div class="clearfix my-2 d-print-none">
-    <span class="back-to-top" @click="toTop">&uarr; Back to top</span>
+    <span class="back-to-top" @click="toTop">{{ $t('back_to_top') }}</span>
   </div>
 </template>
 
