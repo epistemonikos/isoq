@@ -52,7 +52,7 @@
               <b-tab :title="$t('steps.step_1_references')">
                 <UploadReferences :canEdit="isEditing" :loadReferences="loadReferences" :references="references"
                   :lists="lists" :charsOfStudies="charsOfStudies" :methodologicalTableRefs="methodologicalTableRefs"
-                  :useCamelot="project.use_camelot" @CallGetReferences="getReferences"
+                  :useCamelot="project.use_camelot" :activeRefLocks="activeRefLocks" @CallGetReferences="getReferences"
                   @statusLoadReferences="statusLoadReferences" @CallGetProject="getProject"></UploadReferences>
                 <div class="mt-3">
                   <b-row v-if="references.length">

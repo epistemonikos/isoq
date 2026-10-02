@@ -217,7 +217,11 @@
             <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
           </span>
         </div>
-        <template v-if="dataTableFieldsModal.items.length">
+        <!-- La fila, no el largo del arreglo: el modal se renderiza aunque esté cerrado, y
+             cuando otra persona borra el estudio que estaba seleccionado el índice queda
+             apuntando más allá del final. Con `items.length` el render tiraba y la tabla
+             entera dejaba de repintarse — la fila borrada seguía en pantalla. -->
+        <template v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
           <template v-for="field of dataTable.fields">
             <b-form-group v-if="field.key !== 'ref_id'" :key="field.id" :label="field.label"
               label-class="font-weight-bold">
@@ -331,6 +335,8 @@ import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessag
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
+import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 // Identidad local de una columna que todavía no tiene clave del servidor. Un contador y no
@@ -373,7 +379,7 @@ export default {
       default: () => []
     }
   },
-  mixins: [projectFreshnessMixin, preserveScrollMixin, refLockStateMixin],
+  mixins: [projectFreshnessMixin, preserveScrollMixin, refLockStateMixin, referenceDeletedMixin],
   components: {
     BackToTop: () => import('@/components/backToTop.vue'),
     draggable: () => import('vuedraggable'),
@@ -1120,6 +1126,16 @@ export default {
     onEditModalHide: function (bvEvent) {
       if (!bvEvent || !bvEvent.defaultPrevented) this.closingInFlight = true
     },
+    referenceDeletedOpenStudy: function () {
+      return this.rowEditorOpen ? this.dataTableFieldsModal.editingRefId : null
+    },
+    closeForDeletedReference: function () {
+      // Lo pendiente no tiene adónde ir: el servidor lo rechazaría con el mismo aviso.
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.isRowReadOnly = true
+      this.$refs['edit-content-dataTable'].hide()
+      if (this.hiddenWontArrive()) this.onEditModalHidden()
+    },
     onEditModalHidden: function () {
       this.closingInFlight = false
       // BootstrapVue emits `hidden` asynchronously (~300ms of animation). If the editor
@@ -1203,6 +1219,8 @@ export default {
         this.rowLockedBy = result.lockedBy || null
         // El motivo del acquire, no el del latido: acá no perdió nada, nunca lo tuvo.
         this.rowLockDeniedReason = result.reason || null
+        // Estudio borrado: no hay titular que nombrar; el editor se cierra por su canal.
+        if (result.reason === REFERENCE_DELETED) return
         if (this.$notify) {
           this.$notify.warning(this.$t(this.rowLockMessageKey, { user: this.rowLockedBy }))
         }

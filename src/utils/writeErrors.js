@@ -1,5 +1,6 @@
 import { isLockRejection, isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 import { rejectionReason } from '@/utils/replayOutcome'
+import { isReferenceDeletedRejection } from '@/utils/referenceDeleted'
 
 /**
  * Qué aviso corresponde a una escritura que falló, o `null` si otro canal ya avisó.
@@ -21,6 +22,7 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
   if (error && error.isOfflineError) return null // OfflineIndicator
   if (isLockRejection(error)) return null // canal de conflicto de lock (ref-lock-conflict)
   if (isVersionRejection(error)) return null // canal de conflicto de versión
+  if (isReferenceDeletedRejection(error)) return null // canal reference-deleted (Api.js)
 
   const response = error && error.response
   const status = response && response.status

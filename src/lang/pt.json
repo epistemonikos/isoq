@@ -482,7 +482,9 @@
     "refs_processed": "{count} referências processadas localmente",
     "upload_result": "{saved} referências adicionadas. {duplicates} duplicatas ignoradas.",
     "reference_id": "ID da Referência",
-    "author_year": "Autor(es), Ano"
+    "author_year": "Autor(es), Ano",
+    "in_use_by": "{names} está trabalhando com este estudo agora. Se você excluí-lo, o editor dessa pessoa será fechado e ela perderá o que não tiver salvo.",
+    "delete_all_in_use": "{count} destes estudos estão em uso agora por {names}. Se você excluí-los, os editores serão fechados e o que não tiver sido salvo será perdido."
   },
   "inclusion": {
     "step_title": "ETAPA 2: Insira os <b>critérios de inclusão e exclusão</b> de estudos utilizados na revisão (recomendado)",
@@ -1890,5 +1892,14 @@
   "organization": {
     "projects_load_error": "Não foi possível carregar seus projetos. Não é que você não tenha: o carregamento falhou.",
     "projects_load_error_stale": "Não foi possível atualizar seus projetos. O que você vê pode estar desatualizado."
+  },
+  "reference_deleted": {
+    "title": "Estudo excluído",
+    "editor_closed": "Este estudo foi excluído do projeto, então seu editor foi fechado. O que não havia sido salvo foi perdido.",
+    "editor_closed_by": "{name} excluiu este estudo do projeto, então seu editor foi fechado. O que não havia sido salvo foi perdido.",
+    "not_saved": "Não foi salvo: este estudo foi excluído do projeto.",
+    "not_saved_by": "Não foi salvo: {name} excluiu este estudo do projeto.",
+    "saved_without": "Salvo sem um dos estudos selecionados, porque ele foi excluído do projeto.",
+    "saved_without_by": "Salvo sem um dos estudos selecionados, porque {name} o excluiu do projeto."
   }
 }

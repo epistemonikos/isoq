@@ -180,6 +180,29 @@ semana. Y **la cadencia del latido sostiene una promesa de interfaz**: el texto 
 el desalojo convertiría ese cartel en mentira. Son dos razones independientes para no subir
 `HEARBEAT_INTERVAL`; la otra es el bloqueo mutuo.
 
+### Borrar un estudio con otros trabajando en él (2026-10-02)
+
+**No hay lock al entrar al Paso 1**, por decisión: bloquear todo lo relacionado con estudios era el
+lock de proyecto con otro nombre. Quien borra puede borrar siempre; el Paso 1 le **advierte** quién
+está usando el estudio (`studyHolders()`, cualquier granularidad: `R`, `R::sK::oM`, `<doc>::ed::R`).
+
+El servidor no deja que lo tardío resucite el estudio: las escrituras por ítem y el latido/acquire
+devuelven `409 reason: reference_deleted` + `deleted_by`, y `/identity` guarda sin los ids borrados
+y los devuelve en `dropped_references`. Los tres caminos terminan en **un solo evento**,
+`reference-deleted` (`src/utils/referenceDeleted.js`), con el estudio y no la clave de lock:
+- `OfflineIndicator` muestra **un** toast por estudio (el mismo borrado llega por varios latidos);
+- `projectFreshnessMixin` refresca la vista (respetando editores abiertos);
+- `referenceDeletedMixin` cierra el editor de ese estudio (ED, crudTables, EditReferenceModal,
+  StepFour). Un editor nuevo de un estudio se suma ahí.
+
+**No sale por `ref-lock-lost` ni `ref-lock-conflict`**: sus carteles dicen «lo tiene X» y acá no hay
+nadie. `isLockRejection` y `writeErrorMessageKey` lo excluyen.
+
+Trampa medida en navegador: el modal de edición de crudTables se renderiza **cerrado**; cuando la
+fila seleccionada desaparecía, `items[selected_item_index]` era `undefined`, el render tiraba y la
+tabla dejaba de repintarse con la fila borrada en pantalla. La guarda es sobre la fila, no sobre el
+largo del arreglo.
+
 ### Lo que el servidor puede atrapar, y lo que no
 
 Backend instrumenta con warnings los datos que **le mandamos** y que dejamos caer: el contador `_v`

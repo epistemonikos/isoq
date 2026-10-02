@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { store } from '@/store'
 import Api from '@/utils/Api'
+import { REFERENCE_DELETED_EVENT } from '@/utils/referenceDeleted'
 
 /**
  * Detects that somebody else changed something in this project, so a view can reload
@@ -27,7 +28,26 @@ export default {
       pendingRefresh: false
     }
   },
+  mounted () {
+    window.addEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeletedRefresh)
+  },
+  beforeDestroy () {
+    window.removeEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeletedRefresh)
+  },
   methods: {
+    /**
+     * Otra persona borró un estudio que esta pestaña estaba usando. El sondeo de
+     * `last_update` lo vería en el próximo tick, pero quien recibe este aviso tenía el
+     * estudio abierto: la fila tiene que irse ya, no dentro de 15 s. Respeta igual al
+     * editor abierto —el del estudio borrado se está cerrando, y otro editor no tiene
+     * por qué perder su borrador—: el refresco espera a `flushPendingRefresh`.
+     */
+    onReferenceDeletedRefresh () {
+      if (typeof this.applyProjectRefresh !== 'function') return
+      this.pendingRefresh = true
+      if (typeof this.hasOpenEditor === 'function' && this.hasOpenEditor()) return
+      this.flushPendingRefresh()
+    },
     async checkProjectFreshness () {
       const projectId = this.$route && this.$route.params ? this.$route.params.id : null
       if (!projectId) return
