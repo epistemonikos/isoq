@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" @ok="handleModalOk"
+  <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" dialog-class="modal-dialog-wide" @ok="handleModalOk"
     @hidden="resetModal" @shown="onModalShownAll" header-bg-variant="custom-blue" no-close-on-esc
     no-close-on-backdrop>
     <template v-if="localReference">

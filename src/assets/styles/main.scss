@@ -248,11 +248,12 @@ body {
   }
 }
 
-#modal-evidence-profile-form {
-  .modal-dialog {
-    max-width: 98% !important;
-    margin: 1.75rem auto;
-  }
+// Modales de trabajo que necesitan todo el ancho (evidence profile, CAMELOT Pasos 3 y 4).
+// Se aplica con `dialog-class="modal-dialog-wide"`. Dos clases le ganan a `.modal-xl` y al
+// `.modal-dialog` de Bootstrap sin `!important`.
+.modal-dialog.modal-dialog-wide {
+  max-width: 98%;
+  margin: 1.75rem auto;
 }
 
 .modal-header {

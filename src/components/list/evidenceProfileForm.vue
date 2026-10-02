@@ -1,6 +1,7 @@
 <template>
   <div>
     <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
+      dialog-class="modal-dialog-wide"
       :ok-disabled="!canEditFinding"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
       cancel-variant="outline-secondary" @show="onModalShow" @hidden="onModalHidden">
