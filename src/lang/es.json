@@ -319,8 +319,8 @@
     "findings_order_changed": "Mientras tenías esto abierto se agregaron o eliminaron hallazgos de revisión, así que todavía no se guardó nada. La lista de abajo está actualizada (los nuevos quedaron al final): revisa el orden y vuelve a guardar."
   },
   "presence": {
-    "reviewing_one": "{users} está revisando este hallazgo",
-    "reviewing_many": "{users} están revisando este hallazgo",
+    "reviewing_one": "{users} está evaluando este hallazgo de la revisión",
+    "reviewing_many": "{users} están evaluando este hallazgo de la revisión",
     "and": "y"
   },
   "version_conflict": {

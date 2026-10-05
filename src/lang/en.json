@@ -319,8 +319,8 @@
     "findings_order_changed": "Review findings were added or removed while you had this open, so nothing was saved yet. The list below is up to date (new findings are at the end): check the order and save again."
   },
   "presence": {
-    "reviewing_one": "{users} is reviewing this finding",
-    "reviewing_many": "{users} are reviewing this finding",
+    "reviewing_one": "{users} is assessing this review finding",
+    "reviewing_many": "{users} are assessing this review finding",
     "and": "and"
   },
   "version_conflict": {

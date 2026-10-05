@@ -319,8 +319,8 @@
     "findings_order_changed": "Descobertas de revisão foram adicionadas ou removidas enquanto você tinha isto aberto, então nada foi salvo ainda. A lista abaixo está atualizada (as novas ficaram no final): verifique a ordem e salve novamente."
   },
   "presence": {
-    "reviewing_one": "{users} está a rever esta descoberta",
-    "reviewing_many": "{users} estão a rever esta descoberta",
+    "reviewing_one": "{users} está a avaliar esta descoberta da revisão",
+    "reviewing_many": "{users} estão a avaliar esta descoberta da revisão",
     "and": "e"
   },
   "version_conflict": {
