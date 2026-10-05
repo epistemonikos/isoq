@@ -1152,10 +1152,19 @@ export default {
     detectImpossibleLockState () {
       if (!this.refId || !LockService.refLocked) return
       const state = this.studyLockStateOf(this.refId)
-      const holder = state.wholeStudyBlockedBy ||
-        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      // Lo imposible es el choque de GRANULARIDADES, no dos hojas: que cada uno tenga una
+      // celda distinta del mismo estudio es justo la edición en paralelo del endpoint D.
+      // Sin esta distinción, al primer sondeo el estudio entero quedaba en solo lectura
+      // para quien estaba en otra celda (medido en navegador con dos usuarios).
+      const ownKeys = [...LockService.refLocks.keys()]
+      const holdsBareStudy = ownKeys.includes(this.refId)
+      const holdsLeaf = ownKeys.some(k => k !== this.refId && baseRefOf(k) === this.refId)
+      const otherLeaf = state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null
+      const holder = (holdsBareStudy && (state.wholeStudyBlockedBy || otherLeaf)) ||
+        (holdsLeaf && state.wholeStudyBlockedBy) || null
       if (!holder) return
-      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio.
+      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio, en la
+      // otra granularidad.
       this.isRefReadOnly = true
       this.refLockedBy = holder
       this.studyFieldsReadOnly = true

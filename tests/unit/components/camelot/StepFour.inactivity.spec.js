@@ -270,6 +270,38 @@ describe('StepFour — estado imposible: dos dueños del mismo estudio', () => {
     wrapper.destroy()
   })
 
+  // Medido en el navegador con dos usuarios: cada uno en una celda distinta del mismo
+  // estudio —la edición en paralelo que el endpoint D existe para permitir— y al primer
+  // sondeo el estudio entero pasaba a solo lectura para el segundo. Dos hojas distintas no
+  // chocan: lo imposible es el choque de granularidades.
+  it('no degrada cuando cada uno tiene una celda distinta del mismo estudio', async () => {
+    const wrapper = await opened(createWrapper())
+    LockService.refLocks.set('R1::s0::o1', 'proj1')
+    LockService.fetchRefLocks.mockResolvedValue([
+      { ref_id: 'R1::s0::o0', user_name: 'Ana López' },
+      { ref_id: 'R1::s0::o1', user_name: 'Yo Mismo' }
+    ])
+
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.isRefReadOnly).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('degrada si tengo una celda y otro tiene el estudio entero', async () => {
+    const wrapper = await opened(createWrapper())
+    LockService.refLocks.set('R1::s0::o1', 'proj1')
+    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: 'R1', user_name: 'Ana López' }])
+
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(wrapper.vm.refLockedBy).toBe('Ana López')
+    wrapper.destroy()
+  })
+
   it('no degrada si el listado sólo nos muestra a nosotros', async () => {
     const wrapper = await opened(createWrapper())
     LockService.refLocks.set('R1', 'proj1')
