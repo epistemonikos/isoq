@@ -121,23 +121,36 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       wrapper.destroy()
     })
 
-    it('marca read-only y avisa quién lo tiene cuando el lock está tomado', async () => {
+    // Un evento, un canal: el cartel del formulario ya lo dice y se queda mientras dure.
+    it('marca read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
       const { wrapper, $notify } = createWrapper()
       await openModal(wrapper)
       expect(wrapper.vm.isFindingReadOnly).toBe(true)
       expect(wrapper.vm.findingLockedBy).toBe('Ana Pérez')
-      expect($notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      expect(wrapper.find('[data-testid="finding-readonly-notice"]').text()).toContain('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('marca read-only sin nombre cuando el rechazo es por permisos revocados', async () => {
+    it('con permisos revocados el cartel dice eso y no «lo tiene otra persona»', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
       const { wrapper, $notify } = createWrapper()
       await openModal(wrapper)
       expect(wrapper.vm.isFindingReadOnly).toBe(true)
       expect(wrapper.vm.findingLockedBy).toBeNull()
-      expect($notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.find('[data-testid="finding-readonly-notice"]').text()).toContain('lock.permissions_revoked')
+      expect($notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('el cartel explica el motivo de granularidad', async () => {
+      LockService.acquireRef.mockResolvedValue({
+        success: false, lockedBy: 'Ana Pérez', reason: 'locked_at_another_granularity'
+      })
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+      expect(wrapper.vm.readOnlyNotice).toBe('lock.locked_at_another_granularity')
       wrapper.destroy()
     })
 
@@ -313,7 +326,49 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       await flushPromises()
 
       expect(wrapper.vm.isRowReadOnly).toBe(true)
-      expect(wrapper.vm.rowReadOnlyNotice).toBeTruthy()
+      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.lost_while_editing')
+      wrapper.destroy()
+    })
+
+    // Antes el cartel de fila leía un `rowLockedBy` que nunca se declaró: decía siempre
+    // «sin usuario», y el toast de al lado nombraba a la persona.
+    it('al negarse el lock de la fila, sólo el cartel lo dice y nombra a quien la tiene', async () => {
+      const { wrapper, $notify } = createWrapper()
+      await openModal(wrapper)
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
+      wrapper.vm.editExtractedDataInPlace(0)
+      await flushPromises()
+
+      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('al negarse la fila por permisos, el cartel dice eso', async () => {
+      const { wrapper, $notify } = createWrapper()
+      await openModal(wrapper)
+      LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
+      wrapper.vm.editExtractedDataInPlace(0)
+      await flushPromises()
+
+      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.permissions_revoked')
+      expect($notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    // El estudio lo borró otra persona: avisa OfflineIndicator (`reference-deleted`) y el
+    // editor inline se cierra. Antes se sumaban un toast «lo tiene » y el cartel.
+    it('si el estudio de la fila se borró, cierra el editor inline sin cartel ni toast', async () => {
+      const { wrapper, $notify } = createWrapper()
+      await openModal(wrapper)
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: null, reason: 'reference_deleted' })
+      wrapper.vm.editExtractedDataInPlace(0)
+      await flushPromises()
+
+      expect(wrapper.vm.rowReadOnlyNotice).toBeFalsy()
+      expect($notify.warning).not.toHaveBeenCalled()
+      const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
+      expect(emitted[emitted.length - 1][0].display).toBe(false)
       wrapper.destroy()
     })
   })

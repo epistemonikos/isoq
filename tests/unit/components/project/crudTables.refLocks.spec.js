@@ -118,23 +118,26 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
       wrapper.destroy()
     })
 
-    it('marca la fila read-only y avisa quién la tiene cuando el lock está tomado', async () => {
+    // Un evento, un canal: el cartel del modal ya lo dice y se queda mientras dure.
+    it('marca la fila read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper, $notify } = createWrapper()
-      await openRow(wrapper)
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
-      expect($notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      expect(wrapper.text()).toContain('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('marca read-only sin nombre cuando el rechazo es por permisos revocados', async () => {
+    it('con permisos revocados el cartel dice eso, sin toast', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-      const { wrapper, $notify } = createWrapper()
-      await openRow(wrapper)
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBeNull()
-      expect($notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.text()).toContain('lock.permissions_revoked')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 

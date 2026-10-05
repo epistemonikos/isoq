@@ -336,7 +336,6 @@ import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
-import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 // Identidad local de una columna que todavía no tiene clave del servidor. Un contador y no
@@ -1211,19 +1210,16 @@ export default {
       } else if (result.permissionDenied) {
         // Nobody else holds it — this user's own can_write was revoked. There is
         // no "locked by X" to report.
+        // Sin toast: el cartel del modal (`rowLockMessageKey`) ya lo dice y se queda.
         this.isRowReadOnly = true
         this.rowLockedBy = null
-        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
         // El motivo del acquire, no el del latido: acá no perdió nada, nunca lo tuvo.
         this.rowLockDeniedReason = result.reason || null
-        // Estudio borrado: no hay titular que nombrar; el editor se cierra por su canal.
-        if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t(this.rowLockMessageKey, { user: this.rowLockedBy }))
-        }
+        // Sin toast: lo dice el cartel del modal (un evento, un canal). Si el estudio se
+        // borró, el editor lo cierra `referenceDeletedMixin` y el aviso es de OfflineIndicator.
       }
     },
     onFieldInput: function () {

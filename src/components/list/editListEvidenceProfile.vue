@@ -686,6 +686,7 @@ import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 import {
   sectionOfType, blockedSectionsOf, lockKeyBelongsTo, referencesLockKey, referencesEditorOf
 } from '@/utils/evidenceProfileLockKeys'
@@ -764,6 +765,8 @@ export default {
       referencesReadOnly: false,
       referencesLockedBy: null,
       referencesLockLost: false,
+      // Clave del cartel cuando el acquire se negó al abrir (`lockDeniedNoticeKey`).
+      referencesDeniedKey: null,
       savingReferences: false,
       localExtractedData: {
         fields: [],
@@ -806,6 +809,9 @@ export default {
         return this.referencesLockedBy
           ? this.$t('lock.lost_while_editing', { user: this.referencesLockedBy })
           : this.$t('lock.lost_while_editing_no_user')
+      }
+      if (this.referencesDeniedKey) {
+        return this.$t(this.referencesDeniedKey, { user: this.referencesLockedBy })
       }
       return this.referencesLockedBy
         ? this.$t('lock.ref_locked_by', { user: this.referencesLockedBy })
@@ -1026,6 +1032,7 @@ export default {
       this.referencesReadOnly = false
       this.referencesLockedBy = null
       this.referencesLockLost = false
+      this.referencesDeniedKey = null
       const findingId = this.findings && this.findings.id
       if (!findingId || !this.permission) return
       const result = await LockService.acquireRef(this.project.id, findingId)
@@ -1042,9 +1049,8 @@ export default {
       this.referencesReadOnly = true
       // Un 403 no tiene a quién culpar: nombrar a un dueño ahí sería inventarlo.
       this.referencesLockedBy = (result && !result.permissionDenied && result.lockedBy) || null
-      this.$notify.warning(result && result.permissionDenied
-        ? this.$t('lock.permissions_revoked')
-        : this.referencesReadOnlyNotice)
+      // Sin toast: el modal se abre igual y su cartel (`referencesReadOnlyNotice`) lo dice.
+      this.referencesDeniedKey = lockDeniedNoticeKey(result)
       // El padre sondea cada pocos segundos; este rechazo es motivo para no esperarlo.
       this.$emit('lock-denied')
     },
@@ -1058,6 +1064,7 @@ export default {
       this.referencesReadOnly = false
       this.referencesLockedBy = null
       this.referencesLockLost = false
+      this.referencesDeniedKey = null
     },
     releaseReferencesLabel: function () {
       if (this.lockedReferencesLabel) LockService.releaseRef(this.lockedReferencesLabel)

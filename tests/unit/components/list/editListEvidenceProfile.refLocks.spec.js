@@ -523,17 +523,22 @@ describe('editListEvidenceProfile.vue — el modal de referencias respeta el loc
       expect(wrapper.vm.referencesReadOnly).toBe(true)
       expect(wrapper.vm.referencesReadOnlyNotice).toContain('Ana Pérez')
       expect(wrapper.emitted('lock-denied')).toBeTruthy()
+      // Un evento, un canal: lo dice el cartel del modal, sin toast encima.
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('rechazado por permisos (403) no inventa un dueño', async () => {
+    // Antes el toast decía «perdiste el permiso» y el cartel, al lado, «no está disponible
+    // en este momento». Ahora el cartel es el único aviso y dice lo que pasó.
+    it('rechazado por permisos (403) no inventa un dueño y el cartel lo dice', async () => {
       LockService.acquireRef.mockResolvedValueOnce({ success: false, permissionDenied: true, lockedBy: 'X' })
       const wrapper = createWrapper()
       await wrapper.setProps({ list: { ...wrapper.vm.list, references: [] } })
       await wrapper.vm.openModalReferences()
       expect(wrapper.vm.referencesReadOnly).toBe(true)
-      expect(wrapper.vm.referencesReadOnlyNotice).toBe('lock.ref_locked_by_no_user')
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.vm.referencesLockedBy).toBeNull()
+      expect(wrapper.vm.referencesReadOnlyNotice).toContain('lock.permissions_revoked')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 

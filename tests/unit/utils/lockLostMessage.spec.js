@@ -1,4 +1,4 @@
-import { lockLostMessageKey, lockDeniedMessageKey, isRetryableLockLoss } from '@/utils/lockLostMessage'
+import { lockLostMessageKey, lockDeniedMessageKey, lockDeniedNoticeKey, isRetryableLockLoss } from '@/utils/lockLostMessage'
 
 /**
  * El latido distingue tres motivos por los que se pierde un ref-lock, y no se le explican
@@ -79,5 +79,37 @@ describe('isRetryableLockLoss()', () => {
     [null, false]
   ])('para %s devuelve %s', (reason, expected) => {
     expect(isRetryableLockLoss(reason)).toBe(expected)
+  })
+})
+
+/**
+ * El cartel del editor cuando el acquire se negó al abrir. Es el ÚNICO aviso de ese caso
+ * (sin toast encima), así que tiene que distinguir lo que el acquire sabe distinguir: un
+ * 403 no es «lo tiene otra persona», y un rechazo sin titular no es «perdiste el permiso».
+ */
+describe('lockDeniedNoticeKey()', () => {
+  it('un 403 dice que el permiso cambió, nunca que alguien lo tiene', () => {
+    expect(lockDeniedNoticeKey({ success: false, permissionDenied: true }))
+      .toBe('lock.permissions_revoked')
+  })
+
+  it('otra granularidad del mismo estudio tiene su propio texto', () => {
+    expect(lockDeniedNoticeKey({ success: false, lockedBy: 'Ana', reason: 'locked_at_another_granularity' }))
+      .toBe('lock.locked_at_another_granularity')
+  })
+
+  it('nombra a quien lo tiene', () => {
+    expect(lockDeniedNoticeKey({ success: false, lockedBy: 'Ana', reason: 'locked_by_other_user' }))
+      .toBe('lock.ref_locked_by')
+  })
+
+  it('sin titular ni 403 (error de red, respuesta rara) usa el texto anónimo', () => {
+    expect(lockDeniedNoticeKey({ success: false, error: 'Unknown error' })).toBe('lock.ref_locked_by_no_user')
+    expect(lockDeniedNoticeKey(null)).toBe('lock.ref_locked_by_no_user')
+  })
+
+  it('un motivo desconocido con titular sigue nombrándolo', () => {
+    expect(lockDeniedNoticeKey({ success: false, lockedBy: 'Ana', reason: 'un_motivo_que_todavia_no_existe' }))
+      .toBe('lock.ref_locked_by')
   })
 })
