@@ -73,6 +73,7 @@
     "field_required": "This field is required.",
     "auto_saving": "Saving...",
     "auto_saved": "Saved",
+    "auto_save_error": "Couldn't save automatically. Use Save to try again.",
     "interactive": "Interactive",
     "my_data": "My Data",
     "project_properties": "Project Properties",
@@ -327,7 +328,8 @@
     "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",
     "theirs": "What is stored now",
     "mine": "What you tried to save",
-    "reload": "Load the current version"
+    "reload": "Load the current version",
+    "reload_needed": "Someone else saved changes here while you were editing, so your change wasn't saved. Bring in the current version and redo it."
   },
   "project": {
     "notifications": {

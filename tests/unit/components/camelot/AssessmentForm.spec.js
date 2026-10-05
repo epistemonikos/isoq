@@ -2,8 +2,12 @@ import { mount, createLocalVue } from '@vue/test-utils'
 import AssessmentForm from '@/components/camelot/assessment/AssessmentForm.vue'
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import BootstrapVue from 'bootstrap-vue'
 
 const localVue = createLocalVue()
+// Para los tests que necesitan el `b-card` y el `b-button` de verdad (ver `mountWithChrome`).
+const bootstrapVue = createLocalVue()
+bootstrapVue.use(BootstrapVue)
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 jest.mock('@/utils/Api')
@@ -718,6 +722,81 @@ describe('AssessmentForm.vue', () => {
       await flushPromises()
 
       expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    // Nadie escuchaba `item-version-conflict` en el Paso 4: el guardado manual decía «no
+    // se pudo guardar, intente nuevamente» (reintentar manda la misma versión vieja) y el
+    // auto-guardado no decía nada. Ahora es un cartel en la celda, con cómo seguir.
+    const versionRejection = () => Object.assign(lockRejection(409), {
+      response: { status: 409, data: { reason: 'version_conflict' } }
+    })
+
+    it('un conflicto de versión es un cartel en la celda, no el error genérico', async () => {
+      Api.patch.mockRejectedValue(versionRejection())
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+      expect(wrapper.find('[data-testid="assessment-version-conflict"]').text())
+        .toContain('version_conflict.reload_needed')
+    })
+
+    // `b-card` y `b-button` reales: el pie es un slot con nombre (un stub no lo dibuja) y
+    // el cartel tiene que tener un botón de verdad para poder apretarlo.
+    const mountWithChrome = () => mount(AssessmentForm, {
+      localVue: bootstrapVue,
+      propsData,
+      mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify },
+      stubs: {
+        'b-form-group': true, 'b-form-radio-group': true, 'b-form-radio': true,
+        'b-form-textarea': true, 'b-modal': true
+      }
+    })
+
+    it('el cartel de versión trae la versión al día y se cierra', async () => {
+      wrapper.destroy()
+      wrapper = mountWithChrome()
+      Api.patch.mockRejectedValue(versionRejection())
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+      await wrapper.vm.$nextTick()
+
+      await wrapper.find('[data-testid="assessment-version-conflict"] button').trigger('click')
+
+      expect(wrapper.emitted('getAssessments')).toBeTruthy()
+      expect(wrapper.find('[data-testid="assessment-version-conflict"]').exists()).toBe(false)
+    })
+
+    // El estudio lo borró otra persona: avisa OfflineIndicator y el modal se cierra.
+    it('un estudio borrado no suma «no se pudo guardar»', async () => {
+      Api.patch.mockRejectedValue(Object.assign(lockRejection(409), {
+        response: { status: 409, data: { reason: 'reference_deleted' } }
+      }))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    // Antes el estado 'error' existía pero el pie no lo dibujaba: el auto-guardado fallido
+    // era mudo y la persona creía que lo escrito estaba a salvo.
+    it('un auto-guardado fallido se ve en el pie', async () => {
+      wrapper.destroy()
+      wrapper = mountWithChrome()
+      Api.patch.mockRejectedValue(lockRejection(500))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.text()).toContain('common.auto_save_error')
+      expect($notify.error).not.toHaveBeenCalled()
     })
   })
 

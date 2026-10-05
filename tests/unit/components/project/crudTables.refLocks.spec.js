@@ -389,6 +389,38 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
     })
   })
 
+  // El estado 'error' del auto-guardado existía pero no se dibujaba en ninguna rama.
+  describe('auto-guardado fallido', () => {
+    it('se ve en el modal cuando falla el servidor', async () => {
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), {
+        config: { url: '/isoqf_characteristics/tbl1/item/R1' }, response: { status: 500, data: {} }
+      }))
+
+      await wrapper.vm.performAutoSave()
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('common.auto_save_error')
+      wrapper.destroy()
+    })
+
+    // El 409 del lock ya lo avisó OfflineIndicator (`ref-lock-conflict`).
+    it('no suma su indicador a un rechazo por lock', async () => {
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('409'), {
+        config: { url: '/isoqf_characteristics/tbl1/item/R1' }, response: { status: 409, data: {} }
+      }))
+
+      await wrapper.vm.performAutoSave()
+      await flushPromises()
+
+      expect(wrapper.text()).not.toContain('common.auto_save_error')
+      wrapper.destroy()
+    })
+  })
+
   describe('escrituras con la fila read-only', () => {
     it('el autosave no PATCHea', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })

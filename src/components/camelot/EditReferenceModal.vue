@@ -101,6 +101,10 @@
       <span v-else-if="autoSaveStatus === 'saved'" class="text-success mr-auto small align-self-center">
         <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
       </span>
+      <span v-else-if="autoSaveStatus === 'error'" class="text-danger mr-auto small align-self-center"
+        data-testid="reference-autosave-error">
+        {{ $t('common.auto_save_error') }}
+      </span>
       <span v-else class="mr-auto"></span>
       <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
         {{ $t('common.cancel') }}
@@ -126,7 +130,7 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import * as columnService from '@/services/columnService'
 import { fieldsLockKey } from '@/utils/refLockUrls'
-import { isLockRejection, isVersionRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
 import { conflictComparison } from '@/utils/versionConflict'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
@@ -933,12 +937,17 @@ export default {
           // lado del propio. «No se pudo guardar, intente nuevamente» encima de eso diría
           // dos cosas distintas del mismo evento, y la segunda es un consejo falso:
           // reintentar manda otra vez la misma versión vieja.
-          if (error.announced || isLockRejection(error) || isVersionRejection(error)) {
+          // `writeErrorMessageKey` suma el resto de lo que ya avisó otro canal: el 403
+          // (`permission-denied`), el estudio borrado (`reference-deleted`), sin conexión.
+          const key = (error.announced || isVersionRejection(error))
+            ? null
+            : writeErrorMessageKey(error, 'notifications.save_error')
+          if (!key) {
             this.autoSaveStatus = null
             return
           }
           if (closeAfter) {
-            this.$notify.error(this.$t('notifications.save_error'))
+            this.$notify.error(this.$t(key))
           } else {
             this.autoSaveStatus = 'error'
           }

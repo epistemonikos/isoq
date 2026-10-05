@@ -47,6 +47,15 @@
             <font-awesome-icon icon="lock" class="mr-1" />
             {{ $t(studyNoticeKey, { user: studyFieldsBlockedBy }) }}
           </b-alert>
+          <!-- Un campo del estudio no se guardó porque cambió desde que se leyó. Estado, no
+               evento: sigue siendo cierto hasta traer la versión al día. -->
+          <b-alert v-if="studyVersionConflict" show variant="warning" class="mb-3"
+            data-testid="study-version-conflict">
+            <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+            <b-button size="sm" variant="outline-primary" @click="reloadAfterStudyVersionConflict">
+              {{ $t('version_conflict.reload') }}
+            </b-button>
+          </b-alert>
           <template v-if="modal.stage < 2">
             <b-row>
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
@@ -336,7 +345,8 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
-import { isLockRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import {
   ASSESSMENT_CELLS,
   baseRefOf,
@@ -454,6 +464,8 @@ export default {
       // nine cells.
       studyFieldsReadOnly: false,
       studyFieldsLockedBy: null,
+      // El servidor rechazó un campo del estudio por versión (ver el cartel del modal).
+      studyVersionConflict: false,
       holdsStudyLock: false,
       refLockedBy: null,
       isModalOpen: false,
@@ -1348,6 +1360,7 @@ export default {
       this.deniedCellKeys = new Map()
       this.studyPermissionDenied = false
       this.studyLostReason = null
+      this.studyVersionConflict = false
       this.studyLockLost = false
       this.pendingConflictRefId = ''
       // `incompleteCells` NO se limpia acá, aunque cambie de estudio. Limpiarlo lo dejaba
@@ -1511,6 +1524,7 @@ export default {
       this.deniedCellKeys = new Map()
       this.studyPermissionDenied = false
       this.studyLostReason = null
+      this.studyVersionConflict = false
       this.fetchAndUpdateRefLocks()
       // Nothing is being typed any more, so a reload held back while the modal was
       // open can be applied now.
@@ -1746,12 +1760,17 @@ export default {
         })
         .catch(error => {
           console.error('Error saving characteristic field:', error)
-          // Already announced by the lock channel, with the holder's name and the text
-          // kept locally. The generic "try again" would contradict it.
-          if (!isLockRejection(error)) {
-            this.$notify.error(this.$t('notifications.save_error'))
-          }
           this.isSavingField = false
+          // La fila cambió desde que se leyó: lo dice el cartel del modal, y lo escrito
+          // queda a la vista para rehacerlo. Recargar es decisión de la persona (el botón).
+          if (isVersionRejection(error)) {
+            this.studyVersionConflict = true
+            return
+          }
+          // Lo que otro canal ya avisó (lock con el titular y el texto guardado, 403,
+          // estudio borrado, sin conexión) no se repite: «intente nuevamente» lo contradice.
+          const key = writeErrorMessageKey(error, 'notifications.save_error')
+          if (key) this.$notify.error(this.$t(key))
           this.getCharacteristics()
         })
     },
@@ -1767,6 +1786,10 @@ export default {
     },
     onAutoSaveField (newValue) {
       return this.trackPendingWrite(this.saveField(newValue, true))
+    },
+    reloadAfterStudyVersionConflict () {
+      this.studyVersionConflict = false
+      this.getCharacteristics()
     }
   }
 }

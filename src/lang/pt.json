@@ -73,6 +73,7 @@
     "field_required": "Este campo é obrigatório.",
     "auto_saving": "Salvando...",
     "auto_saved": "Salvo",
+    "auto_save_error": "Não foi possível salvar automaticamente. Use Salvar para tentar de novo.",
     "interactive": "Interativo",
     "my_data": "Meus Dados",
     "project_properties": "Propriedades do Projeto",
@@ -327,7 +328,8 @@
     "message": "Outra pessoa salvou alterações neste estudo enquanto você o editava. Seu texto não foi salvo. Abaixo está o que ficou salvo e o que você tentou salvar, para que possa refazer sua alteração sem perder a da outra pessoa.",
     "theirs": "O que ficou salvo",
     "mine": "O que você tentou salvar",
-    "reload": "Carregar a versão atual"
+    "reload": "Carregar a versão atual",
+    "reload_needed": "Outra pessoa salvou alterações aqui enquanto você editava, então sua alteração não foi salva. Traga a versão atualizada e refaça-a."
   },
   "project": {
     "notifications": {

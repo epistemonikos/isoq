@@ -45,6 +45,7 @@ import columnService from '@/services/columnService'
 import LockService from '@/services/lockService'
 import { fieldsLockKey } from '@/utils/refLockUrls'
 import { persistableOrder } from '@/utils/columnOrder'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 
 const COLLECTION = 'isoqf_characteristics'
 
@@ -138,6 +139,8 @@ export default {
 
       const result = await LockService.acquireRef(this.$route.params.id, fieldsLockKey(docId))
       if (!result || !result.success) {
+        // Un 403 ya lo avisó `permission-denied` (el acquire es un POST): no se repite.
+        if (result && result.permissionDenied) return false
         // Con el nombre de quien lo tiene, el usuario sabe que hay que esperar y a quién
         // preguntarle. "Error al actualizar" no dice ni qué pasó ni qué hacer.
         this.notifyError(
@@ -187,7 +190,7 @@ export default {
         }
       } catch (error) {
         console.error('Error saving column:', error)
-        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
+        this.notifyWriteError(error)
       } finally {
         this.isSavingColumns = false
       }
@@ -221,7 +224,7 @@ export default {
         this.emitSaved(response)
       } catch (error) {
         console.error('Error deleting column:', error)
-        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
+        this.notifyWriteError(error)
       } finally {
         this.isSavingColumns = false
       }
@@ -265,7 +268,7 @@ export default {
         this.emitSaved(await columnService.reorderColumns(COLLECTION, this.documentId, order))
       } catch (error) {
         console.error('Error reordering columns:', error)
-        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
+        this.notifyWriteError(error)
       }
     },
     async onModalHidden () {
@@ -311,6 +314,14 @@ export default {
         id: data.id || this.charsData.id,
         _id: data._id || this.charsData._id
       })
+    },
+    /**
+     * El fallo de una escritura de columnas, salvo que otro canal ya lo haya dicho: el 409
+     * del lock (`ref-lock-conflict`), el 403 (`permission-denied`), sin conexión.
+     */
+    notifyWriteError (error) {
+      const key = writeErrorMessageKey(error, 'camelot.step_three.columns_modal.error_update')
+      if (key) this.notifyError(this.$t(key))
     },
     /** Recibe el mensaje ya armado: algunos llevan interpolación. */
     notifyError (message) {

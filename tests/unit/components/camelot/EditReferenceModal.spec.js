@@ -294,6 +294,47 @@ describe('EditReferenceModal.vue', () => {
 
       expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
     })
+
+    // El estudio lo borró otra persona: avisa OfflineIndicator y el editor se cierra.
+    it('un estudio borrado no suma «no se pudo guardar»', async () => {
+      Api.patch.mockRejectedValue(Object.assign(rejection(409), {
+        response: { status: 409, data: { reason: 'reference_deleted' } }
+      }))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+    })
+
+    // El estado 'error' existía pero el pie no lo dibujaba: el auto-guardado fallido era
+    // mudo y la persona creía que lo escrito estaba a salvo.
+    it('un auto-guardado fallido se ve en el pie del modal', async () => {
+      const footerStub = {
+        template: '<div><slot /><slot name="modal-footer" :ok="() => {}" :cancel="() => {}" /></div>'
+      }
+      const conPie = shallowMount(EditReferenceModal, {
+        propsData: { reference: mockReference, charsData: mockCharsData, camelot: mockCamelot },
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal: { show: jest.fn(), hide: jest.fn() },
+          $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+        },
+        stubs: {
+          'b-modal': footerStub, 'b-row': true, 'b-col': true, 'b-card': true,
+          'b-card-body': true, 'b-form-textarea': true, 'CustomFieldsManager': true
+        }
+      })
+      Api.patch.mockRejectedValue(rejection(500))
+
+      await conPie.vm.performSave(false)
+      await flushPromises()
+
+      expect(conPie.find('[data-testid="reference-autosave-error"]').text()).toContain('common.auto_save_error')
+      expect(conPie.vm.$notify.error).not.toHaveBeenCalled()
+      conPie.destroy()
+    })
   })
 
   // Step 3's editor had the same hole as Step 4's: it listened for the conflict on

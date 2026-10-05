@@ -13,7 +13,14 @@
         <!-- Shown for every read-only reason, named holder or not: the loss reported by
              the heartbeat carries no name, and that silence is what left users typing
              into a form that could no longer save. -->
-        <b-alert v-if="isReadOnly && showLockNotice" show variant="warning" class="mb-3"
+        <b-alert v-if="versionConflict" show variant="warning" class="mb-3"
+          data-testid="assessment-version-conflict">
+          <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+          <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
+            {{ $t('version_conflict.reload') }}
+          </b-button>
+        </b-alert>
+        <b-alert v-else-if="isReadOnly && showLockNotice" show variant="warning" class="mb-3"
           data-testid="assessment-readonly-notice">
           <font-awesome-icon icon="lock" class="mr-1" />
           {{ lockNoticeKey
@@ -65,6 +72,10 @@
           <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
             <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
           </span>
+          <span v-else-if="autoSaveStatus === 'error'" class="text-danger small"
+            data-testid="assessment-autosave-error">
+            {{ $t('common.auto_save_error') }}
+          </span>
           <span v-else></span>
           <div>
             <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
@@ -106,7 +117,8 @@
 
 <script>
 import Api from '@/utils/Api'
-import { isLockRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import _debounce from 'lodash.debounce'
 import pendingEditsMixin from '@/mixins/pendingEditsMixin'
@@ -151,6 +163,10 @@ export default {
       returnFocusTarget: null,
       isSaving: false,
       autoSaveStatus: null,
+      // El servidor rechazó el guardado porque la celda cambió desde que se leyó. Es
+      // estado de esta celda —sigue siendo cierto hasta traer la versión al día—, así que
+      // va como cartel y no como toast.
+      versionConflict: false,
       options: [
         [
           {
@@ -533,6 +549,10 @@ export default {
       this.text1 = ''
       this.notes = ''
     },
+    reloadAfterVersionConflict () {
+      this.versionConflict = false
+      this.$emit('getAssessments')
+    },
     async performSave (silent = false) {
       if (this.isReadOnly) return
       if (!this.refId) {
@@ -583,17 +603,25 @@ export default {
         console.error('Error saving assessment data:', error)
         if (revertLocalLeaf) revertLocalLeaf()
         this.isSaving = false
-        // The lock channel already told the user who took the entry and that their text
-        // was kept locally. Adding "please try again" on top contradicts it: retrying
-        // cannot succeed while somebody else holds the lock.
-        if (isLockRejection(error)) {
+        // La celda cambió desde que se leyó: el cartel de la celda lo dice y ofrece traer
+        // la versión al día. Reintentar mandaría otra vez la misma versión vieja.
+        if (isVersionRejection(error)) {
+          this.autoSaveStatus = null
+          this.versionConflict = true
+          return
+        }
+        // Lo que otro canal ya avisó —lock (con el titular y el texto guardado), 403,
+        // estudio borrado, sin conexión— no se repite: «intente nuevamente» lo
+        // contradiría.
+        const key = writeErrorMessageKey(error, 'notifications.save_error')
+        if (!key) {
           this.autoSaveStatus = null
           return
         }
         if (silent) {
           this.autoSaveStatus = 'error'
         } else {
-          this.$notify.error(this.$t('notifications.save_error'))
+          this.$notify.error(this.$t(key))
         }
       }
 
