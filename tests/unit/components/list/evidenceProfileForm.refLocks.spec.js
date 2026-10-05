@@ -509,6 +509,57 @@ describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C
   })
 })
 
+// La fila inline sigue abierta tras el fallo: el conflicto de versión es estado de ESA
+// fila, y va como cartel en ella (antes: «no se pudo guardar, intente nuevamente»).
+describe('evidenceProfileForm.vue — conflicto de versión en la fila inline', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  const versionRejection = () => Object.assign(new Error('409'), {
+    config: { url: '/isoqf_extracted_data/ed1/item/ref1' },
+    response: { status: 409, data: { reason: 'version_conflict' } }
+  })
+
+  it('muestra el cartel en la fila, sin toast', async () => {
+    const { wrapper, $notify } = createWrapper({
+      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
+    })
+    await openModal(wrapper)
+    wrapper.vm.editExtractedDataInPlace(0)
+    await flushPromises()
+    Api.patch.mockRejectedValueOnce(versionRejection())
+
+    await wrapper.vm.updateContentExtractedDataItem('ref1')
+    await flushPromises()
+
+    expect(wrapper.vm.rowVersionConflict).toBe(true)
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('«Traer la versión al día» cierra la edición inline y recarga', async () => {
+    const { wrapper } = createWrapper({
+      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
+    })
+    await openModal(wrapper)
+    wrapper.vm.editExtractedDataInPlace(0)
+    await flushPromises()
+    Api.patch.mockRejectedValueOnce(versionRejection())
+    await wrapper.vm.updateContentExtractedDataItem('ref1')
+    await flushPromises()
+
+    wrapper.vm.reloadAfterRowVersionConflict()
+
+    expect(wrapper.vm.rowVersionConflict).toBe(false)
+    expect(wrapper.emitted('getExtractedData')).toBeTruthy()
+    const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
+    expect(emitted[emitted.length - 1][0].display).toBe(false)
+    wrapper.destroy()
+  })
+})
+
 // Grisar ANTES del clic: el sondeo de la worksheet baja hasta el modal.
 describe('evidenceProfileForm.vue — filas de datos extraídos tomadas por otra persona', () => {
   beforeEach(() => {

@@ -144,6 +144,8 @@ import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -374,9 +376,7 @@ export default {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
         })
-        .catch((error) => {
-          this.$emit('printErrors', error)
-        })
+        .catch((error) => this.onRowWriteError(error))
     },
     saveDataExtractedData: function () {
       // Granular save: PATCH only the edited row via the /item/<ref_id> sub-resource,
@@ -399,9 +399,25 @@ export default {
           this.buffer_extracted_data = {fields: [], items: [], id: null}
           this.buffer_extracted_data_items = {}
         })
-        .catch((error) => {
-          this.$emit('printErrors', error)
-        })
+        .catch((error) => this.onRowWriteError(error))
+    },
+    /**
+     * El modal se cierra al confirmar (`@ok`), así que el fallo llega con el editor ya
+     * cerrado: es un evento, y el aviso va por toast. `printErrors` del padre no muestra
+     * nada, y sólo con él este guardado fallaba sin decirlo.
+     */
+    onRowWriteError: function (error) {
+      this.$emit('printErrors', error)
+      if (!this.$notify) return
+      // La fila cambió desde que se leyó: se trae al día para que la persona, al reabrir,
+      // parta de lo que guardó la otra.
+      if (isVersionRejection(error)) {
+        this.$emit('getExtractedData', true)
+        this.$notify.warning(this.$t('version_conflict.reloaded'))
+        return
+      }
+      const key = writeErrorMessageKey(error, 'notifications.save_error')
+      if (key) this.$notify.error(this.$t(key))
     }
   },
   mounted () {

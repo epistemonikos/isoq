@@ -329,7 +329,8 @@
     "theirs": "O que ficou salvo",
     "mine": "O que você tentou salvar",
     "reload": "Carregar a versão atual",
-    "reload_needed": "Outra pessoa salvou alterações aqui enquanto você editava, então sua alteração não foi salva. Traga a versão atualizada e refaça-a."
+    "reload_needed": "Outra pessoa salvou alterações aqui enquanto você editava, então sua alteração não foi salva. Traga a versão atualizada e refaça-a.",
+    "reloaded": "Outra pessoa salvou alterações nesta linha enquanto você editava, então sua alteração não foi salva. A versão atualizada já está carregada: abra-a de novo para refazer sua alteração."
   },
   "project": {
     "notifications": {

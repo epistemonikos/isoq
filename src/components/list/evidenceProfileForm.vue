@@ -528,7 +528,14 @@
                         showEditExtractedDataInPlace.item.index ===
                         data.item.index
                       ">
-                        <b-alert v-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
+                        <b-alert v-if="rowVersionConflict" show variant="warning" class="mb-2"
+                          data-testid="row-version-conflict">
+                          <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+                          <b-button size="sm" variant="outline-primary" @click="reloadAfterRowVersionConflict">
+                            {{ $t('version_conflict.reload') }}
+                          </b-button>
+                        </b-alert>
+                        <b-alert v-else-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
                           data-testid="row-readonly-notice">
                           {{ rowReadOnlyNotice }}
                         </b-alert>
@@ -847,6 +854,7 @@ import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/util
 import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
+import { isVersionRejection } from '@/utils/lockErrors'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 
 export default {
@@ -916,6 +924,8 @@ export default {
       rowLockedBy: null,
       rowLockLost: false,
       rowDeniedKey: null,
+      // El servidor rechazó la fila inline por versión: cartel en la fila hasta recargar.
+      rowVersionConflict: false,
       selectedOptions: {
         methodological_limitations: {
           option: null,
@@ -1274,6 +1284,7 @@ export default {
       this.rowLockedBy = null
       this.rowLockLost = false
       this.rowDeniedKey = null
+      this.rowVersionConflict = false
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -1593,9 +1604,19 @@ export default {
         .catch((error) => {
           // La edición queda abierta con lo escrito; el lock de la fila sigue tomado.
           this.printErrors(error)
+          // La fila cambió desde que se leyó: estado de ESTA fila, va como cartel en ella.
+          if (isVersionRejection(error)) {
+            this.rowVersionConflict = true
+            return
+          }
           const key = writeErrorMessageKey(error, 'notifications.save_error')
           if (key && this.$notify) this.$notify.error(this.$t(key))
         })
+    },
+    reloadAfterRowVersionConflict: function () {
+      this.rowVersionConflict = false
+      this.cancelExtractedDataInPlace()
+      this.$emit('getExtractedData', true)
     },
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)

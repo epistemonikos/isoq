@@ -329,7 +329,8 @@
     "theirs": "Lo que quedó guardado",
     "mine": "Lo que intentaste guardar",
     "reload": "Traer la versión al día",
-    "reload_needed": "Otra persona guardó cambios aquí mientras editabas, así que tu cambio no se guardó. Trae la versión al día y vuelve a hacerlo."
+    "reload_needed": "Otra persona guardó cambios aquí mientras editabas, así que tu cambio no se guardó. Trae la versión al día y vuelve a hacerlo.",
+    "reloaded": "Otra persona guardó cambios en esta fila mientras la editabas, así que tu cambio no se guardó. Ya está la versión al día: vuelve a abrirla para rehacerlo."
   },
   "project": {
     "notifications": {

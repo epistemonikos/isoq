@@ -329,7 +329,8 @@
     "theirs": "What is stored now",
     "mine": "What you tried to save",
     "reload": "Load the current version",
-    "reload_needed": "Someone else saved changes here while you were editing, so your change wasn't saved. Bring in the current version and redo it."
+    "reload_needed": "Someone else saved changes here while you were editing, so your change wasn't saved. Bring in the current version and redo it.",
+    "reloaded": "Someone else saved changes to this row while you were editing, so your change wasn't saved. The current version is loaded: open it again to redo your change."
   },
   "project": {
     "notifications": {
