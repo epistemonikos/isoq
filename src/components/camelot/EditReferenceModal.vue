@@ -29,15 +29,10 @@
           {{ $t('version_conflict.reload') }}
         </b-button>
       </b-alert>
-      <b-alert v-else-if="isReadOnly && !isOffline" show variant="warning" class="mb-3"
+      <b-alert v-else-if="isReadOnly" show variant="warning" class="mb-3"
         data-testid="reference-readonly-notice">
         <font-awesome-icon icon="lock" class="mr-1" />
-        {{ lockedByUser
-          ? $t('lock.ref_locked_by', { user: lockedByUser })
-          : $t('lock.ref_locked_by_no_user') }}
-      </b-alert>
-      <b-alert v-else-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
-        {{ $t('lock.ref_lock_offline') }}
+        {{ $t(readOnlyNoticeKey, { user: lockedByUser }) }}
       </b-alert>
       <!--
         Fuera del fieldset a propósito: adentro, el botón "Sigo trabajando" quedaría
@@ -144,6 +139,7 @@ import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
+import { lockLostMessageKey, lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 
 export default {
@@ -223,7 +219,10 @@ export default {
       versionConflict: null,
       isReadOnly: false,
       lockedByUser: null,
-      isOffline: false,
+      // Lo que explica el cartel de solo lectura: el motivo del latido si se perdió, o la
+      // clave que dio el acquire al negarse. El cartel es el único aviso (sin toast).
+      lockLostReason: null,
+      lockDeniedKey: null,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -231,6 +230,11 @@ export default {
     }
   },
   computed: {
+    readOnlyNoticeKey () {
+      if (this.lockLostReason) return lockLostMessageKey(this.lockLostReason, this.lockedByUser)
+      if (this.lockDeniedKey) return this.lockDeniedKey
+      return this.lockedByUser ? 'lock.ref_locked_by' : 'lock.ref_locked_by_no_user'
+    },
     modalTitle () {
       if (this.localReference) {
         const authorInfo = Commons.parseReference(this.localReference, true, false)
@@ -312,6 +316,8 @@ export default {
         this.$route.params.id,
         this.localReference.id
       )
+      this.lockLostReason = null
+      this.lockDeniedKey = null
       if (result.success) {
         this.isReadOnly = false
         this.lockedByUser = null
@@ -319,22 +325,14 @@ export default {
         // regresiva sería una amenaza vacía. No hace falta consultar un `canEdit` —
         // acá no existe como prop, y el permiso ya está resuelto en este resultado.
         if (LockService.isEnabled) this.startInactivityWatch()
-      } else if (result.permissionDenied) {
-        // Nobody else is editing this study — this user's own can_write was
-        // revoked. Don't reuse the "locked by X" message, there is no X.
-        this.isReadOnly = true
-        this.lockedByUser = null
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.permissions_revoked'))
-        }
       } else {
+        // Sin toast: lo dice el cartel del editor (`readOnlyNoticeKey`) y se queda. Un
+        // 403 no nombra a nadie: es el can_write propio el que cambió.
+        // Estudio borrado: el modal lo cierra `referenceDeletedMixin`; el aviso es de
+        // OfflineIndicator.
         this.isReadOnly = true
-        this.lockedByUser = result.lockedBy || null
-        // Estudio borrado: no hay titular que nombrar; el modal se cierra por su canal.
-        if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
-        }
+        this.lockedByUser = result.permissionDenied ? null : (result.lockedBy || null)
+        if (result.reason !== REFERENCE_DELETED) this.lockDeniedKey = lockDeniedNoticeKey(result)
       }
     },
     referenceDeletedOpenStudy () {
@@ -355,6 +353,7 @@ export default {
       // The heartbeat's 409 carries no holder; the banner falls back to a neutral
       // wording rather than hiding itself.
       this.lockedByUser = detail.lockedBy || null
+      this.lockLostReason = detail.reason || null
       // Sin lock no queda nada que soltar: el reloj perdió su razón de ser.
       this.stopInactivityWatch()
     },
@@ -448,7 +447,8 @@ export default {
       this.autoSaveStatus = null
       this.isReadOnly = false
       this.lockedByUser = null
-      this.isOffline = false
+      this.lockLostReason = null
+      this.lockDeniedKey = null
       this.$emit('close')
     },
     initScrollSpy () {

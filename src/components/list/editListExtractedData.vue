@@ -283,7 +283,7 @@ export default {
       const item = this.localExtractedData.items[index]
       return item ? item.ref_id : null
     },
-    // Mirrors StepFour.vue's acquireStudyLock: ask on open so the rejection lands
+    // Mirrors StepFour.vue's ensureStudyLock: ask on open so the rejection lands
     // before the user types. The project id comes from the list prop — the route
     // param of this view is the list id.
     async acquireRowLock (lockKey) {

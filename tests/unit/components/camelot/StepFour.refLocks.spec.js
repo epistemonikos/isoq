@@ -154,28 +154,6 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     wrapper.destroy()
   })
 
-  it('marca isRefReadOnly y notifica cuando el lock devuelve 409', async () => {
-    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana López' })
-    const wrapper = createWrapper()
-    await flushPromises()
-    await wrapper.vm.acquireStudyLock('ref1')
-    expect(wrapper.vm.isRefReadOnly).toBe(true)
-    expect(wrapper.vm.refLockedBy).toBe('Ana López')
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
-    wrapper.destroy()
-  })
-
-  it('marca isRefReadOnly SIN nombre de usuario y notifica "permisos revocados" cuando el lock devuelve permissionDenied (403)', async () => {
-    LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-    const wrapper = createWrapper()
-    await flushPromises()
-    await wrapper.vm.acquireStudyLock('ref1')
-    expect(wrapper.vm.isRefReadOnly).toBe(true)
-    expect(wrapper.vm.refLockedBy).toBeNull()
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
-    wrapper.destroy()
-  })
-
   it('al cambiar de pestaña libera la hoja anterior y toma la nueva, sin soltar el estudio', async () => {
     const wrapper = createWrapper()
     await flushPromises()
@@ -297,7 +275,7 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
       wrapper.destroy()
     })
 
-    it('guarda quién tiene la celda y avisa al usuario', async () => {
+    it('guarda quién tiene la celda y lo dice SÓLO el cartel de la celda', async () => {
       const wrapper = createWrapper()
       await flushPromises()
       LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
@@ -309,13 +287,28 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
       // El nombre queda indexado POR CELDA: un escalar se sobreescribía al recorrer
       // varias celdas denegadas, y es el que alimenta el cartel de AssessmentForm.
       expect(wrapper.vm.cellLockedBy(0, 0)).toBe('Ana López')
-      expect(wrapper.vm.$notify.warning)
-        .toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
+      expect(wrapper.vm.cellLockNoticeKey(0, 0)).toBe('lock.ref_locked_by')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('el cartel de la celda explica la granularidad del acquire', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref === 'ref1::s0::o0'
+          ? { success: false, lockedBy: 'Ana López', reason: 'locked_at_another_granularity' }
+          : { success: true }
+      ))
+
+      await openModalOn(wrapper, 0, 0)
+
+      expect(wrapper.vm.cellLockNoticeKey(0, 0)).toBe('lock.locked_at_another_granularity')
       wrapper.destroy()
     })
 
     // A 403 is not "someone else has it": this user's can_write was revoked, so
-    // nothing in the study is editable — same call acquireStudyLock makes.
+    // nothing in the study is editable.
     it('un 403 deja el estudio entero en solo lectura, no una celda', async () => {
       const wrapper = createWrapper()
       await flushPromises()
@@ -327,7 +320,10 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
 
       expect(wrapper.vm.isRefReadOnly).toBe(true)
       expect(wrapper.vm.cellLockedBy(0, 0)).toBeNull()
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      // Un solo cartel, el del estudio, y dice lo que pasó: no «otra persona trabaja».
+      expect(wrapper.vm.studyNoticeKey).toBe('lock.permissions_revoked')
+      expect(wrapper.vm.cellLockNoticeKey(0, 0)).toBeNull()
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
@@ -425,16 +421,6 @@ describe('StepFour.vue — canEdit gating (read-only user protection)', () => {
     LockService.acquireRef.mockResolvedValue({ success: true })
   })
 
-  it('acquireStudyLock no llama a LockService.acquireRef cuando canEdit es false', async () => {
-    const wrapper = createWrapper({ canEdit: false })
-    await flushPromises()
-    await wrapper.vm.acquireStudyLock('ref1')
-    expect(LockService.acquireRef).not.toHaveBeenCalled()
-    expect(wrapper.vm.isRefReadOnly).toBe(true)
-    expect(wrapper.vm.refLockedBy).toBeNull()
-    wrapper.destroy()
-  })
-
   it('openModal deja el assessment en solo lectura cuando canEdit es false, sin tomar el lock', async () => {
     const wrapper = createWrapper({ canEdit: false })
     await flushPromises()
@@ -447,14 +433,6 @@ describe('StepFour.vue — canEdit gating (read-only user protection)', () => {
     wrapper.destroy()
   })
 
-  it('acquireStudyLock sigue adquiriendo el lock cuando canEdit es true (regresión)', async () => {
-    const wrapper = createWrapper({ canEdit: true })
-    await flushPromises()
-    await wrapper.vm.acquireStudyLock('ref1')
-    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
-    expect(wrapper.vm.isRefReadOnly).toBe(false)
-    wrapper.destroy()
-  })
 })
 
 // "characteristics = un estudio, un usuario": the study fields are locked only while
@@ -486,7 +464,7 @@ describe('StepFour.vue — lock del estudio bajo demanda (campos de characterist
     wrapper.destroy()
   })
 
-  it('si el estudio ya lo tiene otro, no entra en edición y avisa quién', async () => {
+  it('si el estudio ya lo tiene otro, no entra en edición y lo dice sólo el cartel', async () => {
     const wrapper = createWrapper()
     await flushPromises()
     await openStudy(wrapper)
@@ -497,7 +475,8 @@ describe('StepFour.vue — lock del estudio bajo demanda (campos de characterist
     expect(wrapper.vm.editingField.type).toBeNull()
     expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
     expect(wrapper.vm.studyFieldsLockedBy).toBe('Ana López')
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
+    expect(wrapper.vm.studyNoticeKey).toBe('lock.study_fields_locked_by')
+    expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 

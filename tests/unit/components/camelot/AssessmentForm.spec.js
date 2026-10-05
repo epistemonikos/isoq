@@ -587,6 +587,29 @@ describe('AssessmentForm.vue', () => {
       roWrapper.destroy()
     })
 
+    // El cartel de la celda dice el motivo que StepFour sabe (granularidad, latido).
+    it('usa la clave que le pasa StepFour', async () => {
+      const roWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: true, lockedByUser: 'Ana', lockNoticeKey: 'lock.evicted_granularity' },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(roWrapper.find('[data-testid="assessment-readonly-notice"]').text()).toContain('lock.evicted_granularity')
+      roWrapper.destroy()
+    })
+
+    // Con el estudio entero bloqueado lo explica el cartel de arriba de StepFour; uno por
+    // celda diría lo mismo (o, peor, otra cosa) al lado.
+    it('no dibuja su cartel cuando StepFour ya avisa por el estudio entero', async () => {
+      const roWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: true, lockedByUser: null, showLockNotice: false },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(roWrapper.find('[data-testid="assessment-readonly-notice"]').exists()).toBe(false)
+      roWrapper.destroy()
+    })
+
     it('no avisa nada mientras la celda se puede editar', async () => {
       const rwWrapper = mount(AssessmentForm, {
         localVue,

@@ -95,7 +95,7 @@ async function openRow (wrapper, index = 0, rows = ROWS, fields = []) {
 // Endpoint B (`PATCH /<coll>/<id>/item/<ref_id>`) is guarded by @verify_ref_lock,
 // which demands the caller HOLDS the lock — a write without one is a 409
 // `lock_not_held` even when nobody else is editing. Pattern mirrors
-// StepFour.vue's acquireStudyLock (the proven camelot flow).
+// StepFour.vue's ensureStudyLock (the proven camelot flow).
 describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
   beforeEach(() => {
     jest.clearAllMocks()

@@ -1111,7 +1111,7 @@ export default {
       // por el valor de una sesión anterior.
       return sectionLockKey(findingId, this.openedSection || (this.modalData && this.modalData.type))
     },
-    // Mirrors StepFour.vue's acquireStudyLock: asked for on open, so the rejection
+    // Mirrors StepFour.vue's ensureStudyLock: asked for on open, so the rejection
     // reaches the user before they fill the form instead of on save.
     //
     // UNA sola clave al abrir: la de la sección que se está mostrando. Tomar además la

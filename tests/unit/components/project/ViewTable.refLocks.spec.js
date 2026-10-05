@@ -223,7 +223,20 @@ describe('ViewTable — rechazo del lock', () => {
 
     expect(wrapper.vm.isFindingReadOnly).toBe(true)
     expect(wrapper.vm.findingLockedBy).toBeNull()
-    expect($notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+    // El cartel dice lo que pasó, y es el único aviso (un evento, un canal).
+    expect(wrapper.vm.readOnlyNotice).toContain('lock.permissions_revoked')
+    expect($notify.warning).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('un lock ajeno lo dice sólo el cartel del modal, sin toast', async () => {
+    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana' })
+    const { wrapper, $notify } = createWrapper()
+
+    await wrapper.vm.editModalFindingName({ index: 0, item: LISTS[0] })
+
+    expect(wrapper.vm.readOnlyNotice).toContain('lock.ref_locked_by')
+    expect($notify.warning).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 

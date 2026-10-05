@@ -254,6 +254,22 @@ describe('StepFour — estado imposible: dos dueños del mismo estudio', () => {
     wrapper.destroy()
   })
 
+  // El sondeo corre cada 15 s y este estado persiste: con un toast por ciclo, la pila de
+  // avisos crecía mientras el modal siguiera abierto. Lo dice el cartel del estudio.
+  it('no apila un toast por sondeo: lo dice el cartel del estudio', async () => {
+    const wrapper = await opened(createWrapper())
+    LockService.refLocks.set('R1', 'proj1')
+    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: 'R1::s1::o2', user_name: 'Ana López' }])
+
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
+    expect(wrapper.vm.studyNoticeKey).toBe('lock.ref_locked_by')
+    wrapper.destroy()
+  })
+
   it('no degrada si el listado sólo nos muestra a nosotros', async () => {
     const wrapper = await opened(createWrapper())
     LockService.refLocks.set('R1', 'proj1')

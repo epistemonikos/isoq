@@ -219,16 +219,41 @@ describe('EditReferenceModal.vue', () => {
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBe('Ana López')
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      // Un evento, un canal: lo dice el cartel del editor, sin toast encima.
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text()).toContain('lock.ref_locked_by')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
     })
 
-    it('deshabilita edición SIN nombre de usuario y avisa "permisos revocados" cuando acquireRef retorna permissionDenied (403)', async () => {
+    it('con permissionDenied (403) el cartel dice «permisos revocados», sin nombre ni toast', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
       await wrapper.vm.onModalShown()
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBeNull()
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text()).toContain('lock.permissions_revoked')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
+    })
+
+    it('el cartel explica la granularidad del acquire', async () => {
+      LockService.acquireRef.mockResolvedValue({
+        success: false, lockedBy: 'Ana López', reason: 'locked_at_another_granularity'
+      })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text())
+        .toContain('lock.locked_at_another_granularity')
+    })
+
+    it('el cartel explica el motivo del latido cuando se pierde el lock', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ref1', lockedBy: 'Ana López', reason: 'evicted_granularity_conflict' }
+      }))
+      await flushPromises()
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text())
+        .toContain('lock.evicted_granularity')
     })
 
     it('llama releaseRef en resetModal', () => {

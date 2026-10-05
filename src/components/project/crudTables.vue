@@ -1193,7 +1193,7 @@ export default {
       if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
       this.lockedRowRef = null
     },
-    // Mirrors StepFour.vue's acquireStudyLock: the lock is asked for when the
+    // Mirrors StepFour.vue's ensureStudyLock: the lock is asked for when the
     // editor opens, so the rejection reaches the user before they type, not on save.
     async acquireRowLock (refId) {
       if (!refId) return

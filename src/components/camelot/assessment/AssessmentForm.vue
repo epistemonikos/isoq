@@ -13,12 +13,14 @@
         <!-- Shown for every read-only reason, named holder or not: the loss reported by
              the heartbeat carries no name, and that silence is what left users typing
              into a form that could no longer save. -->
-        <b-alert v-if="isReadOnly" show variant="warning" class="mb-3"
+        <b-alert v-if="isReadOnly && showLockNotice" show variant="warning" class="mb-3"
           data-testid="assessment-readonly-notice">
           <font-awesome-icon icon="lock" class="mr-1" />
-          {{ lockedByUser
-            ? $t('lock.ref_locked_by', { user: lockedByUser })
-            : $t('lock.ref_locked_by_no_user') }}
+          {{ lockNoticeKey
+            ? $t(lockNoticeKey, { user: lockedByUser })
+            : lockedByUser
+              ? $t('lock.ref_locked_by', { user: lockedByUser })
+              : $t('lock.ref_locked_by_no_user') }}
         </b-alert>
 
         <b-form-group label="" class="mb-4">
@@ -291,6 +293,17 @@ export default {
       default: false
     },
     lockedByUser: {
+      type: String,
+      default: null
+    },
+    // StepFour lo apaga cuando el estudio entero está cerrado: lo explica su cartel de
+    // arriba, y uno por celda diría lo mismo al lado (un evento, un canal).
+    showLockNotice: {
+      type: Boolean,
+      default: true
+    },
+    // El motivo que StepFour sabe (granularidad, latido); sin él, el texto de siempre.
+    lockNoticeKey: {
       type: String,
       default: null
     }
