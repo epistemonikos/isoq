@@ -16,6 +16,16 @@
         <b-alert v-if="versionConflict" show variant="warning" class="mb-3"
           data-testid="assessment-version-conflict">
           <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+          <!-- Rótulos como texto y no `placeholder`: la caja siempre tiene valor. -->
+          <template v-if="conflictLeaf">
+            <label class="d-block small mb-0">{{ $t('version_conflict.theirs') }}</label>
+            <b-form-textarea :value="conflictSummary(conflictLeaf)" readonly rows="2" class="bg-light mb-1" />
+            <label class="d-block small mb-0">{{ $t('version_conflict.mine') }}</label>
+            <!-- Los campos en vivo, no una foto del intento: la persona puede seguir
+                 escribiendo, y «Traer la versión al día» los reemplaza. -->
+            <b-form-textarea :value="conflictSummary({ option: selected, text: text1 })" readonly rows="2"
+              class="bg-light mb-2" />
+          </template>
           <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
             {{ $t('version_conflict.reload') }}
           </b-button>
@@ -119,6 +129,7 @@
 import Api from '@/utils/Api'
 import { isVersionRejection } from '@/utils/lockErrors'
 import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
+import { VERSION_FIELD, leafVersionOf, leafInDocument } from '@/utils/leafVersion'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import _debounce from 'lodash.debounce'
 import pendingEditsMixin from '@/mixins/pendingEditsMixin'
@@ -167,6 +178,14 @@ export default {
       // estado de esta celda —sigue siendo cierto hasta traer la versión al día—, así que
       // va como cartel y no como toast.
       versionConflict: false,
+      // Lo que quedó guardado (viene en el 409), para mostrarlo junto a lo que la persona
+      // tiene escrito y que pueda rehacer su cambio sin perder el de la otra.
+      conflictLeaf: null,
+      // Versión de la celda con la que se HIDRATÓ el formulario (endpoint D). Va atada a la
+      // hidratación y no al documento que llega: con un borrador abierto el watcher no
+      // rehidrata, y absorber el `_v` de una escritura ajena haría que el guardado la
+      // pisara sin conflicto.
+      leafVersion: 0,
       options: [
         [
           {
@@ -448,7 +467,15 @@ export default {
       this.selected = leaf.option
       this.text1 = leaf.text
       this.notes = leaf.notes || ''
+      this.leafVersion = leafVersionOf(leaf)
       this.markHydrated()
+    },
+    /** La celda como texto para el cartel de conflicto: el nivel elegido y la explicación. */
+    conflictSummary (leaf) {
+      if (!leaf) return ''
+      const meta = this.options[this.modalStage] && this.options[this.modalStage][this.selectedMeta]
+      const choice = meta && meta.values ? meta.values.find(v => v.value === leaf.option) : null
+      return [choice ? choice.text : '', leaf.text || ''].filter(Boolean).join('\n')
     },
     markHydrated () {
       this.hydratedLeaf = { option: this.selected, text: this.text1, notes: this.notes }
@@ -550,11 +577,22 @@ export default {
       this.notes = ''
     },
     reloadAfterVersionConflict () {
+      // Lo que quedó guardado ya vino en el 409, con su versión: se muestra eso y se sigue
+      // desde ahí. Esperar al refetch no alcanza, porque los campos tienen el borrador y el
+      // watcher no rehidrata encima de un borrador.
+      if (this.conflictLeaf) this.hydrateFrom(this.conflictLeaf)
       this.versionConflict = false
+      this.conflictLeaf = null
       this.$emit('getAssessments')
+      // Los campos cambiaron y el documento del padre todavía es el viejo: `checkChanges`
+      // agendaría un auto-guardado de lo que acaba de llegar del servidor.
+      this.$nextTick(() => { if (this.autoSaveDebounced) this.autoSaveDebounced.cancel() })
     },
     async performSave (silent = false) {
       if (this.isReadOnly) return
+      // Con la celda desactualizada, cada guardado mandaría la misma versión vieja: un 409
+      // por tecla. Se sigue cuando la persona trae la versión al día.
+      if (this.versionConflict) return
       if (!this.refId) {
         this.isSaving = false
         return
@@ -565,8 +603,20 @@ export default {
       // The leaf, with all three keys: the backend resets any key we omit to
       // its canonical empty value instead of merging it with what is stored.
       const leaf = { option: this.selected, text: this.text1, notes: this.notes }
+      // Dónde quedó la celda en el documento que responde el servidor; se fija abajo con
+      // la key canónica de la etapa, que es como direcciona el endpoint.
+      const target = { stageKey: this.modalStage, optionIndex: this.selectedMeta }
 
       const onSuccess = (response) => {
+        // El servidor estampa siempre «la anterior + 1». Sin conexión no hay respuesta que
+        // leer, y la cola reproduce en orden: la siguiente edición tiene que ir con la que
+        // esta escritura va a dejar. Con respuesta, se lee lo que quedó.
+        if (wasOnlyQueued(response)) {
+          this.leafVersion = this.leafVersion + 1
+        } else {
+          const written = leafInDocument(response && response.data, this.refId, target.stageKey, target.optionIndex)
+          if (written) this.leafVersion = leafVersionOf(written)
+        }
         // Lo que acabamos de escribir pasa a ser "lo guardado", y antes de pedir el
         // refetch: si no, el documento que vuelve encontraría los campos marcados como
         // borrador y no se aplicaría nunca más. Si la persona siguió editando mientras el
@@ -610,8 +660,11 @@ export default {
         // La celda cambió desde que se leyó: el cartel de la celda lo dice y ofrece traer
         // la versión al día. Reintentar mandaría otra vez la misma versión vieja.
         if (isVersionRejection(error)) {
+          if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
           this.autoSaveStatus = null
           this.versionConflict = true
+          const data = (error.response && error.response.data) || {}
+          this.conflictLeaf = data.option || null
           return
         }
         // Lo que otro canal ya avisó —lock (con el titular y el texto guardado), 403,
@@ -700,12 +753,17 @@ export default {
         onError(new Error(`Unaddressable cell: stage ${this.modalStage}, option ${this.selectedMeta}`))
         return
       }
+      target.stageKey = stageKey
+      target.optionIndex = optionIndex
 
       // Endpoint D: writes ONE leaf. Saving the study through B would replace
       // all ten and wipe whatever anyone else just wrote.
       return Api.patch(
         `/isoqf_assessments/${destino.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
-        leaf
+        // La versión de la celda que se está editando: si otra persona la escribió desde
+        // entonces, el servidor responde 409 en vez de pisarla. Va aparte de `leaf`, que
+        // es lo que se pinta en la grilla.
+        { ...leaf, [VERSION_FIELD]: this.leafVersion }
       )
         .then(onSuccess)
         .catch(onError)

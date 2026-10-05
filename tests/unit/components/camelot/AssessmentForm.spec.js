@@ -844,12 +844,13 @@ describe('AssessmentForm.vue', () => {
       await wrapper.vm.performSave(false)
       await flushPromises()
 
+      // `_v`: la versión de la celda, que el endpoint D compara (0 sin contador).
       expect(Api.patch.mock.calls[0][1]).toEqual({
-        option: 'B', text: 'texto', notes: ''
+        option: 'B', text: 'texto', notes: '', _v: 0
       })
     })
 
-    it('no envía claves fuera de la whitelist {option, text, notes}', async () => {
+    it('no envía claves fuera de la whitelist {option, text, notes, _v}', async () => {
       Api.patch.mockResolvedValue({ data: {} })
       await wrapper.setData({ selected: 'A', text1: 'x' })
 
@@ -857,7 +858,7 @@ describe('AssessmentForm.vue', () => {
       await flushPromises()
 
       expect(Object.keys(Api.patch.mock.calls[0][1]).sort())
-        .toEqual(['notes', 'option', 'text'])
+        .toEqual(['_v', 'notes', 'option', 'text'])
     })
 
     // The backend keys stages by stages[].key, not by array position.
@@ -1095,6 +1096,192 @@ describe('AssessmentForm.vue', () => {
       await flushPromises()
 
       expect(wrapper.emitted('option-saved')).toBeUndefined()
+      wrapper.destroy()
+    })
+  })
+})
+
+/**
+ * El contador de versión de la CELDA (`stages[k].options[i]._v`, endpoint D). Sin él, un
+ * lock que caducó con la pestaña dormida —y que otra persona tomó, escribió y soltó— o un
+ * cambio sin conexión reproducido después pisaban el juicio de la otra persona sin aviso.
+ *
+ * La versión va atada a la HIDRATACIÓN, no al documento que llega: con un borrador
+ * abierto el watcher no rehidrata, y eso tiene que seguir así. Absorber el `_v` de una
+ * escritura ajena mientras se escribe haría que el guardado la pisara sin conflicto.
+ */
+describe('AssessmentForm.vue — versión de la celda (endpoint D)', () => {
+  const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+  const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const stagesWith = (leafPatch = {}) => [{
+    key: 0,
+    options: [
+      { option: 'A', text: 'mío', notes: '', ...leafPatch },
+      { option: null, text: '', notes: '' },
+      { option: null, text: '', notes: '' },
+      { option: null, text: '', notes: '' }
+    ]
+  }]
+  const assessmentsWith = (leafPatch) => ({
+    id: 'assess1',
+    items: [{ ref_id: 'ref1', authors: 'Author 2024', stages: stagesWith(leafPatch) }]
+  })
+  const mountWith = (leafPatch) => mount(AssessmentForm, {
+    localVue,
+    propsData: { selectedMeta: 0, modalStage: 0, modalIndex: 0, refId: 'ref1', assessments: assessmentsWith(leafPatch) },
+    mocks: { $t: key => key, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal: { show: jest.fn(), hide: jest.fn() }, $notify },
+    stubs: {
+      'b-card': true, 'b-form-group': true, 'b-form-radio-group': true, 'b-form-radio': true,
+      'b-form-textarea': true, 'b-button': true, 'b-modal': true
+    }
+  })
+  const lastPayload = () => Api.patch.mock.calls[Api.patch.mock.calls.length - 1][1]
+  const savedDoc = (version) => ({
+    data: { id: 'assess1', items: [{ ref_id: 'ref1', stages: stagesWith({ _v: version }) }] }
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.get.mockResolvedValue({ data: [] })
+    Api.patch.mockResolvedValue({ data: {} })
+  })
+
+  it('manda la versión con la que se abrió la celda', async () => {
+    const wrapper = mountWith({ _v: 4 })
+    await wrapper.setData({ text1: 'cambio' })
+    await wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(4)
+    wrapper.destroy()
+  })
+
+  it('una celda sin contador va con 0, nunca vacía', async () => {
+    const wrapper = mountWith()
+    await wrapper.setData({ text1: 'cambio' })
+    await wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(0)
+    wrapper.destroy()
+  })
+
+  // El auto-guardado manda el siguiente 1,5 s después: sin absorber la respuesta choca
+  // consigo mismo en el segundo guardado seguido.
+  it('el guardado siguiente usa la versión que devolvió el servidor', async () => {
+    const wrapper = mountWith({ _v: 4 })
+    Api.patch.mockResolvedValueOnce(savedDoc(5))
+    await wrapper.setData({ text1: 'uno' })
+    await wrapper.vm.performSave(true)
+    await flushPromises()
+    await wrapper.setData({ text1: 'dos' })
+    await wrapper.vm.performSave(true)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(5)
+    wrapper.destroy()
+  })
+
+  // Sin conexión no hay respuesta del servidor: la cola reproduce en orden, y el servidor
+  // estampa siempre «la anterior + 1». Dos ediciones offline seguidas no pueden ir con la
+  // misma versión, o la segunda choca al reproducirse.
+  it('si el guardado quedó en la cola, el siguiente va con la versión + 1', async () => {
+    const wrapper = mountWith({ _v: 4 })
+    Api.patch.mockResolvedValueOnce({ data: {}, queued: true, status: 200 })
+    await wrapper.setData({ text1: 'uno' })
+    await wrapper.vm.performSave(true)
+    await flushPromises()
+    await wrapper.setData({ text1: 'dos' })
+    await wrapper.vm.performSave(true)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(5)
+    wrapper.destroy()
+  })
+
+  it('un documento que llega con un borrador abierto no mueve la versión', async () => {
+    const wrapper = mountWith({ _v: 4 })
+    await wrapper.setData({ text1: 'borrador' })
+    await wrapper.setProps({ assessments: assessmentsWith({ text: 'de la otra persona', _v: 9 }) })
+    await wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(4)
+    wrapper.destroy()
+  })
+
+  it('sin borrador, el documento que llega trae la versión nueva', async () => {
+    const wrapper = mountWith({ _v: 4 })
+    await wrapper.setProps({ assessments: assessmentsWith({ text: 'de la otra persona', _v: 9 }) })
+    await wrapper.setData({ text1: 'encima, sabiendo' })
+    await wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(lastPayload()._v).toBe(9)
+    wrapper.destroy()
+  })
+
+  describe('cuando el servidor dice que la celda cambió', () => {
+    const conflicto = () => Object.assign(new Error('409'), {
+      config: { url: '/isoqf_assessments/assess1/item/ref1/stage/0/option/0' },
+      response: {
+        status: 409,
+        data: {
+          reason: 'version_conflict',
+          expected_version: 4,
+          current_version: 6,
+          option: { option: 'B', text: 'lo que escribió la otra persona', notes: '', _v: 6 }
+        }
+      }
+    })
+
+    it('muestra lo guardado junto a lo propio y deja de guardar solo', async () => {
+      const wrapper = mountWith({ _v: 4 })
+      Api.patch.mockRejectedValueOnce(conflicto())
+      await wrapper.setData({ text1: 'lo mío' })
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      const alerta = wrapper.find('[data-testid="assessment-version-conflict"]')
+      expect(alerta.html()).toContain('lo que escribió la otra persona')
+      expect(alerta.html()).toContain('lo mío')
+
+      Api.patch.mockClear()
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+      expect(Api.patch).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    // Medido en navegador: la persona siguió escribiendo después del conflicto y la caja
+    // mostraba la foto del primer intento. «Traer la versión al día» reemplaza los campos,
+    // así que lo último escrito se perdía sin haberse mostrado nunca.
+    it('la caja de lo propio muestra lo que hay en los campos, aunque se siga escribiendo', async () => {
+      const wrapper = mountWith({ _v: 4 })
+      Api.patch.mockRejectedValueOnce(conflicto())
+      await wrapper.setData({ text1: 'lo mío' })
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      await wrapper.setData({ text1: 'lo mío, y lo que escribí después' })
+
+      expect(wrapper.find('[data-testid="assessment-version-conflict"]').html())
+        .toContain('lo mío, y lo que escribí después')
+      wrapper.destroy()
+    })
+
+    it('«Traer la versión al día» muestra lo de la otra persona y sigue desde su versión', async () => {
+      const wrapper = mountWith({ _v: 4 })
+      Api.patch.mockRejectedValueOnce(conflicto())
+      await wrapper.setData({ text1: 'lo mío' })
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      wrapper.vm.reloadAfterVersionConflict()
+      await flushPromises()
+      expect(wrapper.vm.text1).toBe('lo que escribió la otra persona')
+      expect(wrapper.vm.selected).toBe('B')
+      expect(wrapper.emitted('getAssessments')).toBeTruthy()
+
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setData({ text1: 'rehecho' })
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+      expect(lastPayload()._v).toBe(6)
       wrapper.destroy()
     })
   })
