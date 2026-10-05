@@ -21,7 +21,10 @@
             <label class="d-block small mb-0">{{ $t('version_conflict.theirs') }}</label>
             <b-form-textarea :value="conflictSummary(conflictLeaf)" readonly rows="2" class="bg-light mb-1" />
             <label class="d-block small mb-0">{{ $t('version_conflict.mine') }}</label>
-            <b-form-textarea :value="conflictSummary(conflictMine)" readonly rows="2" class="bg-light mb-2" />
+            <!-- Los campos en vivo, no una foto del intento: la persona puede seguir
+                 escribiendo, y «Traer la versión al día» los reemplaza. -->
+            <b-form-textarea :value="conflictSummary({ option: selected, text: text1 })" readonly rows="2"
+              class="bg-light mb-2" />
           </template>
           <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
             {{ $t('version_conflict.reload') }}
@@ -175,10 +178,9 @@ export default {
       // estado de esta celda —sigue siendo cierto hasta traer la versión al día—, así que
       // va como cartel y no como toast.
       versionConflict: false,
-      // Lo que quedó guardado (viene en el 409) y lo que se intentó guardar, para que la
-      // persona pueda rehacer su cambio sin perder el de la otra.
+      // Lo que quedó guardado (viene en el 409), para mostrarlo junto a lo que la persona
+      // tiene escrito y que pueda rehacer su cambio sin perder el de la otra.
       conflictLeaf: null,
-      conflictMine: null,
       // Versión de la celda con la que se HIDRATÓ el formulario (endpoint D). Va atada a la
       // hidratación y no al documento que llega: con un borrador abierto el watcher no
       // rehidrata, y absorber el `_v` de una escritura ajena haría que el guardado la
@@ -581,7 +583,6 @@ export default {
       if (this.conflictLeaf) this.hydrateFrom(this.conflictLeaf)
       this.versionConflict = false
       this.conflictLeaf = null
-      this.conflictMine = null
       this.$emit('getAssessments')
       // Los campos cambiaron y el documento del padre todavía es el viejo: `checkChanges`
       // agendaría un auto-guardado de lo que acaba de llegar del servidor.
@@ -664,7 +665,6 @@ export default {
           this.versionConflict = true
           const data = (error.response && error.response.data) || {}
           this.conflictLeaf = data.option || null
-          this.conflictMine = { ...leaf }
           return
         }
         // Lo que otro canal ya avisó —lock (con el titular y el texto guardado), 403,

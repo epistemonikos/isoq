@@ -1247,6 +1247,23 @@ describe('AssessmentForm.vue — versión de la celda (endpoint D)', () => {
       wrapper.destroy()
     })
 
+    // Medido en navegador: la persona siguió escribiendo después del conflicto y la caja
+    // mostraba la foto del primer intento. «Traer la versión al día» reemplaza los campos,
+    // así que lo último escrito se perdía sin haberse mostrado nunca.
+    it('la caja de lo propio muestra lo que hay en los campos, aunque se siga escribiendo', async () => {
+      const wrapper = mountWith({ _v: 4 })
+      Api.patch.mockRejectedValueOnce(conflicto())
+      await wrapper.setData({ text1: 'lo mío' })
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      await wrapper.setData({ text1: 'lo mío, y lo que escribí después' })
+
+      expect(wrapper.find('[data-testid="assessment-version-conflict"]').html())
+        .toContain('lo mío, y lo que escribí después')
+      wrapper.destroy()
+    })
+
     it('«Traer la versión al día» muestra lo de la otra persona y sigue desde su versión', async () => {
       const wrapper = mountWith({ _v: 4 })
       Api.patch.mockRejectedValueOnce(conflicto())
