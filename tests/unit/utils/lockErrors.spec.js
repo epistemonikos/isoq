@@ -20,8 +20,15 @@ describe('isLockRejection() — rechazos que ya tienen su propio aviso', () => {
 
   // 403 means the user's can_write was revoked: also announced on its own channel
   // (`permission-denied`), so the generic message is noise there too.
-  it('reconoce el 403 de permiso revocado en una escritura granular', () => {
-    expect(isLockRejection(rejection(403, '/isoqf_characteristics/c1/item/ref1'))).toBe(true)
+  // …pero sólo si alguien lo avisó de verdad: la pantalla dueña reclama el evento y
+  // Api.js marca el error. Sin dueño montado, callarlo sería un silencio.
+  it('reconoce el 403 de permiso revocado en una escritura granular, si ya se avisó', () => {
+    const avisado = { ...rejection(403, '/isoqf_characteristics/c1/item/ref1'), permissionDeniedAnnounced: true }
+    expect(isLockRejection(avisado)).toBe(true)
+  })
+
+  it('un 403 que nadie avisó no se da por explicado', () => {
+    expect(isLockRejection(rejection(403, '/isoqf_characteristics/c1/item/ref1'))).toBe(false)
   })
 
   it('no reclama un fallo de servidor: ese sí merece el mensaje genérico', () => {

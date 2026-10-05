@@ -528,7 +528,14 @@
                         showEditExtractedDataInPlace.item.index ===
                         data.item.index
                       ">
-                        <b-alert v-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
+                        <b-alert v-if="rowVersionConflict" show variant="warning" class="mb-2"
+                          data-testid="row-version-conflict">
+                          <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+                          <b-button size="sm" variant="outline-primary" @click="reloadAfterRowVersionConflict">
+                            {{ $t('version_conflict.reload') }}
+                          </b-button>
+                        </b-alert>
+                        <b-alert v-else-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
                           data-testid="row-readonly-notice">
                           {{ rowReadOnlyNotice }}
                         </b-alert>
@@ -846,6 +853,9 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
 import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 
 export default {
   name: 'evidenceProfileForm',
@@ -890,8 +900,11 @@ export default {
       isFindingReadOnly: false,
       findingLockedBy: null,
       // True only when the lock was taken away mid-edit. Opening onto an already-locked
-      // finding is a different story: that one is announced by a toast on open.
+      // finding is a different story, with its own text (`findingDeniedKey`). Both are
+      // told by the banner alone: no toast on top (un evento, un canal).
       lockLostWhileEditing: false,
+      // Clave del cartel cuando el acquire se negó al abrir (`lockDeniedNoticeKey`).
+      findingDeniedKey: null,
       // Claves de sección que este modal sostiene. Es un array y no un valor porque el
       // guardado de una dimensión puede tener que escribir también `cerqual`, y ahí se
       // sostienen dos a la vez — el camino feliz, no un accidente.
@@ -906,6 +919,13 @@ export default {
       staleHiddenPending: false,
       lockedRowRef: null,
       isRowReadOnly: false,
+      // La fila inline tiene su propio cartel: quién la tiene, si se perdió con el editor
+      // abierto, o qué dijo el acquire al negarla.
+      rowLockedBy: null,
+      rowLockLost: false,
+      rowDeniedKey: null,
+      // El servidor rechazó la fila inline por versión: cartel en la fila hasta recargar.
+      rowVersionConflict: false,
       selectedOptions: {
         methodological_limitations: {
           option: null,
@@ -1032,11 +1052,8 @@ export default {
           return this.$t('lock.lost_while_editing_no_user')
         }
       } else if (this.isFindingReadOnly) {
-        if (user) {
-          return this.$t('lock.ref_locked_by', { user })
-        } else {
-          return this.$t('lock.ref_locked_by_no_user')
-        }
+        const key = this.findingDeniedKey || (user ? 'lock.ref_locked_by' : 'lock.ref_locked_by_no_user')
+        return this.$t(key, { user })
       }
       return null
     },
@@ -1045,9 +1062,13 @@ export default {
     // by losing or failing to get its lock, and both deserve the banner.
     rowReadOnlyNotice: function () {
       if (!this.isRowReadOnly) return null
-      return this.rowLockedBy
-        ? this.$t('lock.lost_while_editing', { user: this.rowLockedBy })
-        : this.$t('lock.ref_locked_by_no_user')
+      const user = this.rowLockedBy
+      if (this.rowLockLost) {
+        return user
+          ? this.$t('lock.lost_while_editing', { user })
+          : this.$t('lock.lost_while_editing_no_user')
+      }
+      return this.$t(this.rowDeniedKey || 'lock.ref_locked_by_no_user', { user })
     },
     clearCerqualWarningMessage: function () {
       if (this.checkIfIsTheOnlyPublished()) {
@@ -1100,7 +1121,7 @@ export default {
       // por el valor de una sesión anterior.
       return sectionLockKey(findingId, this.openedSection || (this.modalData && this.modalData.type))
     },
-    // Mirrors StepFour.vue's acquireStudyLock: asked for on open, so the rejection
+    // Mirrors StepFour.vue's ensureStudyLock: asked for on open, so the rejection
     // reaches the user before they fill the form instead of on save.
     //
     // UNA sola clave al abrir: la de la sección que se está mostrando. Tomar además la
@@ -1117,18 +1138,13 @@ export default {
         this.rememberSectionLock(key)
         this.isFindingReadOnly = false
         this.findingLockedBy = null
+        this.findingDeniedKey = null
         this.lockLostWhileEditing = false
-      } else if (result.permissionDenied) {
-        this.isFindingReadOnly = true
-        this.findingLockedBy = null
-        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
-        this.$emit('lock-denied')
       } else {
+        // Sin toast: lo dice el cartel del formulario (`readOnlyNotice`) y se queda.
         this.isFindingReadOnly = true
         this.findingLockedBy = result.lockedBy || null
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.findingLockedBy }))
-        }
+        this.findingDeniedKey = lockDeniedNoticeKey(result)
         // Avisa a la tabla para que grise los botones YA. `emitRefLocksChanged` se
         // dispara sólo en un acquire exitoso y en el release, nunca en un rechazo,
         // así que sin esto el grisado esperaba el próximo tick del sondeo — hasta
@@ -1165,6 +1181,8 @@ export default {
       }
       if (detail.refId && detail.refId === this.lockedRowRef) {
         this.isRowReadOnly = true
+        this.rowLockedBy = detail.lockedBy || null
+        this.rowLockLost = true
       }
     },
     onModalHidden: function () {
@@ -1183,6 +1201,7 @@ export default {
       this.releaseRowLock()
       this.isFindingReadOnly = false
       this.findingLockedBy = null
+      this.findingDeniedKey = null
       this.lockLostWhileEditing = false
     },
     rememberSectionLock: function (key) {
@@ -1235,26 +1254,37 @@ export default {
     async acquireRowLock (lockKey) {
       if (!lockKey || !this.permission) return
       const result = await LockService.acquireRef(this.list.project_id, lockKey)
+      this.rowLockedBy = null
+      this.rowLockLost = false
+      this.rowDeniedKey = null
       if (result.success) {
         this.lockedRowRef = lockKey
         this.isRowReadOnly = false
         return
       }
+      this.lockedRowRef = null
+      // El estudio lo borró otra persona: no hay a quién esperar. El aviso es de
+      // OfflineIndicator (`reference-deleted`) y acá sólo se cierra el editor inline.
+      if (result.reason === REFERENCE_DELETED) {
+        this.cancelExtractedDataInPlace()
+        return
+      }
       // Mismo motivo que en `acquireSectionLock`: sin esto el botón de esta fila sigue
       // invitando al clic hasta el próximo tick del sondeo.
       this.$emit('lock-denied')
-      this.lockedRowRef = null
+      // Sin toast: lo dice el cartel de la fila (`rowReadOnlyNotice`).
       this.isRowReadOnly = true
-      if (this.$notify) {
-        this.$notify.warning(result.permissionDenied
-          ? this.$t('lock.permissions_revoked')
-          : this.$t('lock.ref_locked_by', { user: result.lockedBy || '' }))
-      }
+      this.rowLockedBy = result.lockedBy || null
+      this.rowDeniedKey = lockDeniedNoticeKey(result)
     },
     releaseRowLock: function () {
       if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
       this.lockedRowRef = null
       this.isRowReadOnly = false
+      this.rowLockedBy = null
+      this.rowLockLost = false
+      this.rowDeniedKey = null
+      this.rowVersionConflict = false
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -1574,9 +1604,19 @@ export default {
         .catch((error) => {
           // La edición queda abierta con lo escrito; el lock de la fila sigue tomado.
           this.printErrors(error)
+          // La fila cambió desde que se leyó: estado de ESTA fila, va como cartel en ella.
+          if (isVersionRejection(error)) {
+            this.rowVersionConflict = true
+            return
+          }
           const key = writeErrorMessageKey(error, 'notifications.save_error')
           if (key && this.$notify) this.$notify.error(this.$t(key))
         })
+    },
+    reloadAfterRowVersionConflict: function () {
+      this.rowVersionConflict = false
+      this.cancelExtractedDataInPlace()
+      this.$emit('getExtractedData', true)
     },
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)

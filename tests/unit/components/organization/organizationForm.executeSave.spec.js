@@ -51,6 +51,33 @@ describe('organizationForm.vue — executeSave() error handling', () => {
     expect($notify.error).toHaveBeenCalledTimes(1)
   })
 
+  // Dentro del proyecto viewProject reclama `permission-denied` y lo avisa él: un segundo
+  // toast con el mismo texto sería el mismo evento dos veces.
+  it('calla el 403 que ya avisó la pantalla dueña (permissionDeniedAnnounced)', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Project.update.mockRejectedValue({
+      response: { status: 403, data: { message: 'Forbidden' } }, permissionDeniedAnnounced: true
+    })
+
+    await wrapper.vm.executeSave({ id: 'proj1', name: 'Updated name' })
+
+    expect($notify.error).not.toHaveBeenCalled()
+  })
+
+  // Sin conexión el alta no se encola: Api.js ya disparó `offline-write-blocked` y
+  // OfflineIndicator lo avisa. El `data.message` del error es un texto interno de Api.js.
+  it('sin conexión no suma un toast con el texto interno de Api.js', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Project.update.mockRejectedValue({
+      isOfflineError: true,
+      response: { status: 0, data: { message: 'No internet connection and no cached data available for /isoqf_projects', offline: true } }
+    })
+
+    await wrapper.vm.executeSave({ id: 'proj1', name: 'Updated name' })
+
+    expect($notify.error).not.toHaveBeenCalled()
+  })
+
   it('still shows the generic message-based error for a non-403 failure (regression)', async () => {
     const { wrapper, $notify } = createWrapper()
     Project.update.mockRejectedValue({ response: { status: 500, data: { message: 'Server error' } } })

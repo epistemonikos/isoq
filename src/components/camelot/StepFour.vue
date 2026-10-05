@@ -40,12 +40,21 @@
             tarjeta sólo esconde su botón Edit, así que la persona no tenía forma de
             saber que había alguien del otro lado.
           -->
-          <b-alert v-if="studyFieldsBlocked" show variant="warning" class="mb-3"
+          <!-- Sin permiso de escritura la persona nunca esperó editar: «otra persona está
+               trabajando» sería falso. Perderlo con el modal abierto sí se explica. -->
+          <b-alert v-if="studyFieldsBlocked && (canEdit || studyPermissionDenied)" show variant="warning" class="mb-3"
             data-testid="study-fields-readonly-notice">
             <font-awesome-icon icon="lock" class="mr-1" />
-            {{ studyFieldsBlockedBy
-              ? $t('lock.study_fields_locked_by', { user: studyFieldsBlockedBy })
-              : $t('lock.study_fields_locked_no_user') }}
+            {{ $t(studyNoticeKey, { user: studyFieldsBlockedBy }) }}
+          </b-alert>
+          <!-- Un campo del estudio no se guardó porque cambió desde que se leyó. Estado, no
+               evento: sigue siendo cierto hasta traer la versión al día. -->
+          <b-alert v-if="studyVersionConflict" show variant="warning" class="mb-3"
+            data-testid="study-version-conflict">
+            <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+            <b-button size="sm" variant="outline-primary" @click="reloadAfterStudyVersionConflict">
+              {{ $t('version_conflict.reload') }}
+            </b-button>
           </b-alert>
           <template v-if="modal.stage < 2">
             <b-row>
@@ -110,6 +119,8 @@
                             :refId="refId" :modalIndex="modal.index"
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
                             :locked-by-user="cellLockedBy(modal.stage, dIndex)"
+                            :show-lock-notice="!isRefReadOnly"
+                            :lock-notice-key="cellLockNoticeKey(modal.stage, dIndex)"
                             @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                             @option-saved="onAssessmentOptionSaved"
                             @getAssessments="getAssessments"></assessmentForm>
@@ -162,6 +173,7 @@
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
                     :locked-by-user="cellLockedBy(2, 0)"
+                    :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(2, 0)"
                     @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                     @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
@@ -243,6 +255,7 @@
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
                     :locked-by-user="cellLockedBy(3, 0)"
+                    :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(3, 0)"
                     @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                     @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
@@ -332,7 +345,8 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
-import { isLockRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import {
   ASSESSMENT_CELLS,
   baseRefOf,
@@ -360,6 +374,7 @@ import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
+import { lockLostMessageKey, lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 
 export default {
   name: 'StepFour',
@@ -449,6 +464,8 @@ export default {
       // nine cells.
       studyFieldsReadOnly: false,
       studyFieldsLockedBy: null,
+      // El servidor rechazó un campo del estudio por versión (ver el cartel del modal).
+      studyVersionConflict: false,
       holdsStudyLock: false,
       refLockedBy: null,
       isModalOpen: false,
@@ -464,6 +481,13 @@ export default {
       // sirve a nadie para coordinarse. Se reemplaza entero en cada cambio (Vue 2 no
       // observa el interior de un Map).
       deniedCellHolders: new Map(),
+      // Posición -> clave del cartel de esa celda (motivo del acquire o del latido).
+      deniedCellKeys: new Map(),
+      // El estudio entero quedó en solo lectura porque el can_write propio cambió (403):
+      // el cartel del estudio no puede decir que «otra persona está trabajando».
+      studyPermissionDenied: false,
+      // Motivo del latido cuando se perdió el lock del estudio pelado.
+      studyLostReason: null,
       // "Lo tuve y lo perdí" no es lo mismo que "nunca lo tomé". El sondeo sólo ve los
       // locks AJENOS, así que un lock propio que caducó (pestaña throttleada, sin que
       // nadie lo tomara) deja el listado vacío y devolvería los campos como editables —
@@ -684,6 +708,21 @@ export default {
       return this.studyFieldsLockedBy || this.refLockedBy || null
     },
     /**
+     * El cartel de arriba es el ÚNICO aviso de un bloqueo del estudio: sin toast encima, y
+     * los de cada celda callan (`show-lock-notice`) cuando el estudio entero está cerrado.
+     * Con sólo los campos cerrados (una celda ajena) habla de los campos; con el estudio
+     * entero, del estudio.
+     */
+    studyNoticeKey () {
+      const user = this.studyFieldsBlockedBy
+      if (this.studyPermissionDenied) return 'lock.permissions_revoked'
+      if (this.isRefReadOnly) {
+        if (this.studyLostReason) return lockLostMessageKey(this.studyLostReason, user)
+        return user ? 'lock.ref_locked_by' : 'lock.ref_locked_by_no_user'
+      }
+      return user ? 'lock.study_fields_locked_by' : 'lock.study_fields_locked_no_user'
+    },
+    /**
      * Las celdas de la etapa abierta que frenan una salida. Se derivan de las claves que
      * los formularios montados reportaron —los de otras etapas se dieron de baja al
      * destruirse—, así que no hay que saber cuántas pestañas tiene cada etapa.
@@ -759,6 +798,14 @@ export default {
     }
   },
   watch: {
+    // El dueño bajó el permiso con el modal abierto. El toast global («tu acceso cambió»)
+    // es el evento y se va solo; el editor deshabilitado necesita su cartel, que es estado.
+    canEdit (now, before) {
+      if (before && !now && this.isModalOpen) {
+        this.isRefReadOnly = true
+        this.studyPermissionDenied = true
+      }
+    },
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
     },
@@ -1009,6 +1056,16 @@ export default {
      * esperar ese ciclo entero para poder nombrar a nadie. El titular del estudio queda
      * de último recurso: sólo aplica si nadie tiene la celda en particular.
      */
+    /**
+     * Clave del cartel de ESTA celda, o null cuando no le toca dibujarlo: si el estudio
+     * entero está en solo lectura lo explica el cartel de arriba.
+     */
+    cellLockNoticeKey (stage, option) {
+      if (this.isRefReadOnly || !this.isCellReadOnly(stage, option)) return null
+      const key = this.deniedCellKeys.get(`${stage}-${option}`)
+      if (key) return key
+      return this.cellLockedBy(stage, option) ? 'lock.ref_locked_by' : 'lock.ref_locked_by_no_user'
+    },
     cellLockedBy (stage, option) {
       const position = `${stage}-${option}`
       return this.deniedCellHolders.get(position) ||
@@ -1036,12 +1093,20 @@ export default {
       this.onLeafLockDenied(result)
     },
     /** Adds or clears the read-only mark on one cell, remembering who holds it. */
-    markCellDenied (stage, option, denied = true, holder = null) {
+    markCellDenied (stage, option, denied = true, holder = null, noticeKey = null) {
       const position = `${stage}-${option}`
       const next = new Map(this.deniedCellHolders)
-      if (denied) next.set(position, holder)
-      else next.delete(position)
+      const keys = new Map(this.deniedCellKeys)
+      if (denied) {
+        next.set(position, holder)
+        if (noticeKey) keys.set(position, noticeKey)
+        else keys.delete(position)
+      } else {
+        next.delete(position)
+        keys.delete(position)
+      }
       this.deniedCellHolders = next
+      this.deniedCellKeys = keys
     },
     /**
      * The cell the user just moved to could not be locked. Note that a 409 here
@@ -1052,22 +1117,18 @@ export default {
      * @param {{ lockedBy?: string, permissionDenied?: boolean }} result
      */
     onLeafLockDenied (result) {
+      // Sin toast en ningún caso: lo dicen los carteles (un evento, un canal).
       if (result.permissionDenied) {
         // Not a conflict: this user's can_write was revoked, so nothing in the
-        // study is editable — the same conclusion acquireStudyLock reaches.
+        // study is editable. The study banner says so.
         this.isRefReadOnly = true
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.permissions_revoked'))
-        }
+        this.studyPermissionDenied = true
         return
       }
 
       if (result.reason === REFERENCE_DELETED) return
       const holder = result.lockedBy || null
-      this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder)
-      if (this.$notify) {
-        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
-      }
+      this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder, lockDeniedNoticeKey(result))
     },
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
@@ -1099,17 +1160,24 @@ export default {
     detectImpossibleLockState () {
       if (!this.refId || !LockService.refLocked) return
       const state = this.studyLockStateOf(this.refId)
-      const holder = state.wholeStudyBlockedBy ||
-        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      // Lo imposible es el choque de GRANULARIDADES, no dos hojas: que cada uno tenga una
+      // celda distinta del mismo estudio es justo la edición en paralelo del endpoint D.
+      // Sin esta distinción, al primer sondeo el estudio entero quedaba en solo lectura
+      // para quien estaba en otra celda (medido en navegador con dos usuarios).
+      const ownKeys = [...LockService.refLocks.keys()]
+      const holdsBareStudy = ownKeys.includes(this.refId)
+      const holdsLeaf = ownKeys.some(k => k !== this.refId && baseRefOf(k) === this.refId)
+      const otherLeaf = state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null
+      const holder = (holdsBareStudy && (state.wholeStudyBlockedBy || otherLeaf)) ||
+        (holdsLeaf && state.wholeStudyBlockedBy) || null
       if (!holder) return
-      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio.
+      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio, en la
+      // otra granularidad.
       this.isRefReadOnly = true
       this.refLockedBy = holder
       this.studyFieldsReadOnly = true
       this.studyFieldsLockedBy = holder
-      if (this.$notify) {
-        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
-      }
+      // Sin toast: esto corre en cada sondeo (15 s) mientras dure, y lo dice el cartel.
     },
     /** What a refresh means here: the grid plus the study fields it shows. */
     applyProjectRefresh: function () {
@@ -1306,6 +1374,10 @@ export default {
       // escribiendo. `hasOpenEditor()` sólo contesta por el sondeo propio.
       this.$emit('editor-open', true)
       this.deniedCellHolders = new Map()
+      this.deniedCellKeys = new Map()
+      this.studyPermissionDenied = false
+      this.studyLostReason = null
+      this.studyVersionConflict = false
       this.studyLockLost = false
       this.pendingConflictRefId = ''
       // `incompleteCells` NO se limpia acá, aunque cambie de estudio. Limpiarlo lo dejaba
@@ -1346,7 +1418,7 @@ export default {
      */
     refreshStudyFieldsLockState: function (refId) {
       // A user without write permission sees the whole assessment read-only, cells
-      // included — the check acquireStudyLock used to make when the modal opened.
+      // included.
       if (!this.canEdit) {
         this.isRefReadOnly = true
         this.studyFieldsReadOnly = true
@@ -1384,48 +1456,15 @@ export default {
       }
       this.studyFieldsReadOnly = true
       this.studyFieldsLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
-      // Estudio borrado: no hay titular que nombrar; el modal se cierra por su canal.
-      if (result.reason === REFERENCE_DELETED) return false
-      if (this.$notify) {
-        this.$notify.warning(result.permissionDenied
-          ? this.$t('lock.permissions_revoked')
-          : this.$t('lock.ref_locked_by', { user: this.studyFieldsLockedBy }))
-      }
+      // Sin toast: lo dice el cartel del estudio. Si el estudio se borró, el modal lo
+      // cierra `referenceDeletedMixin`.
+      if (result.permissionDenied) this.studyPermissionDenied = true
       return false
     },
     releaseStudyLock: function () {
       if (!this.holdsStudyLock) return
       LockService.releaseRef(this.refId)
       this.holdsStudyLock = false
-    },
-    async acquireStudyLock (refId) {
-      if (!refId) return
-      if (!this.canEdit) {
-        this.isRefReadOnly = true
-        this.refLockedBy = null
-        return
-      }
-      const result = await LockService.acquireRef(this.$route.params.id, refId)
-      if (result.success) {
-        this.isRefReadOnly = false
-        this.refLockedBy = null
-      } else if (result.permissionDenied) {
-        // Nobody else is editing this study — this user's own can_write was
-        // revoked (their canEdit prop just hadn't caught up yet). Don't reuse
-        // the "locked by X" message, there is no X.
-        this.isRefReadOnly = true
-        this.refLockedBy = null
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.permissions_revoked'))
-        }
-      } else {
-        this.isRefReadOnly = true
-        this.refLockedBy = result.lockedBy || null
-        if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.refLockedBy }))
-        }
-      }
     },
     /**
      * Thirty minutes with the assessment modal open and nobody typing. Persist first,
@@ -1499,6 +1538,10 @@ export default {
       this.studyFieldsReadOnly = false
       this.studyFieldsLockedBy = null
       this.deniedCellHolders = new Map()
+      this.deniedCellKeys = new Map()
+      this.studyPermissionDenied = false
+      this.studyLostReason = null
+      this.studyVersionConflict = false
       this.fetchAndUpdateRefLocks()
       // Nothing is being typed any more, so a reload held back while the modal was
       // open can be applied now.
@@ -1517,6 +1560,7 @@ export default {
       if (lostRef === this.refId) {
         this.isRefReadOnly = true
         this.refLockedBy = detail.lockedBy || null
+        this.studyLostReason = detail.reason || null
         // Not just cosmetic: holdsStudyLock is what ensureStudyLock checks before
         // skipping the acquire, so leaving it true would silently authorize a write
         // we can no longer make.
@@ -1531,7 +1575,8 @@ export default {
       const position = leafPositionOf(lostRef)
       if (!position) return
       const [stage, option] = position.split('-').map(Number)
-      this.markCellDenied(stage, option, true, detail.lockedBy || null)
+      const lostKey = detail.reason ? lockLostMessageKey(detail.reason, detail.lockedBy || null) : null
+      this.markCellDenied(stage, option, true, detail.lockedBy || null, lostKey)
       // Sólo cuando ya no queda NINGÚN lock: perder una hoja no libera el estudio ni las
       // otras nueve celdas, y ésas siguen mereciendo el temporizador.
       if (!LockService.refLocked) this.stopInactivityWatch()
@@ -1725,19 +1770,25 @@ export default {
 
           if (!keepEditing) {
             this.cancelEditing()
-            this.$notify.success(this.$t('notifications.saved'))
+            // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+            if (!wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
           }
           this.isSavingField = false
           this.$root.$emit('characteristics-updated', this.characteristics)
         })
         .catch(error => {
           console.error('Error saving characteristic field:', error)
-          // Already announced by the lock channel, with the holder's name and the text
-          // kept locally. The generic "try again" would contradict it.
-          if (!isLockRejection(error)) {
-            this.$notify.error(this.$t('notifications.save_error'))
-          }
           this.isSavingField = false
+          // La fila cambió desde que se leyó: lo dice el cartel del modal, y lo escrito
+          // queda a la vista para rehacerlo. Recargar es decisión de la persona (el botón).
+          if (isVersionRejection(error)) {
+            this.studyVersionConflict = true
+            return
+          }
+          // Lo que otro canal ya avisó (lock con el titular y el texto guardado, 403,
+          // estudio borrado, sin conexión) no se repite: «intente nuevamente» lo contradice.
+          const key = writeErrorMessageKey(error, 'notifications.save_error')
+          if (key) this.$notify.error(this.$t(key))
           this.getCharacteristics()
         })
     },
@@ -1753,6 +1804,10 @@ export default {
     },
     onAutoSaveField (newValue) {
       return this.trackPendingWrite(this.saveField(newValue, true))
+    },
+    reloadAfterStudyVersionConflict () {
+      this.studyVersionConflict = false
+      this.getCharacteristics()
     }
   }
 }

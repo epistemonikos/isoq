@@ -329,6 +329,43 @@ describe('ManageColumnsButton — lock del documento', () => {
     expect(columnService.renameColumn).not.toHaveBeenCalled()
   })
 
+  // El acquire es un POST: su 403 dispara `permission-denied` y viewProject lo avisa.
+  it('un 403 del acquire no suma su propio toast', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, permissionDenied: true })
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
+
+    expect(wrapper.vm.$bvToast.toast).not.toHaveBeenCalled()
+    expect(columnService.renameColumn).not.toHaveBeenCalled()
+  })
+
+  // Un evento, un canal: el 409 del lock ya lo avisó OfflineIndicator (`ref-lock-conflict`);
+  // «error al actualizar» encima sería el mismo rechazo dos veces.
+  it('un rechazo por lock al escribir no suma «error al actualizar»', async () => {
+    columnService.renameColumn.mockRejectedValueOnce(Object.assign(new Error('409'), {
+      config: { url: '/isoqf_characteristics/char1/field/column_a' },
+      response: { status: 409, data: { locked_by: 'Ana' } }
+    }))
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
+    await flushPromises()
+
+    expect(wrapper.vm.$bvToast.toast).not.toHaveBeenCalled()
+  })
+
+  it('un fallo del servidor al escribir sí avisa', async () => {
+    columnService.renameColumn.mockRejectedValueOnce(Object.assign(new Error('500'), {
+      config: { url: '/isoqf_characteristics/char1/field/column_a' },
+      response: { status: 500, data: {} }
+    }))
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
+    await flushPromises()
+
+    expect(wrapper.vm.$bvToast.toast).toHaveBeenCalledWith(
+      'camelot.step_three.columns_modal.error_update', expect.any(Object))
+  })
+
   it('lo suelta al cerrar el modal', async () => {
     await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
 

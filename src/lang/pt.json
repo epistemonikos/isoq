@@ -73,6 +73,7 @@
     "field_required": "Este campo é obrigatório.",
     "auto_saving": "Salvando...",
     "auto_saved": "Salvo",
+    "auto_save_error": "Não foi possível salvar automaticamente. Use Salvar para tentar de novo.",
     "interactive": "Interativo",
     "my_data": "Meus Dados",
     "project_properties": "Propriedades do Projeto",
@@ -269,7 +270,6 @@
   "lock": {
     "ref_locked_by": "Sendo editado por {user}",
     "ref_locked_by_no_user": "Somente leitura: este achado não está disponível para edição neste momento.",
-    "ref_lock_offline": "Sem conexão — edição indisponível",
     "ref_lock_reconnected": "Reconectado — iniciar edição?",
     "study_fields_locked_by": "Os campos do estudo estão somente leitura: {user} está trabalhando neste estudo.",
     "study_fields_locked_no_user": "Os campos do estudo estão somente leitura: outra pessoa está trabalhando neste estudo.",
@@ -327,7 +327,9 @@
     "message": "Outra pessoa salvou alterações neste estudo enquanto você o editava. Seu texto não foi salvo. Abaixo está o que ficou salvo e o que você tentou salvar, para que possa refazer sua alteração sem perder a da outra pessoa.",
     "theirs": "O que ficou salvo",
     "mine": "O que você tentou salvar",
-    "reload": "Carregar a versão atual"
+    "reload": "Carregar a versão atual",
+    "reload_needed": "Outra pessoa salvou alterações aqui enquanto você editava, então sua alteração não foi salva. Traga a versão atualizada e refaça-a.",
+    "reloaded": "Outra pessoa salvou alterações nesta linha enquanto você editava, então sua alteração não foi salva. A versão atualizada já está carregada: abra-a de novo para refazer sua alteração."
   },
   "project": {
     "notifications": {
@@ -1228,12 +1230,10 @@
   },
   "offline": {
     "noConnection": "Sem conexão com a Internet",
-    "synced": "Alterações sincronizadas",
     "syncPending": "Sincronizando alterações pendentes...",
     "connected": "Conectado",
     "pendingOperation": "operação pendente",
     "pendingOperations": "operações pendentes",
-    "refresh": "Atualizar",
     "noInternetAndNoCache": "Sem conexão com a Internet e sem dados em cache para",
     "action_disabled": "Esta ação está desativada enquanto estiver offline",
     "projectNotCached": "Este projeto não está disponível offline. Por favor, conecte-se à internet para visualizá-lo.",
@@ -1652,7 +1652,8 @@
     "make_private_error": "Não foi possível tornar o projeto privado, então suas referências não foram removidas. Nada mudou.",
     "extracted_data_create_error": "O achado foi criado, mas não sua tabela de dados extraídos. Ela será criada quando você abrir o achado.",
     "references_check_error": "Não foi possível verificar se outros achados têm referências, então nada foi alterado. Tente novamente.",
-    "extracted_data_missing": "Este achado não tem tabela de dados extraídos e não foi possível criá-la agora. Será tentado novamente na próxima vez que você abrir o achado."
+    "extracted_data_missing": "Este achado não tem tabela de dados extraídos e não foi possível criá-la agora. Será tentado novamente na próxima vez que você abrir o achado.",
+    "clone_error": "Não foi possível duplicar o projeto. O original não mudou."
   },
   "admin": {
     "panel_link": "Painel de administração",

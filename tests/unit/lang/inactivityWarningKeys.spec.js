@@ -13,10 +13,16 @@ import pt from '@/lang/pt.json'
 const FILES = [
   'src/components/common/InactivityWarning.vue',
   'src/components/camelot/EditReferenceModal.vue',
-  'src/components/camelot/StepFour.vue'
+  'src/components/camelot/StepFour.vue',
+  'src/components/camelot/assessment/AssessmentForm.vue',
+  // Las claves de los carteles de lock salen de acá: los componentes las reciben ya
+  // elegidas y las pasan a `$t` por variable.
+  'src/utils/lockLostMessage.js'
 ]
 
-const KEY_RE = /\$t\(\s*'(lock\.[a-z0-9_]+)'/g
+// Cualquier literal `'lock.…'`, no sólo los que van dentro de `$t(…)`: los carteles eligen
+// la clave en un computed (`studyNoticeKey`, `cellLockNoticeKey`) y la traducen después.
+const KEY_RE = /'(lock\.[a-z0-9_]+)'/g
 // El mensaje del aviso ya no es un literal `$t('…')`: es el default del prop `messageKey`
 // de InactivityWarning (Propiedades pasa el suyo). Se lo captura por ahí.
 const DEFAULT_KEY_RE = /default:\s*'(lock\.[a-z0-9_]+)'/g

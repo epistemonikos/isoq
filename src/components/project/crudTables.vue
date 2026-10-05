@@ -216,6 +216,9 @@
           <span v-else-if="autoSaveStatus === 'saved'" class="text-success">
             <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
           </span>
+          <span v-else-if="autoSaveStatus === 'error'" class="text-danger">
+            {{ $t('common.auto_save_error') }}
+          </span>
         </div>
         <!-- La fila, no el largo del arreglo: el modal se renderiza aunque esté cerrado, y
              cuando otra persona borra el estudio que estaba seleccionado el índice queda
@@ -328,6 +331,7 @@ import { copyItemMetadata, itemsFingerprint, isItemMetadata, withoutItemMetadata
 import { conflictComparison } from '@/utils/versionConflict'
 import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 import { isLockRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { fieldsLockKey } from '@/utils/refLockUrls'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import { isAlreadyGone } from '@/utils/replayOutcome'
@@ -336,7 +340,6 @@ import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
-import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 // Identidad local de una columna que todavía no tiene clave del servidor. Un contador y no
@@ -861,6 +864,8 @@ export default {
       const lockRef = fieldsLockKey(docId)
       const result = await LockService.acquireRef(this.$route.params.id, lockRef)
       if (!result || !result.success) {
+        // Un 403 ya lo avisó `permission-denied` (el acquire es un POST): no se repite.
+        if (result && result.permissionDenied) return false
         this.notifyColumnsError(
           result && result.lockedBy
             ? this.$t('characteristics.columns_locked_by', { name: result.lockedBy })
@@ -1194,7 +1199,7 @@ export default {
       if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
       this.lockedRowRef = null
     },
-    // Mirrors StepFour.vue's acquireStudyLock: the lock is asked for when the
+    // Mirrors StepFour.vue's ensureStudyLock: the lock is asked for when the
     // editor opens, so the rejection reaches the user before they type, not on save.
     async acquireRowLock (refId) {
       if (!refId) return
@@ -1211,19 +1216,16 @@ export default {
       } else if (result.permissionDenied) {
         // Nobody else holds it — this user's own can_write was revoked. There is
         // no "locked by X" to report.
+        // Sin toast: el cartel del modal (`rowLockMessageKey`) ya lo dice y se queda.
         this.isRowReadOnly = true
         this.rowLockedBy = null
-        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
         // El motivo del acquire, no el del latido: acá no perdió nada, nunca lo tuvo.
         this.rowLockDeniedReason = result.reason || null
-        // Estudio borrado: no hay titular que nombrar; el editor se cierra por su canal.
-        if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t(this.rowLockMessageKey, { user: this.rowLockedBy }))
-        }
+        // Sin toast: lo dice el cartel del modal (un evento, un canal). Si el estudio se
+        // borró, el editor lo cierra `referenceDeletedMixin` y el aviso es de OfflineIndicator.
       }
     },
     onFieldInput: function () {
@@ -1273,12 +1275,14 @@ export default {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
         })
-        .catch(() => {
+        .catch((error) => {
           // Salvo que el conflicto de versión ya haya puesto su cartel: ahí este ícono
           // sería un segundo indicador del mismo evento, y el que menos dice de los dos —
           // «no se pudo guardar» sugiere reintentar, y reintentar es justo lo que no
-          // corresponde mientras la fila esté desactualizada.
-          if (!this.versionConflict) this.autoSaveStatus = 'error'
+          // corresponde mientras la fila esté desactualizada. Tampoco si otro canal ya lo
+          // dijo (lock, 403, estudio borrado, sin conexión).
+          const otherChannel = this.versionConflict || !writeErrorMessageKey(error)
+          this.autoSaveStatus = otherChannel ? null : 'error'
         })
     },
     saveContentDataTable: function () {

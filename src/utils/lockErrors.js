@@ -3,7 +3,8 @@ import { isReferenceDeletedRejection } from '@/utils/referenceDeleted'
 
 // A rejection on a granular write that the concurrency layer already explains on its
 // own: 409 goes out as `ref-lock-conflict` (with the holder's name and the text kept
-// locally), 403 as `permission-denied`.
+// locally), 403 as `permission-denied` — but only when a screen claimed that event
+// (`permissionDeniedAnnounced`, set by Api.js). Nobody listening means nobody told.
 const ANNOUNCED_STATUSES = [409, 403]
 
 // The item-version check answers on the same URLs and with the same 409, but it is a
@@ -29,6 +30,7 @@ const DUPLICATE_KEY_REASON = 'duplicate_key'
 export function isLockRejection (error) {
   const status = error && error.response && error.response.status
   if (!ANNOUNCED_STATUSES.includes(status)) return false
+  if (status === 403 && !error.permissionDeniedAnnounced) return false
   if (isVersionRejection(error)) return false
   if (isDuplicateKeyRejection(error)) return false
   // El estudio ya no existe: no hay lock de nadie que explicar. Lo anuncia su propio canal

@@ -95,7 +95,7 @@ async function openRow (wrapper, index = 0, rows = ROWS, fields = []) {
 // Endpoint B (`PATCH /<coll>/<id>/item/<ref_id>`) is guarded by @verify_ref_lock,
 // which demands the caller HOLDS the lock — a write without one is a 409
 // `lock_not_held` even when nobody else is editing. Pattern mirrors
-// StepFour.vue's acquireStudyLock (the proven camelot flow).
+// StepFour.vue's ensureStudyLock (the proven camelot flow).
 describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -118,23 +118,26 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
       wrapper.destroy()
     })
 
-    it('marca la fila read-only y avisa quién la tiene cuando el lock está tomado', async () => {
+    // Un evento, un canal: el cartel del modal ya lo dice y se queda mientras dure.
+    it('marca la fila read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper, $notify } = createWrapper()
-      await openRow(wrapper)
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
-      expect($notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      expect(wrapper.text()).toContain('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('marca read-only sin nombre cuando el rechazo es por permisos revocados', async () => {
+    it('con permisos revocados el cartel dice eso, sin toast', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-      const { wrapper, $notify } = createWrapper()
-      await openRow(wrapper)
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBeNull()
-      expect($notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.text()).toContain('lock.permissions_revoked')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
@@ -383,6 +386,38 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
       wrapper.destroy()
       expect(removeSpy).toHaveBeenCalledWith('ref-lock-lost', expect.any(Function))
       removeSpy.mockRestore()
+    })
+  })
+
+  // El estado 'error' del auto-guardado existía pero no se dibujaba en ninguna rama.
+  describe('auto-guardado fallido', () => {
+    it('se ve en el modal cuando falla el servidor', async () => {
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), {
+        config: { url: '/isoqf_characteristics/tbl1/item/R1' }, response: { status: 500, data: {} }
+      }))
+
+      await wrapper.vm.performAutoSave()
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('common.auto_save_error')
+      wrapper.destroy()
+    })
+
+    // El 409 del lock ya lo avisó OfflineIndicator (`ref-lock-conflict`).
+    it('no suma su indicador a un rechazo por lock', async () => {
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openRow(wrapper, 0, ROWS, [{ key: 'column_0', label: 'Col 0' }])
+      Api.patch.mockRejectedValueOnce(Object.assign(new Error('409'), {
+        config: { url: '/isoqf_characteristics/tbl1/item/R1' }, response: { status: 409, data: {} }
+      }))
+
+      await wrapper.vm.performAutoSave()
+      await flushPromises()
+
+      expect(wrapper.text()).not.toContain('common.auto_save_error')
+      wrapper.destroy()
     })
   })
 

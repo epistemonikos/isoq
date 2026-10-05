@@ -29,15 +29,10 @@
           {{ $t('version_conflict.reload') }}
         </b-button>
       </b-alert>
-      <b-alert v-else-if="isReadOnly && !isOffline" show variant="warning" class="mb-3"
+      <b-alert v-else-if="isReadOnly" show variant="warning" class="mb-3"
         data-testid="reference-readonly-notice">
         <font-awesome-icon icon="lock" class="mr-1" />
-        {{ lockedByUser
-          ? $t('lock.ref_locked_by', { user: lockedByUser })
-          : $t('lock.ref_locked_by_no_user') }}
-      </b-alert>
-      <b-alert v-else-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
-        {{ $t('lock.ref_lock_offline') }}
+        {{ $t(readOnlyNoticeKey, { user: lockedByUser }) }}
       </b-alert>
       <!--
         Fuera del fieldset a propósito: adentro, el botón "Sigo trabajando" quedaría
@@ -106,6 +101,10 @@
       <span v-else-if="autoSaveStatus === 'saved'" class="text-success mr-auto small align-self-center">
         <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
       </span>
+      <span v-else-if="autoSaveStatus === 'error'" class="text-danger mr-auto small align-self-center"
+        data-testid="reference-autosave-error">
+        {{ $t('common.auto_save_error') }}
+      </span>
       <span v-else class="mr-auto"></span>
       <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
         {{ $t('common.cancel') }}
@@ -131,7 +130,7 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import * as columnService from '@/services/columnService'
 import { fieldsLockKey } from '@/utils/refLockUrls'
-import { isLockRejection, isVersionRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
 import { conflictComparison } from '@/utils/versionConflict'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
@@ -139,11 +138,12 @@ import { copyItemMetadata } from '@/utils/itemMetadata'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import { withoutVirtualMark } from '@/utils/camelotFields'
 import { persistableOrder, isStoredOrder } from '@/utils/columnOrder'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
+import { lockLostMessageKey, lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 
 export default {
@@ -223,7 +223,10 @@ export default {
       versionConflict: null,
       isReadOnly: false,
       lockedByUser: null,
-      isOffline: false,
+      // Lo que explica el cartel de solo lectura: el motivo del latido si se perdió, o la
+      // clave que dio el acquire al negarse. El cartel es el único aviso (sin toast).
+      lockLostReason: null,
+      lockDeniedKey: null,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -231,6 +234,11 @@ export default {
     }
   },
   computed: {
+    readOnlyNoticeKey () {
+      if (this.lockLostReason) return lockLostMessageKey(this.lockLostReason, this.lockedByUser)
+      if (this.lockDeniedKey) return this.lockDeniedKey
+      return this.lockedByUser ? 'lock.ref_locked_by' : 'lock.ref_locked_by_no_user'
+    },
     modalTitle () {
       if (this.localReference) {
         const authorInfo = Commons.parseReference(this.localReference, true, false)
@@ -312,6 +320,8 @@ export default {
         this.$route.params.id,
         this.localReference.id
       )
+      this.lockLostReason = null
+      this.lockDeniedKey = null
       if (result.success) {
         this.isReadOnly = false
         this.lockedByUser = null
@@ -319,22 +329,14 @@ export default {
         // regresiva sería una amenaza vacía. No hace falta consultar un `canEdit` —
         // acá no existe como prop, y el permiso ya está resuelto en este resultado.
         if (LockService.isEnabled) this.startInactivityWatch()
-      } else if (result.permissionDenied) {
-        // Nobody else is editing this study — this user's own can_write was
-        // revoked. Don't reuse the "locked by X" message, there is no X.
-        this.isReadOnly = true
-        this.lockedByUser = null
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.permissions_revoked'))
-        }
       } else {
+        // Sin toast: lo dice el cartel del editor (`readOnlyNoticeKey`) y se queda. Un
+        // 403 no nombra a nadie: es el can_write propio el que cambió.
+        // Estudio borrado: el modal lo cierra `referenceDeletedMixin`; el aviso es de
+        // OfflineIndicator.
         this.isReadOnly = true
-        this.lockedByUser = result.lockedBy || null
-        // Estudio borrado: no hay titular que nombrar; el modal se cierra por su canal.
-        if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
-        }
+        this.lockedByUser = result.permissionDenied ? null : (result.lockedBy || null)
+        if (result.reason !== REFERENCE_DELETED) this.lockDeniedKey = lockDeniedNoticeKey(result)
       }
     },
     referenceDeletedOpenStudy () {
@@ -355,6 +357,7 @@ export default {
       // The heartbeat's 409 carries no holder; the banner falls back to a neutral
       // wording rather than hiding itself.
       this.lockedByUser = detail.lockedBy || null
+      this.lockLostReason = detail.reason || null
       // Sin lock no queda nada que soltar: el reloj perdió su razón de ser.
       this.stopInactivityWatch()
     },
@@ -448,7 +451,8 @@ export default {
       this.autoSaveStatus = null
       this.isReadOnly = false
       this.lockedByUser = null
-      this.isOffline = false
+      this.lockLostReason = null
+      this.lockDeniedKey = null
       this.$emit('close')
     },
     initScrollSpy () {
@@ -912,12 +916,16 @@ export default {
 
           this.$emit('saved', savedData)
 
+          // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+          const queued = wasOnlyQueued(response)
           if (closeAfter) {
-            this.$notify.success(this.$t('notifications.saved'))
+            if (!queued) this.$notify.success(this.$t('notifications.saved'))
             this.hide()
-          } else {
+          } else if (!queued) {
             this.autoSaveStatus = 'saved'
             setTimeout(() => { this.autoSaveStatus = null }, 2000)
+          } else {
+            this.autoSaveStatus = null
           }
         })
         .catch(error => {
@@ -933,12 +941,17 @@ export default {
           // lado del propio. «No se pudo guardar, intente nuevamente» encima de eso diría
           // dos cosas distintas del mismo evento, y la segunda es un consejo falso:
           // reintentar manda otra vez la misma versión vieja.
-          if (error.announced || isLockRejection(error) || isVersionRejection(error)) {
+          // `writeErrorMessageKey` suma el resto de lo que ya avisó otro canal: el 403
+          // (`permission-denied`), el estudio borrado (`reference-deleted`), sin conexión.
+          const key = (error.announced || isVersionRejection(error))
+            ? null
+            : writeErrorMessageKey(error, 'notifications.save_error')
+          if (!key) {
             this.autoSaveStatus = null
             return
           }
           if (closeAfter) {
-            this.$notify.error(this.$t('notifications.save_error'))
+            this.$notify.error(this.$t(key))
           } else {
             this.autoSaveStatus = 'error'
           }

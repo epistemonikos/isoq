@@ -73,6 +73,7 @@
     "field_required": "Este campo es requerido.",
     "auto_saving": "Guardando...",
     "auto_saved": "Guardado",
+    "auto_save_error": "No se pudo guardar automáticamente. Usa Guardar para intentarlo de nuevo.",
     "interactive": "Interactivo",
     "my_data": "Mis Datos",
     "project_properties": "Propiedades del Proyecto",
@@ -269,7 +270,6 @@
   "lock": {
     "ref_locked_by": "Siendo editado por {user}",
     "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
-    "ref_lock_offline": "Sin conexión — edición no disponible",
     "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
     "study_fields_locked_by": "Los campos del estudio están en solo lectura: {user} está trabajando en este estudio.",
     "study_fields_locked_no_user": "Los campos del estudio están en solo lectura: otra persona está trabajando en este estudio.",
@@ -327,7 +327,9 @@
     "message": "Otra persona guardó cambios en este estudio mientras lo editabas. Tu texto no se guardó. Abajo está lo que quedó guardado y lo que intentaste guardar, para que puedas rehacer tu cambio sin perder el de la otra persona.",
     "theirs": "Lo que quedó guardado",
     "mine": "Lo que intentaste guardar",
-    "reload": "Traer la versión al día"
+    "reload": "Traer la versión al día",
+    "reload_needed": "Otra persona guardó cambios aquí mientras editabas, así que tu cambio no se guardó. Trae la versión al día y vuelve a hacerlo.",
+    "reloaded": "Otra persona guardó cambios en esta fila mientras la editabas, así que tu cambio no se guardó. Ya está la versión al día: vuelve a abrirla para rehacerlo."
   },
   "project": {
     "notifications": {
@@ -1228,12 +1230,10 @@
   },
   "offline": {
     "noConnection": "Sin conexión a Internet",
-    "synced": "Cambios sincronizados",
     "syncPending": "Sincronizando cambios pendientes...",
     "connected": "Conectado",
     "pendingOperation": "operación pendiente",
     "pendingOperations": "operaciones pendientes",
-    "refresh": "Recargar",
     "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para",
     "action_disabled": "Esta acción está deshabilitada sin conexión",
     "projectNotCached": "Este proyecto no está disponible sin conexión. Por favor, conéctate a internet para verlo.",
@@ -1652,7 +1652,8 @@
     "make_private_error": "No se pudo pasar el proyecto a privado, así que no se quitaron sus referencias. No cambió nada.",
     "extracted_data_create_error": "El finding se creó, pero no su tabla de datos extraídos. Se creará cuando abra el finding.",
     "references_check_error": "No se pudo comprobar si otros findings tienen referencias, así que no se cambió nada. Vuelva a intentarlo.",
-    "extracted_data_missing": "Este finding no tiene tabla de datos extraídos y no se pudo crear ahora. Se volverá a intentar la próxima vez que abra el finding."
+    "extracted_data_missing": "Este finding no tiene tabla de datos extraídos y no se pudo crear ahora. Se volverá a intentar la próxima vez que abra el finding.",
+    "clone_error": "No se pudo duplicar el proyecto. El original no cambió."
   },
   "admin": {
     "panel_link": "Panel de administración",

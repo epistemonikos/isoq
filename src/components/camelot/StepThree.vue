@@ -1,10 +1,19 @@
 <template>
   <div>
+    <!-- Una carga fallida no se muestra como vacío: sin esto la pantalla decía «no hay
+         registros» cuando lo que pasó es que no se pudo leer. -->
+    <b-alert v-if="loadError" show variant="warning" class="d-print-none" data-test="step-three-load-error">
+      {{ $t('characteristics.load_error') }}
+      <b-button size="sm" variant="outline-warning" class="ml-2" data-test="step-three-load-retry"
+        @click="loadCharacteristicsData()">
+        {{ $t('common.retry') }}
+      </b-button>
+    </b-alert>
     <b-alert show variant="info" v-if="isLoading">
       {{ $t('camelot.step_three.loading') }}
     </b-alert>
     <b-alert show variant="info"
-      v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
+      v-else-if="!loadError && references.length === 0 && (!charsData.items || charsData.items.length === 0)">
       {{ $t('camelot.step_three.no_records') }}
     </b-alert>
     <div v-else>
@@ -291,6 +300,8 @@ export default {
         project_id: ''
       },
       isLoading: true,
+      // La última carga falló: lo que se ve no es el estado real de la tabla.
+      loadError: false,
       isFirstLoad: true,
       showComments: false,
       visibleColumnKeys: [], // Keys of currently visible columns
@@ -526,6 +537,7 @@ export default {
       // antes de encenderlo es lo único que llega a tiempo.
       this.holdScrollPosition()
       this.isLoading = true
+      this.loadError = false
 
       const params = {
         organization: this.$route.params.org_id,
@@ -576,6 +588,7 @@ export default {
         .catch(error => {
           console.error('Error al cargar los datos de características:', error)
           this.isLoading = false
+          this.loadError = true
         })
     }
   },

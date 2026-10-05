@@ -73,6 +73,7 @@
     "field_required": "This field is required.",
     "auto_saving": "Saving...",
     "auto_saved": "Saved",
+    "auto_save_error": "Couldn't save automatically. Use Save to try again.",
     "interactive": "Interactive",
     "my_data": "My Data",
     "project_properties": "Project Properties",
@@ -269,7 +270,6 @@
   "lock": {
     "ref_locked_by": "Being edited by {user}",
     "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
-    "ref_lock_offline": "No connection — editing unavailable",
     "ref_lock_reconnected": "Reconnected — start editing?",
     "study_fields_locked_by": "Study fields are read-only: {user} is working on this study.",
     "study_fields_locked_no_user": "Study fields are read-only: someone else is working on this study.",
@@ -327,7 +327,9 @@
     "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",
     "theirs": "What is stored now",
     "mine": "What you tried to save",
-    "reload": "Load the current version"
+    "reload": "Load the current version",
+    "reload_needed": "Someone else saved changes here while you were editing, so your change wasn't saved. Bring in the current version and redo it.",
+    "reloaded": "Someone else saved changes to this row while you were editing, so your change wasn't saved. The current version is loaded: open it again to redo your change."
   },
   "project": {
     "notifications": {
@@ -1228,12 +1230,10 @@
   },
   "offline": {
     "noConnection": "No Internet Connection",
-    "synced": "Changes Synced",
     "syncPending": "Syncing pending changes...",
     "connected": "Connected",
     "pendingOperation": "pending operation",
     "pendingOperations": "pending operations",
-    "refresh": "Refresh",
     "noInternetAndNoCache": "No internet connection and no cached data available for",
     "action_disabled": "This action is disabled while offline",
     "projectNotCached": "This project is not available offline. Please connect to the internet to view it.",
@@ -1652,7 +1652,8 @@
     "make_private_error": "The project could not be made private, so its references were not removed. Nothing changed.",
     "extracted_data_create_error": "The finding was created, but its extracted data table could not be created. It will be created when you open the finding.",
     "references_check_error": "We could not check whether other findings still have references, so nothing was changed. Please try again.",
-    "extracted_data_missing": "This finding has no extracted data table and it could not be created now. It will be retried the next time you open the finding."
+    "extracted_data_missing": "This finding has no extracted data table and it could not be created now. It will be retried the next time you open the finding.",
+    "clone_error": "The project couldn't be duplicated. The original is unchanged."
   },
   "admin": {
     "panel_link": "Admin Panel",

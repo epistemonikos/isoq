@@ -41,6 +41,22 @@ export function lockDeniedMessageKey (reason, lockedBy) {
 }
 
 /**
+ * Clave i18n del cartel del editor cuando el acquire se negó al abrir, a partir del
+ * resultado de `LockService.acquireRef`.
+ *
+ * Ese cartel es el único aviso del caso —un evento, un canal: no va toast encima—, así que
+ * tiene que separar lo que el acquire separa. Un 403 trae `permissionDenied` y nadie tiene
+ * el lock; un rechazo sin titular (red, respuesta inesperada) no autoriza a decir que el
+ * permiso cambió. Lo demás es la regla de `lockDeniedMessageKey`.
+ */
+export function lockDeniedNoticeKey (result) {
+  const r = result || {}
+  if (r.permissionDenied) return 'lock.permissions_revoked'
+  if (!r.lockedBy) return 'lock.ref_locked_by_no_user'
+  return lockDeniedMessageKey(r.reason || null, r.lockedBy)
+}
+
+/**
  * True cuando el bloqueo se destraba solo y tiene sentido ofrecer volver a intentar.
  *
  * Los dos motivos de granularidad cuentan, vengan del latido o del acquire: en los dos la

@@ -40,6 +40,25 @@ describe('Api.js interceptor — permission-denied', () => {
     expect(event.detail).toEqual({ url: '/isoqf_findings/find1', method })
   })
 
+  // Un evento, un canal: la pantalla dueña del aviso (viewProject / editList) lo reclama
+  // con preventDefault, y el error sale marcado para que los catch locales callen. Sin
+  // dueño montado (el modal de proyecto en la organización) el catch local sí avisa.
+  it('es cancelable, y si un dueño lo reclama el error sale marcado como avisado', async () => {
+    window.dispatchEvent.mockImplementation(e => { dispatched.push(e); return e.type !== 'permission-denied' })
+    const err = makeError('/isoqf_findings/find1', 'patch')
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    const event = dispatched.find(e => e.type === 'permission-denied')
+    expect(event.cancelable).toBe(true)
+    expect(err.permissionDeniedAnnounced).toBe(true)
+  })
+
+  it('sin nadie que lo reclame, el error no sale marcado', async () => {
+    const err = makeError('/isoqf_findings/find1', 'patch')
+    await expect(errorHandler(err)).rejects.toBe(err)
+    expect(err.permissionDeniedAnnounced).toBeFalsy()
+  })
+
   it('NO dispara permission-denied en un 403 de GET (lectura)', async () => {
     const err = makeError('/isoqf_projects/proj1', 'get')
     await expect(errorHandler(err)).rejects.toBe(err)

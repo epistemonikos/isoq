@@ -152,3 +152,77 @@ describe('editListExtractedData.vue — el contador de versión por ítem', () =
     wrapper.destroy()
   })
 })
+
+/**
+ * El modal se cierra al guardar (`@ok`), así que un fallo llega con el editor ya cerrado:
+ * es un evento, y el aviso es un toast. Antes iba a `printErrors` del padre, que no
+ * muestra nada: cualquier fallo de este guardado era mudo.
+ */
+describe('editListExtractedData.vue — fallos del guardado de una fila', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const ROW = { ref_id: 'ref1', authors: 'Smith 2020', column_0: 'old', _v: 3 }
+  const conNotify = () => {
+    const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+    const wrapper = shallowMount(editListExtractedData, {
+      localVue,
+      propsData: {
+        ui: {}, show: { selected: [] }, mode: 'edit', list: { id: 'list1', organization: 'org1' },
+        permission: true, extractedData: { id: 'ed1', fields: [], fieldsObj: [], items: [ROW] },
+        modePrintFieldObject: [], refsWithTitle: []
+      },
+      mocks: { $t: key => key, $route: { params: { org_id: 'org1', id: 'list1' } }, $notify },
+      stubs: {
+        videoHelp: true, 'bc-filters': true, 'back-to-top': true,
+        'b-table': true, 'b-modal': true, 'b-button': true, 'b-form-group': true,
+        'b-form-input': true, 'b-row': true, 'b-col': true, 'font-awesome-icon': true
+      }
+    })
+    return { wrapper, $notify }
+  }
+  const rechazo = (status, data = {}) => Object.assign(new Error(String(status)), {
+    config: { url: '/isoqf_extracted_data/ed1/item/ref1' }, response: { status, data }
+  })
+
+  it('un fallo del servidor avisa con un toast', async () => {
+    const { wrapper, $notify } = conNotify()
+    await wrapper.setData({ buffer_extracted_data_items: { ...ROW, column_0: 'nuevo' } })
+    Api.patch.mockRejectedValueOnce(rechazo(500))
+
+    await wrapper.vm.saveDataExtractedData()
+    await flushPromises()
+
+    expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    wrapper.destroy()
+  })
+
+  // El 409 del lock ya lo avisó OfflineIndicator (`ref-lock-conflict`).
+  it('un rechazo por lock no suma su toast', async () => {
+    const { wrapper, $notify } = conNotify()
+    await wrapper.setData({ buffer_extracted_data_items: { ...ROW, column_0: 'nuevo' } })
+    Api.patch.mockRejectedValueOnce(rechazo(409))
+
+    await wrapper.vm.saveDataExtractedData()
+    await flushPromises()
+
+    expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.warning).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // Antes no tenía ningún canal. La tabla se trae al día para que, al reabrir, la persona
+  // parta de lo que la otra persona guardó.
+  it('un conflicto de versión recarga la tabla y lo dice', async () => {
+    const { wrapper, $notify } = conNotify()
+    await wrapper.setData({ buffer_extracted_data_items: { ...ROW, column_0: 'nuevo' } })
+    Api.patch.mockRejectedValueOnce(rechazo(409, { reason: 'version_conflict' }))
+
+    await wrapper.vm.saveDataExtractedData()
+    await flushPromises()
+
+    expect($notify.warning).toHaveBeenCalledWith('version_conflict.reloaded')
+    expect(wrapper.emitted('getExtractedData')).toBeTruthy()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})

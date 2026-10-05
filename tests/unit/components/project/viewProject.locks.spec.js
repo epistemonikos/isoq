@@ -108,7 +108,7 @@ describe('viewProject.vue — permission-denied event', () => {
     const { wrapper } = createWrapper()
     await flushPromises()
 
-    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.refreshPermissions)
+    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.onPermissionDenied)
     addSpy.mockRestore()
     wrapper.destroy()
   })

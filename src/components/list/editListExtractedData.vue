@@ -95,7 +95,7 @@
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <b-alert v-if="isRowReadOnly" show variant="warning">
-          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+          {{ $t(rowLockMessageKey, { user: rowLockedBy }) }}
         </b-alert>
         <p>{{ $t('characteristics.confirm_delete_row') }}</p>
       </b-modal>
@@ -112,7 +112,7 @@
         ok-variant="outline-success"
         :ok-title="$t('common.save')">
         <b-alert v-if="isRowReadOnly" show variant="warning">
-          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+          {{ $t(rowLockMessageKey, { user: rowLockedBy }) }}
         </b-alert>
         <b-form-group
           v-for="(field, index) in buffer_extracted_data.fields"
@@ -143,6 +143,9 @@ import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLo
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
+import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -188,6 +191,10 @@ export default {
       // caller holds the lock of that row's ref_id.
       isRowReadOnly: false,
       rowLockedBy: null,
+      // El motivo del latido (`ref-lock-lost`) o del acquire, para que el cartel diga si
+      // se destraba solo. Ver `lockLostMessage.js`.
+      rowLockLostReason: null,
+      rowLockDeniedReason: null,
       lockedRowRef: null,
       rowEditorOpen: false,
       // El estudio de la fila abierta. Aparte de `lockedRowRef` porque ése queda en null
@@ -215,6 +222,15 @@ export default {
         fields: [],
         items: []
       }
+    }
+  },
+  computed: {
+    // Mismo criterio que crudTables: un lock perdido gana sobre uno negado, porque es lo
+    // último que pasó. El cartel es el único aviso; no hay toast encima.
+    rowLockMessageKey () {
+      if (this.rowLockLostReason) return lockLostMessageKey(this.rowLockLostReason, this.rowLockedBy)
+      if (this.rowLockDeniedReason) return lockDeniedMessageKey(this.rowLockDeniedReason, this.rowLockedBy)
+      return lockLostMessageKey(null, this.rowLockedBy)
     }
   },
   methods: {
@@ -269,11 +285,14 @@ export default {
       const item = this.localExtractedData.items[index]
       return item ? item.ref_id : null
     },
-    // Mirrors StepFour.vue's acquireStudyLock: ask on open so the rejection lands
+    // Mirrors StepFour.vue's ensureStudyLock: ask on open so the rejection lands
     // before the user types. The project id comes from the list prop — the route
     // param of this view is the list id.
     async acquireRowLock (lockKey) {
       if (!lockKey) return
+      // Abrir otra fila sin que la anterior llegara a `hidden` no puede heredar su motivo.
+      this.rowLockLostReason = null
+      this.rowLockDeniedReason = null
       if (!this.permission) {
         this.isRowReadOnly = true
         this.rowLockedBy = null
@@ -285,18 +304,16 @@ export default {
         this.isRowReadOnly = false
         this.rowLockedBy = null
       } else if (result.permissionDenied) {
+        // Sin toast: el cartel del modal lo dice y se queda (un evento, un canal).
         this.isRowReadOnly = true
         this.rowLockedBy = null
-        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
         this.$emit('lock-denied')
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
+        this.rowLockDeniedReason = result.reason || null
         // Estudio borrado: no hay titular que nombrar; el editor se cierra por su canal.
         if (result.reason === REFERENCE_DELETED) return
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
-        }
         // Que el padre repida el sondeo ya: `emitRefLocksChanged` sólo se dispara en un
         // acquire exitoso y en el release, así que sin esto los botones de esta fila
         // seguirían invitando al clic hasta el próximo ciclo.
@@ -309,6 +326,7 @@ export default {
       if (detail.refId !== this.lockedRowRef) return
       this.isRowReadOnly = true
       this.rowLockedBy = detail.lockedBy || null
+      this.rowLockLostReason = detail.reason || null
     },
     // BootstrapVue emits `hide` synchronously when a close starts, and every `hidden`
     // follows a `hide` that was not cancelled. A cancelled one never gets its `hidden`.
@@ -337,6 +355,8 @@ export default {
       this.releaseRowLock()
       this.isRowReadOnly = false
       this.rowLockedBy = null
+      this.rowLockLostReason = null
+      this.rowLockDeniedReason = null
     },
     extractedDataRemoveDataItem: function () {
       // Granular reset: blank this row's data columns (keep ref_id + authors) via the
@@ -356,9 +376,7 @@ export default {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
         })
-        .catch((error) => {
-          this.$emit('printErrors', error)
-        })
+        .catch((error) => this.onRowWriteError(error))
     },
     saveDataExtractedData: function () {
       // Granular save: PATCH only the edited row via the /item/<ref_id> sub-resource,
@@ -381,9 +399,25 @@ export default {
           this.buffer_extracted_data = {fields: [], items: [], id: null}
           this.buffer_extracted_data_items = {}
         })
-        .catch((error) => {
-          this.$emit('printErrors', error)
-        })
+        .catch((error) => this.onRowWriteError(error))
+    },
+    /**
+     * El modal se cierra al confirmar (`@ok`), así que el fallo llega con el editor ya
+     * cerrado: es un evento, y el aviso va por toast. `printErrors` del padre no muestra
+     * nada, y sólo con él este guardado fallaba sin decirlo.
+     */
+    onRowWriteError: function (error) {
+      this.$emit('printErrors', error)
+      if (!this.$notify) return
+      // La fila cambió desde que se leyó: se trae al día para que la persona, al reabrir,
+      // parta de lo que guardó la otra.
+      if (isVersionRejection(error)) {
+        this.$emit('getExtractedData', true)
+        this.$notify.warning(this.$t('version_conflict.reloaded'))
+        return
+      }
+      const key = writeErrorMessageKey(error, 'notifications.save_error')
+      if (key) this.$notify.error(this.$t(key))
     }
   },
   mounted () {

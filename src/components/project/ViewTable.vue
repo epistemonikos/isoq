@@ -316,7 +316,7 @@
 <script>
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -326,6 +326,7 @@ import {
   lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS, referencesLockKey, referencesEditorOf
 } from '@/utils/evidenceProfileLockKeys'
 import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
+import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 
 export default {
   name: 'ViewTable',
@@ -443,6 +444,8 @@ export default {
       findingLockedBy: null,
       isFindingReadOnly: false,
       lockLostWhileEditing: false,
+      // Clave del cartel cuando el acquire se negó al abrir (`lockDeniedNoticeKey`).
+      findingDeniedKey: null,
       // El lock no se suelta mientras un guardado viaja: bootstrap-vue emite `ok` y
       // enseguida `hidden`, y el PATCH es asíncrono.
       savingFinding: false,
@@ -577,6 +580,7 @@ export default {
           ? this.$t('lock.lost_while_editing', { user: this.findingLockedBy })
           : this.$t('lock.lost_while_editing_no_user')
       }
+      if (this.findingDeniedKey) return this.$t(this.findingDeniedKey, { user: this.findingLockedBy })
       return this.findingLockedBy
         ? this.$t('lock.ref_locked_by', { user: this.findingLockedBy })
         : this.$t('lock.ref_locked_by_no_user')
@@ -670,6 +674,7 @@ export default {
       this.isFindingReadOnly = false
       this.findingLockedBy = null
       this.lockLostWhileEditing = false
+      this.findingDeniedKey = null
       if (!findingId || !this.canEdit) return
       const result = await LockService.acquireRef(this.$route.params.id, findingId)
       if (result && result.success) {
@@ -681,11 +686,8 @@ export default {
       // Un 403 no tiene a quién culpar: nadie más lo tiene, este usuario perdió el
       // permiso de escritura. Nombrar a un dueño ahí sería inventarlo.
       this.findingLockedBy = (result && !result.permissionDenied && result.lockedBy) || null
-      if (this.$notify) {
-        this.$notify.warning(result && result.permissionDenied
-          ? this.$t('lock.permissions_revoked')
-          : this.readOnlyNotice)
-      }
+      // Sin toast: el modal se abre igual y su cartel (`readOnlyNotice`) lo dice.
+      this.findingDeniedKey = lockDeniedNoticeKey(result)
       // El padre sondea cada 15 s; este rechazo es motivo para no esperarlos.
       this.$emit('lock-denied')
     },
@@ -723,6 +725,7 @@ export default {
       this.isFindingReadOnly = false
       this.findingLockedBy = null
       this.lockLostWhileEditing = false
+      this.findingDeniedKey = null
     },
     /**
      * El lock puede evaporarse en pleno tipeo: un latido fallido, o una concesión offline
@@ -1038,10 +1041,11 @@ export default {
         notes: this.editFindingName.notes || ''
       }
       return Api.patch(`/isoqf_findings/${this.editFindingName.finding_id}/identity`, params)
-        .then(() => {
+        .then((response) => {
           this.finishFindingSave()
           this.$emit('get-lists')
-          this.$notify.success(this.$t('notifications.saved'))
+          // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+          if (!wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
           console.error(error)
@@ -1199,13 +1203,15 @@ export default {
         references: this.selected_references
       })
         .then((response) => {
-          // Un estudio que se borró con el modal abierto: el servidor guardó el resto.
-          announceDroppedReferences(response && response.data)
+          // Un estudio que se borró con el modal abierto: el servidor guardó el resto, y
+          // OfflineIndicator lo dice («se guardó sin…»). Un «Guardado» al lado sería otro
+          // aviso, y distinto, del mismo guardado.
+          const dropped = announceDroppedReferences(response && response.data)
           this.finishFindingSave()
           this.cleanReferencesList()
           this.$emit('get-lists')
           this.$emit('set-load-references', false)
-          this.$notify.success(this.$t('notifications.saved'))
+          if (!dropped && !wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
           console.error(error)

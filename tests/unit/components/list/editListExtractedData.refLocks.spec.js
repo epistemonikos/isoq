@@ -99,23 +99,36 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       wrapper.destroy()
     })
 
-    it('marca read-only y avisa quién la tiene cuando el lock está tomado', async () => {
+    // Un evento, un canal: el cartel del modal ya lo dice y se queda mientras dure.
+    it('marca read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper, $notify } = createWrapper()
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
       await openEditRow(wrapper)
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
-      expect($notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      expect(wrapper.text()).toContain('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('marca read-only sin nombre cuando el rechazo es por permisos revocados', async () => {
+    it('con permisos revocados el cartel dice eso, sin toast', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-      const { wrapper, $notify } = createWrapper()
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
       await openEditRow(wrapper)
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBeNull()
-      expect($notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.text()).toContain('lock.permissions_revoked')
+      expect($notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('el cartel explica el motivo de granularidad del acquire', async () => {
+      LockService.acquireRef.mockResolvedValue({
+        success: false, lockedBy: 'Ana Pérez', reason: 'locked_at_another_granularity'
+      })
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openEditRow(wrapper)
+      expect(wrapper.text()).toContain('lock.locked_at_another_granularity')
       wrapper.destroy()
     })
 
@@ -183,6 +196,19 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
 
       expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
+      wrapper.destroy()
+    })
+
+    it('el cartel explica el motivo del latido (desalojo por granularidad)', async () => {
+      const { wrapper } = createWrapper({ renderModals: true })
+      await openEditRow(wrapper)
+
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez', reason: 'evicted_granularity_conflict' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('lock.evicted_granularity')
       wrapper.destroy()
     })
 

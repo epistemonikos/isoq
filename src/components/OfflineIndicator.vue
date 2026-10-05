@@ -12,9 +12,6 @@
         <button v-if="isOnline && pendingCount > 0" class="sync-btn" @click="syncNow">
           <font-awesome-icon icon="sync-alt" :spin="syncing" />
         </button>
-        <button v-if="showRefresh" class="refresh-btn" @click="refreshPage">
-          {{ $t('offline.refresh') }}
-        </button>
       </div>
     </div>
   </transition>
@@ -36,31 +33,24 @@ export default {
     return {
       pendingCount: 0,
       syncing: false,
-      checkInterval: null,
-      showRefresh: false,
-      syncedMessage: ''
+      checkInterval: null
     }
   },
   computed: {
     showIndicator () {
-      return !this.isOnline || this.pendingCount > 0 || this.showRefresh
+      return !this.isOnline || this.pendingCount > 0
     },
     statusClass () {
       if (!this.isOnline) return 'offline'
-      if (this.showRefresh) return 'synced'
       if (this.pendingCount > 0) return 'pending'
       return 'online'
     },
     statusIcon () {
-      if (this.showRefresh) return 'sync-alt'
       return this.isOnline ? 'wifi' : 'exclamation-triangle'
     },
     statusText () {
       if (!this.isOnline) {
         return this.$t('offline.noConnection')
-      }
-      if (this.showRefresh) {
-        return this.$t('offline.synced')
       }
       if (this.pendingCount > 0) {
         return this.$t('offline.syncPending')
@@ -74,7 +64,6 @@ export default {
 
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
-    window.addEventListener('offlineSync', this.handleSyncComplete)
     // A replay conflict surfaces with nothing open — the editor that made the change
     // was closed before the network came back — so the warning has to live in a
     // component that is always mounted.
@@ -97,7 +86,6 @@ export default {
   beforeDestroy () {
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
-    window.removeEventListener('offlineSync', this.handleSyncComplete)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
     window.removeEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
     window.removeEventListener('offline-write-blocked', this.handleOfflineWriteBlocked)
@@ -229,14 +217,6 @@ export default {
     },
     handleOffline () {
       this.$store.commit('SET_ONLINE', false)
-      this.showRefresh = false
-    },
-    handleSyncComplete (event) {
-      const { syncedCount } = event.detail
-      if (syncedCount > 0) {
-        this.showRefresh = true
-        this.updatePendingCount()
-      }
     },
     async updatePendingCount () {
       try {
@@ -258,9 +238,6 @@ export default {
       } finally {
         this.syncing = false
       }
-    },
-    refreshPage () {
-      window.location.reload()
     }
   }
 }
@@ -292,11 +269,6 @@ export default {
     background-color: #28a745;
     color: white;
   }
-
-  &.synced {
-    background-color: #17a2b8;
-    color: white;
-  }
 }
 
 .indicator-content {
@@ -317,8 +289,7 @@ export default {
   font-size: 12px;
 }
 
-.sync-btn,
-.refresh-btn {
+.sync-btn {
   background: transparent;
   border: 1px solid currentColor;
   color: inherit;
@@ -331,11 +302,6 @@ export default {
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
-}
-
-.refresh-btn {
-  background-color: rgba(255, 255, 255, 0.2);
-  font-weight: 500;
 }
 
 // Animación de entrada/salida

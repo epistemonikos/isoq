@@ -13,12 +13,21 @@
         <!-- Shown for every read-only reason, named holder or not: the loss reported by
              the heartbeat carries no name, and that silence is what left users typing
              into a form that could no longer save. -->
-        <b-alert v-if="isReadOnly" show variant="warning" class="mb-3"
+        <b-alert v-if="versionConflict" show variant="warning" class="mb-3"
+          data-testid="assessment-version-conflict">
+          <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
+          <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
+            {{ $t('version_conflict.reload') }}
+          </b-button>
+        </b-alert>
+        <b-alert v-else-if="isReadOnly && showLockNotice" show variant="warning" class="mb-3"
           data-testid="assessment-readonly-notice">
           <font-awesome-icon icon="lock" class="mr-1" />
-          {{ lockedByUser
-            ? $t('lock.ref_locked_by', { user: lockedByUser })
-            : $t('lock.ref_locked_by_no_user') }}
+          {{ lockNoticeKey
+            ? $t(lockNoticeKey, { user: lockedByUser })
+            : lockedByUser
+              ? $t('lock.ref_locked_by', { user: lockedByUser })
+              : $t('lock.ref_locked_by_no_user') }}
         </b-alert>
 
         <b-form-group label="" class="mb-4">
@@ -63,6 +72,10 @@
           <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
             <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
           </span>
+          <span v-else-if="autoSaveStatus === 'error'" class="text-danger small"
+            data-testid="assessment-autosave-error">
+            {{ $t('common.auto_save_error') }}
+          </span>
           <span v-else></span>
           <div>
             <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
@@ -104,7 +117,8 @@
 
 <script>
 import Api from '@/utils/Api'
-import { isLockRejection } from '@/utils/lockErrors'
+import { isVersionRejection } from '@/utils/lockErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import _debounce from 'lodash.debounce'
 import pendingEditsMixin from '@/mixins/pendingEditsMixin'
@@ -149,6 +163,10 @@ export default {
       returnFocusTarget: null,
       isSaving: false,
       autoSaveStatus: null,
+      // El servidor rechazó el guardado porque la celda cambió desde que se leyó. Es
+      // estado de esta celda —sigue siendo cierto hasta traer la versión al día—, así que
+      // va como cartel y no como toast.
+      versionConflict: false,
       options: [
         [
           {
@@ -291,6 +309,17 @@ export default {
       default: false
     },
     lockedByUser: {
+      type: String,
+      default: null
+    },
+    // StepFour lo apaga cuando el estudio entero está cerrado: lo explica su cartel de
+    // arriba, y uno por celda diría lo mismo al lado (un evento, un canal).
+    showLockNotice: {
+      type: Boolean,
+      default: true
+    },
+    // El motivo que StepFour sabe (granularidad, latido); sin él, el texto de siempre.
+    lockNoticeKey: {
       type: String,
       default: null
     }
@@ -520,6 +549,10 @@ export default {
       this.text1 = ''
       this.notes = ''
     },
+    reloadAfterVersionConflict () {
+      this.versionConflict = false
+      this.$emit('getAssessments')
+    },
     async performSave (silent = false) {
       if (this.isReadOnly) return
       if (!this.refId) {
@@ -533,7 +566,7 @@ export default {
       // its canonical empty value instead of merging it with what is stored.
       const leaf = { option: this.selected, text: this.text1, notes: this.notes }
 
-      const onSuccess = () => {
+      const onSuccess = (response) => {
         // Lo que acabamos de escribir pasa a ser "lo guardado", y antes de pedir el
         // refetch: si no, el documento que vuelve encontraría los campos marcados como
         // borrador y no se aplicaría nunca más. Si la persona siguió editando mientras el
@@ -557,7 +590,11 @@ export default {
           this.baselineOption = this.selected
         }
         this.isSaving = false
-        if (silent) {
+        // Encolado sin conexión: todavía no se guardó, ni en el pie ni en un toast (lo
+        // pendiente lo cuenta la barra offline).
+        if (wasOnlyQueued(response)) {
+          this.autoSaveStatus = null
+        } else if (silent) {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
         } else {
@@ -570,17 +607,25 @@ export default {
         console.error('Error saving assessment data:', error)
         if (revertLocalLeaf) revertLocalLeaf()
         this.isSaving = false
-        // The lock channel already told the user who took the entry and that their text
-        // was kept locally. Adding "please try again" on top contradicts it: retrying
-        // cannot succeed while somebody else holds the lock.
-        if (isLockRejection(error)) {
+        // La celda cambió desde que se leyó: el cartel de la celda lo dice y ofrece traer
+        // la versión al día. Reintentar mandaría otra vez la misma versión vieja.
+        if (isVersionRejection(error)) {
+          this.autoSaveStatus = null
+          this.versionConflict = true
+          return
+        }
+        // Lo que otro canal ya avisó —lock (con el titular y el texto guardado), 403,
+        // estudio borrado, sin conexión— no se repite: «intente nuevamente» lo
+        // contradiría.
+        const key = writeErrorMessageKey(error, 'notifications.save_error')
+        if (!key) {
           this.autoSaveStatus = null
           return
         }
         if (silent) {
           this.autoSaveStatus = 'error'
         } else {
-          this.$notify.error(this.$t('notifications.save_error'))
+          this.$notify.error(this.$t(key))
         }
       }
 

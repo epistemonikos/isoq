@@ -107,6 +107,29 @@ describe('CreateAccount.vue', () => {
     expect(wrapper.vm.errorMessage).toBe('account.create_error')
   })
 
+  // Sin conexión Api.js arma un error cuyo `data.message` es «No internet connection and no
+  // cached data available for /create_user»: el cartel lo mostraba crudo, y además salía el
+  // toast de OfflineIndicator. Pantalla previa al login: el aviso es de ella, uno solo.
+  it('sin conexión el cartel dice que falló la conexión, no el texto interno', async () => {
+    Api.post.mockRejectedValue({
+      isOfflineError: true,
+      response: { status: 0, data: { message: 'No internet connection and no cached data available for /create_user', offline: true } },
+      request: {}
+    })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe('common.connection_failed')
+  })
+
+  it('el alta se pide sin cola ni aviso central: la pantalla avisa por su cuenta', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/create_user', expect.any(Object), { noQueue: true })
+  })
+
   // ─── La clave `msg` de create_user ───────────────────────────────────────────
   //
   // El backend usa 'message' en ~200 respuestas, pero create_user usa 'msg' en 7
@@ -258,7 +281,7 @@ describe('CreateAccount.vue', () => {
     await wrapper.vm.createAccount()
     expect(Api.post).toHaveBeenCalledWith('/create_user', expect.objectContaining({
       shared: { token: 'TOKEN-ID-123' }
-    }))
+    }), { noQueue: true })
   })
 
   it('does not include shared params when query is empty', async () => {

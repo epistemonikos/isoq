@@ -219,16 +219,41 @@ describe('EditReferenceModal.vue', () => {
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBe('Ana López')
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+      // Un evento, un canal: lo dice el cartel del editor, sin toast encima.
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text()).toContain('lock.ref_locked_by')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
     })
 
-    it('deshabilita edición SIN nombre de usuario y avisa "permisos revocados" cuando acquireRef retorna permissionDenied (403)', async () => {
+    it('con permissionDenied (403) el cartel dice «permisos revocados», sin nombre ni toast', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
       await wrapper.vm.onModalShown()
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBeNull()
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text()).toContain('lock.permissions_revoked')
+      expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
+    })
+
+    it('el cartel explica la granularidad del acquire', async () => {
+      LockService.acquireRef.mockResolvedValue({
+        success: false, lockedBy: 'Ana López', reason: 'locked_at_another_granularity'
+      })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text())
+        .toContain('lock.locked_at_another_granularity')
+    })
+
+    it('el cartel explica el motivo del latido cuando se pierde el lock', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ref1', lockedBy: 'Ana López', reason: 'evicted_granularity_conflict' }
+      }))
+      await flushPromises()
+      expect(wrapper.find('[data-testid="reference-readonly-notice"]').text())
+        .toContain('lock.evicted_granularity')
     })
 
     it('llama releaseRef en resetModal', () => {
@@ -268,6 +293,47 @@ describe('EditReferenceModal.vue', () => {
       await flushPromises()
 
       expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    // El estudio lo borró otra persona: avisa OfflineIndicator y el editor se cierra.
+    it('un estudio borrado no suma «no se pudo guardar»', async () => {
+      Api.patch.mockRejectedValue(Object.assign(rejection(409), {
+        response: { status: 409, data: { reason: 'reference_deleted' } }
+      }))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+    })
+
+    // El estado 'error' existía pero el pie no lo dibujaba: el auto-guardado fallido era
+    // mudo y la persona creía que lo escrito estaba a salvo.
+    it('un auto-guardado fallido se ve en el pie del modal', async () => {
+      const footerStub = {
+        template: '<div><slot /><slot name="modal-footer" :ok="() => {}" :cancel="() => {}" /></div>'
+      }
+      const conPie = shallowMount(EditReferenceModal, {
+        propsData: { reference: mockReference, charsData: mockCharsData, camelot: mockCamelot },
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal: { show: jest.fn(), hide: jest.fn() },
+          $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+        },
+        stubs: {
+          'b-modal': footerStub, 'b-row': true, 'b-col': true, 'b-card': true,
+          'b-card-body': true, 'b-form-textarea': true, 'CustomFieldsManager': true
+        }
+      })
+      Api.patch.mockRejectedValue(rejection(500))
+
+      await conPie.vm.performSave(false)
+      await flushPromises()
+
+      expect(conPie.find('[data-testid="reference-autosave-error"]').text()).toContain('common.auto_save_error')
+      expect(conPie.vm.$notify.error).not.toHaveBeenCalled()
+      conPie.destroy()
     })
   })
 

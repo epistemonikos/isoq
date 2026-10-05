@@ -72,4 +72,40 @@ describe('CloneProjectModal.vue', () => {
     expect(Api.get).toHaveBeenCalledWith('/clone/project/test-id/org/org-123')
     expect(wrapper.emitted('project-cloned')).toBeTruthy()
   })
+
+  // El modal sigue abierto tras el fallo (el ok hace preventDefault): el aviso es un cartel
+  // en él. Antes sólo iba a la consola, y con showWarning ya encendido el modal decía
+  // «duplicado completo» sobre una copia que no existía.
+  describe('cuando la clonación falla', () => {
+    const fallar = async (error) => {
+      Api.get.mockRejectedValue(error)
+      await wrapper.setProps({ uiCopy: { ...wrapper.props('uiCopy'), showWarning: true } })
+      await wrapper.vm.startCloning(new Event('ok'))
+      await new Promise(resolve => setTimeout(resolve, 0))
+    }
+
+    it('lo dice en el modal y no anuncia «duplicado completo»', async () => {
+      await fallar({ response: { status: 500, data: {} } })
+
+      expect(wrapper.find('[data-testid="clone-error"]').text()).toContain('notifications.clone_error')
+      expect(wrapper.text()).not.toContain('common.duplicate_complete')
+      expect(wrapper.emitted('project-cloned')).toBeFalsy()
+    })
+
+    it('sin conexión dice que falló la conexión', async () => {
+      await fallar({ isOfflineError: true, response: { status: 0, data: {} }, request: {} })
+
+      expect(wrapper.find('[data-testid="clone-error"]').text()).toContain('common.connection_failed')
+    })
+
+    it('un nuevo intento limpia el aviso anterior', async () => {
+      await fallar({ response: { status: 500, data: {} } })
+      Api.get.mockResolvedValue({})
+
+      await wrapper.vm.startCloning(new Event('ok'))
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      expect(wrapper.find('[data-testid="clone-error"]').exists()).toBe(false)
+    })
+  })
 })

@@ -394,7 +394,7 @@ export default {
   mounted () {
     this.updateTranslations()
     this.getList()
-    window.addEventListener('permission-denied', this.refreshPermissions)
+    window.addEventListener('permission-denied', this.onPermissionDenied)
     // El sondeo no arranca acá con un fetch inmediato: en este punto todavía no
     // conocemos el project_id (ver fetchAndUpdateRefLocks).
     this.startRefLocksPolling()
@@ -419,7 +419,7 @@ export default {
     // nada, pero si no se suelta la persona sigue apareciendo como presente después de
     // salir.
     PresenceService.leave()
-    window.removeEventListener('permission-denied', this.refreshPermissions)
+    window.removeEventListener('permission-denied', this.onPermissionDenied)
   },
   methods: {
     updateTranslations: function () {
@@ -808,9 +808,11 @@ export default {
     // it never gets a "did my permission change?" check for free. Re-checks it
     // in reaction to a rejected write anywhere in the app (see the 'permission-denied'
     // window event dispatched by Api.js) instead.
+    // Devuelve true si mostró un aviso (permisos quitados o concedidos).
     refreshPermissions: async function () {
+      let announced = false
       if (!this.project || !this.project.id) {
-        return
+        return false
       }
       const params = { organization: this.project.organization }
       try {
@@ -824,6 +826,7 @@ export default {
           if (this.mode === 'edit') {
             this.mode = 'view'
           }
+          announced = true
           this.$bvToast.toast(this.$t('lock.permissions_revoked'), {
             title: this.$t('notifications.error'),
             variant: 'danger',
@@ -831,6 +834,7 @@ export default {
           })
         } else if (!wasWrite && isWriteNow) {
           this.mode = 'edit'
+          announced = true
           this.$bvToast.toast(this.$t('lock.permissions_granted'), {
             title: this.$t('notifications.success'),
             variant: 'success',
@@ -839,6 +843,24 @@ export default {
         }
       } catch (error) {
         console.warn('refreshPermissions failed', error)
+      }
+      return announced
+    },
+    /**
+     * Un 403 de una escritura, en cualquier parte de esta pantalla. Esta pantalla es la
+     * dueña del aviso: lo reclama (`preventDefault`) para que Api.js marque el error y los
+     * catch locales callen, y avisa una sola vez — permisos quitados si eso cambió, o que
+     * ese cambio no se permite si los permisos siguen igual (un 403 sin aviso sería mudo).
+     */
+    onPermissionDenied: async function (event) {
+      if (event && event.preventDefault) event.preventDefault()
+      const announced = await this.refreshPermissions()
+      if (!announced) {
+        this.$bvToast.toast(this.$t('notifications.write_forbidden'), {
+          title: this.$t('notifications.error'),
+          variant: 'danger',
+          solid: true
+        })
       }
     },
     getFinding: function (fromModal = false) {

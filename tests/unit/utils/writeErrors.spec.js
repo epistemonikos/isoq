@@ -1,4 +1,4 @@
-import { writeErrorMessageKey, requestFailureKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, requestFailureKey, wasOnlyQueued } from '@/utils/writeErrors'
 
 const conStatus = (status, { url = '/isoqf_projects/p1', data = {} } = {}) => ({
   config: { url }, response: { status, data }
@@ -46,8 +46,17 @@ describe('writeErrorMessageKey', () => {
       expect(writeErrorMessageKey(conStatus(409, { url: '/isoqf_findings/f1/section/coherence' }))).toBeNull()
     })
 
-    it('un 403 en una ruta granular: también el canal de conflicto', () => {
-      expect(writeErrorMessageKey(conStatus(403, { url: '/isoqf_findings/f1/section/coherence' }))).toBeNull()
+    // El 403 es de `permission-denied`: si la pantalla dueña lo reclamó, Api.js marca el error.
+    it('un 403 que permission-denied ya avisó, granular o no', () => {
+      const granular = { ...conStatus(403, { url: '/isoqf_findings/f1/section/coherence' }), permissionDeniedAnnounced: true }
+      const plano = { ...conStatus(403), permissionDeniedAnnounced: true }
+      expect(writeErrorMessageKey(granular)).toBeNull()
+      expect(writeErrorMessageKey(plano, 'notifications.publish_error')).toBeNull()
+    })
+
+    it('un 403 granular sin nadie que lo haya avisado se ve', () => {
+      expect(writeErrorMessageKey(conStatus(403, { url: '/isoqf_findings/f1/section/coherence' })))
+        .toBe('notifications.write_forbidden')
     })
 
     it('un conflicto de versión: su propio canal', () => {
@@ -99,3 +108,16 @@ describe('requestFailureKey', () => {
   })
 })
 
+
+// La cola offline responde 200 con `queued: true` sin haber tocado el servidor. Un
+// «Guardado» ahí promete algo que todavía no pasó.
+describe('wasOnlyQueued', () => {
+  it('reconoce la respuesta de la cola offline', () => {
+    expect(wasOnlyQueued({ data: {}, queued: true, status: 200 })).toBe(true)
+  })
+
+  it('una respuesta del servidor no es de la cola', () => {
+    expect(wasOnlyQueued({ data: {}, status: 200 })).toBe(false)
+    expect(wasOnlyQueued(undefined)).toBe(false)
+  })
+})

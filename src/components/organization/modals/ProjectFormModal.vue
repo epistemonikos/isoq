@@ -11,14 +11,6 @@
     :ok-title="$t('common.save')"
     ok-variant="outline-success"
     cancel-variant="outline-secondary">
-    <b-alert
-      :show="error.status ? dismissCountDown : 0"
-      @dismiss-count-down="countDownChanged"
-      variant="danger"
-      v-if="error.status">
-        <p>[{{error.status}}] - {{error.statusText}}</p>
-        <p>This alert will dismiss after {{ dismissCountDown }} seconds...</p>
-      </b-alert>
     <PropertiesLockAlert
       :status="propertiesLock.status"
       :lockedBy="propertiesLock.lockedBy" />
@@ -54,15 +46,6 @@ export default {
     canEditProject: {
       type: Boolean,
       default: false
-    }
-  },
-  data () {
-    return {
-      dismissCountDown: 0,
-      error: {
-        status: '',
-        statusText: ''
-      }
     }
   },
   computed: {
@@ -109,14 +92,6 @@ export default {
     modalNotification: function () {
       this.hide()
       this.$emit('project-saved')
-    },
-    countDownChanged (dismissCountDown) {
-      this.dismissCountDown = dismissCountDown
-    },
-    showError (error) {
-      this.error.status = error.status
-      this.error.statusText = error.statusText
-      this.dismissCountDown = 10
     }
   }
 }
