@@ -25,6 +25,16 @@ Vue 2.7.16 (package.json pide ^2.6.12) · Vuex 3.6.2 · Vue Router 3.6.5 hash ·
   vacío (`LoadErrorAlert.vue` o el `b-alert` + Reintentar de la pantalla). Seguir el patrón de aviso que la
   pantalla ya tenga (toast, `b-alert`, feedback de campo). `tests/unit/guards/silentCatches.spec.js` falla ante
   un `catch` nuevo que sólo loguea: si callar es correcto, va a su allowlist CON el motivo.
+- Toast vs `b-alert` — **un evento, un canal**:
+  - `b-alert` = **estado** que sigue siendo cierto mientras la persona mira ese editor o pantalla y cambia
+    lo que puede hacer ahí: solo lectura por lock negado/perdido, carga fallida + Reintentar, conflicto de
+    versión + Recargar, inactividad, advertencias preventivas, errores de formularios que no se cierran.
+  - Toast = **evento** que no deja huella en la pantalla actual: guardado ok, fallo de un editor que ya se
+    cerró, editor cerrado por estudio borrado, replay offline, permisos cambiados, lock negado sin editor
+    abierto donde poner el cartel (columnas, cerqual).
+  - Si el componente va a dibujar un `b-alert` para ese estado, **no** dispara toast. Un mismo evento que
+    llega por varios caminos (interceptor + listener + `catch`) lo avisa sólo su dueño: el 403 de escritura
+    es de `permission-denied` (toast en viewProject/editList), y por eso `writeErrorMessageKey` lo calla.
 
 ---
 
