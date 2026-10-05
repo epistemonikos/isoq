@@ -247,7 +247,9 @@ export default {
           token: this.$route.query['token']
         }
       }
-      Api.post('/create_user', params)
+      // `noQueue`: sin conexión no hay cola ni aviso central (OfflineIndicator); el cartel
+      // de esta pantalla es el único aviso.
+      Api.post('/create_user', params, { noQueue: true })
         .then((response) => {
           const data = (response && response.data) || {}
 
@@ -278,6 +280,12 @@ export default {
         })
         .catch((error) => {
           this.ui.isProcessing = false
+          // El `data.message` de un error sin conexión es un texto interno de Api.js
+          // («No internet connection… /create_user»), no algo para mostrar.
+          if (error && error.isOfflineError) {
+            this.errorMessage = this.$t(requestFailureKey(error))
+            return
+          }
           const data = (error.response && error.response.data) || {}
 
           // El 400 por términos ausentes es el único fallo que este componente

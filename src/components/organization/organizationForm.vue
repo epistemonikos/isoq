@@ -530,6 +530,9 @@ export default {
           }
         }
       } catch (error) {
+        // Sin conexión: lo avisa OfflineIndicator (`offline-write-blocked`). El
+        // `data.message` de este error es un texto interno de Api.js, no para mostrar.
+        if (error && error.isOfflineError) return
         if (error.response && error.response.status === 403) {
           // Distinguish "you no longer have can_write" from any other save
           // error — the generic messages below don't tell the user why nothing
