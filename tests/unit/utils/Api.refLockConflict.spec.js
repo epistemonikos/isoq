@@ -243,12 +243,16 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     expect(dispatched.find(e => e.type === 'ref-lock-conflict')).toBeUndefined()
   })
 
-  it('un 403 en vivo sigue yendo al canal de locks, como antes', async () => {
+  // Tampoco en vivo: el backend responde 403 sólo cuando falta can_write
+  // (`verify_ref_lock`, control 1), nunca por el lock de otra persona. El canal de locks
+  // decía «otra persona tomó este estudio» con el nombre vacío; lo avisa `permission-denied`.
+  it('un 403 en vivo tampoco va al canal de locks: no hay otra persona', async () => {
     const err = makeError('/isoqf_characteristics/char1/item/ref1', { ref_id: 'ref1' }, '')
     err.response.status = 403
     await expect(errorHandler(err)).rejects.toBe(err)
 
-    expect(dispatched.find(e => e.type === 'ref-lock-conflict')).toBeTruthy()
+    expect(dispatched.find(e => e.type === 'ref-lock-conflict')).toBeUndefined()
+    expect(dispatched.find(e => e.type === 'permission-denied')).toBeTruthy()
   })
 })
 

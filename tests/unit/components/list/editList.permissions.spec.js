@@ -157,8 +157,51 @@ describe('editList.vue — refreshPermissions()', () => {
   it('registers itself as the permission-denied listener on mount', () => {
     const addSpy = jest.spyOn(window, 'addEventListener')
     const { wrapper } = createWrapper()
-    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.refreshPermissions)
+    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.onPermissionDenied)
     addSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  // Un evento, un canal: el 403 lo avisa esta pantalla y nadie más.
+  it('reclama el aviso del 403 para que los catch locales callen', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const event = new CustomEvent('permission-denied', { detail: {}, cancelable: true })
+    window.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+    await flushPromises()
+    wrapper.destroy()
+  })
+
+  it('tras un 403 con los permisos intactos, dice que ese cambio no se permitió', async () => {
+    const { wrapper, bvToastToast } = createWrapper()
+    await wrapper.setData({
+      project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] },
+      list: { organization: 'other_org' },
+      mode: 'edit'
+    })
+    Api.get.mockResolvedValueOnce({ data: { can_write: [42], can_read: [] } })
+
+    await wrapper.vm.onPermissionDenied({ preventDefault: jest.fn() })
+
+    expect(bvToastToast).toHaveBeenCalledTimes(1)
+    expect(bvToastToast).toHaveBeenCalledWith('notifications.write_forbidden', expect.any(Object))
+    wrapper.destroy()
+  })
+
+  it('tras un 403 que sí quitó la escritura, un solo toast: permisos revocados', async () => {
+    const { wrapper, bvToastToast } = createWrapper()
+    await wrapper.setData({
+      project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] },
+      list: { organization: 'other_org' },
+      mode: 'edit'
+    })
+    Api.get.mockResolvedValueOnce({ data: { can_write: [], can_read: [42] } })
+
+    await wrapper.vm.onPermissionDenied({ preventDefault: jest.fn() })
+
+    expect(bvToastToast).toHaveBeenCalledTimes(1)
+    expect(bvToastToast).toHaveBeenCalledWith('lock.permissions_revoked', expect.any(Object))
     wrapper.destroy()
   })
 

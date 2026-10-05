@@ -20,6 +20,10 @@ import { isReferenceDeletedRejection } from '@/utils/referenceDeleted'
  */
 export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_error') {
   if (error && error.isOfflineError) return null // OfflineIndicator
+  // El 403 de una escritura es de `permission-denied`: la pantalla que lo reclamó
+  // (viewProject / editList) ya dijo si se perdió la escritura o si ese cambio no se
+  // permite. Sin dueño montado no viene marcado, y se avisa abajo como `write_forbidden`.
+  if (error && error.permissionDeniedAnnounced) return null
   if (isLockRejection(error)) return null // canal de conflicto de lock (ref-lock-conflict)
   if (isVersionRejection(error)) return null // canal de conflicto de versión
   if (isReferenceDeletedRejection(error)) return null // canal reference-deleted (Api.js)

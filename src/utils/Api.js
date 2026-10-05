@@ -258,10 +258,11 @@ axios.interceptors.response.use(
 
       const refId = refLockKeyFromUrl(url)
       const isReplay = Boolean(error.config && error.config.isOfflineReplay)
-      // Un 403 en un replay es, casi siempre, un permiso que se perdió mientras la persona
-      // estaba sin conexión. Este canal lo anunciaría como «otra persona está editando», que
-      // es falso: lo anuncia la cola, con su motivo (ver replayOutcome.js).
-      if (refId && typeof window !== 'undefined' && !(isReplay && error.response.status === 403)) {
+      // Un 403 nunca es de este canal: el backend lo responde sólo cuando falta can_write
+      // (`verify_ref_lock`, control 1), no por el lock de otra persona. Este canal lo
+      // anunciaría como «otra persona está editando», que es falso. En vivo lo avisa
+      // `permission-denied`, abajo; en un replay, la cola con su motivo (replayOutcome.js).
+      if (refId && typeof window !== 'undefined' && error.response.status !== 403) {
         let failedData = {}
         if (error.config && error.config.data) {
           try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
@@ -277,8 +278,15 @@ axios.interceptors.response.use(
       // so any listener (viewProject.vue, editList.vue) can re-check permissions
       // and lock the UI down without waiting for the user to navigate.
       const isWriteMethod = ['post', 'patch', 'put', 'delete'].includes(method)
+      //
+      // Cancelable a propósito: la pantalla dueña del aviso lo reclama con preventDefault
+      // y el error sale marcado, para que los catch locales no avisen lo mismo otra vez
+      // (`writeErrorMessageKey`, `isLockRejection`). Un evento, un canal.
       if (error.response.status === 403 && isWriteMethod && typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url, method } }))
+        const claimed = !window.dispatchEvent(new CustomEvent('permission-denied', {
+          detail: { url, method }, cancelable: true
+        }))
+        if (claimed) error.permissionDeniedAnnounced = true
       }
     }
     return Promise.reject(error)

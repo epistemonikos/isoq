@@ -697,8 +697,10 @@ describe('AssessmentForm.vue', () => {
       expect($notify.error).not.toHaveBeenCalled()
     })
 
+    // El Paso 4 vive dentro de viewProject, que reclama `permission-denied`: el 403 real
+    // llega marcado por Api.js y el aviso ya lo dio esa pantalla.
     it('tampoco lo agrega cuando el rechazo es por permiso revocado', async () => {
-      Api.patch.mockRejectedValue(lockRejection(403))
+      Api.patch.mockRejectedValue(Object.assign(lockRejection(403), { permissionDeniedAnnounced: true }))
       await wrapper.setData({ selected: 'A', text1: 'texto' })
 
       await wrapper.vm.performSave(false)

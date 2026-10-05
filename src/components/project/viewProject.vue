@@ -790,7 +790,7 @@ export default {
     // A write was rejected with 403 somewhere in the app (project properties,
     // a finding save, a ref-lock attempt, etc.) — re-check this user's permission
     // right away instead of waiting for them to navigate to a different tab/step.
-    window.addEventListener('permission-denied', this.refreshPermissions)
+    window.addEventListener('permission-denied', this.onPermissionDenied)
     // Un lock tomado o soltado en esta misma pestaña no espera al próximo tick.
     window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
 
@@ -816,7 +816,7 @@ export default {
     // stay held until the server TTL. Verified live before this was added.
     this.$_alive = false
     LockService.releaseRef()
-    window.removeEventListener('permission-denied', this.refreshPermissions)
+    window.removeEventListener('permission-denied', this.onPermissionDenied)
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     this.stopProjectPolling()
   },
@@ -1103,7 +1103,9 @@ export default {
     // Re-checks this user's can_write/can_read against the server without a full
     // reload, so a permission change made by the project owner while this user has
     // the project open takes effect on their next tab/step navigation.
+    // Devuelve true si mostró un aviso (permisos quitados o concedidos).
     refreshPermissions: async function () {
+      let announced = false
       const params = {
         organization: this.$route.params.org_id
       }
@@ -1118,6 +1120,7 @@ export default {
           // Lost write access while in edit mode
           if (this.mode === 'edit') {
             this.mode = 'view'
+            announced = true
             this.$bvToast.toast(this.$t('lock.permissions_revoked'), {
               title: this.$t('notifications.error'),
               variant: 'danger',
@@ -1128,6 +1131,7 @@ export default {
           // Gained write access: drop the user straight into edit mode so the
           // toast's promise ("you can edit now") holds without an extra click.
           this.mode = 'edit'
+          announced = true
           this.$bvToast.toast(this.$t('lock.permissions_granted'), {
             title: this.$t('notifications.success'),
             variant: 'success',
@@ -1136,6 +1140,24 @@ export default {
         }
       } catch (error) {
         console.warn('refreshPermissions failed', error)
+      }
+      return announced
+    },
+    /**
+     * Un 403 de una escritura, en cualquier parte de esta pantalla. Esta pantalla es la
+     * dueña del aviso: lo reclama (`preventDefault`) para que Api.js marque el error y los
+     * catch locales callen, y avisa una sola vez — permisos quitados si eso cambió, o que
+     * ese cambio no se permite si los permisos siguen igual (un 403 sin aviso sería mudo).
+     */
+    onPermissionDenied: async function (event) {
+      if (event && event.preventDefault) event.preventDefault()
+      const announced = await this.refreshPermissions()
+      if (!announced) {
+        this.$bvToast.toast(this.$t('notifications.write_forbidden'), {
+          title: this.$t('notifications.error'),
+          variant: 'danger',
+          solid: true
+        })
       }
     },
     getCharacteristicsData: async function () {

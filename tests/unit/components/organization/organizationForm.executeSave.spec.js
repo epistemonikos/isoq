@@ -51,6 +51,19 @@ describe('organizationForm.vue — executeSave() error handling', () => {
     expect($notify.error).toHaveBeenCalledTimes(1)
   })
 
+  // Dentro del proyecto viewProject reclama `permission-denied` y lo avisa él: un segundo
+  // toast con el mismo texto sería el mismo evento dos veces.
+  it('calla el 403 que ya avisó la pantalla dueña (permissionDeniedAnnounced)', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Project.update.mockRejectedValue({
+      response: { status: 403, data: { message: 'Forbidden' } }, permissionDeniedAnnounced: true
+    })
+
+    await wrapper.vm.executeSave({ id: 'proj1', name: 'Updated name' })
+
+    expect($notify.error).not.toHaveBeenCalled()
+  })
+
   it('still shows the generic message-based error for a non-403 failure (regression)', async () => {
     const { wrapper, $notify } = createWrapper()
     Project.update.mockRejectedValue({ response: { status: 500, data: { message: 'Server error' } } })

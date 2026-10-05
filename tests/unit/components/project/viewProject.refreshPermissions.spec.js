@@ -161,6 +161,45 @@ describe('viewProject.vue — refreshPermissions()', () => {
     })
   })
 
+  // Un evento, un canal: el 403 de una escritura lo avisa esta pantalla y nadie más.
+  describe('onPermissionDenied()', () => {
+    it('reclama el aviso (preventDefault) para que los catch locales callen', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ project: { id: 'proj1', can_write: [1], can_read: [] } })
+      Api.get.mockResolvedValueOnce({ data: { can_write: [1], can_read: [] } })
+      const event = { preventDefault: jest.fn() }
+
+      await wrapper.vm.onPermissionDenied(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('con los permisos intactos dice que ese cambio no se permitió', async () => {
+      const { wrapper, bvToastToast } = createWrapper()
+      await wrapper.setData({ project: { id: 'proj1', can_write: [1], can_read: [] }, mode: 'edit' })
+      Api.get.mockResolvedValueOnce({ data: { can_write: [1], can_read: [] } })
+
+      await wrapper.vm.onPermissionDenied({ preventDefault: jest.fn() })
+
+      expect(bvToastToast).toHaveBeenCalledTimes(1)
+      expect(bvToastToast).toHaveBeenCalledWith('notifications.write_forbidden', expect.any(Object))
+      wrapper.destroy()
+    })
+
+    it('si le quitaron la escritura, un solo toast: permisos revocados', async () => {
+      const { wrapper, bvToastToast } = createWrapper()
+      await wrapper.setData({ project: { id: 'proj1', can_write: [1], can_read: [] }, mode: 'edit' })
+      Api.get.mockResolvedValueOnce({ data: { can_write: [], can_read: [1] } })
+
+      await wrapper.vm.onPermissionDenied({ preventDefault: jest.fn() })
+
+      expect(bvToastToast).toHaveBeenCalledTimes(1)
+      expect(bvToastToast).toHaveBeenCalledWith('lock.permissions_revoked', expect.any(Object))
+      wrapper.destroy()
+    })
+  })
+
   it('fails silently (no throw) when the request errors', async () => {
     const { wrapper } = createWrapper()
     await wrapper.setData({ project: { id: 'proj1', can_write: [1], can_read: [] }, mode: 'edit' })
