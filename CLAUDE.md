@@ -242,6 +242,19 @@ cartel estaban rotuladas con `placeholder` —invisible en cuanto hay valor, que
 pasaron revisión de código y suite. Si el dato termina en pantalla, la afirmación va sobre el DOM
 renderizado, y la puerta final es el navegador.
 
+### Versión por celda en el Paso 4 (endpoint D, 2026-10-05)
+
+Además del `_v` de la fila (endpoints B/C), cada celda del Paso 4 lleva el suyo:
+`stages[k].options[i]._v`, que el endpoint D compara. Es de la **celda** y no de la fila a propósito:
+dos personas en dos celdas del mismo estudio no se invalidan. Contrato (backend
+`tests/test_assessment_leaf_version.py`): una celda sin contador está en la **versión 0** y el cliente
+manda siempre un entero (`src/utils/leafVersion.js`). En `AssessmentForm` la versión va atada a la
+**hidratación**, no al documento que llega —con un borrador abierto no se absorbe la de una escritura
+ajena—; tras guardar se lee de la respuesta, y si quedó en la cola offline se suma 1. El 409 trae
+`option` (la celda al día): el cartel la muestra junto a lo propio y «Traer la versión al día» sigue
+desde esa versión. Vive detrás de `ENABLE_ITEM_VERSIONS` del backend; **desplegar el servidor
+primero**: uno viejo rechaza el `_v` en el body con 400.
+
 ### Perder el lock tiene que ser visible
 
 Un editor en solo lectura y mudo es peor que uno bloqueado: la gente sigue escribiendo. Todo editor
