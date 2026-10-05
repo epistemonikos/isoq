@@ -1655,7 +1655,8 @@
     "make_private_error": "The project could not be made private, so its references were not removed. Nothing changed.",
     "extracted_data_create_error": "The finding was created, but its extracted data table could not be created. It will be created when you open the finding.",
     "references_check_error": "We could not check whether other findings still have references, so nothing was changed. Please try again.",
-    "extracted_data_missing": "This finding has no extracted data table and it could not be created now. It will be retried the next time you open the finding."
+    "extracted_data_missing": "This finding has no extracted data table and it could not be created now. It will be retried the next time you open the finding.",
+    "clone_error": "The project couldn't be duplicated. The original is unchanged."
   },
   "admin": {
     "panel_link": "Admin Panel",

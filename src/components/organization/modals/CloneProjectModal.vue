@@ -28,7 +28,11 @@
           label="Loading..." variant="secondary"></b-spinner>
       </div>
     </template>
-    <template v-if="!isCopying && uiCopy.showWarning">
+    <!-- El modal sigue abierto tras el fallo: el aviso es estado de este modal. -->
+    <b-alert v-if="cloneErrorKey" show variant="danger" data-testid="clone-error">
+      {{ $t(cloneErrorKey) }}
+    </b-alert>
+    <template v-else-if="!isCopying && uiCopy.showWarning">
       <p class="text-center text-success">{{ $t('common.duplicate_complete') || 'Duplicate complete. You can now close this modal.' }}</p>
     </template>
   </b-modal>
@@ -36,6 +40,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { writeErrorMessageKey, requestFailureKey } from '@/utils/writeErrors'
 
 export default {
   name: 'CloneProjectModal',
@@ -48,6 +53,13 @@ export default {
     uiCopy: {
       type: Object,
       required: true
+    }
+  },
+  data () {
+    return {
+      // Clave i18n del último fallo, o null. Sin ella, con `showWarning` ya encendido, el
+      // modal anunciaba «duplicado completo» sobre una copia que no existía.
+      cloneErrorKey: null
     }
   },
   computed: {
@@ -64,6 +76,7 @@ export default {
     },
     startCloning: function (event) {
       if (event) event.preventDefault()
+      this.cloneErrorKey = null
       this.$emit('clone-started')
 
       if (this.project && this.project.id !== null) {
@@ -78,14 +91,13 @@ export default {
           this.$emit('project-cloned')
         })
         .catch((error) => {
+          console.error('Error cloning project:', error)
           this.$emit('update-copy-state', { key: 'project', value: false })
-          if (error.response) {
-            console.log(error.response.data)
-          } else if (error.request) {
-            console.log('Request', error.request)
-          } else {
-            console.log('Error', error.message)
-          }
+          // Es un GET: sin conexión no pasa por el aviso central de escrituras, así que
+          // el caso lo dice este cartel.
+          this.cloneErrorKey = error && error.isOfflineError
+            ? requestFailureKey(error)
+            : (writeErrorMessageKey(error, 'notifications.clone_error') || 'notifications.clone_error')
         })
     },
     closeCloneModal: function () {

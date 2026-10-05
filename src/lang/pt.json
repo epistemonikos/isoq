@@ -1655,7 +1655,8 @@
     "make_private_error": "Não foi possível tornar o projeto privado, então suas referências não foram removidas. Nada mudou.",
     "extracted_data_create_error": "O achado foi criado, mas não sua tabela de dados extraídos. Ela será criada quando você abrir o achado.",
     "references_check_error": "Não foi possível verificar se outros achados têm referências, então nada foi alterado. Tente novamente.",
-    "extracted_data_missing": "Este achado não tem tabela de dados extraídos e não foi possível criá-la agora. Será tentado novamente na próxima vez que você abrir o achado."
+    "extracted_data_missing": "Este achado não tem tabela de dados extraídos e não foi possível criá-la agora. Será tentado novamente na próxima vez que você abrir o achado.",
+    "clone_error": "Não foi possível duplicar o projeto. O original não mudou."
   },
   "admin": {
     "panel_link": "Painel de administração",
