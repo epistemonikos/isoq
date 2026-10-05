@@ -41,8 +41,8 @@
             saber que había alguien del otro lado.
           -->
           <!-- Sin permiso de escritura la persona nunca esperó editar: «otra persona está
-               trabajando» sería falso. -->
-          <b-alert v-if="studyFieldsBlocked && canEdit" show variant="warning" class="mb-3"
+               trabajando» sería falso. Perderlo con el modal abierto sí se explica. -->
+          <b-alert v-if="studyFieldsBlocked && (canEdit || studyPermissionDenied)" show variant="warning" class="mb-3"
             data-testid="study-fields-readonly-notice">
             <font-awesome-icon icon="lock" class="mr-1" />
             {{ $t(studyNoticeKey, { user: studyFieldsBlockedBy }) }}
@@ -798,6 +798,14 @@ export default {
     }
   },
   watch: {
+    // El dueño bajó el permiso con el modal abierto. El toast global («tu acceso cambió»)
+    // es el evento y se va solo; el editor deshabilitado necesita su cartel, que es estado.
+    canEdit (now, before) {
+      if (before && !now && this.isModalOpen) {
+        this.isRefReadOnly = true
+        this.studyPermissionDenied = true
+      }
+    },
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
     },

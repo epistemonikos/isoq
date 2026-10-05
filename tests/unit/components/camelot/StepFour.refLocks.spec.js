@@ -770,3 +770,41 @@ describe('StepFour.vue — rechazo por lock al guardar un campo del estudio', ()
     wrapper.destroy()
   })
 })
+
+// Medido en navegador: con la celda abierta, el dueño le bajó el permiso a «sólo ver». El
+// toast global («tu acceso cambió») se iba a los 6 s y el formulario quedaba deshabilitado
+// sin ningún cartel: el del estudio se ocultaba por `!canEdit`, pensado para quien nunca
+// pudo editar. Perder el permiso con el editor abierto es otra cosa: es estado del editor.
+describe('StepFour.vue — permiso perdido con el modal abierto', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  const abrir = async (wrapper) => {
+    await flushPromises()
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+  }
+
+  it('el cartel del estudio dice que el acceso cambió y las celdas callan', async () => {
+    const wrapper = createWrapper({ canEdit: true })
+    await abrir(wrapper)
+
+    await wrapper.setProps({ canEdit: false })
+
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(wrapper.vm.studyNoticeKey).toBe('lock.permissions_revoked')
+    expect(wrapper.vm.cellLockNoticeKey(0, 0)).toBeNull()
+    expect(wrapper.find('[data-testid="study-fields-readonly-notice"]').exists()).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('quien nunca pudo editar no ve cartel de bloqueo', async () => {
+    const wrapper = createWrapper({ canEdit: false })
+    await abrir(wrapper)
+
+    expect(wrapper.find('[data-testid="study-fields-readonly-notice"]').exists()).toBe(false)
+    wrapper.destroy()
+  })
+})
