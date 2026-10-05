@@ -316,7 +316,7 @@
 <script>
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -1041,10 +1041,11 @@ export default {
         notes: this.editFindingName.notes || ''
       }
       return Api.patch(`/isoqf_findings/${this.editFindingName.finding_id}/identity`, params)
-        .then(() => {
+        .then((response) => {
           this.finishFindingSave()
           this.$emit('get-lists')
-          this.$notify.success(this.$t('notifications.saved'))
+          // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+          if (!wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
           console.error(error)
@@ -1202,13 +1203,15 @@ export default {
         references: this.selected_references
       })
         .then((response) => {
-          // Un estudio que se borró con el modal abierto: el servidor guardó el resto.
-          announceDroppedReferences(response && response.data)
+          // Un estudio que se borró con el modal abierto: el servidor guardó el resto, y
+          // OfflineIndicator lo dice («se guardó sin…»). Un «Guardado» al lado sería otro
+          // aviso, y distinto, del mismo guardado.
+          const dropped = announceDroppedReferences(response && response.data)
           this.finishFindingSave()
           this.cleanReferencesList()
           this.$emit('get-lists')
           this.$emit('set-load-references', false)
-          this.$notify.success(this.$t('notifications.saved'))
+          if (!dropped && !wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
           console.error(error)

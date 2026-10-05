@@ -97,6 +97,19 @@ describe('ViewTable.vue', () => {
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
     })
 
+    it('no dice «Guardado» si el PATCH sólo quedó en la cola offline', async () => {
+      Api.patch.mockResolvedValue({ data: {}, queued: true, status: 200 })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'Nombre nuevo', category: 'cat1', notes: '' }
+      })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
+    })
+
     // La whitelist del servidor devuelve 400 ante estas claves, que es justo lo que impide
     // que los campos derivados de processLists vuelvan a la base.
     it('no manda los campos que processLists inyecta para pintar la tabla', async () => {
@@ -189,6 +202,32 @@ describe('ViewTable.vue', () => {
       expect(Api.patch).toHaveBeenCalledTimes(1)
       expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1/identity', { references: ['ref1', 'ref2'] })
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    })
+
+    // Sin conexión el PATCH queda en la cola: todavía no se guardó nada en el servidor, y
+    // lo que hay pendiente lo cuenta la barra de OfflineIndicator.
+    it('no dice «Guardado» si la escritura sólo quedó en la cola offline', async () => {
+      Api.patch.mockResolvedValue({ data: {}, queued: true, status: 200 })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
+    })
+
+    // El servidor guardó sin un estudio que otra persona borró: el aviso de OfflineIndicator
+    // dice «se guardó sin…». Un «Guardado» al lado dice otra cosa del mismo guardado.
+    it('no dice «Guardado» encima del aviso de estudios descartados', async () => {
+      Api.patch.mockResolvedValue({ data: { dropped_references: [{ ref_id: 'R9', deleted_by: 'Ana' }] } })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
     })
 
     it('avisa del fallo cuando no es un rechazo de lock', async () => {

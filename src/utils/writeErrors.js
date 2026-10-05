@@ -41,6 +41,17 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
 }
 
 /**
+ * True cuando la escritura no llegó al servidor: la cola offline la guardó para después y
+ * respondió `200` con `queued: true`.
+ *
+ * Un «Guardado» ahí promete algo que todavía no pasó —y que el replay puede rechazar—. Lo
+ * pendiente ya lo cuenta la barra de OfflineIndicator; el éxito se anuncia cuando lo hay.
+ */
+export function wasOnlyQueued (response) {
+  return Boolean(response && response.queued)
+}
+
+/**
  * Para las pantallas previas al login. Sus rutas (`/auth/`) no pasan por el aviso central de
  * «necesita conexión», así que el caso sin red lo dicen ellas. No se dice «sin conexión»: un
  * servidor caído llega igual como error de red, y mandar a revisar el wifi a quien lo tiene

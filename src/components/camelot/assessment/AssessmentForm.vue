@@ -118,7 +118,7 @@
 <script>
 import Api from '@/utils/Api'
 import { isVersionRejection } from '@/utils/lockErrors'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import _debounce from 'lodash.debounce'
 import pendingEditsMixin from '@/mixins/pendingEditsMixin'
@@ -566,7 +566,7 @@ export default {
       // its canonical empty value instead of merging it with what is stored.
       const leaf = { option: this.selected, text: this.text1, notes: this.notes }
 
-      const onSuccess = () => {
+      const onSuccess = (response) => {
         // Lo que acabamos de escribir pasa a ser "lo guardado", y antes de pedir el
         // refetch: si no, el documento que vuelve encontraría los campos marcados como
         // borrador y no se aplicaría nunca más. Si la persona siguió editando mientras el
@@ -590,7 +590,11 @@ export default {
           this.baselineOption = this.selected
         }
         this.isSaving = false
-        if (silent) {
+        // Encolado sin conexión: todavía no se guardó, ni en el pie ni en un toast (lo
+        // pendiente lo cuenta la barra offline).
+        if (wasOnlyQueued(response)) {
+          this.autoSaveStatus = null
+        } else if (silent) {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
         } else {

@@ -138,7 +138,7 @@ import { copyItemMetadata } from '@/utils/itemMetadata'
 import { resolveTableDoc } from '@/utils/tableDocs'
 import { withoutVirtualMark } from '@/utils/camelotFields'
 import { persistableOrder, isStoredOrder } from '@/utils/columnOrder'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
@@ -916,12 +916,16 @@ export default {
 
           this.$emit('saved', savedData)
 
+          // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+          const queued = wasOnlyQueued(response)
           if (closeAfter) {
-            this.$notify.success(this.$t('notifications.saved'))
+            if (!queued) this.$notify.success(this.$t('notifications.saved'))
             this.hide()
-          } else {
+          } else if (!queued) {
             this.autoSaveStatus = 'saved'
             setTimeout(() => { this.autoSaveStatus = null }, 2000)
+          } else {
+            this.autoSaveStatus = null
           }
         })
         .catch(error => {

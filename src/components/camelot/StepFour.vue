@@ -346,7 +346,7 @@
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import { isVersionRejection } from '@/utils/lockErrors'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import {
   ASSESSMENT_CELLS,
   baseRefOf,
@@ -1753,7 +1753,8 @@ export default {
 
           if (!keepEditing) {
             this.cancelEditing()
-            this.$notify.success(this.$t('notifications.saved'))
+            // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+            if (!wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.saved'))
           }
           this.isSavingField = false
           this.$root.$emit('characteristics-updated', this.characteristics)

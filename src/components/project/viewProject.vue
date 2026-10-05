@@ -493,7 +493,7 @@
 <script>
 import Api from '@/utils/Api'
 import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
-import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import { isAlreadyGone } from '@/utils/replayOutcome'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -1780,7 +1780,7 @@ export default {
       const deletedItem = _options.splice(index, 1)
 
       if (objID) {
-        const onDeleted = async () => {
+        const onDeleted = async (response) => {
           await this.getListCategories()
           this.updateLists(deletedItem)
           this.modal_edit_list_categories.remove = false
@@ -1788,7 +1788,8 @@ export default {
           this.modal_edit_list_categories.extra_info = ''
           this.modal_edit_list_categories.index = null
           this.modal_edit_list_categories.id = null
-          this.$notify.success(this.$t('notifications.deleted'))
+          // Encolado sin conexión: todavía no se borró (lo cuenta la barra offline).
+          if (!wasOnlyQueued(response)) this.$notify.success(this.$t('notifications.deleted'))
         }
         Api.delete(`/isoqf_list_categories/${objID}`)
           .then(onDeleted)
@@ -1869,10 +1870,11 @@ export default {
           Api.patch(`/isoqf_lists/${list.id}`, { sort: index + 1 })
             .catch((error) => { if (!isAlreadyGone(error)) throw error })
         ))
-        await Promise.all(requests)
+        const responses = await Promise.all(requests)
         this.getLists()
         this.$refs['modal-sort-findings'].hide()
-        this.$notify.success(this.$t('notifications.saved'))
+        // Encolado sin conexión: todavía no se guardó (lo cuenta la barra offline).
+        if (!responses.some(wasOnlyQueued)) this.$notify.success(this.$t('notifications.saved'))
       } catch (error) {
         this.table_settings.isBusy = false
         // Otra persona tiene el orden: el cartel del modal lo dice y nombra a quién.

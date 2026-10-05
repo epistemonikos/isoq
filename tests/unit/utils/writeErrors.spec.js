@@ -1,4 +1,4 @@
-import { writeErrorMessageKey, requestFailureKey } from '@/utils/writeErrors'
+import { writeErrorMessageKey, requestFailureKey, wasOnlyQueued } from '@/utils/writeErrors'
 
 const conStatus = (status, { url = '/isoqf_projects/p1', data = {} } = {}) => ({
   config: { url }, response: { status, data }
@@ -108,3 +108,16 @@ describe('requestFailureKey', () => {
   })
 })
 
+
+// La cola offline responde 200 con `queued: true` sin haber tocado el servidor. Un
+// «Guardado» ahí promete algo que todavía no pasó.
+describe('wasOnlyQueued', () => {
+  it('reconoce la respuesta de la cola offline', () => {
+    expect(wasOnlyQueued({ data: {}, queued: true, status: 200 })).toBe(true)
+  })
+
+  it('una respuesta del servidor no es de la cola', () => {
+    expect(wasOnlyQueued({ data: {}, status: 200 })).toBe(false)
+    expect(wasOnlyQueued(undefined)).toBe(false)
+  })
+})
