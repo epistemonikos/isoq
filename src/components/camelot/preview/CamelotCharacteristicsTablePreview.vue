@@ -1,9 +1,6 @@
 <template>
   <div>
-    <b-alert show variant="info" v-if="isLoading">
-      {{ $t('camelot.step_three.loading') }}
-    </b-alert>
-    <div v-else>
+    <div>
       <b-table :items="tableItems" :fields="tableFields" striped hover responsive
         show-empty :empty-text="$t('camelot.step_three.no_records')">
         <template v-slot:cell(authors)="data">
@@ -102,7 +99,6 @@ export default {
         fields: [],
         items: []
       },
-      isLoading: false,
       expandedCells: {},
       visibleColumnKeys: []
     }

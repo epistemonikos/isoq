@@ -270,7 +270,6 @@
   "lock": {
     "ref_locked_by": "Siendo editado por {user}",
     "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
-    "ref_lock_offline": "Sin conexión — edición no disponible",
     "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
     "study_fields_locked_by": "Los campos del estudio están en solo lectura: {user} está trabajando en este estudio.",
     "study_fields_locked_no_user": "Los campos del estudio están en solo lectura: otra persona está trabajando en este estudio.",
@@ -1231,12 +1230,10 @@
   },
   "offline": {
     "noConnection": "Sin conexión a Internet",
-    "synced": "Cambios sincronizados",
     "syncPending": "Sincronizando cambios pendientes...",
     "connected": "Conectado",
     "pendingOperation": "operación pendiente",
     "pendingOperations": "operaciones pendientes",
-    "refresh": "Recargar",
     "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para",
     "action_disabled": "Esta acción está deshabilitada sin conexión",
     "projectNotCached": "Este proyecto no está disponible sin conexión. Por favor, conéctate a internet para verlo.",

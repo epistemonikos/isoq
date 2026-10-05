@@ -1,9 +1,6 @@
 <template>
   <div>
-    <b-alert show variant="info" v-if="isLoading">
-      {{ $t('camelot.step_four.loading') }}
-    </b-alert>
-    <div v-else>
+    <div>
       <b-table :fields="fields" :items="tableItems" bordered responsive class="camelot-table" thead-tr-class="header-second-row"
         show-empty :empty-text="$t('camelot.step_four.no_records')">
         <template v-slot:thead-top>
@@ -66,7 +63,6 @@ export default {
     const overallHeaderClass = 'header-overall-row'
 
     return {
-      isLoading: false,
       responses: [
         { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
         { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },

@@ -270,7 +270,6 @@
   "lock": {
     "ref_locked_by": "Being edited by {user}",
     "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
-    "ref_lock_offline": "No connection — editing unavailable",
     "ref_lock_reconnected": "Reconnected — start editing?",
     "study_fields_locked_by": "Study fields are read-only: {user} is working on this study.",
     "study_fields_locked_no_user": "Study fields are read-only: someone else is working on this study.",
@@ -1231,12 +1230,10 @@
   },
   "offline": {
     "noConnection": "No Internet Connection",
-    "synced": "Changes Synced",
     "syncPending": "Syncing pending changes...",
     "connected": "Connected",
     "pendingOperation": "pending operation",
     "pendingOperations": "pending operations",
-    "refresh": "Refresh",
     "noInternetAndNoCache": "No internet connection and no cached data available for",
     "action_disabled": "This action is disabled while offline",
     "projectNotCached": "This project is not available offline. Please connect to the internet to view it.",
