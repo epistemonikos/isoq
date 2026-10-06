@@ -129,7 +129,7 @@ export default function createFixedRefLockMixin ({ name, key }) {
       async [m.checkFree] () {
         const p = priv(this)
         const session = p.session
-        const listing = await LockService.probeRefLocks(this[m.projectId]())
+        const listing = await LockService.probeRefLocks(this[m.projectId](), { background: true })
         if (session !== p.session || !p.timer) return
         // Un listado que no respondió dice `[]`, y sin red `acquireRef` concede un grant
         // offline que no es un lock: los dos se leerían como «libre». Se sigue esperando.

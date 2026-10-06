@@ -1902,5 +1902,11 @@
     "not_saved_by": "Not saved: {name} deleted this study from the project.",
     "saved_without": "Saved without one of the selected studies, because it was deleted from the project.",
     "saved_without_by": "Saved without one of the selected studies, because {name} deleted it from the project."
+  },
+  "session_expired": {
+    "title": "Your session has expired",
+    "text": "For security, sessions close after a period without activity. Log in again to continue: what you were editing is kept, and pending changes will be saved once you are back.",
+    "another_account": "Use another account",
+    "request_failed": "Could not log in. Check your connection and try again."
   }
 }

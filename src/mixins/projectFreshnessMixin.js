@@ -60,7 +60,7 @@ export default {
         // Straight to the network on purpose: Api.get caches /isoqf_projects/<id> in
         // IndexedDB, and a cached answer can never reveal somebody else's change.
         const response = await axios.get(`/api/isoqf_projects/${projectId}`, {
-          headers: Api.getHeaders()
+          headers: Api.getHeaders({ background: true })
         })
         const project = Array.isArray(response.data) ? response.data[0] : response.data
         lastUpdate = project ? project.last_update : null
