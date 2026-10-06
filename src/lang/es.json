@@ -1902,5 +1902,11 @@
     "not_saved_by": "No se guardó: {name} eliminó este estudio del proyecto.",
     "saved_without": "Se guardó sin uno de los estudios marcados, porque se eliminó del proyecto.",
     "saved_without_by": "Se guardó sin uno de los estudios marcados, porque {name} lo eliminó del proyecto."
+  },
+  "session_expired": {
+    "title": "Tu sesión expiró",
+    "text": "Por seguridad, la sesión se cierra tras un tiempo sin actividad. Vuelve a iniciar sesión para seguir: lo que estabas editando se conserva y los cambios pendientes se guardarán al entrar.",
+    "another_account": "Usar otra cuenta",
+    "request_failed": "No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo."
   }
 }

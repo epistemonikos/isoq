@@ -12,6 +12,7 @@ import { refLockKeyFromUrl } from '@/utils/refLockUrls'
 import { isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 import { replayOutcome, rejectionReason } from '@/utils/replayOutcome'
 import { isReferenceDeletedRejection, announceReferenceDeleted, studyOfLockKey } from '@/utils/referenceDeleted'
+import { isSessionExpired, isSessionExpiredRejection, markSessionExpired } from '@/utils/sessionExpiry'
 export { refLockKeyFromUrl }
 
 // Estado de conexión
@@ -221,6 +222,11 @@ function createOfflineError (message) {
 axios.interceptors.response.use(
   response => response,
   error => {
+    // Sesión vencida (8 h sin actividad o 7 días): se marca una vez y `SessionExpiredModal`
+    // pide volver a entrar sin salir de la pantalla. El error sigue su camino, así que cada
+    // guardado conserva lo que tenía —el formulario sigue escrito—.
+    if (isSessionExpiredRejection(error)) markSessionExpired()
+
     if (error.response && (error.response.status === 409 || error.response.status === 403)) {
       const url = error.config && error.config.url ? error.config.url : ''
       const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
@@ -311,6 +317,10 @@ export default class Api {
   static getHeaders (config = {}, data = null) {
     let authToken = localStorage.getItem('l_s')
     const headers = { ...config.headers }
+    // Lo que el cliente hace solo (latido, presencia, sondeos) no cuenta como actividad: el
+    // servidor no desliza la ventana de 8 h por esas peticiones, o una pestaña abierta nunca
+    // dejaría vencer la sesión.
+    if (config.background) headers['X-Background-Request'] = '1'
     if (authToken && authToken !== 'null') {
       headers.Authorization = `Bearer ${authToken}`
     }
@@ -723,7 +733,8 @@ export default class Api {
   }
 
   static async _syncPendingOperations () {
-    if (!isOnline) return
+    // Con la sesión vencida cada operación daría 401: se espera al re-login, que sincroniza.
+    if (!isOnline || isSessionExpired()) return
 
     try {
       const operations = await getPendingOperations()
@@ -747,6 +758,11 @@ export default class Api {
         if (op.lockRef && op.lockProjectId) {
           const LockService = await getLockService()
           const result = await LockService.acquireRef(op.lockProjectId, op.lockRef)
+          if (result.sessionExpired) {
+            // Nadie tomó el estudio: venció la sesión. Descartarla como un conflicto perdía
+            // lo escrito sin conexión por un token. Queda en la cola y se corta la corrida.
+            break
+          }
           if (!result.success) {
             // Somebody took the entity while we were away. Replaying would fail, and
             // retrying forever would stall the queue behind it: drop it and hand the

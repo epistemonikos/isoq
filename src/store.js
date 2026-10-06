@@ -103,7 +103,11 @@ export const store = new Vuex.Store({
               return
             }
             if (data.status !== 'invalid_credentials') {
-              commit('auth_success', parseUserFromResponse(data))
+              // El login no devuelve el correo; se guarda el que se tipeó para que
+              // SessionExpiredModal lo traiga puesto cuando la sesión venza.
+              const loggedUser = parseUserFromResponse(data)
+              if (!loggedUser.username) loggedUser.username = user.username
+              commit('auth_success', loggedUser)
               commit('save_promise', Promise.resolve())
               resolve(response)
             } else {

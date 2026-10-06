@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="h-100">
     <offline-indicator/>
+    <session-expired-modal/>
     <main-menu/>
     <!-- <accessibility v-if="$route.name !== 'MainPage'"/> -->
     <router-view class="h-100"/>
@@ -10,13 +11,15 @@
 <script>
 const Menu = () => import(/* webpackChunkName: "menu" */ '@/components/Menu')
 const OfflineIndicator = () => import(/* webpackChunkName: "offline" */ '@/components/OfflineIndicator')
+const SessionExpiredModal = () => import(/* webpackChunkName: "session-expired" */ '@/components/SessionExpiredModal')
 // const Accessibility = () => import(/* webpackChunkName: "accessibility" */ '@/components/Accessibility')
 
 export default {
   name: 'App',
   components: {
     'main-menu': Menu,
-    'offline-indicator': OfflineIndicator
+    'offline-indicator': OfflineIndicator,
+    'session-expired-modal': SessionExpiredModal
     // 'accessibility': Accessibility
   },
   data () {

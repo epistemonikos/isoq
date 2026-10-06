@@ -1902,5 +1902,11 @@
     "not_saved_by": "Não foi salvo: {name} excluiu este estudo do projeto.",
     "saved_without": "Salvo sem um dos estudos selecionados, porque ele foi excluído do projeto.",
     "saved_without_by": "Salvo sem um dos estudos selecionados, porque {name} o excluiu do projeto."
+  },
+  "session_expired": {
+    "title": "Sua sessão expirou",
+    "text": "Por segurança, a sessão é encerrada após um período sem atividade. Faça login novamente para continuar: o que você estava editando é mantido e as alterações pendentes serão salvas ao entrar.",
+    "another_account": "Usar outra conta",
+    "request_failed": "Não foi possível fazer login. Verifique sua conexão e tente novamente."
   }
 }

@@ -4,6 +4,7 @@ import Api from '@/utils/Api'
 import { baseRefOf } from '@/utils/camelotAssessmentKeys'
 import { PROPERTIES_LOCK_KEY } from '@/utils/propertiesLock'
 import { REFERENCE_DELETED, announceReferenceDeleted, studyOfLockKey } from '@/utils/referenceDeleted'
+import { markSessionExpired } from '@/utils/sessionExpiry'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 
@@ -162,6 +163,12 @@ class LockService {
         this.refLockedBy = data.locked_by
         return { success: false, lockedBy: this.refLockedBy, reason: data.reason || null }
       }
+      if (error.response && error.response.status === 401) {
+        // Ni lo tiene otra persona ni falta permiso: venció la sesión. El interceptor ya
+        // abrió el modal; quien llama no debe pintarlo como un conflicto.
+        markSessionExpired()
+        return { success: false, sessionExpired: true }
+      }
       if (error.response && error.response.status === 403) {
         // Different from a 409: nobody else holds the lock, this user simply no
         // longer has can_write. Callers must not treat this as "locked by X".
@@ -274,14 +281,22 @@ class LockService {
     await Promise.all([...this.refLocks.entries()].map(async ([refId, projectId]) => {
       try {
         await axios.post(`/api/lock/${projectId}/ref/${refId}/heartbeat`, {}, {
-          headers: Api.getHeaders()
+          headers: Api.getHeaders({ background: true })
         })
       } catch (error) {
-        if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
+        // Sesión vencida: el lock NO se suelta ni se anuncia como perdido. Antes salía por
+        // `ref-lock-lost` como un 403 —editor en solo lectura y «tu acceso cambió»—, y no era
+        // cierto. Tras volver a entrar, el latido siguiente lo recupera (el servidor resucita
+        // a propósito un lock propio vencido) o recibe `lock_expired`, con su propio cartel.
+        if (error.response && error.response.status === 401) {
+          markSessionExpired()
+          return
+        }
+        if (error.response && (error.response.status === 409 || error.response.status === 403)) {
           this.refLocks.delete(refId)
           // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`.
           // Passing it through is what lets the read-only banner name the person instead
-          // of falling back to its anonymous wording. A 401/403 has nobody to blame,
+          // of falling back to its anonymous wording. A 403 has nobody to blame,
           // hence the null.
           //
           // And since 2026-08-26 it also carries `reason`, which splits three situations
@@ -333,7 +348,7 @@ class LockService {
    * `enabled: false` no es incertidumbre: con la concurrencia apagada no hay locks
    * posibles, así que no hay nada que avisar y no vale la pena molestar.
    */
-  async probeRefLocks (projectId) {
+  async probeRefLocks (projectId, { background = false } = {}) {
     if (!this.isEnabled) return { locks: [], reachable: true, enabled: false }
     try {
       // `?verbose=1` devuelve `{enabled, locks}` en vez del array plano, y ese `enabled`
@@ -342,7 +357,7 @@ class LockService {
       // distingue de «nadie está editando». Nos costó un falso verde entero — la
       // verificación del aviso de import pasó sin que el aviso pudiera salir nunca.
       const response = await axios.get(`/api/lock/${projectId}/refs?verbose=1`, {
-        headers: Api.getHeaders()
+        headers: Api.getHeaders({ background })
       })
       return { ...this.readRefLockListing(response.data), reachable: true }
     } catch (e) {
@@ -372,7 +387,8 @@ class LockService {
   // un fallo silencioso es la conducta correcta ahí. Delega para no tener dos copias de
   // la misma llamada.
   async fetchRefLocks (projectId) {
-    return (await this.probeRefLocks(projectId)).locks
+    // De fondo: los cuatro lo llaman en sondeos o al montar, nunca por un clic.
+    return (await this.probeRefLocks(projectId, { background: true })).locks
   }
 }
 

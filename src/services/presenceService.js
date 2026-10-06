@@ -84,7 +84,7 @@ class PresenceService {
     if (store && store.state && !store.state.isOnline) return
     try {
       await axios.post(`/api/presence/${this.projectId}/${this.findingId}`, {},
-        { headers: Api.getHeaders() })
+        { headers: Api.getHeaders({ background: true }) })
     } catch (e) {
       // Saber quién está adentro es accesorio; nada de lo que llama a esto debe caer
       // por un fallo de red suyo.
@@ -136,7 +136,7 @@ class PresenceService {
     if (!this.isEnabled || !projectId) return { present: [], enabled: true }
     try {
       const response = await axios.get(`/api/presence/${projectId}`,
-        { headers: Api.getHeaders() })
+        { headers: Api.getHeaders({ background: true }) })
       return this.readPresenceListing(response && response.data)
     } catch (e) {
       return { present: [], enabled: true }
