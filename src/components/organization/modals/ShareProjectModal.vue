@@ -277,8 +277,15 @@ export default {
             // Backend devuelve el proyecto como objeto, no como array
             const projectData = Array.isArray(response.data) ? response.data[0] : response.data
             this.$emit('project-shared', projectData)
-            this.project.sharedTo = ''
-            this.project.tmp_invite_emails = []
+            // El acceso se concedió a todos, pero el correo de invitación de algunos rebotó
+            // (dirección mal escrita, buzón inexistente). Se avisa a quiénes y esas
+            // direcciones quedan en el campo para corregirlas y reintentar.
+            const notSent = (projectData && projectData.invitations_not_sent) || []
+            if (notSent.length) {
+              this.$notify.warning(this.$t('notifications.share_invite_not_sent', { emails: notSent.join(', ') }))
+            }
+            this.project.sharedTo = notSent.join(', ')
+            this.project.tmp_invite_emails = notSent
           }
         }).catch((error) => {
           this.notifyShareError(error, 'notifications.share_invite_error')

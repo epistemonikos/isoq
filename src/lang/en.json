@@ -1644,6 +1644,7 @@
     "write_duplicate": "One with that name already exists.",
     "publish_error": "The publication status could not be changed. The project stays as it was.",
     "share_invite_error": "The project could not be shared. The invitation was not sent.",
+    "share_invite_not_sent": "The project was shared, but the invitation could not be sent to: {emails}. Check the address and try again.",
     "share_unshare_error": "Access could not be removed. The person still has access to the project.",
     "share_permission_error": "The permission could not be changed. It stays as it was.",
     "share_link_error": "The shared link could not be updated.",
