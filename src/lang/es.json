@@ -1644,6 +1644,7 @@
     "write_duplicate": "Ya existe uno con ese nombre.",
     "publish_error": "No se pudo cambiar el estado de publicación. El proyecto sigue como estaba.",
     "share_invite_error": "No se pudo compartir el proyecto. La invitación no se envió.",
+    "share_invite_not_sent": "Se compartió el proyecto, pero no se pudo enviar la invitación a: {emails}. Revisa la dirección e inténtalo de nuevo.",
     "share_unshare_error": "No se pudo quitar el acceso. La persona sigue teniendo acceso al proyecto.",
     "share_permission_error": "No se pudo cambiar el permiso. Sigue como estaba.",
     "share_link_error": "No se pudo actualizar el enlace compartido.",
