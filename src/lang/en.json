@@ -1771,7 +1771,8 @@
     "role_support": "Support",
     "role_superadmin": "Superadmin",
     "role_business_manager": "Business manager",
-    "error_superadmin_required": "Only a superadmin can do this."
+    "error_superadmin_required": "Only a superadmin can do this.",
+    "no_eligible_owner": "No collaborator can take over this project (none has an account with a personal workspace). It cannot be transferred."
   },
   "gdpr": {
     "privacyAndTerms": {
