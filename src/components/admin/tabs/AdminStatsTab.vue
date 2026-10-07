@@ -87,6 +87,7 @@
           </b-card>
         </b-col>
       </b-row>
+      <p class="text-muted small">{{ $t('admin.stat_published_since_note') }}</p>
     </div>
   </div>
 </template>

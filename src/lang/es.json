@@ -1739,10 +1739,10 @@
     "stat_section_projects": "Proyectos",
     "stat_section_in_range": "En el período",
     "stat_projects_new_in_range": "Proyectos creados en el período",
-    "stat_projects_published_in_range": "Publicados en el período",
+    "stat_projects_published_in_range": "Publicados en iSoQ en el período",
     "error_invalid_date": "Formato de fecha inválido. Use YYYY-MM-DD.",
     "stat_total_projects": "Proyectos totales",
-    "stat_published": "Proyectos publicados",
+    "stat_published": "Publicados en iSoQ",
     "stats_load_error": "No se pudieron cargar las estadísticas. Intente nuevamente.",
     "audit_title": "Log de auditoría",
     "audit_col_timestamp": "Fecha",
@@ -1773,7 +1773,8 @@
     "role_business_manager": "Business manager",
     "error_superadmin_required": "Sólo un superadmin puede hacer esto.",
     "no_eligible_owner": "Ningún colaborador puede quedarse con este proyecto (ninguno tiene una cuenta con espacio personal). No se puede transferir.",
-    "audit_filter_person_placeholder": "Correo o ID"
+    "audit_filter_person_placeholder": "Correo o ID",
+    "stat_published_since_note": "«Publicados en el período» sólo cuenta las publicaciones desde que iSoQ empezó a registrar la fecha de publicación; los proyectos publicados antes no se incluyen. Se refiere a la publicación en iSoQ, no a que la revisión esté publicada en una revista."
   },
   "gdpr": {
     "privacyAndTerms": {
