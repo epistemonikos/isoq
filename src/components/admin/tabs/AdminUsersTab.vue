@@ -23,7 +23,7 @@
     <b-alert variant="danger" :show="!!loadError">{{ loadError }}</b-alert>
 
     <b-table
-      :items="filteredUsers"
+      :items="processedUsers"
       :fields="fields"
       :busy="isBusy"
       responsive
@@ -183,6 +183,7 @@ export default {
   },
   data () {
     return {
+      loadSeq: 0,
       users: [],
       total: 0,
       isBusy: false,
@@ -223,19 +224,17 @@ export default {
         full_name: [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username
       }))
     },
-    filteredUsers () {
-      const q = this.filter.toLowerCase().trim()
-      if (!q) return this.processedUsers
-      return this.processedUsers.filter(u =>
-        u.full_name.toLowerCase().includes(q) ||
-        (u.username && u.username.toLowerCase().includes(q))
-      )
-    },
     pageInfo () {
       if (this.total === 0) return ''
       const from = (this.currentPage - 1) * this.perPage + 1
       const to = Math.min(from + this.users.length - 1, this.total)
       return this.$t('admin.page_info', { from, to, total: this.total })
+    }
+  },
+  watch: {
+    // La búsqueda la hace el servidor sobre toda la base (`q`); el input ya trae debounce.
+    filter () {
+      this.loadUsers(1)
     }
   },
   created () {
@@ -250,16 +249,22 @@ export default {
       this.isBusy = true
       this.loadError = ''
       const offset = (page - 1) * this.perPage
+      const params = { _limit: this.perPage, _offset: offset }
+      const q = (this.filter || '').trim()
+      if (q) params.q = q
+      // Al escribir salen varias búsquedas: sólo cuenta la última que se pidió.
+      const requestId = ++this.loadSeq
       try {
-        const response = await Api.get('/admin/users', { _limit: this.perPage, _offset: offset })
+        const response = await Api.get('/admin/users', params)
+        if (requestId !== this.loadSeq) return
         const { users, total } = response.data
         this.users = users || []
         this.total = total || 0
         this.currentPage = page
       } catch (err) {
-        this.loadError = this.$t('admin.load_error')
+        if (requestId === this.loadSeq) this.loadError = this.$t('admin.load_error')
       } finally {
-        this.isBusy = false
+        if (requestId === this.loadSeq) this.isBusy = false
       }
     },
     goToPage (page) {
