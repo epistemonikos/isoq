@@ -44,6 +44,15 @@
         </b-badge>
       </template>
 
+      <template #cell(roles)="{ item }">
+        <b-badge
+          v-for="role in rolesOf(item)"
+          :key="role"
+          variant="info"
+          class="mr-1"
+        >{{ $t('admin.role_' + role) }}</b-badge>
+      </template>
+
       <template #cell(actions)="{ item }">
         <b-dropdown size="sm" variant="outline-secondary" right boundary="window">
           <b-dropdown-item v-if="isSupport" @click="openImpersonate(item)">
@@ -203,6 +212,7 @@ export default {
         { key: 'full_name', label: this.$t('admin.col_name'), sortable: true },
         { key: 'username', label: this.$t('admin.col_email'), sortable: true },
         { key: 'active', label: this.$t('admin.col_active'), sortable: true },
+        { key: 'roles', label: this.$t('admin.col_roles') },
         { key: 'owned_projects', label: this.$t('admin.col_owned_projects'), sortable: true },
         { key: 'shared_projects', label: this.$t('admin.col_shared_projects'), sortable: true },
         { key: 'actions', label: this.$t('admin.col_actions') }
@@ -330,6 +340,10 @@ export default {
     onUpdated (userId, changes) {
       const user = this.users.find(u => u.id === userId)
       if (user) Object.assign(user, changes)
+    },
+    // Los flags que el servidor manda como booleanos, en orden fijo.
+    rolesOf (user) {
+      return ['support', 'superadmin', 'business_manager'].filter(flag => user[flag])
     },
     onFlagsUpdated (userId, newFlags) {
       const user = this.users.find(u => u.id === userId)
