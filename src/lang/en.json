@@ -260,7 +260,8 @@
     "email_not_verified": "Your email address has not been verified yet. Please check your inbox.",
     "resend_verification_btn": "Resend verification email",
     "resend_email_failed": "The email could not be resent.",
-    "email_check_failed": "The email could not be checked."
+    "email_check_failed": "The email could not be checked.",
+    "registration_unavailable": "An account cannot be created with this email. Please contact support."
   },
   "subscribe": {
     "title": "Newsletter",
@@ -1760,7 +1761,10 @@
     "action_deactivate_user": "Account deactivation",
     "action_update_user": "Data edit",
     "action_update_flags": "Permission change",
-    "action_force_logout": "Forced logout"
+    "action_force_logout": "Forced logout",
+    "delete_violation_label": "Account closed for a serious violation of the terms",
+    "delete_violation_help": "Blocks new sign-ups with this email for 90 days. Only a keyed hash of the email is kept, and it is deleted automatically when the period ends.",
+    "error_registration_block_unavailable": "The server is not configured to block re-registration (REGISTRATION_BLOCK_KEY). The account was not deleted."
   },
   "gdpr": {
     "privacyAndTerms": {

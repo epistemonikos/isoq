@@ -260,7 +260,8 @@
     "email_not_verified": "Seu endereço de e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada.",
     "resend_verification_btn": "Reenviar e-mail de verificação",
     "resend_email_failed": "Não foi possível reenviar o e-mail.",
-    "email_check_failed": "Não foi possível verificar o e-mail."
+    "email_check_failed": "Não foi possível verificar o e-mail.",
+    "registration_unavailable": "Não é possível criar uma conta com este e-mail. Por favor, entre em contato com o suporte."
   },
   "subscribe": {
     "title": "Boletim informativo",
@@ -1760,7 +1761,10 @@
     "action_deactivate_user": "Desativação de conta",
     "action_update_user": "Edição de dados",
     "action_update_flags": "Alteração de permissões",
-    "action_force_logout": "Encerramento forçado de sessão"
+    "action_force_logout": "Encerramento forçado de sessão",
+    "delete_violation_label": "Conta encerrada por uma violação grave dos termos",
+    "delete_violation_help": "Impede novos cadastros com este e-mail durante 90 dias. Apenas um hash com chave do e-mail é guardado, e ele é excluído automaticamente ao fim do prazo.",
+    "error_registration_block_unavailable": "O servidor não está configurado para bloquear o recadastro (REGISTRATION_BLOCK_KEY). A conta não foi excluída."
   },
   "gdpr": {
     "privacyAndTerms": {

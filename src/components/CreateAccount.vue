@@ -312,6 +312,13 @@ export default {
             return
           }
 
+          // Email bloqueado tras un cierre por infracción: el texto del servidor está en
+          // inglés y remite a soporte, así que se traduce acá sin cambiar lo que dice.
+          if (data.result === 'registration_unavailable') {
+            this.errorMessage = this.$t('account.registration_unavailable')
+            return
+          }
+
           this.errorMessage = this.serverText(data) || this.$t('account.create_error')
         })
     },

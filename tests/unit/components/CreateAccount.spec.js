@@ -484,3 +484,27 @@ describe('CreateAccount.vue — la comprobación del correo que falla', () => {
   })
 })
 
+
+// ─── Email bloqueado tras un cierre por infracción ─────────────────────────────
+//
+// El servidor responde 403 `registration_unavailable` con un texto en inglés que remite a
+// soporte. Se traduce acá: la pantalla de alta es multilingüe y el texto del servidor no.
+describe('CreateAccount.vue — email bloqueado', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+  })
+
+  it('muestra el aviso traducido, no el texto del servidor', async () => {
+    Api.post.mockRejectedValue({ response: { status: 403, data: {
+      result: 'registration_unavailable',
+      message: 'An account cannot be created with this email. Please contact support.'
+    } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe('account.registration_unavailable')
+    expect(wrapper.vm.ui.isProcessing).toBe(false)
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+})

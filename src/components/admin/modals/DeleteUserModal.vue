@@ -43,6 +43,11 @@
         </div>
       </div>
 
+      <b-form-checkbox v-model="isViolation" class="mt-3">
+        {{ $t('admin.delete_violation_label') }}
+      </b-form-checkbox>
+      <small class="form-text text-muted mb-3">{{ $t('admin.delete_violation_help') }}</small>
+
       <b-alert variant="danger" :show="!!error">{{ error }}</b-alert>
       <b-spinner v-if="isDeleting" small />
     </template>
@@ -63,7 +68,8 @@ export default {
       isDeleting: false,
       error: '',
       projects: [],
-      transfers: {}
+      transfers: {},
+      isViolation: false
     }
   },
   computed: {
@@ -86,6 +92,7 @@ export default {
       this.error = ''
       this.projects = []
       this.transfers = {}
+      this.isViolation = false
     },
     async loadProjects () {
       if (!this.user) return
@@ -119,8 +126,12 @@ export default {
       this.sharedProjects.forEach(p => {
         if (this.transfers[p.id]) ownershipTransfers[p.id] = this.transfers[p.id]
       })
+      // `reason: 'violation'` bloquea 90 días el re-registro con ese email. Sólo viaja
+      // marcada: sin ella el cuerpo es el del borrado ordinario.
+      const body = { ownership_transfers: ownershipTransfers }
+      if (this.isViolation) body.reason = 'violation'
       try {
-        await Api.delete(`/admin/users/${this.user.id}`, { ownership_transfers: ownershipTransfers })
+        await Api.delete(`/admin/users/${this.user.id}`, body)
         this.$emit('deleted', this.user.id)
         this.$refs.modal.hide()
       } catch (err) {
@@ -129,6 +140,7 @@ export default {
           if (data.result === 'transfer_required') this.error = this.$t('admin.error_transfer_required')
           else if (data.result === 'invalid_transfer') this.error = this.$t('admin.error_invalid_transfer')
           else if (data.result === 'forbidden') this.error = this.$t('admin.error_self_action')
+          else if (data.result === 'registration_block_unavailable') this.error = this.$t('admin.error_registration_block_unavailable')
           else this.error = this.$t('notifications.delete_error')
         } else {
           this.error = this.$t('notifications.delete_error')
