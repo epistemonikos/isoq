@@ -1766,7 +1766,12 @@
     "delete_violation_help": "Impede novos cadastros com este e-mail durante 90 dias. Apenas um hash com chave do e-mail é guardado, e ele é excluído automaticamente ao fim do prazo.",
     "error_registration_block_unavailable": "O servidor não está configurado para bloquear o recadastro (REGISTRATION_BLOCK_KEY). A conta não foi excluída.",
     "error_invalid_email": "O e-mail não é válido.",
-    "error_privileged_account": "Apenas um superadmin pode editar uma conta com funções especiais (support, superadmin ou business manager)."
+    "error_privileged_account": "Apenas um superadmin pode editar uma conta com funções especiais (support, superadmin ou business manager).",
+    "col_roles": "Funções",
+    "role_support": "Support",
+    "role_superadmin": "Superadmin",
+    "role_business_manager": "Business manager",
+    "error_superadmin_required": "Apenas um superadmin pode fazer isso."
   },
   "gdpr": {
     "privacyAndTerms": {

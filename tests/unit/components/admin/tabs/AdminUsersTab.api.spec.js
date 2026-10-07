@@ -365,3 +365,23 @@ describe('AdminUsersTab.vue — currentUserId computed', () => {
     expect(wrapper.vm.currentUserId).toBeNull()
   })
 })
+
+// ─── Roles visibles ───────────────────────────────────────────────────────────
+//
+// El servidor manda ahora support/superadmin/business_manager como booleanos. Antes no los
+// mandaba: la lista no mostraba quién es admin y el modal de roles abría todo desmarcado.
+describe('AdminUsersTab.vue — columna de roles', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('la tabla tiene una columna de roles', () => {
+    const keys = makeWrapper().vm.fields.map(f => f.key)
+    expect(keys).toContain('roles')
+  })
+
+  it('rolesOf lista sólo los flags encendidos, en orden fijo', () => {
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.rolesOf({ business_manager: true, support: false, superadmin: true }))
+      .toEqual(['superadmin', 'business_manager'])
+    expect(wrapper.vm.rolesOf({})).toEqual([])
+  })
+})

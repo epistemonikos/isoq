@@ -1766,7 +1766,12 @@
     "delete_violation_help": "Impide registrarse de nuevo con este correo durante 90 días. Sólo se guarda un hash con clave del correo, que se borra automáticamente al terminar el plazo.",
     "error_registration_block_unavailable": "El servidor no está configurado para bloquear el re-registro (REGISTRATION_BLOCK_KEY). La cuenta no se borró.",
     "error_invalid_email": "El correo no es válido.",
-    "error_privileged_account": "Sólo un superadmin puede editar una cuenta con roles especiales (support, superadmin o business manager)."
+    "error_privileged_account": "Sólo un superadmin puede editar una cuenta con roles especiales (support, superadmin o business manager).",
+    "col_roles": "Roles",
+    "role_support": "Support",
+    "role_superadmin": "Superadmin",
+    "role_business_manager": "Business manager",
+    "error_superadmin_required": "Sólo un superadmin puede hacer esto."
   },
   "gdpr": {
     "privacyAndTerms": {

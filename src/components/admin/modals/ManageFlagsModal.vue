@@ -106,7 +106,8 @@ export default {
         if (data && data.message && data.message.toLowerCase().includes('own')) {
           this.error = this.$t('admin.error_self_action')
         } else if (err.response && err.response.status === 403) {
-          this.error = this.$t('admin.error_self_action')
+          // Sólo un superadmin gestiona roles; quitarse el propio es el 400 de arriba.
+          this.error = this.$t('admin.error_superadmin_required')
         } else {
           this.error = this.$t('notifications.save_error')
         }

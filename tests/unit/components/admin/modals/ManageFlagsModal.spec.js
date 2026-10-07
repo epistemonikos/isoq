@@ -142,14 +142,16 @@ describe('ManageFlagsModal.vue — confirm()', () => {
     expect(wrapper.vm.error).toBe('admin.error_self_action')
   })
 
-  it('sets error_self_action on 403', async () => {
+  // El 403 del servidor es «no sos superadmin», no «acción sobre tu propia cuenta»: quitarse
+  // el propio superadmin es un 400 con 'own' en el mensaje (caso de arriba).
+  it('sets error_superadmin_required on 403', async () => {
     Api.patch.mockRejectedValueOnce({ response: { status: 403, data: {} } })
     const wrapper = makeWrapper()
     wrapper.vm.initFlags()
     wrapper.vm.flags.support = true
     await wrapper.vm.confirm()
     await flushPromises()
-    expect(wrapper.vm.error).toBe('admin.error_self_action')
+    expect(wrapper.vm.error).toBe('admin.error_superadmin_required')
   })
 
   it('sets generic save_error on other failures', async () => {
