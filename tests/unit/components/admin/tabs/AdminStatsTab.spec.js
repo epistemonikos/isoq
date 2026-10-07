@@ -278,3 +278,19 @@ describe('AdminStatsTab.vue — card definitions', () => {
     expect(keys).toContain('published_in_range')
   })
 })
+
+// ─── «Publicados» es la publicación en iSoQ, con fecha desde el despliegue ─────
+//
+// El servidor contaba published_status (la revisión publicada en una revista, con DOI). Ahora
+// cuenta la publicación en iSoQ, y «en el período» va por published_at, que sólo existe desde
+// que se empezó a guardar: la pantalla tiene que decirlo o el número parece un total.
+describe('AdminStatsTab.vue — nota sobre publicados en el período', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('se muestra junto a las tarjetas de proyectos del período', async () => {
+    Api.get.mockResolvedValue({ data: mockStats })
+    const wrapper = makeWrapper()
+    await flushPromises()
+    expect(wrapper.html()).toContain('admin.stat_published_since_note')
+  })
+})
