@@ -174,3 +174,50 @@ describe('EditUserModal.vue — confirm()', () => {
     expect(wrapper.vm.isLoading).toBe(false)
   })
 })
+
+// ─── Lo que el servidor exige desde que un support no puede tomar cuentas privilegiadas ──
+//
+// El servidor normaliza el email (minúsculas, sin bordes) y valida su formato; y editar una
+// cuenta support/superadmin exige ser superadmin (403).
+describe('EditUserModal.vue — validaciones del servidor', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('manda el email normalizado, y es lo que emite', async () => {
+    const wrapper = makeWrapper()
+    wrapper.vm.initForm()
+    wrapper.vm.form.username = '  Nuevo@Test.COM '
+    await wrapper.vm.confirm()
+    await flushPromises()
+    expect(Api.patch).toHaveBeenCalledWith('/admin/users/user_abc', { username: 'nuevo@test.com' })
+    expect(wrapper.emitted('updated')[0]).toEqual(['user_abc', { username: 'nuevo@test.com' }])
+  })
+
+  it('un cambio sólo de mayúsculas no es un cambio', async () => {
+    const wrapper = makeWrapper()
+    wrapper.vm.initForm()
+    wrapper.vm.form.username = 'USER@test.com'
+    await wrapper.vm.confirm()
+    expect(Api.patch).not.toHaveBeenCalled()
+    expect(wrapper.vm.error).toBe('admin.error_no_changes')
+  })
+
+  it('invalid_email tiene su mensaje', async () => {
+    Api.patch.mockRejectedValueOnce({ response: { status: 400, data: { result: 'invalid_email' } } })
+    const wrapper = makeWrapper()
+    wrapper.vm.initForm()
+    wrapper.vm.form.username = 'no-es-email'
+    await wrapper.vm.confirm()
+    await flushPromises()
+    expect(wrapper.vm.error).toBe('admin.error_invalid_email')
+  })
+
+  it('el 403 dice que la cuenta es privilegiada', async () => {
+    Api.patch.mockRejectedValueOnce({ response: { status: 403, data: { status: 'error' } } })
+    const wrapper = makeWrapper()
+    wrapper.vm.initForm()
+    wrapper.vm.form.first_name = 'Otro'
+    await wrapper.vm.confirm()
+    await flushPromises()
+    expect(wrapper.vm.error).toBe('admin.error_privileged_account')
+  })
+})

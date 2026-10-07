@@ -1764,7 +1764,9 @@
     "action_force_logout": "Cierre de sesión forzado",
     "delete_violation_label": "Cuenta cerrada por una infracción grave de los términos",
     "delete_violation_help": "Impide registrarse de nuevo con este correo durante 90 días. Sólo se guarda un hash con clave del correo, que se borra automáticamente al terminar el plazo.",
-    "error_registration_block_unavailable": "El servidor no está configurado para bloquear el re-registro (REGISTRATION_BLOCK_KEY). La cuenta no se borró."
+    "error_registration_block_unavailable": "El servidor no está configurado para bloquear el re-registro (REGISTRATION_BLOCK_KEY). La cuenta no se borró.",
+    "error_invalid_email": "El correo no es válido.",
+    "error_privileged_account": "Sólo un superadmin puede editar una cuenta support o superadmin."
   },
   "gdpr": {
     "privacyAndTerms": {
