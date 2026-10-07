@@ -91,7 +91,7 @@ export default {
         } else if (result === 'invalid_email') {
           this.error = this.$t('admin.error_invalid_email')
         } else if (err.response && err.response.status === 403) {
-          // Editar una cuenta support/superadmin exige ser superadmin.
+          // Editar una cuenta con cualquier flag (support, superadmin, business_manager) exige ser superadmin.
           this.error = this.$t('admin.error_privileged_account')
         } else {
           this.error = this.$t('notifications.save_error')
