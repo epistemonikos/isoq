@@ -260,3 +260,44 @@ describe('DeleteUserModal.vue — sharedProjects (computed)', () => {
     expect(wrapper.vm.isOkDisabled).toBe(false)
   })
 })
+
+// ─── Cierre por infracción: bloquea el re-registro ────────────────────────────
+//
+// Con la casilla marcada, el DELETE lleva `reason: 'violation'` y el servidor guarda un
+// HMAC del email durante 90 días (isoq_server_py310, libs/registration_blocks.py). Sin
+// marcarla el cuerpo es exactamente el de antes: el borrado ordinario no cambia.
+
+describe('DeleteUserModal.vue — cierre por infracción', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('arranca desmarcada', () => {
+    expect(makeWrapper().vm.isViolation).toBe(false)
+  })
+
+  it('marcada, manda reason violation junto con las transferencias', async () => {
+    const wrapper = makeWrapper()
+    await wrapper.setData({ isViolation: true })
+    await wrapper.vm.confirm()
+    await flushPromises()
+    expect(Api.delete).toHaveBeenCalledWith('/admin/users/user_abc', {
+      ownership_transfers: {}, reason: 'violation'
+    })
+  })
+
+  it('al reabrir el modal vuelve a estar desmarcada', async () => {
+    const wrapper = makeWrapper()
+    await wrapper.setData({ isViolation: true })
+    wrapper.vm.reset()
+    expect(wrapper.vm.isViolation).toBe(false)
+  })
+
+  it('sin clave en el servidor dice que no se borró nada', async () => {
+    Api.delete.mockRejectedValueOnce({ response: { status: 503, data: { result: 'registration_block_unavailable' } } })
+    const wrapper = makeWrapper()
+    await wrapper.setData({ isViolation: true })
+    await wrapper.vm.confirm()
+    await flushPromises()
+    expect(wrapper.vm.error).toBe('admin.error_registration_block_unavailable')
+    expect(wrapper.emitted('deleted')).toBeFalsy()
+  })
+})
