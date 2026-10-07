@@ -95,6 +95,7 @@
 </template>
 
 <script>
+import { formatServerDate } from '@/utils/serverDate'
 import Api from '@/utils/Api'
 
 const ACTION_KEYS = [
@@ -192,9 +193,9 @@ export default {
     onFilterChange () {
       this.loadEvents(1)
     },
+    // El servidor manda UTC sin zona; new Date() lo leía como hora local.
     formatDate (timestamp) {
-      if (!timestamp) return ''
-      return new Date(timestamp).toLocaleString()
+      return formatServerDate(timestamp)
     },
     actionLabel (action) {
       const key = `admin.action_${action}`

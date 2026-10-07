@@ -418,3 +418,33 @@ describe('AdminUsersTab.vue — búsqueda', () => {
     expect(wrapper.vm.users.map(u => u.id)).toEqual(['nuevo'])
   })
 })
+
+// ─── Fechas y orden en el servidor ────────────────────────────────────────────
+//
+// Ordenar en el navegador sólo reordenaba la página visible. Ahora las columnas ordenables
+// son las que el servidor sabe ordenar (`_sort`), y cambiar el orden vuelve a la página 1.
+describe('AdminUsersTab.vue — fechas y orden', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('tiene columnas de alta y último login, ordenables', () => {
+    const fields = makeWrapper().vm.fields
+    const byKey = Object.fromEntries(fields.map(f => [f.key, f]))
+    expect(byKey.created_at.sortable).toBe(true)
+    expect(byKey.last_login.sortable).toBe(true)
+  })
+
+  it('sólo son ordenables las columnas que ordena el servidor', () => {
+    const sortable = makeWrapper().vm.fields.filter(f => f.sortable).map(f => f.key).sort()
+    expect(sortable).toEqual(['created_at', 'full_name', 'last_login', 'username'])
+  })
+
+  it('cambiar el orden pide _sort al servidor desde la página 1', async () => {
+    const wrapper = makeWrapper()
+    await flushPromises()
+    await wrapper.setData({ currentPage: 4 })
+    jest.clearAllMocks()
+    wrapper.vm.onSortChanged({ sortBy: 'last_login', sortDesc: true })
+    await flushPromises()
+    expect(Api.get).toHaveBeenCalledWith('/admin/users', { _limit: 50, _offset: 0, _sort: '-last_login' })
+  })
+})
