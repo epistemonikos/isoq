@@ -14,6 +14,7 @@
         <label class="small text-muted mb-1">{{ $t('admin.audit_col_actor') }}</label>
         <b-form-input
           v-model="filterActor"
+          :placeholder="$t('admin.audit_filter_person_placeholder')"
           size="sm"
           debounce="400"
           @update="onFilterChange"
@@ -23,6 +24,7 @@
         <label class="small text-muted mb-1">{{ $t('admin.audit_col_target') }}</label>
         <b-form-input
           v-model="filterTarget"
+          :placeholder="$t('admin.audit_filter_person_placeholder')"
           size="sm"
           debounce="400"
           @update="onFilterChange"
@@ -166,8 +168,9 @@ export default {
       const offset = (page - 1) * this.perPage
       const params = { _limit: this.perPage, _offset: offset }
       if (this.filterAction) params.action = this.filterAction
-      if (this.filterActor.trim()) params.actor_id = this.filterActor.trim()
-      if (this.filterTarget.trim()) params.target_id = this.filterTarget.trim()
+      // ID o parte del email; el servidor compara con el email que la cuenta tenía en el evento.
+      if (this.filterActor.trim()) params.actor = this.filterActor.trim()
+      if (this.filterTarget.trim()) params.target = this.filterTarget.trim()
       try {
         const response = await Api.get('/admin/audit', params)
         const { events, total } = response.data

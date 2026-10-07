@@ -164,3 +164,26 @@ describe('AdminAuditTab.vue — actionVariant()', () => {
     expect(wrapper.vm.actionVariant('unknown_action')).toBe('secondary')
   })
 })
+
+// ─── Filtros de actor y destinatario por email ────────────────────────────────
+//
+// Los cuadros se mandaban como actor_id/target_id y el servidor comparaba contra el ID
+// interno: un email no encontraba nada. `actor`/`target` aceptan el ID o parte del email.
+describe('AdminAuditTab.vue — filtros por email', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('manda actor y target, no actor_id ni target_id', async () => {
+    Api.get.mockResolvedValue(makeResponse())
+    const wrapper = makeWrapper()
+    await flushPromises()
+    jest.clearAllMocks()
+    wrapper.vm.filterActor = ' ana@ '
+    wrapper.vm.filterTarget = 'teresa'
+    wrapper.vm.onFilterChange()
+    await flushPromises()
+    const params = Api.get.mock.calls[0][1]
+    expect(params).toEqual(expect.objectContaining({ actor: 'ana@', target: 'teresa' }))
+    expect(params).not.toHaveProperty('actor_id')
+    expect(params).not.toHaveProperty('target_id')
+  })
+})

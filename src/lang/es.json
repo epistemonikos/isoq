@@ -1772,7 +1772,8 @@
     "role_superadmin": "Superadmin",
     "role_business_manager": "Business manager",
     "error_superadmin_required": "Sólo un superadmin puede hacer esto.",
-    "no_eligible_owner": "Ningún colaborador puede quedarse con este proyecto (ninguno tiene una cuenta con espacio personal). No se puede transferir."
+    "no_eligible_owner": "Ningún colaborador puede quedarse con este proyecto (ninguno tiene una cuenta con espacio personal). No se puede transferir.",
+    "audit_filter_person_placeholder": "Correo o ID"
   },
   "gdpr": {
     "privacyAndTerms": {
