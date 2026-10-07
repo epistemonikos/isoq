@@ -121,3 +121,10 @@ describe('wasOnlyQueued', () => {
     expect(wasOnlyQueued(undefined)).toBe(false)
   })
 })
+
+describe('writeErrorMessageKey — confirmación de datos personales', () => {
+  it('el 400 del gate de publicación dice qué falta, no «no se pudo publicar»', () => {
+    const error = { response: { status: 400, data: { reason: 'personal_data_confirmation_required' } } }
+    expect(writeErrorMessageKey(error, 'notifications.publish_error')).toBe('publish.confirm_no_personal_data_required')
+  })
+})

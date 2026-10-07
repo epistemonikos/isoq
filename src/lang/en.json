@@ -980,6 +980,8 @@
     "relevance": "Relevance"
   },
   "publish": {
+    "confirm_no_personal_data": "I confirm that the content does not identify participants of primary studies and does not include personal data that I am not able to make public",
+    "confirm_no_personal_data_required": "To publish, you must confirm that the content does not identify participants of primary studies and does not include personal data that you are not able to make public.",
     "to_word": "to MS Word",
     "the_references": "the references",
     "print_pdf": "Print or save as PDF",

@@ -121,4 +121,29 @@ describe('ProjectFormModal.vue', () => {
     expect(mockEvent.preventDefault).toHaveBeenCalled()
     expect(wrapper.vm.$refs['organizationForm'].save).toHaveBeenCalled()
   })
+
+  // El modal de edición de la lista también publica (organizationForm → /api/publish): sin
+  // la casilla de datos personales, «Guardar» no se puede pulsar.
+  describe('confirmación de datos personales', () => {
+    // Con el lock de propiedades tomado: lo que se mide es la casilla, no el lock.
+    const mountModalHeld = (propsData) => {
+      mountModal(propsData)
+      wrapper.vm.propertiesLock = { status: 'held', lockedBy: null }
+    }
+
+    it('público sin confirmar: OK deshabilitado', () => {
+      mountModalHeld({ project: { id: 'test-id', name: 'Test Project', public_type: 'fully' } })
+      expect(wrapper.vm.okDisabled).toBe(true)
+    })
+
+    it('público confirmado: OK habilitado', () => {
+      mountModalHeld({ project: { id: 'test-id', name: 'Test Project', public_type: 'fully', no_personal_data_confirmed: true } })
+      expect(wrapper.vm.okDisabled).toBe(false)
+    })
+
+    it('privado: OK habilitado sin la casilla', () => {
+      mountModalHeld({ project: { id: 'test-id', name: 'Test Project', public_type: 'private' } })
+      expect(wrapper.vm.okDisabled).toBe(false)
+    })
+  })
 })

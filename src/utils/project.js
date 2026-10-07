@@ -1,4 +1,5 @@
 import Api from './Api'
+import { needsPersonalDataConfirmation } from './personalDataConfirmation'
 
 function validEmail (email) {
   var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
@@ -30,7 +31,8 @@ export default class Project {
         url_doi: null,
         complete_by_author: null,
         lists_authors: null,
-        license: null
+        license: null,
+        no_personal_data_confirmed: null
       }
     }
 
@@ -79,6 +81,11 @@ export default class Project {
       // check if project has a license
       if (data.license_type === '' || data.license_type === null || data.license_type === undefined) {
         responses.state.license = false
+        cnt++
+      }
+      // Obligatoria para publicar: PATCH /api/publish la exige igual (400).
+      if (needsPersonalDataConfirmation(data)) {
+        responses.state.no_personal_data_confirmed = false
         cnt++
       }
 

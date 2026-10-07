@@ -222,6 +222,9 @@ describe('PublishModal.vue', () => {
 
     it('should enable save button when online', async () => {
       mockStore.state.isOnline = true
+      // El modal cargado (openModal) con un nivel privado: público, el botón espera además la
+      // casilla de datos personales (PublishModal.personalData.spec.js).
+      wrapper.vm.loadModalProject(mockProject)
       await wrapper.vm.$nextTick()
       
       const saveButton = wrapper.find('b-button-stub[variant="outline-success"]')

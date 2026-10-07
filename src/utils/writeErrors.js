@@ -1,6 +1,7 @@
 import { isLockRejection, isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 import { rejectionReason } from '@/utils/replayOutcome'
 import { isReferenceDeletedRejection } from '@/utils/referenceDeleted'
+import { isPersonalDataConfirmationRejection } from '@/utils/personalDataConfirmation'
 
 /**
  * Qué aviso corresponde a una escritura que falló, o `null` si otro canal ya avisó.
@@ -32,6 +33,7 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
   const status = response && response.status
 
   if (isDuplicateKeyRejection(error)) return 'notifications.write_duplicate'
+  if (isPersonalDataConfirmationRejection(error)) return 'publish.confirm_no_personal_data_required'
   if (!status) return fallbackKey
 
   const reason = rejectionReason(status)

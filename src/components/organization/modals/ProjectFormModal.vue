@@ -7,7 +7,7 @@
     @ok="save"
     @cancel="closeModalProject"
     @hidden="closeModalProject"
-    :ok-disabled="!project.name || !canEdit"
+    :ok-disabled="okDisabled"
     :ok-title="$t('common.save')"
     ok-variant="outline-success"
     cancel-variant="outline-secondary">
@@ -27,6 +27,7 @@
 import Api from '@/utils/Api'
 import propertiesLockMixin from '@/mixins/propertiesLockMixin'
 import PropertiesLockAlert from '@/components/project/PropertiesLockAlert.vue'
+import { needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../../organization/organizationForm')
 
 export default {
@@ -52,6 +53,10 @@ export default {
     // Un proyecto nuevo no tiene a quién bloquear.
     canEdit () {
       return this.canEditProject && (!this.project.id || this.propertiesLockHeld)
+    },
+    // organizationForm escribe la casilla de datos personales en este mismo objeto.
+    okDisabled () {
+      return !this.project.name || !this.canEdit || needsPersonalDataConfirmation(this.project)
     }
   },
   methods: {
