@@ -73,7 +73,7 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
 
   it('publicar falla en el PATCH', async () => {
     const { wrapper, $notify } = createWrapper()
-    await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by' } })
+    await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by', no_personal_data_confirmed: true } })
     Api.patch.mockRejectedValueOnce(error500())
     await wrapper.vm.savePublicStatus({ preventDefault () {} })
     await flushPromises()
@@ -84,7 +84,7 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
   it('publicar falla antes, al preguntar si se puede', async () => {
     // Ese GET no tenía catch: el método rechazaba y el spinner quedaba igual de colgado.
     const { wrapper, $notify } = createWrapper()
-    await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by' } })
+    await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by', no_personal_data_confirmed: true } })
     Api.get.mockRejectedValueOnce(error500())
     await wrapper.vm.savePublicStatus({ preventDefault () {} })
     await flushPromises()

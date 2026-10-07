@@ -57,6 +57,14 @@
           ></b-form-radio-group>
           <b-form-invalid-feedback :state="state.license_type">{{ $t('actionButtons.modal.must_select_license') }}</b-form-invalid-feedback>
         </b-form-group>
+        <b-form-group>
+          <b-form-checkbox
+            id="modal-publish-personal-data"
+            v-model="modalProject.no_personal_data_confirmed"
+            name="modal-checkbox-personal-data">
+            {{ $t('publish.confirm_no_personal_data') }}
+          </b-form-checkbox>
+        </b-form-group>
       </template>
     </template>
 
@@ -65,7 +73,7 @@
         <b-button
           variant="outline-success"
           class="float-right ml-3"
-          :disabled="!isOnline || !propertiesLockHeld"
+          :disabled="!isOnline || !propertiesLockHeld || missingPersonalDataConfirmation"
           @click="savePublicStatus">
           <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
           {{ $t('actionButtons.modal.save') }}
@@ -88,6 +96,7 @@ import { writeErrorMessageKey } from '@/utils/writeErrors'
 import videoHelp from '@/components/videoHelp'
 import propertiesLockMixin from '@/mixins/propertiesLockMixin'
 import PropertiesLockAlert from '@/components/project/PropertiesLockAlert.vue'
+import { PERSONAL_DATA_CONFIRMED, needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
 
 export default {
   name: 'PublishModal',
@@ -127,6 +136,10 @@ export default {
     },
     isOnline () {
       return this.$store.state.isOnline
+    },
+    // Obligatoria para publicar; el servidor la exige igual (ver utils/personalDataConfirmation).
+    missingPersonalDataConfirmation () {
+      return needsPersonalDataConfirmation(this.modalProject)
     }
   },
   data () {
@@ -191,7 +204,7 @@ export default {
     async savePublicStatus (event) {
       event.preventDefault()
       // Defensa además del botón deshabilitado: el `@ok` del b-modal también llega acá.
-      if (!this.propertiesLockHeld) return
+      if (!this.propertiesLockHeld || this.missingPersonalDataConfirmation) return
       this.$emit('uiPublishShowLoader', true)
 
       let params = {}
@@ -205,6 +218,7 @@ export default {
         params.private = false
         params.is_public = true
         params.license_type = this.modalProject.license_type
+        params[PERSONAL_DATA_CONFIRMED] = true
 
         if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
           this.state.license_type = false
@@ -221,7 +235,8 @@ export default {
           canPublish = await Api.get('/api/project/can_publish', {
             id: this.project.id,
             workspace: this.$route.params.org_id,
-            isModal: isModal
+            isModal: isModal,
+            [PERSONAL_DATA_CONFIRMED]: true
           })
         } catch (error) {
           // Sin este catch el método rechazaba y el spinner quedaba girando para siempre.

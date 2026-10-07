@@ -213,6 +213,18 @@
                 <b>{{ $t('project.explanation') }}</b> {{ license.explanation }}
               </span>
             </p>
+            <b-form-group>
+              <b-form-checkbox
+                :disabled="!canEdit"
+                :state="state.no_personal_data_confirmed"
+                @change="state.no_personal_data_confirmed = null"
+                id="checkbox-project-personal-data"
+                v-model="formData.no_personal_data_confirmed"
+                name="checkbox-project-personal-data">
+                {{ $t('publish.confirm_no_personal_data') }}
+              </b-form-checkbox>
+              <b-form-invalid-feedback :state="state.no_personal_data_confirmed">{{ $t('publish.confirm_no_personal_data_required') }}</b-form-invalid-feedback>
+            </b-form-group>
           </template>
           <b-form-group
             :label="$t('project.additional_info')"
@@ -313,6 +325,7 @@
 <script>
 import Api from '@/utils/Api'
 import Project from '@/utils/project'
+import { needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
@@ -354,7 +367,8 @@ export default {
         complete_by_author: null,
         lists_authors: null,
         license: null,
-        can_publish: null
+        can_publish: null,
+        no_personal_data_confirmed: null
       },
       originalFormData: null,
       pendingData: null,
@@ -412,7 +426,8 @@ export default {
         complete_by_author: null,
         lists_authors: null,
         license: null,
-        can_publish: null
+        can_publish: null,
+        no_personal_data_confirmed: null
       }
     },
     handlePublishWarningContinue: function () {
@@ -611,7 +626,8 @@ export default {
              (this.originalFormData && this.originalFormData.public_type !== 'private')
     },
     isInvalid () {
-      return !this.formData.name || this.formData.name.trim().length < 3
+      return !this.formData.name || this.formData.name.trim().length < 3 ||
+        needsPersonalDataConfirmation(this.formData)
     }
   },
   watch: {
