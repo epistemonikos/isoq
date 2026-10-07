@@ -385,3 +385,36 @@ describe('AdminUsersTab.vue — columna de roles', () => {
     expect(wrapper.vm.rolesOf({})).toEqual([])
   })
 })
+
+// ─── Búsqueda en el servidor ──────────────────────────────────────────────────
+//
+// Filtraba en el navegador sólo la página cargada: no se podía encontrar a nadie de otra
+// página. Ahora `q` viaja a GET /admin/users y la lista muestra lo que devuelve el servidor.
+describe('AdminUsersTab.vue — búsqueda', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('manda q y vuelve a la página 1 al cambiar el filtro', async () => {
+    const wrapper = makeWrapper()
+    await flushPromises()
+    await wrapper.setData({ currentPage: 3 })
+    jest.clearAllMocks()
+    await wrapper.setData({ filter: '  ana  ' })
+    await flushPromises()
+    expect(Api.get).toHaveBeenCalledWith('/admin/users', { _limit: 50, _offset: 0, q: 'ana' })
+  })
+
+  it('una respuesta vieja no pisa a la búsqueda más nueva', async () => {
+    let resolveOld
+    const wrapper = makeWrapper()
+    await flushPromises()
+    Api.get
+      .mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve }))
+      .mockResolvedValueOnce(makeApiResponse([{ id: 'nuevo', username: 'n@x.com' }], 1))
+    const old = wrapper.vm.loadUsers(1)
+    await wrapper.vm.loadUsers(1)
+    resolveOld(makeApiResponse([{ id: 'viejo', username: 'v@x.com' }], 1))
+    await old
+    await flushPromises()
+    expect(wrapper.vm.users.map(u => u.id)).toEqual(['nuevo'])
+  })
+})
