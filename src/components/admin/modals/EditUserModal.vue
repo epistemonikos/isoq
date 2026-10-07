@@ -63,7 +63,10 @@ export default {
       const payload = {}
       if (this.form.first_name !== this.original.first_name) payload.first_name = this.form.first_name
       if (this.form.last_name !== this.original.last_name) payload.last_name = this.form.last_name
-      if (this.form.username !== this.original.username) payload.username = this.form.username
+      // El servidor guarda el email normalizado (el login lo normaliza igual): se manda ya
+      // así para que lo que se emite a la lista sea lo que quedó guardado.
+      const username = (this.form.username || '').trim().toLowerCase()
+      if (username !== this.original.username) payload.username = username
       return payload
     },
     async confirm () {
@@ -85,6 +88,11 @@ export default {
           this.error = this.$t('admin.error_username_taken')
         } else if (result === 'no_changes') {
           this.error = this.$t('admin.error_no_changes')
+        } else if (result === 'invalid_email') {
+          this.error = this.$t('admin.error_invalid_email')
+        } else if (err.response && err.response.status === 403) {
+          // Editar una cuenta support/superadmin exige ser superadmin.
+          this.error = this.$t('admin.error_privileged_account')
         } else {
           this.error = this.$t('notifications.save_error')
         }
