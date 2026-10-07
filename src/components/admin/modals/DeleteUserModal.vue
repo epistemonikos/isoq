@@ -31,7 +31,11 @@
 
         <div v-for="project in sharedProjects" :key="project.id" class="mb-3">
           <label>{{ $t('admin.transfer_owner_label', { project: project.name }) }}</label>
+          <small v-if="!(project.candidates || []).length" class="d-block text-danger">
+            {{ $t('admin.no_eligible_owner') }}
+          </small>
           <b-form-select
+            v-else
             v-model="transfers[project.id]"
             :options="ownerOptions(project)"
             :placeholder="$t('admin.select_owner')"
@@ -59,8 +63,7 @@ import Api from '@/utils/Api'
 
 export default {
   props: {
-    user: { type: Object, default: null },
-    allUsers: { type: Array, default: () => [] }
+    user: { type: Object, default: null }
   },
   data () {
     return {
@@ -79,6 +82,11 @@ export default {
     isOkDisabled () {
       if (this.isLoading || this.isDeleting) return true
       return this.sharedProjects.some(p => !this.transfers[p.id])
+    },
+    // Compartidos sin ningún colaborador que pueda heredarlos: el servidor no acepta el
+    // borrado hasta que alguno tenga cuenta con organización personal (no mira si está activa).
+    projectsWithoutHeir () {
+      return this.sharedProjects.filter(p => !(p.candidates || []).length)
     }
   },
   methods: {
@@ -110,14 +118,13 @@ export default {
         this.isLoading = false
       }
     },
+    // Los herederos los resuelve el servidor (`candidates`): antes se cruzaban con la página
+    // visible de la lista del panel y un colaborador de otra página no aparecía.
     ownerOptions (project) {
-      const eligibleIds = [...new Set([...project.can_write, ...project.can_read])]
-      return this.allUsers
-        .filter(u => eligibleIds.includes(u.id))
-        .map(u => ({
-          value: u.id,
-          text: [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username
-        }))
+      return (project.candidates || []).map(c => ({
+        value: c.id,
+        text: c.name && c.name !== c.username ? `${c.name} (${c.username})` : c.username
+      }))
     },
     async confirm () {
       this.isDeleting = true

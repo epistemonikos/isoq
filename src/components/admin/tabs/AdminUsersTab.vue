@@ -156,7 +156,6 @@
     <delete-user-modal
       ref="deleteModal"
       :user="selectedUser"
-      :all-users="users"
       @deleted="onDeleted"
     />
   </div>

@@ -301,3 +301,32 @@ describe('DeleteUserModal.vue — cierre por infracción', () => {
     expect(wrapper.emitted('deleted')).toBeFalsy()
   })
 })
+
+// ─── Herederos resueltos por el servidor ──────────────────────────────────────
+//
+// Las opciones de nuevo dueño salían de cruzar can_write/can_read con la lista de usuarios de
+// la página visible del panel: un colaborador de otra página no aparecía y el borrado se
+// trababa. El servidor manda ahora `candidates` por proyecto, ya resueltos.
+describe('DeleteUserModal.vue — candidatos del servidor', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('ownerOptions sale de candidates, no de la lista del panel', () => {
+    const wrapper = makeWrapper({ allUsers: [] })
+    const project = {
+      id: 'p1', can_write: ['u2'], can_read: [],
+      candidates: [{ id: 'u2', name: 'Ana Pérez', username: 'ana@x.com' }]
+    }
+    expect(wrapper.vm.ownerOptions(project)).toEqual([{ value: 'u2', text: 'Ana Pérez (ana@x.com)' }])
+  })
+
+  it('un proyecto compartido sin candidatos se marca, y el borrado no se habilita', async () => {
+    Api.get.mockResolvedValueOnce({ data: [
+      { id: 'p1', name: 'Shared', can_write: ['fantasma'], can_read: [], candidates: [] }
+    ] })
+    const wrapper = makeWrapper()
+    await wrapper.vm.loadProjects()
+    await flushPromises()
+    expect(wrapper.vm.projectsWithoutHeir.map(p => p.id)).toEqual(['p1'])
+    expect(wrapper.vm.isOkDisabled).toBe(true)
+  })
+})
