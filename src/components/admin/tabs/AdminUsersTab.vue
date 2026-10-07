@@ -24,6 +24,8 @@
 
     <b-table
       :items="processedUsers"
+      no-local-sorting
+      @sort-changed="onSortChanged"
       :fields="fields"
       :busy="isBusy"
       responsive
@@ -162,6 +164,7 @@
 </template>
 
 <script>
+import { formatServerDate } from '@/utils/serverDate'
 import Api from '@/utils/Api'
 import ActivateUserModal from '../modals/ActivateUserModal'
 import DeactivateUserModal from '../modals/DeactivateUserModal'
@@ -183,6 +186,8 @@ export default {
   },
   data () {
     return {
+      sortBy: '',
+      sortDesc: false,
       loadSeq: 0,
       users: [],
       total: 0,
@@ -209,12 +214,16 @@ export default {
     },
     fields () {
       return [
+        // Ordenables sólo las que ordena el servidor (`_sort`): en el navegador se
+        // reordenaba nada más la página visible.
         { key: 'full_name', label: this.$t('admin.col_name'), sortable: true },
         { key: 'username', label: this.$t('admin.col_email'), sortable: true },
-        { key: 'active', label: this.$t('admin.col_active'), sortable: true },
+        { key: 'active', label: this.$t('admin.col_active') },
         { key: 'roles', label: this.$t('admin.col_roles') },
-        { key: 'owned_projects', label: this.$t('admin.col_owned_projects'), sortable: true },
-        { key: 'shared_projects', label: this.$t('admin.col_shared_projects'), sortable: true },
+        { key: 'created_at', label: this.$t('admin.col_created_at'), sortable: true, formatter: formatServerDate },
+        { key: 'last_login', label: this.$t('admin.col_last_login'), sortable: true, formatter: formatServerDate },
+        { key: 'owned_projects', label: this.$t('admin.col_owned_projects') },
+        { key: 'shared_projects', label: this.$t('admin.col_shared_projects') },
         { key: 'actions', label: this.$t('admin.col_actions') }
       ]
     },
@@ -252,6 +261,7 @@ export default {
       const params = { _limit: this.perPage, _offset: offset }
       const q = (this.filter || '').trim()
       if (q) params.q = q
+      if (this.sortBy) params._sort = (this.sortDesc ? '-' : '') + this.sortBy
       // Al escribir salen varias búsquedas: sólo cuenta la última que se pidió.
       const requestId = ++this.loadSeq
       try {
@@ -266,6 +276,11 @@ export default {
       } finally {
         if (requestId === this.loadSeq) this.isBusy = false
       }
+    },
+    onSortChanged ({ sortBy, sortDesc }) {
+      this.sortBy = sortBy || ''
+      this.sortDesc = !!sortDesc
+      this.loadUsers(1)
     },
     goToPage (page) {
       this.loadUsers(page)

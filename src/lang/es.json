@@ -1774,7 +1774,9 @@
     "error_superadmin_required": "Sólo un superadmin puede hacer esto.",
     "no_eligible_owner": "Ningún colaborador puede quedarse con este proyecto (ninguno tiene una cuenta con espacio personal). No se puede transferir.",
     "audit_filter_person_placeholder": "Correo o ID",
-    "stat_published_since_note": "«Publicados en el período» sólo cuenta las publicaciones desde que iSoQ empezó a registrar la fecha de publicación; los proyectos publicados antes no se incluyen. Se refiere a la publicación en iSoQ, no a que la revisión esté publicada en una revista."
+    "stat_published_since_note": "«Publicados en el período» sólo cuenta las publicaciones desde que iSoQ empezó a registrar la fecha de publicación; los proyectos publicados antes no se incluyen. Se refiere a la publicación en iSoQ, no a que la revisión esté publicada en una revista.",
+    "col_created_at": "Alta",
+    "col_last_login": "Último login"
   },
   "gdpr": {
     "privacyAndTerms": {
