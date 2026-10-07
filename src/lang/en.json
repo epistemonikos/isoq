@@ -1776,7 +1776,20 @@
     "audit_filter_person_placeholder": "Email or ID",
     "stat_published_since_note": "«Published in the period» only counts publications since iSoQ started recording the publication date; projects published earlier are not included. It refers to publication in iSoQ, not to the review being published in a journal.",
     "col_created_at": "Signed up",
-    "col_last_login": "Last login"
+    "col_last_login": "Last login",
+    "view_projects": "View projects",
+    "user_projects_title": "Projects of {name}",
+    "user_projects_empty": "This user has no projects.",
+    "col_project_name": "Project",
+    "col_project_role": "Role",
+    "col_project_status": "Status",
+    "col_project_last_update": "Last update",
+    "col_project_published_at": "Published on",
+    "project_role_owner": "Owner",
+    "project_role_write": "Can edit",
+    "project_role_read": "Can view",
+    "project_published": "Published",
+    "project_private": "Private"
   },
   "gdpr": {
     "privacyAndTerms": {

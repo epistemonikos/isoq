@@ -61,6 +61,10 @@
             <font-awesome-icon icon="sign-out-alt" class="mr-1" />
             {{ $t('admin.impersonate') }}
           </b-dropdown-item>
+          <b-dropdown-item @click="openProjects(item)">
+            <font-awesome-icon icon="table" class="mr-1" />
+            {{ $t('admin.view_projects') }}
+          </b-dropdown-item>
           <b-dropdown-item @click="openEdit(item)">
             <font-awesome-icon icon="edit" class="mr-1" />
             {{ $t('admin.edit_user') }}
@@ -150,6 +154,11 @@
       @flags-updated="onFlagsUpdated"
     />
 
+    <user-projects-modal
+      ref="projectsModal"
+      :user="selectedUser"
+    />
+
     <force-logout-modal
       ref="forceLogoutModal"
       :user="selectedUser"
@@ -171,6 +180,7 @@ import DeactivateUserModal from '../modals/DeactivateUserModal'
 import EditUserModal from '../modals/EditUserModal'
 import ManageFlagsModal from '../modals/ManageFlagsModal'
 import ForceLogoutModal from '../modals/ForceLogoutModal'
+import UserProjectsModal from '../modals/UserProjectsModal'
 import DeleteUserModal from '../modals/DeleteUserModal'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
@@ -182,6 +192,7 @@ export default {
     EditUserModal,
     ManageFlagsModal,
     ForceLogoutModal,
+    UserProjectsModal,
     DeleteUserModal
   },
   data () {
@@ -334,6 +345,12 @@ export default {
       this.selectedUser = user
       this.$nextTick(() => {
         this.$refs.flagsModal.show()
+      })
+    },
+    openProjects (user) {
+      this.selectedUser = user
+      this.$nextTick(() => {
+        this.$refs.projectsModal.show()
       })
     },
     openForceLogout (user) {
