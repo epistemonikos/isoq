@@ -319,6 +319,7 @@ import Api from '@/utils/Api'
 import { Trans } from '@/plugins/Translation'
 import { isBackendTrue } from '@/constants/backendBoolean'
 import { isGdprEnabled } from '@/constants/gdpr'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 import { downloadPersonalData } from '@/services/personalDataExport'
 
 export default {
@@ -527,7 +528,9 @@ export default {
         await Api.post('/users/update_info', {
           user_id: this.$store.state.user.id,
           newsletter: this.newsletter,
-          improvement: this.improvement
+          improvement: this.improvement,
+          // Qué texto de las casillas se mostró (src/constants/consents.js).
+          consent_text_version: CONSENT_TEXT_VERSION
         })
 
         // Sólo tras confirmar: si falla, el cambio sigue pendiente y el

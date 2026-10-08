@@ -1,6 +1,7 @@
 import { shallowMount } from '@vue/test-utils'
 import CreateAccount from '@/components/CreateAccount'
 import { TERMS_VERSION } from '@/constants/terms'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn(),
@@ -61,6 +62,16 @@ describe('CreateAccount.vue', () => {
     const payload = Api.post.mock.calls[0][1]
     expect(payload.user.newsletter).toBe(false)
     expect(payload.user.improvement).toBe(false)
+  })
+
+  it('declara qué texto de las casillas se mostró', async () => {
+    // El backend lo guarda en consent_history (GDPR Art. 7.1): sin esto la constancia
+    // dice cuándo se consintió, pero no a qué.
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    expect(Api.post.mock.calls[0][1].user.consent_text_version).toBe(CONSENT_TEXT_VERSION)
   })
 
   it('propaga las preferencias que el usuario marcó', async () => {
@@ -352,6 +363,14 @@ describe('CreateAccount.vue — con ENABLE_GDPR apagado', () => {
     const payload = Api.post.mock.calls[0][1]
     expect(payload.user).not.toHaveProperty('newsletter')
     expect(payload.user).not.toHaveProperty('improvement')
+  })
+
+  it('no declara versión de texto: no se mostró ninguna casilla', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    expect(Api.post.mock.calls[0][1].user).not.toHaveProperty('consent_text_version')
   })
 
   it('sigue mandando los datos del usuario', async () => {

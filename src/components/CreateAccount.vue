@@ -138,6 +138,7 @@ import Api from '@/utils/Api'
 import { requestFailureKey } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import { TERMS_VERSION } from '@/constants/terms'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 import { isGdprEnabled } from '@/constants/gdpr'
 
 export default {
@@ -239,7 +240,10 @@ export default {
           terms_accepted: true,
           terms_version: TERMS_VERSION,
           newsletter: this.newsletter,
-          improvement: this.improvement
+          improvement: this.improvement,
+          // Qué texto de las casillas se mostró: el backend lo guarda con cada
+          // consentimiento (src/constants/consents.js).
+          consent_text_version: CONSENT_TEXT_VERSION
         })
       }
       if (Object.prototype.hasOwnProperty.call(this.$route.query, 'token')) {
