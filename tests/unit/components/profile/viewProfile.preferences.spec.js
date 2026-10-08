@@ -11,6 +11,7 @@ import Vuex from 'vuex'
 import VueI18n from 'vue-i18n'
 import viewProfile from '@/components/profile/viewProfile'
 import en from '@/lang/en.json'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 
 const Api = require('@/utils/Api').default
 const localVue = createLocalVue()
@@ -133,7 +134,8 @@ describe('viewProfile.vue — perfil y preferencias', () => {
     expect(llamadasA('/users/update_info')[0][1]).toEqual({
       user_id: 'u1',
       newsletter: true,
-      improvement: false
+      improvement: false,
+      consent_text_version: CONSENT_TEXT_VERSION
     })
   })
 
