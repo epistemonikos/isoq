@@ -1847,7 +1847,7 @@
       "declineNote": "Se preferir não aceitar, pode descarregar os seus dados antes de sair. Ao cancelar, a sua sessão será terminada."
     },
     "export": {
-      "description": "Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro JSON",
+      "description": "Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro ZIP com ficheiros JSON",
       "button": "Exportar dados do perfil",
       "modalTitle": "Descarregar os meus dados",
       "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
@@ -1858,8 +1858,8 @@
       "cancel": "Cancelar",
       "label": "Descarregar os dados do perfil:",
       "noteIntro": "Nota: Pode descarregar uma cópia dos dados de perfil associados à sua conta.",
-      "note1": "A exportação incluirá a informação pessoal que forneceu (por exemplo, nome e email) e o registo da sua atividade na plataforma. Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro JSON",
-      "note2": "Os dados serão fornecidos num formato estruturado, de uso corrente e legível por máquina (JSON, CSV, XML).",
+      "note1": "A exportação incluirá a informação pessoal que forneceu (por exemplo, nome e email), os seus projetos e o registo da sua atividade na plataforma.",
+      "note2": "Os dados serão fornecidos num formato estruturado, de uso corrente e legível por máquina (JSON). O ficheiro about_this_export.json descreve cada ficheiro e durante quanto tempo se conserva cada tipo de dado.",
       "note3": "Exportar o seu perfil não o elimina dos nossos sistemas. Pode solicitar a eliminação em separado.",
       "note4": "Podemos demorar até 30 dias a fornecer a exportação completa, de acordo com a nossa Política de Privacidade.",
       "noteFooter": "Para mais detalhes, consulte a nossa",
