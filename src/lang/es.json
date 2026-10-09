@@ -1764,6 +1764,9 @@
     "action_update_user": "Edición de datos",
     "action_update_flags": "Cambio de permisos",
     "action_force_logout": "Cierre de sesión forzado",
+    "action_admin_unpublish_project": "Proyecto despublicado por admin",
+    "audit_shared_link_revoked": "Enlace desactivado",
+    "audit_owner_not_notified": "Sin correo a la persona dueña",
     "delete_violation_label": "Cuenta cerrada por una infracción grave de los términos",
     "delete_violation_help": "Impide registrarse de nuevo con este correo durante 90 días. Sólo se guarda un hash con clave del correo, que se borra automáticamente al terminar el plazo.",
     "error_registration_block_unavailable": "El servidor no está configurado para bloquear el re-registro (REGISTRATION_BLOCK_KEY). La cuenta no se borró.",
@@ -1791,7 +1794,22 @@
     "project_role_write": "Puede editar",
     "project_role_read": "Puede ver",
     "project_published": "Publicado",
-    "project_private": "Privado"
+    "project_private": "Privado",
+    "unpublish": "Despublicar",
+    "unpublish_confirm": "¿Despublicar «{name}»? Dejará de estar visible para el público, y la persona dueña tendrá que volver a confirmar la declaración sobre datos personales para republicarlo.",
+    "unpublish_audit_note": "Esta acción queda registrada en la auditoría con tu cuenta, el proyecto, el motivo, si salió el correo y si se desactivó el enlace. La persona dueña recibe este registro en la exportación de sus datos personales, sin tu identidad.",
+    "unpublish_reason_label": "Motivo",
+    "unpublish_reason_placeholder": "Elige un motivo",
+    "unpublish_reason_personal_data": "Contiene datos personales o identifica a participantes",
+    "unpublish_reason_not_publishable": "No cumple los requisitos de publicación",
+    "unpublish_reason_owner_request": "Lo pidió la persona dueña",
+    "unpublish_reason_other": "Otro",
+    "unpublish_success": "«{name}» se despublicó.",
+    "unpublish_already_private": "«{name}» ya no estaba publicado.",
+    "unpublish_owner_notice_note": "La persona dueña recibirá un correo con el motivo. El correo no dice quién despublicó el proyecto.",
+    "unpublish_shared_link_note": "Por este motivo también se desactivará el enlace de lectura anónima del proyecto.",
+    "unpublish_shared_link_revoked": "Se desactivó su enlace de lectura anónima.",
+    "unpublish_owner_not_notified": "El proyecto se despublicó, pero no se pudo enviar el correo a la persona dueña. Avísale por otra vía."
   },
   "gdpr": {
     "privacyAndTerms": {
