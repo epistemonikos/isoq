@@ -514,6 +514,7 @@ import { categoriesLockMessageKey, isCategoriesLockRejection } from '@/utils/cat
 import { findingsOrderLockMessageKey, reconcileFindingsOrder } from '@/utils/findingsOrderLock'
 import { isFixedLockRejection } from '@/utils/fixedRefLock'
 import { isDuplicateKeyRejection } from '@/utils/lockErrors'
+import { sortByStudyLabel } from '@/utils/tableDataUtils'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
@@ -1372,18 +1373,18 @@ export default {
       let data = JSON.parse(JSON.stringify(response.data))
       if (data.length) {
         data = Commons.sortFindings(data, this.list_categories)
-        // Sort the references once, not once per list: this.references does not change
-        // during the loop, so hoisting the clone+sort turns an O(lists x refs log refs)
-        // per-list cost into a single O(refs log refs).
-        const sortedReferences = [...this.references].sort((a, b) => a.id - b.id)
         // parseReference(r, true) is pure for a fixed reference, so the authors string is
         // identical every time a list cites that reference. Build it once per reference here
         // instead of once per (list, ref) match in the loop below (was O(Σ list.references)
         // parses; now O(references)).
         const parsedAuthorsById = new Map()
-        for (const r of sortedReferences) {
+        for (const r of this.references) {
           parsedAuthorsById.set(r.id, this.parseReference(r, true))
         }
+        // Sort the references once, not once per list: this.references does not change
+        // during the loop. Por la etiqueta que se lee: el viejo `a.id - b.id` daba NaN con
+        // los ids reales (strings hex) y dejaba las citas en el orden de subida.
+        const sortedReferences = sortByStudyLabel(this.references, r => parsedAuthorsById.get(r.id))
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             list.status = 'unfinished'
@@ -1439,7 +1440,7 @@ export default {
           list.cerqual_explanation = list.cerqual.explanation
           list.ref_list = ''
           list.raw_ref = []
-          // Iterate sortedReferences (id order preserved) and keep only the ones this list
+          // Iterate sortedReferences (alphabetical order preserved) and keep only the ones this list
           // cites; the Set turns the inner O(list.references) scan into an O(1) membership test.
           const citedIds = new Set(list.references)
           for (let r of sortedReferences) {

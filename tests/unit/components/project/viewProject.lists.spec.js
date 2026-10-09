@@ -512,11 +512,11 @@ describe('viewProject.vue — mounted() parallel load (perf: categories + refere
 describe('viewProject.vue — processLists() reference matching (O(n^2) refactor guard)', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('builds raw_ref per list in reference-id order, filtered to each list', async () => {
+  it('builds raw_ref per list in alphabetical order, filtered to each list', async () => {
     const { wrapper } = createWrapper()
     await flushPromises()
     await wrapper.setData({
-      // Deliberately unsorted so the id-order guarantee is meaningful.
+      // Deliberately unsorted so the order guarantee is meaningful.
       references: [
         { id: 3, authors: 'Cccc' },
         { id: 1, authors: 'Aaaa' },
@@ -534,9 +534,39 @@ describe('viewProject.vue — processLists() reference matching (O(n^2) refactor
     const byId = Object.fromEntries(result.map(l => [l.id, l]))
     expect(byId.lA.raw_ref.map(r => r.id)).toEqual([1, 3])
     expect(byId.lB.raw_ref.map(r => r.id)).toEqual([2])
-    // ref_list is the concatenation of parsed authors in that same id order.
+    // ref_list is the concatenation of parsed authors in that same order.
     expect(byId.lA.ref_list).toBe('AaaaCccc')
     expect(byId.lB.ref_list).toBe('Bbbb')
+    wrapper.destroy()
+  })
+
+  // Los ids reales son el string hex de un ObjectId: el viejo `sort((a, b) => a.id - b.id)`
+  // daba NaN y no ordenaba nada, así que las citas salían en el orden de subida de las
+  // referencias al proyecto. Los tests de arriba usan ids numéricos y no podían verlo.
+  it('lists the citations alphabetically with real ObjectId ids, not in upload order', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      // Upload order: Smith, Adams, Moore.
+      references: [
+        { id: '65a1f0c2e4b0a1b2c3d4e5f6', authors: 'Smith' },
+        { id: '65a1f0c2e4b0a1b2c3d4e5f7', authors: 'Adams' },
+        { id: '65a1f0c2e4b0a1b2c3d4e5f8', authors: 'Moore' }
+      ],
+      list_categories: { options: [], selected: null }
+    })
+    const lists = [{
+      id: 'lA',
+      name: 'A',
+      sort: 1,
+      cerqual: { option: null, explanation: '' },
+      references: ['65a1f0c2e4b0a1b2c3d4e5f6', '65a1f0c2e4b0a1b2c3d4e5f7', '65a1f0c2e4b0a1b2c3d4e5f8']
+    }]
+
+    const [list] = await wrapper.vm.processLists({ data: lists })
+
+    expect(list.raw_ref.map(r => r.authors)).toEqual(['Adams', 'Moore', 'Smith'])
+    expect(list.ref_list).toBe('AdamsMooreSmith')
     wrapper.destroy()
   })
 

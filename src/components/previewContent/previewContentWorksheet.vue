@@ -93,6 +93,7 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
 import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
+import { sortByAuthors, sortByStudyLabel } from '@/utils/tableDataUtils'
 
 const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
 const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
@@ -214,7 +215,8 @@ export default {
         pageOptions: [10, 50, 100]
       },
       references: [],
-      camelot_references: []
+      camelot_references: [],
+      project_references: []
     }
   },
   computed: {
@@ -234,15 +236,12 @@ export default {
           key: 'references',
           label: this.$t('table_head.references'),
           formatter: value => {
-            let references = ''
-            for (let item of value) {
-              for (let reference of this.references) {
-                if (item === reference.id) {
-                  references = references.concat(reference.content)
-                }
-              }
-            }
-            return references
+            // `value` viene en el orden en que se marcaron las casillas: sin ordenar, el
+            // estudio agregado después quedaba último.
+            const refs = this.references.filter(reference => value.includes(reference.id))
+            return sortByStudyLabel(refs, reference => reference.content)
+              .map(reference => reference.content)
+              .join('')
           }
         }
       ]
@@ -461,10 +460,11 @@ export default {
     },
     getAllReferences: function () {
       const url = this.getSharedUrl(`/isoqf_references?project_id=${this.list.project_id}`)
-      Api.get(url)
+      this.$_referencesRequest = Api.get(url)
         .then((response) => {
           this.loadErrors.references = false
           let _references = response.data
+          this.project_references = Array.isArray(_references) ? _references : []
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
@@ -472,16 +472,49 @@ export default {
             _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
           }
 
-          this.references = _refs.sort((a, b) => a.id - b.id)
-          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.id - b.id)
-          this.camelot_references = _references
-            .filter(reference => this.list.references.some(refId => String(refId) === String(reference.id)))
-            .sort((a, b) => a.id - b.id)
+          // Antes `sort((a, b) => a.id - b.id)`: los ids son strings hex, la resta da NaN y el
+          // sort no hacía nada. El orden útil es el de la etiqueta que se lee.
+          this.references = sortByStudyLabel(_refs, ref => ref.content)
+          this.refsWithTitle = sortByStudyLabel(_refsWithTitles, ref => ref.content)
+          this.camelot_references = sortByStudyLabel(
+            _references.filter(reference => this.list.references.some(refId => String(refId) === String(reference.id))),
+            reference => this.parseReference(reference, true)
+          )
         })
         .catch((error) => {
           this.loadErrors.references = true
           this.printErrors(error)
         })
+      return this.$_referencesRequest
+    },
+    /**
+     * Las tablas resuelven el autor de cada estudio con las referencias del proyecto, así
+     * que esperan a que lleguen: si no, el resultado dependería de qué request respondiera
+     * primero. Nunca rechaza: sin referencias la tabla se arma igual, como antes.
+     */
+    referencesLoaded: function () {
+      return this.$_referencesRequest || Promise.resolve()
+    },
+    /**
+     * Las referencias completas con las que se resuelve el autor de cada fila.
+     *
+     * La preview pide la lista por la ruta genérica, que NO trae `fullreferences`, así que
+     * el autor de un estudio sin fila guardada —justamente el que se agregó después— no se
+     * resolvía y la fila salía en blanco. Se usan las del proyecto, que ya se piden para la
+     * celda References; `fullreferences` manda si viene.
+     */
+    bibliographicReferences: function () {
+      const full = this.list.fullreferences
+      if (typeof full === 'string') {
+        try {
+          return JSON.parse(full)
+        } catch (e) {
+          console.error('Error parsing fullreferences', e)
+        }
+      } else if (Array.isArray(full) && full.length) {
+        return full
+      }
+      return this.project_references
     },
     getStageOneData: function (fromModal = false) {
       const url = this.getSharedUrl('/isoqf_findings')
@@ -497,6 +530,10 @@ export default {
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push({
                 ...this.findings.evidence_profile,
+                // El endpoint de identidad escribe las referencias sólo en la lista: la
+                // copia del finding queda vieja y no traía los estudios agregados después.
+                // Igual que `editList`.
+                references: this.list.references || [],
                 displayNumber: this.list.displayNumber
               })
             }
@@ -522,8 +559,8 @@ export default {
         finding_id: this.findings.id
       }
 
-      Api.get(url, params)
-        .then((response) => {
+      return Promise.all([Api.get(url, params), this.referencesLoaded()])
+        .then(([response]) => {
           this.loadErrors.extracted = false
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
@@ -543,15 +580,6 @@ export default {
             const _references = this.list.references
             let _items = []
             let extractedDataItems = JSON.parse(JSON.stringify(this.extracted_data.items))
-            extractedDataItems.sort(function (a, b) {
-              if (a.authors < b.authors) {
-                return -1
-              }
-              if (a.authors > b.authors) {
-                return 1
-              }
-              return 0
-            })
             this.extracted_data.original_items = extractedDataItems
             let haveContent = 0
             // Left-join sobre las referencias del finding, no sobre los ítems: un estudio
@@ -559,7 +587,7 @@ export default {
             // lectura —shared link, impresión— así que nadie puede sembrarla desde acá, y
             // sin esto el estudio faltaba tanto en la pantalla como en el export Word, que
             // sale de estos mismos datos.
-            const bibRefs = Array.isArray(this.list.fullreferences) ? this.list.fullreferences : []
+            const bibRefs = this.bibliographicReferences()
             const conDerivadas = withDerivedRows(extractedDataItems, _references, (refId) => {
               const bibRef = bibRefs.find(r => String(r.id) === String(refId))
               return {
@@ -595,7 +623,8 @@ export default {
               this.ui.coherence.display_warning = false
               this.ui.adequacy.extracted_data.display_warning = false
             }
-            this.extracted_data.items = _items
+            // `_items` sigue el orden de `list.references`, que es el de las casillas.
+            this.extracted_data.items = sortByAuthors(_items)
           }
         })
         .catch((error) => {
@@ -608,8 +637,8 @@ export default {
       let params = {
         project_id: this.list.project_id
       }
-      Api.get(url, params)
-        .then((response) => {
+      return Promise.all([Api.get(url, params), this.referencesLoaded()])
+        .then(([response]) => {
           this.loadErrors.characteristics = false
           // Reference list is the source of truth: build one row per reference and
           // merge DB-persisted data when it exists. A CAMELOT project that was just
@@ -634,18 +663,7 @@ export default {
             'analysis_extractedData', 'presentation_extractedData'
           ]
 
-          let bibliographicRefs = []
-          if (this.list.fullreferences) {
-            if (typeof this.list.fullreferences === 'string') {
-              try {
-                bibliographicRefs = JSON.parse(this.list.fullreferences)
-              } catch (e) {
-                console.error('Error parsing fullreferences', e)
-              }
-            } else {
-              bibliographicRefs = this.list.fullreferences
-            }
-          }
+          const bibliographicRefs = this.bibliographicReferences()
           const fieldKeys = data.fields.map(f => f.key)
           // El contador de versión entra por la exclusión, no por la preservación: estas
           // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
@@ -716,7 +734,8 @@ export default {
             this.ui.adequacy.chars_of_studies.display_warning = false
             this.ui.relevance.chars_of_studies.display_warning = false
           }
-          data.items = items
+          // `list.references` está en el orden en que se marcaron las casillas.
+          data.items = sortByAuthors(items)
           this.characteristics_studies = data
           if (data.fields.length) {
             let fields = JSON.parse(JSON.stringify(data.fields))
@@ -756,8 +775,8 @@ export default {
       let params = {
         project_id: this.list.project_id
       }
-      Api.get(url, params)
-        .then((response) => {
+      return Promise.all([Api.get(url, params), this.referencesLoaded()])
+        .then(([response]) => {
           this.loadErrors.assessments = false
           // Same left-join-on-references principle as getCharsOfStudies: the study
           // list drives the rows so the shared worksheet is never empty for a CAMELOT
@@ -773,18 +792,7 @@ export default {
           let items = []
 
           let haveContent = 0
-          let bibliographicRefs = []
-          if (this.list.fullreferences) {
-            if (typeof this.list.fullreferences === 'string') {
-              try {
-                bibliographicRefs = JSON.parse(this.list.fullreferences)
-              } catch (e) {
-                console.error('Error parsing fullreferences', e)
-              }
-            } else {
-              bibliographicRefs = this.list.fullreferences
-            }
-          }
+          const bibliographicRefs = this.bibliographicReferences()
           const fieldKeys = data.fields.map(f => f.key)
           // El contador de versión entra por la exclusión, no por la preservación: estas
           // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
@@ -854,7 +862,8 @@ export default {
             this.ui.methodological_assessments.display_warning = false
           }
 
-          data.items = items
+          // `list.references` está en el orden en que se marcaron las casillas.
+          data.items = sortByAuthors(items)
 
           let _fields = data.fields
           data.fieldsObj = []

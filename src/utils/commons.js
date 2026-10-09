@@ -1,4 +1,5 @@
 import { i18n } from '@/plugins/i18n'
+import { sortByStudyLabel } from '@/utils/tableDataUtils'
 
 export default class Commons {
   // The five evidence_profile sections, in display order. cerqual last: it is derived from the
@@ -15,9 +16,10 @@ export default class Commons {
         }
       }
     }
-    authorsList.sort()
+    // `localeCompare` y no `.sort()`, que ordena por código de carácter: una minúscula
+    // inicial o un acento se iban detrás de la Z. Mismo criterio que `sortByStudyLabel`.
     let authors = ''
-    for (const author of authorsList) {
+    for (const author of sortByStudyLabel(authorsList, label => label)) {
       authors += author + '; '
     }
     return authors

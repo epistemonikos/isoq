@@ -279,7 +279,10 @@ describe('ExportStrategies', () => {
         expect(result).not.toContain('undefined')
       })
 
-      it('should sort references by id ascending regardless of refIds order', () => {
+      // El orden es alfabético por la etiqueta «Autor Año», ni el de `refIds` (el de las
+      // casillas) ni el del id. Antes era `a.id - b.id`, que con los ids reales —el string
+      // hex de un ObjectId— daba NaN y dejaba las citas en el orden de las casillas.
+      it('should sort references alphabetically regardless of refIds or id order', () => {
         const data = {
           findings: [],
           references: [
@@ -289,12 +292,26 @@ describe('ExportStrategies', () => {
           ]
         }
         const strategy = new IsoQExportStrategy(mockProject, data)
-        // Pass IDs in reverse order — result should still be sorted by id
         const result = strategy.formatReferenceList([3, 1, 2])
         const parts = result.split('; ')
-        expect(parts[0]).toContain('Zebra')
-        expect(parts[1]).toContain('Alpha')
-        expect(parts[2]).toContain('Middle')
+        expect(parts[0]).toContain('Alpha')
+        expect(parts[1]).toContain('Middle')
+        expect(parts[2]).toContain('Zebra')
+      })
+
+      it('sorts alphabetically with real ObjectId ids', () => {
+        const ids = ['65a1f0c2e4b0a1b2c3d4e5f6', '65a1f0c2e4b0a1b2c3d4e5f7', '65a1f0c2e4b0a1b2c3d4e5f8']
+        const data = {
+          findings: [],
+          references: [
+            { id: ids[0], authors: ['Smith J'], publication_year: '2020' },
+            { id: ids[1], authors: ['Adams A'], publication_year: '2019' },
+            { id: ids[2], authors: ['Moore M'], publication_year: '2021' }
+          ]
+        }
+        const strategy = new IsoQExportStrategy(mockProject, data)
+        const parts = strategy.formatReferenceList(ids).split('; ')
+        expect(parts.map(p => p.split(' ')[0])).toEqual(['Adams', 'Moore', 'Smith'])
       })
 
       it('should populate references column using evidence_profile.references', async () => {
@@ -473,6 +490,38 @@ describe('ExportStrategies', () => {
         expect(strategy.getOptionColor('E')).toBe('B3B3B3')
         expect(strategy.getOptionColor('X')).toBeNull()
       })
+    })
+  })
+
+  // Reporte: un estudio agregado al finding después de los demás salía al final. Las citas
+  // del export siguen el orden de la etiqueta que se lee, no el de las casillas ni el del id.
+  describe('orden de las citas en los exports de la hoja', () => {
+    const ids = ['65a1f0c2e4b0a1b2c3d4e5f6', '65a1f0c2e4b0a1b2c3d4e5f7', '65a1f0c2e4b0a1b2c3d4e5f8']
+
+    it('CAMELOT: listReferenceLabels en orden alfabético', () => {
+      const strategy = new CamelotExportStrategy(mockProject, {
+        ...mockData,
+        references: [
+          { id: ids[0], authors: ['Smith J'], publication_year: '2020' },
+          { id: ids[1], authors: ['Adams A'], publication_year: '2019' },
+          { id: ids[2], authors: ['Moore M'], publication_year: '2021' }
+        ],
+        list: { references: [ids[0], ids[1], ids[2]] }
+      })
+      expect(strategy.listReferenceLabels().map(l => l.split(' ')[0])).toEqual(['Adams', 'Moore', 'Smith'])
+    })
+
+    it('hoja: formatReferences en orden alfabético', () => {
+      const strategy = new WorksheetExportStrategy(mockProject, {
+        ...mockData,
+        references: [
+          { id: ids[0], content: 'Smith 2020' },
+          { id: ids[1], content: 'Adams 2019' },
+          { id: ids[2], content: 'Moore 2021' }
+        ],
+        list: { references: [ids[0], ids[1], ids[2]] }
+      })
+      expect(strategy.formatReferences([ids[0], ids[1], ids[2]])).toBe('Adams 2019\n\nMoore 2021\n\nSmith 2020')
     })
   })
 

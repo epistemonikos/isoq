@@ -1,4 +1,35 @@
-import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
+import { sortByAuthors, sortByStudyLabel, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
+
+// El orden de los estudios es de presentación: se deriva de la etiqueta que la persona lee
+// («Autor Año»), no del orden en que se marcaron las referencias.
+describe('sortByStudyLabel', () => {
+  it('ordena por la etiqueta que devuelve labelOf', () => {
+    const items = [{ id: 'a', l: 'Smith 2020' }, { id: 'b', l: 'Adams 2019' }, { id: 'c', l: 'Jones 2021' }]
+    expect(sortByStudyLabel(items, i => i.l).map(i => i.id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('no distingue mayúsculas: una minúscula inicial no se va al final', () => {
+    const items = [{ l: 'Zhang 2018' }, { l: 'de Vries 2017' }, { l: 'Brown 2016' }]
+    expect(sortByStudyLabel(items, i => i.l).map(i => i.l)).toEqual(['Brown 2016', 'de Vries 2017', 'Zhang 2018'])
+  })
+
+  it('un acento no manda el estudio al final', () => {
+    const items = [{ l: 'Zapata 2018' }, { l: 'Álvarez 2017' }, { l: 'Bravo 2016' }]
+    expect(sortByStudyLabel(items, i => i.l).map(i => i.l)).toEqual(['Álvarez 2017', 'Bravo 2016', 'Zapata 2018'])
+  })
+
+  it('a igual etiqueta conserva el orden de entrada', () => {
+    const items = [{ id: 1, l: 'Smith 2020' }, { id: 2, l: 'Smith 2020' }, { id: 3, l: 'Adams 2019' }]
+    expect(sortByStudyLabel(items, i => i.l).map(i => i.id)).toEqual([3, 1, 2])
+  })
+
+  it('tolera etiquetas ausentes y no muta la entrada', () => {
+    const items = [{ l: 'Smith' }, {}, { l: null }]
+    const copia = [...items]
+    expect(() => sortByStudyLabel(items, i => i.l)).not.toThrow()
+    expect(items).toEqual(copia)
+  })
+})
 
 describe('sortByAuthors', () => {
   it('ordena items por authors ascendente', () => {

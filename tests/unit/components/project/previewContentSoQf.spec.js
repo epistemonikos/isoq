@@ -45,6 +45,31 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     jest.clearAllMocks()
   })
 
+  // Los ids reales son el string hex de un ObjectId: el viejo `sort((a, b) => a.id - b.id)`
+  // daba NaN y no ordenaba nada, así que las citas de la columna References salían en el
+  // orden de subida de las referencias al proyecto y no en orden alfabético.
+  it('lista las citas de cada finding en orden alfabético, no en el de subida', async () => {
+    const ids = ['65a1f0c2e4b0a1b2c3d4e5f6', '65a1f0c2e4b0a1b2c3d4e5f7', '65a1f0c2e4b0a1b2c3d4e5f8']
+    Api.get.mockResolvedValue({
+      data: {
+        ...BUNDLE,
+        lists: [{ ...BUNDLE.lists[0], references: ids }],
+        // Orden de subida: Smith, Adams, Moore.
+        references: [
+          { id: ids[0], authors: ['Smith J'], publication_year: '2020' },
+          { id: ids[1], authors: ['Adams A'], publication_year: '2019' },
+          { id: ids[2], authors: ['Moore M'], publication_year: '2021' }
+        ]
+      }
+    })
+
+    const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
+    await flushPromises()
+
+    expect(wrapper.vm.lists[0].raw_ref.map(r => r.id)).toEqual([ids[1], ids[2], ids[0]])
+    wrapper.destroy()
+  })
+
   it('calls GET /shared/:token (not collection endpoints) when route is sharedContent', async () => {
     Api.get.mockResolvedValue({ data: BUNDLE })
 

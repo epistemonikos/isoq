@@ -125,6 +125,7 @@ import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
 import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
+import { sortByAuthors } from '@/utils/tableDataUtils'
 // Más corto que los 15 s de las otras superficies que pintan candados
 // (`InclusionExclusionCriteria.vue`, `viewProject.vue`, `StepThree/StepFour`), y a
 // propósito: ésta es la única donde dos personas trabajan sobre el MISMO hallazgo,
@@ -573,7 +574,9 @@ export default {
         }
       }
 
-      return { filteredItems, haveContent }
+      // `references` está en el orden en que se marcaron las casillas, así que sin esto el
+      // estudio agregado al final quedaba último en las tablas, en vez de en su lugar alfabético.
+      return { filteredItems: sortByAuthors(filteredItems), haveContent }
     },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
@@ -1104,15 +1107,6 @@ export default {
         const _references = this.list.references
         let _items = []
         let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
-        extractedDataItems.sort(function (a, b) {
-          if (a.authors < b.authors) {
-            return -1
-          }
-          if (a.authors > b.authors) {
-            return 1
-          }
-          return 0
-        })
         // Un estudio incluido en el finding puede no tener fila en el documento: el finding
         // se creó sin referencias, o la referencia se agregó después. La fila se deriva de
         // las referencias, que es el patrón que ya usan `filterItemsByReferences` y el
@@ -1131,6 +1125,10 @@ export default {
             column_0: ''
           }
         })
+        // Se ordena DESPUÉS de derivar —las derivadas llegan al final, y son justamente los
+        // estudios agregados después— y ANTES de fijar `original_items` y el `index` de cada
+        // fila, para que los dos editores sigan direccionando la fila que muestran.
+        extractedDataItems = sortByAuthors(extractedDataItems)
 
         localData.original_items = JSON.parse(JSON.stringify(extractedDataItems))
         let haveContent = 0
