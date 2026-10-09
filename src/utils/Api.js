@@ -1,33 +1,863 @@
 import axios from 'axios'
+import {
+  addPendingOperation,
+  getPendingOperations,
+  removePendingOperation,
+  getPendingOperationsCount
+} from '@/services/db'
+import { i18n } from '@/plugins/i18n'
+import { strategies } from '@/utils/OfflineStrategies'
+// Re-exported so the modules that already import it from here keep working.
+import { refLockKeyFromUrl } from '@/utils/refLockUrls'
+import { isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
+import { replayOutcome, rejectionReason } from '@/utils/replayOutcome'
+import { isReferenceDeletedRejection, announceReferenceDeleted, studyOfLockKey } from '@/utils/referenceDeleted'
+import { isSessionExpired, isSessionExpiredRejection, markSessionExpired } from '@/utils/sessionExpiry'
+export { refLockKeyFromUrl }
+
+// Estado de conexión
+let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
+
+/*
+ * Un error de red es una SOSPECHA de estar sin conexión, no un hecho.
+ *
+ * Antes la dejaba firme: `isOnline` quedaba en false y lo único que lo devolvía era el
+ * evento `online` del navegador, que no llega si el navegador nunca perdió la red (se
+ * reinició el servidor, un wifi que parpadeó). La pestaña entera quedaba sirviendo caché y
+ * encolando escrituras hasta recargar, y OfflineIndicator lo copiaba al store.
+ *
+ * Ahora `markOffline()` además pregunta: sondea `/api/health` con espera creciente hasta
+ * que el servidor conteste. Con el navegador sin red no sondea — el evento `online` va a
+ * llegar solo, y sondear sería gastar batería contra un fallo seguro.
+ */
+const PROBE_DELAYS = [5000, 10000, 20000, 30000]
+let probeTimer = null
+let probeAttempt = 0
+let syncInFlight = null
+
+const browserSaysOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false
+
+function stopProbe () {
+  if (probeTimer) clearTimeout(probeTimer)
+  probeTimer = null
+  probeAttempt = 0
+}
+
+function scheduleProbe () {
+  if (probeTimer || browserSaysOffline()) return
+  const delay = PROBE_DELAYS[Math.min(probeAttempt, PROBE_DELAYS.length - 1)]
+  probeTimer = setTimeout(runProbe, delay)
+}
+
+async function runProbe () {
+  probeTimer = null
+  if (isOnline || browserSaysOffline()) return
+  try {
+    await axios.get('/api/health', { timeout: 5000 })
+    markOnline()
+  } catch (error) {
+    // Cualquier respuesta cuenta como red, aunque sea un 503 de un deploy: el servidor
+    // contesta, y seguir offline encolaría escrituras que ahora fallarían de verdad.
+    if (error && error.response) {
+      markOnline()
+      return
+    }
+    probeAttempt++
+    scheduleProbe()
+  }
+}
+
+function markOffline () {
+  isOnline = false
+  scheduleProbe()
+}
+
+function markOnline () {
+  const wasOffline = !isOnline
+  isOnline = true
+  stopProbe()
+  if (wasOffline) Api.syncPendingOperations()
+}
+
+// Listeners para cambios de conexión
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    isOnline = true
+    stopProbe()
+    // Sin el retraso de antes: `syncPendingOperations` ya no puede correr dos veces a la
+    // vez, así que no hace falta dejarle paso a OfflineIndicator.
+    Api.syncPendingOperations()
+  })
+
+  window.addEventListener('offline', () => {
+    isOnline = false
+    stopProbe()
+  })
+
+  // Chrome frena los setTimeout de una pestaña oculta hasta uno por minuto, así que el
+  // sondeo programado puede llegar tarde. Volver al frente es cuando la persona va a
+  // actuar: se sondea en el acto (lo mismo hace `revalidateLocks()` con los locks).
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || isOnline) return
+      stopProbe()
+      runProbe()
+    })
+  }
+}
+
+/**
+ * LockService imported lazily: it imports Api itself, and a static cycle would leave
+ * one of the two holding an uninitialised binding.
+ */
+async function getLockService () {
+  const mod = await import('@/services/lockService')
+  return mod.default || mod
+}
+
+/**
+ * Lock context to persist with a queued granular write, so the replay can acquire the
+ * lock it will need. The project id is not derivable from these URLs, but LockService
+ * already maps it per ref (the editor holds the lock — or the offline grant — while
+ * the write is being queued).
+ */
+async function queuedLockContext (url) {
+  const refId = refLockKeyFromUrl(url)
+  if (!refId) return null
+  const LockService = await getLockService()
+  const projectId = LockService.offlineRefs.get(refId) ||
+    LockService.refLocks.get(refId) || null
+  return { lockRef: refId, lockProjectId: projectId }
+}
+
+/**
+ * @param source 'live' for a request that failed right now, 'replay' for one the
+ * offline queue tried later. Same failure, opposite explanations: telling the user a
+ * live 409 happened "while you were offline" is simply wrong, and it was the wording
+ * that made a lock conflict look like a sync bug.
+ */
+function reportRefLockConflict (refId, failedData, lockedBy, source = 'live') {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy, source }))
+  window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+    detail: { refId, failedData, lockedBy, source }
+  }))
+}
+
+/**
+ * Anuncia que el servidor rechazó la escritura porque la fila cambió desde que se leyó.
+ *
+ * Canal propio y no el de locks: son ejes distintos y las salidas también. Ante un lock
+ * ajeno no hay nada que hacer más que copiar el texto y esperar; acá la persona sí tiene
+ * el permiso, y lo que necesita para decidir es ver el valor de la otra persona al lado
+ * del suyo. Por eso el `item` al día viaja en el evento — el servidor ya lo manda en el
+ * cuerpo del 409, y pedirlo de nuevo sería una segunda vuelta al mismo estado.
+ */
+function reportVersionConflict (refId, error, source) {
+  if (typeof window === 'undefined') return
+  const data = (error.response && error.response.data) || {}
+  let failedData = {}
+  if (error.config && error.config.data) {
+    try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
+  }
+  window.dispatchEvent(new CustomEvent('item-version-conflict', {
+    detail: {
+      refId,
+      expectedVersion: data.expected_version,
+      currentVersion: data.current_version,
+      item: data.item,
+      failedData,
+      source
+    }
+  }))
+}
+
+/**
+ * Anuncia que una escritura encolada se descartó porque el nombre ya existe.
+ *
+ * Canal propio, y hace falta uno: el interceptor no toca este caso —la URL de las
+ * categorías no es granular, así que `refLockKeyFromUrl` da null y no se dispara nada—,
+ * de modo que si la cola descartara la operación en silencio la persona perdería el
+ * rename que escribió sin conexión sin una sola señal. El texto viaja en el evento
+ * porque es lo único que le permite reconocer cuál de sus cambios se cayó.
+ */
+function reportDuplicateKeyConflict (endpoint, payload, source) {
+  if (typeof window === 'undefined') return
+  const data = payload || {}
+  window.dispatchEvent(new CustomEvent('duplicate-key-conflict', {
+    detail: { endpoint, text: data.text || '', payload: data, source }
+  }))
+}
+
+// Lo hecho sin conexión que el servidor no aceptó al volver. Un solo evento por corrida:
+// veinte ediciones rechazadas por el mismo permiso son un aviso, no veinte.
+function reportReplayRejected (rejected) {
+  if (typeof window === 'undefined' || !rejected.length) return
+  window.dispatchEvent(new CustomEvent('offline-replay-rejected', { detail: { rejected } }))
+}
+
+// Una escritura que no se hizo porque no había red y no podía esperar en la cola. El
+// aviso lo pinta OfflineIndicator, montado siempre: el llamador puede no mostrar nada.
+function reportOfflineWriteBlocked (path) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('offline-write-blocked', { detail: { path } }))
+}
+
+// Crear error compatible con estructura de Axios
+function createOfflineError (message) {
+  const msg = message || i18n.t('offline.noConnection')
+  const error = new Error(msg)
+  error.isOfflineError = true
+  error.response = {
+    status: 0,
+    statusText: 'Offline',
+    data: { message, offline: true }
+  }
+  error.request = {}
+  error.request = {}
+  return error
+}
+
+// Interceptor para detectar errores de bloqueo (Concurrency Control)
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    // Sesión vencida (8 h sin actividad o 7 días): se marca una vez y `SessionExpiredModal`
+    // pide volver a entrar sin salir de la pantalla. El error sigue su camino, así que cada
+    // guardado conserva lo que tenía —el formulario sigue escrito—.
+    if (isSessionExpiredRejection(error)) markSessionExpired()
+
+    if (error.response && (error.response.status === 409 || error.response.status === 403)) {
+      const url = error.config && error.config.url ? error.config.url : ''
+      const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
+
+      console.log('Api.js Interceptor 409:', { url, method })
+
+      // Detect a conflict on any granular write (a ref lock held by another user, or
+      // no lock at all after the offline queue replays). Surface it via a
+      // non-blocking event so the open editor can show copyable fields. Covers
+      // endpoint A (/section/) as well as B/C/D (/item/), which is why the key comes
+      // from refLockKeyFromUrl and not from the raw path split.
+      // …but not a rejection over the item's version. Same status and same URL, other
+      // axis entirely: the lock says who may write, the version says whether what is
+      // about to be written was read before somebody else changed it. Announcing it here
+      // names a holder that does not exist and tells the user they lost a lock they still
+      // have. It gets its own channel, right below.
+      if (isVersionRejection(error)) {
+        const versionRef = refLockKeyFromUrl(url)
+        if (versionRef) {
+          const source = (error.config && error.config.isOfflineReplay) ? 'replay' : 'live'
+          reportVersionConflict(versionRef, error, source)
+        }
+        return Promise.reject(error)
+      }
+
+      // El estudio de esta escritura lo borró otra persona: el servidor ya no deja que el
+      // upsert lo resucite. Tampoco es un conflicto de lock —anunciarlo acá nombraría a un
+      // titular que no existe—, así que sale por su canal, con quién lo borró.
+      if (isReferenceDeletedRejection(error)) {
+        const data = error.response.data || {}
+        const studyId = data.ref_id || studyOfLockKey(refLockKeyFromUrl(url))
+        announceReferenceDeleted({ refId: studyId, deletedBy: data.deleted_by, source: 'write' })
+        return Promise.reject(error)
+      }
+
+      const refId = refLockKeyFromUrl(url)
+      const isReplay = Boolean(error.config && error.config.isOfflineReplay)
+      // Un 403 nunca es de este canal: el backend lo responde sólo cuando falta can_write
+      // (`verify_ref_lock`, control 1), no por el lock de otra persona. Este canal lo
+      // anunciaría como «otra persona está editando», que es falso. En vivo lo avisa
+      // `permission-denied`, abajo; en un replay, la cola con su motivo (replayOutcome.js).
+      if (refId && typeof window !== 'undefined' && error.response.status !== 403) {
+        let failedData = {}
+        if (error.config && error.config.data) {
+          try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
+        }
+        const lockedBy = (error.response.data && error.response.data.locked_by) || ''
+        reportRefLockConflict(refId, failedData, lockedBy, isReplay ? 'replay' : 'live')
+      }
+
+      // A 403 on any write request means the user's can_write/can_read may have
+      // just changed server-side (e.g. the project owner revoked their access
+      // while they still had an editor open). Unlike the two checks above, this
+      // is intentionally broad — it doesn't try to guess *why* the 403 happened —
+      // so any listener (viewProject.vue, editList.vue) can re-check permissions
+      // and lock the UI down without waiting for the user to navigate.
+      const isWriteMethod = ['post', 'patch', 'put', 'delete'].includes(method)
+      //
+      // Cancelable a propósito: la pantalla dueña del aviso lo reclama con preventDefault
+      // y el error sale marcado, para que los catch locales no avisen lo mismo otra vez
+      // (`writeErrorMessageKey`, `isLockRejection`). Un evento, un canal.
+      if (error.response.status === 403 && isWriteMethod && typeof window !== 'undefined') {
+        const claimed = !window.dispatchEvent(new CustomEvent('permission-denied', {
+          detail: { url, method }, cancelable: true
+        }))
+        if (claimed) error.permissionDeniedAnnounced = true
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Endpoints que NO deben cachearse
+const NO_CACHE_PATTERNS = [
+  /^\/auth\//,
+  /^\/users\//,
+  /^\/share\//,
+  /^\/shared\//,
+  /^\/clone\//,
+  /^\/remove\//,
+  /^\/publish/,
+  /^\/admin\//
+]
 
 export default class Api {
   static host = process.env.API_URL
-  static getHeaders () {
+
+  static getHeaders (config = {}, data = null) {
     let authToken = localStorage.getItem('l_s')
-    return {
-      Authorization: `Token session="${authToken}"`
+    const headers = { ...config.headers }
+    // Lo que el cliente hace solo (latido, presencia, sondeos) no cuenta como actividad: el
+    // servidor no desliza la ventana de 8 h por esas peticiones, o una pestaña abierta nunca
+    // dejaría vencer la sesión.
+    if (config.background) headers['X-Background-Request'] = '1'
+    if (authToken && authToken !== 'null') {
+      headers.Authorization = `Bearer ${authToken}`
+    }
+
+    // Explicitly set Content-Type to application/json if data is present and not FormData
+    if (data && !(typeof FormData !== 'undefined' && data instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    return headers
+  }
+
+  static isOnline () {
+    return isOnline
+  }
+
+  static setOnline (status) {
+    isOnline = status
+    if (status) stopProbe()
+  }
+
+  static getUrl (path) {
+    if (path.startsWith('http')) return path
+    if (path.startsWith('/api')) return path
+
+    const rootEndpoints = ['/users', '/share', '/auth', '/organizations', '/project', '/create_user', '/admin']
+    for (const endpoint of rootEndpoints) {
+      if (path === endpoint || path.startsWith(endpoint + '/')) {
+        return path
+      }
+    }
+
+    return Api.host + path
+  }
+
+  static shouldCache (path) {
+    // No cachear si coincide con patrones excluidos
+    for (const pattern of NO_CACHE_PATTERNS) {
+      if (pattern.test(path)) return false
+    }
+    // Cachear si alguna estrategia coincide
+    for (const strategy of strategies) {
+      if (strategy.patterns.some(p => p.test(path))) return true
+    }
+    return false
+  }
+
+  static shouldQueue (path, data) {
+    // No encolar si coincide con patrones excluidos (mismos que cache)
+    for (const pattern of NO_CACHE_PATTERNS) {
+      if (pattern.test(path)) return false
+    }
+
+    // No encolar si es FormData (no se puede clonar en IndexedDB)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      return false
+    }
+
+    return true
+  }
+
+  static async cacheResponse (path, data) {
+    try {
+      for (const strategy of strategies) {
+        if (strategy.patterns.some(p => p.test(path))) {
+          await strategy.save(data, path)
+          // No hacemos 'break' aquí por si un path coincide con múltiples estrategias (raro, pero posible)
+        }
+      }
+    } catch (error) {
+      console.warn('Error caching response:', error)
     }
   }
 
-  static put (path, data) {
-    return axios.put(Api.host + path, data, {headers: this.getHeaders()})
+  static async getCachedData (path, params = {}) {
+    try {
+      for (const strategy of strategies) {
+        if (strategy.patterns.some(p => p.test(path))) {
+          const data = await strategy.serve(path, params)
+          if (data) return data
+        }
+      }
+      return null
+    } catch (error) {
+      console.warn('Error getting cached data:', error)
+      return null
+    }
   }
 
-  static get (path, data) {
-    let options = {
-      url: Api.host + path,
+  /**
+   * `config.networkOnly`: la respuesta tiene que venir del servidor. Sin red falla en vez de
+   * servir la caché. Es para las lecturas que DECIDEN algo (si crear un documento): ahí una
+   * caché vieja con una lista vacía es un «no sé» disfrazado de «no existe».
+   */
+  static async get (path, data, config = {}) {
+    const url = this.getUrl(path)
+    const { networkOnly = false, ...axiosConfig } = config
+    config = axiosConfig
+    const options = {
+      ...config,
+      url: url,
       method: 'GET',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(config),
       params: data
     }
-    return axios(options)
+
+    // Función helper para intentar servir desde cache
+    const tryServeFromCache = async (reason) => {
+      if (!networkOnly && this.shouldCache(path)) {
+        const cachedData = await this.getCachedData(path, data)
+        if (cachedData) {
+          // console.log(`Serving from cache (${reason}):`, path)
+          return { data: cachedData, fromCache: true, status: 200 }
+        }
+      }
+      return null
+    }
+
+    // Con el flag offline, primero la caché. Si no hay caché a la que caer —`networkOnly`, una
+    // ruta que no se cachea (/auth/), o un dato que nunca se cacheó— no intentar la red es fallar
+    // seguro: se intenta, y si responde, la red volvió. Sólo si el navegador dice que no hay red
+    // se falla sin intentar. Antes el Reintentar de VerifyEmail no servía hasta el próximo sondeo.
+    if (!isOnline) {
+      const cached = await tryServeFromCache('offline')
+      if (cached) return cached
+      if (browserSaysOffline()) throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+    }
+
+    // Intentar la red
+    try {
+      const response = await axios(options)
+      if (!isOnline) markOnline()
+
+      // Cachear la respuesta si es cacheable
+      if (this.shouldCache(path)) {
+        this.cacheResponse(path, response.data)
+      }
+
+      return response
+    } catch (error) {
+      // Detectar si es un error de red (offline real o DevTools offline)
+      const isNetworkError = !error.response && (
+        error.code === 'ERR_NETWORK' ||
+        error.code === 'ECONNABORTED' ||
+        error.message === 'Network Error' ||
+        error.message.includes('timeout')
+      )
+
+      if (isNetworkError) {
+        // Marcar como offline
+        markOffline()
+
+        // Intentar servir desde cache
+        const cached = await tryServeFromCache('network error')
+        if (cached) return cached
+
+        // No hay cache, lanzar error compatible con Axios
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
+
+      // Error del servidor (4xx, 5xx) - no es offline, propagar el error
+      throw error
+    }
   }
 
-  static post (path, data) {
-    return axios.post(Api.host + path, data, {headers: this.getHeaders()})
+  static async put (path, data, config = {}) {
+    const url = this.getUrl(path)
+    // Helper para encolar operación
+    const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
+      await addPendingOperation({
+        type: 'PUT',
+        endpoint: url,
+        method: 'PUT',
+        payload: data
+      })
+      // console.log('Operation queued for sync:', 'PUT', url)
+      return { data: data, queued: true, status: 200 }
+    }
+
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
+              // console.log('Optimistic update applied for:', path)
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
+    }
+
+    if (!isOnline) {
+      await tryOptimisticUpdate(path, data)
+      return queueOperation()
+    }
+
+    try {
+      const response = await axios.put(url, data, { ...config, headers: this.getHeaders(config, data) })
+      // También actualizamos cache si estamos online para mantener consistencia
+      if (this.shouldCache(path)) {
+        await tryOptimisticUpdate(path, data)
+      }
+      return response
+    } catch (error) {
+      if (!error.response) {
+        markOffline()
+        await tryOptimisticUpdate(path, data)
+        return queueOperation()
+      }
+      throw error
+    }
   }
 
-  static delete (path, data) {
-    return axios.delete(Api.host + path, {headers: this.getHeaders()})
+  static async patch (path, data, config = {}) {
+    const url = this.getUrl(path)
+    // Helper para encolar operación
+    const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
+      const lockContext = await queuedLockContext(url)
+      await addPendingOperation({
+        type: 'PATCH',
+        endpoint: url,
+        method: 'PATCH',
+        payload: data,
+        ...(lockContext || {})
+      })
+      // console.log('Operation queued for sync:', 'PATCH', url)
+      return { data: data, queued: true, status: 200 }
+    }
+
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
+    }
+
+    if (!isOnline) {
+      await tryOptimisticUpdate(path, data)
+      return queueOperation()
+    }
+
+    try {
+      const response = await axios.patch(url, data, { ...config, headers: this.getHeaders(config, data) })
+      if (this.shouldCache(path)) {
+        await tryOptimisticUpdate(path, data)
+      }
+      return response
+    } catch (error) {
+      if (!error.response) {
+        markOffline()
+        await tryOptimisticUpdate(path, data)
+        return queueOperation()
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Un POST crea, y un alta NO se encola: sin red falla con el error offline.
+   *
+   * Encolada, le devolvía a quien llamó su propio payload sin id, y con eso se encadenaban
+   * altas hijas con el padre en `undefined` — medido con el alta de un finding: «Created
+   * successfully», una lista fantasma al volver la red y dos 403 reintentándose para siempre.
+   * Y un alta que llegó al servidor justo antes de cortarse la respuesta se duplicaba al
+   * reproducirse. Lo que sí espera en la cola son las escrituras idempotentes sobre un id
+   * (PATCH, PUT, DELETE).
+   *
+   * `config.queue: true` recupera el encolado para un alta que de verdad lo tolere (con id
+   * generado en el cliente, por ejemplo). Hoy no la usa nadie.
+   *
+   * `config.noQueue`: lo mismo, pero quien llama se hace cargo del aviso — la escritura no se
+   * puede diferir y ya tiene su propio cartel (el import de tabla). Sin él, Api emite
+   * `offline-write-blocked` y OfflineIndicator avisa: hay llamadores que sólo pasan el error a
+   * `printErrors`, que no muestra nada.
+   */
+  static async post (path, data, config = {}) {
+    const url = this.getUrl(path)
+    const { noQueue: explicitNoQueue = false, queue = false, ...axiosConfig } = config
+    config = axiosConfig
+    const noQueue = explicitNoQueue || !queue
+    // Helper para encolar operación
+    const queueOperation = async () => {
+      if (noQueue || !this.shouldQueue(path, data)) {
+        // Se avisa también con FormData (la subida de un archivo RIS): nunca se encola, y
+        // excluirlo la dejaba muda sin conexión. Sólo se excluyen las rutas de sesión, que
+        // manejan su propio error.
+        if (!explicitNoQueue && !NO_CACHE_PATTERNS.some(pattern => pattern.test(path))) reportOfflineWriteBlocked(path)
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
+      await addPendingOperation({
+        type: 'POST',
+        endpoint: url,
+        method: 'POST',
+        payload: data
+      })
+      // console.log('Operation queued for sync:', 'POST', url)
+      return { data: data, queued: true, status: 200 }
+    }
+
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
+    }
+
+    // `noQueue` no tiene cola a la que caer: igual que `networkOnly` en `get`, se intenta —
+    // salvo que el navegador diga que no hay red, y ahí intentar es fallar seguro.
+    if (!isOnline && (!noQueue || browserSaysOffline())) {
+      if (!noQueue) await tryOptimisticUpdate(path, data)
+      return queueOperation()
+    }
+
+    try {
+      const response = await axios.post(url, data, { ...config, headers: this.getHeaders(config, data) })
+      if (!isOnline) markOnline()
+      if (this.shouldCache(path)) {
+        // Para POST es más complejo porque el ID puede venir del servidor
+        // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
+        if (data && data.id) {
+          await tryOptimisticUpdate(path, data)
+        }
+      }
+      return response
+    } catch (error) {
+      if (!error.response) {
+        markOffline()
+        if (!noQueue) await tryOptimisticUpdate(path, data)
+        return queueOperation()
+      }
+      throw error
+    }
+  }
+
+  /** `config.noQueue`: igual que en `post`. */
+  static async delete (path, data, config = {}) {
+    const url = this.getUrl(path)
+    const { noQueue = false, ...axiosConfig } = config
+    config = axiosConfig
+    // Helper para encolar operación
+    const queueOperation = async () => {
+      if (noQueue || !this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
+      await addPendingOperation({
+        type: 'DELETE',
+        endpoint: url,
+        method: 'DELETE',
+        payload: data
+      })
+      // console.log('Operation queued for sync:', 'DELETE', url)
+      return { data: null, queued: true, status: 200 }
+    }
+
+    if (!isOnline && (!noQueue || browserSaysOffline())) {
+      return queueOperation()
+    }
+
+    try {
+      const response = await axios.delete(url, { ...config, data, headers: this.getHeaders(config, data) })
+      if (!isOnline) markOnline()
+      return response
+    } catch (error) {
+      if (!error.response) {
+        markOffline()
+        return queueOperation()
+      }
+      throw error
+    }
+  }
+
+  // Sincronizar operaciones pendientes cuando vuelva la conexión
+  /**
+   * Una sola corrida a la vez. Al volver la red se dispara desde varios lados (el evento
+   * `online` acá y en OfflineIndicator, el sondeo), y dos corridas solapadas leían la misma
+   * cola antes de que se vaciara: cada operación se reproducía dos veces. Quien llega con
+   * una corrida en curso recibe esa misma promesa.
+   */
+  static syncPendingOperations () {
+    if (!syncInFlight) {
+      syncInFlight = this._syncPendingOperations().finally(() => { syncInFlight = null })
+    }
+    return syncInFlight
+  }
+
+  static async _syncPendingOperations () {
+    // Con la sesión vencida cada operación daría 401: se espera al re-login, que sincroniza.
+    if (!isOnline || isSessionExpired()) return
+
+    try {
+      const operations = await getPendingOperations()
+      const rejected = []
+      // Proyectos cuya caché quedó con un PATCH que salió de la cola sin aplicarse (ver abajo).
+      const staleProjects = new Set()
+      const noteDiscarded = (discarded) => {
+        const match = String(discarded.endpoint).match(/\/isoqf_projects\/([a-zA-Z0-9]+)/)
+        if (match && (discarded.method === 'PATCH' || discarded.method === 'PUT')) staleProjects.add(match[1])
+      }
+      // Se corta la corrida ante un fallo transitorio: lo que sigue puede depender de esa
+      // operación, y si la red se cayó, todo lo demás va a fallar igual.
+      let stop = false
+
+      for (const op of operations) {
+        if (stop) break
+        // A granular write needs the ref lock the editor no longer holds (it was
+        // closed, or the grant was only local because we were offline). Without it
+        // the backend answers 409 `lock_not_held` and the change is lost.
+        let heldLock = null
+        if (op.lockRef && op.lockProjectId) {
+          const LockService = await getLockService()
+          const result = await LockService.acquireRef(op.lockProjectId, op.lockRef)
+          if (result.sessionExpired) {
+            // Nadie tomó el estudio: venció la sesión. Descartarla como un conflicto perdía
+            // lo escrito sin conexión por un token. Queda en la cola y se corta la corrida.
+            break
+          }
+          if (!result.success) {
+            // Somebody took the entity while we were away. Replaying would fail, and
+            // retrying forever would stall the queue behind it: drop it and hand the
+            // payload to the user through the conflict channel.
+            reportRefLockConflict(op.lockRef, op.payload, result.lockedBy || '', 'replay')
+            await removePendingOperation(op.id)
+            noteDiscarded(op)
+            continue
+          }
+          heldLock = op.lockRef
+        }
+
+        // `isOfflineReplay` no lo entiende axios, pero viaja en `error.config` y es lo
+        // único que distingue este envío de uno en vivo cuando el interceptor tiene que
+        // redactar el aviso: decirle «mientras estabas desconectado» a quien nunca perdió
+        // la red manda a la persona a investigar el problema equivocado.
+        const replayConfig = { headers: this.getHeaders(), isOfflineReplay: true }
+        try {
+          switch (op.method) {
+            case 'POST':
+              await axios.post(op.endpoint, op.payload, replayConfig)
+              break
+            case 'PUT':
+              await axios.put(op.endpoint, op.payload, replayConfig)
+              break
+            case 'PATCH':
+              await axios.patch(op.endpoint, op.payload, replayConfig)
+              break
+            case 'DELETE':
+              await axios.delete(op.endpoint, { data: op.payload, ...replayConfig })
+              break
+          }
+          // Operación exitosa, remover de la cola
+          await removePendingOperation(op.id)
+          // console.log('Synced operation:', op.method, op.endpoint)
+        } catch (error) {
+          console.error('Failed to sync operation:', op.method, op.endpoint, error)
+          if (isDuplicateKeyRejection(error)) {
+            // El payload lleva justamente el nombre que choca, así que reintentarlo es el
+            // mismo 409 en cada sincronización, para siempre y con la cola trabada detrás.
+            // Se descarta por el mismo motivo que el conflicto de versión — y se avisa por
+            // el canal propio, porque a diferencia de aquél acá el interceptor no dijo nada.
+            reportDuplicateKeyConflict(op.endpoint, op.payload, 'replay')
+            await removePendingOperation(op.id)
+            noteDiscarded(op)
+          } else if (isVersionRejection(error)) {
+            // Reintentar no puede funcionar: el payload encolado lleva por definición la
+            // versión de antes de desconectarse, así que cada sincronización repetiría el
+            // mismo 409 y trabaría la cola detrás. El interceptor ya le entregó el texto
+            // a la persona por el canal de conflicto de versión; acá sólo hay que dejar
+            // de intentarlo. Mismo trato que el lock tomado por otra persona, arriba.
+            await removePendingOperation(op.id)
+            noteDiscarded(op)
+          } else {
+            const outcome = replayOutcome(error, op.method)
+            if (outcome === 'retry') {
+              if (!error || !error.response) markOffline()
+              stop = true
+            } else {
+              await removePendingOperation(op.id)
+              if (outcome !== 'done') noteDiscarded(op)
+              if (outcome === 'drop') {
+                const status = error.response.status
+                rejected.push({ status, method: op.method, endpoint: op.endpoint, reason: rejectionReason(status) })
+              }
+            }
+          }
+        } finally {
+          if (heldLock) {
+            const LockService = await getLockService()
+            await LockService.releaseRef(heldLock)
+          }
+        }
+      }
+      reportReplayRejected(rejected)
+      // `project-single` aplicó cada PATCH encolado a la caché del proyecto antes de mandarlo
+      // (tryOptimisticUpdate). Si salió de la cola sin aplicarse, la caché seguía mostrando el
+      // cambio, y se servía si la red caía antes de la próxima lectura. La cola sólo corre con
+      // red: se vuelve a pedir el proyecto y la caché queda con lo del servidor.
+      staleProjects.forEach(projectId => this.refreshCachedProject(projectId))
+    } catch (error) {
+      console.error('Error during sync:', error)
+    }
+  }
+
+  static async refreshCachedProject (projectId) {
+    try {
+      await this.get(`/isoqf_projects/${projectId}`)
+    } catch (error) {
+      console.warn('No se pudo refrescar la caché del proyecto', projectId, error)
+    }
+  }
+
+  // Obtener cantidad de operaciones pendientes
+  static async getPendingCount () {
+    return getPendingOperationsCount()
   }
 }

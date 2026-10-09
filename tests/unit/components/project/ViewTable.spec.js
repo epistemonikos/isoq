@@ -1,0 +1,653 @@
+import { shallowMount, createLocalVue } from '@vue/test-utils'
+import ViewTable from '@/components/project/ViewTable.vue'
+import Api from '@/utils/Api'
+
+jest.mock('@/utils/Api')
+
+const localVue = createLocalVue()
+
+const defaultProps = {
+  lists: [
+    {
+      id: 'list1',
+      name: 'Finding One',
+      notes: '',
+      sort: 1,
+      references: ['ref1'],
+      category: null,
+      category_name: '',
+      cerqual_option: '',
+      cerqual_explanation: '',
+      raw_ref: ['ref1'],
+      filter_cerqual: '',
+      evidence_profile: {
+        methodological_limitations: { notes: '' },
+        coherence: { notes: '' },
+        adequacy: { notes: '' },
+        relevance: { notes: '' },
+        cerqual: { option: null, notes: '' }
+      }
+    }
+  ],
+  list_categories: { options: [], selected: null },
+  fields: {
+    with_categories: [],
+    without_categories: []
+  },
+  project: { id: 'proj1', is_public: false, private: true },
+  references: [],
+  refs: [],
+  isBusy: false,
+  mode: 'edit',
+  canEdit: true
+}
+
+function createWrapper (overrideProps = {}) {
+  const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const wrapper = shallowMount(ViewTable, {
+    localVue,
+    propsData: { ...defaultProps, ...overrideProps },
+    mocks: {
+      $t: (key) => key,
+      $route: { params: { id: 'proj1', org_id: 'org1' } },
+      $notify
+    },
+    stubs: { videoHelp: true }
+  })
+  return { wrapper, $notify }
+}
+
+describe('ViewTable.vue', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  // Residue of the legacy per-finding lock (see editList.returnTo.spec.js): three
+  // <b-alert> blocks bound to editingUser.show, which no code could ever set.
+  describe('flag legado de edición', () => {
+    it('no expone editingUser', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.editingUser).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    it('el buffer editFindingName no arrastra el campo editing', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.editFindingName).not.toHaveProperty('editing')
+      wrapper.destroy()
+    })
+  })
+
+  // updateFinding/processDataList desaparecieron: eran dos PATCH de documento completo.
+  describe('updateListName — endpoint de identidad', () => {
+    it('manda un único PATCH con sólo los campos del modal', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'Nombre nuevo', category: 'cat1', notes: 'una nota' }
+      })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect(Api.patch).toHaveBeenCalledTimes(1)
+      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1/identity', {
+        name: 'Nombre nuevo', category: 'cat1', notes: 'una nota'
+      })
+      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    })
+
+    it('no dice «Guardado» si el PATCH sólo quedó en la cola offline', async () => {
+      Api.patch.mockResolvedValue({ data: {}, queued: true, status: 200 })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'Nombre nuevo', category: 'cat1', notes: '' }
+      })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
+    })
+
+    // La whitelist del servidor devuelve 400 ante estas claves, que es justo lo que impide
+    // que los campos derivados de processLists vuelvan a la base.
+    it('no manda los campos que processLists inyecta para pintar la tabla', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', category: null, notes: '' }
+      })
+
+      await wrapper.vm.updateListName()
+
+      const body = Api.patch.mock.calls[0][1]
+      expect(Object.keys(body).sort()).toEqual(['category', 'name', 'notes'])
+      ;['raw_ref', 'ref_list', 'displayNumber', 'cerqual_option', 'status', 'is_public', 'sort']
+        .forEach(k => expect(body).not.toHaveProperty(k))
+    })
+
+    // notes ausente en 3074 de 6897 listas; processLists lo normaliza a '' antes del modal,
+    // pero el servidor devuelve 400 ante null, así que el guard vale igual.
+    it('nunca manda notes null', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', category: null, notes: null }
+      })
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch.mock.calls[0][1].notes).toBe('')
+    })
+
+    it('emite get-lists al guardar bien', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.emitted('get-lists')).toBeTruthy()
+    })
+
+    it('avisa del fallo cuando no es un rechazo de lock', async () => {
+      Api.patch.mockRejectedValue(new Error('network error'))
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    // El conflicto ya se le anunció por el canal de locks; "intente nuevamente" es un
+    // consejo falso mientras el lock sea de otra persona.
+    it('NO encima el error genérico sobre un 409 de lock', async () => {
+      Api.patch.mockRejectedValue({
+        response: { status: 409, data: { reason: 'locked_by_other_user', locked_by: 'Ana' } },
+        config: { url: '/api/isoqf_findings/find1/identity' }
+      })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    it('no escribe sin el id del finding', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: null, name: 'N', notes: '' } })
+      Api.patch.mockClear()
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('saveReferencesList — endpoint de identidad', () => {
+    it('manda sólo references, en un único PATCH', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1', 'ref2'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect(Api.patch).toHaveBeenCalledTimes(1)
+      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1/identity', { references: ['ref1', 'ref2'] })
+      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    })
+
+    // Sin conexión el PATCH queda en la cola: todavía no se guardó nada en el servidor, y
+    // lo que hay pendiente lo cuenta la barra de OfflineIndicator.
+    it('no dice «Guardado» si la escritura sólo quedó en la cola offline', async () => {
+      Api.patch.mockResolvedValue({ data: {}, queued: true, status: 200 })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
+    })
+
+    // El servidor guardó sin un estudio que otra persona borró: el aviso de OfflineIndicator
+    // dice «se guardó sin…». Un «Guardado» al lado dice otra cosa del mismo guardado.
+    it('no dice «Guardado» encima del aviso de estudios descartados', async () => {
+      Api.patch.mockResolvedValue({ data: { dropped_references: [{ ref_id: 'R9', deleted_by: 'Ana' }] } })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.success).not.toHaveBeenCalled()
+    })
+
+    it('avisa del fallo cuando no es un rechazo de lock', async () => {
+      Api.patch.mockRejectedValue(new Error('network error'))
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    it('limpia la selección al guardar bien', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        finding: { id: 'find1' },
+        selected_references: ['ref1'],
+        original_references: ['ref1']
+      })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.vm.selected_references).toEqual([])
+      expect(wrapper.vm.original_references).toEqual([])
+    })
+
+    it('no escribe sin el id del finding', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ finding: {}, selected_references: ['ref1'] })
+      Api.patch.mockClear()
+
+      await wrapper.vm.saveReferencesList()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('confirmRemoveList', () => {
+    it('shows success toast after a successful delete', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+      await wrapper.vm.$nextTick()
+
+      expect(Api.post).toHaveBeenCalledWith('/finding/remove', expect.objectContaining({ finding_id: 'list1' }))
+      expect($notify.success).toHaveBeenCalledWith('notifications.deleted')
+    })
+
+    it('shows error toast when delete fails', async () => {
+      Api.post.mockRejectedValue(new Error('network error'))
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.delete_error')
+    })
+
+    it('emits get-project on success', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.emitted('get-project')).toBeTruthy()
+    })
+
+    it('does nothing when editFindingName.id is not set', async () => {
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: null } })
+
+      await wrapper.vm.confirmRemoveList()
+
+      expect(Api.post).not.toHaveBeenCalled()
+      expect($notify.success).not.toHaveBeenCalled()
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('edit finding name ok-disabled condition', () => {
+    it('ok-disabled is true when name is null', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = null
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is true when name is empty string', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = ''
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is true when name is only whitespace', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = '   '
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is false when name has content', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = 'My finding'
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(false)
+    })
+  })
+
+  describe('finding name dirty flag', () => {
+    it('starts with findingNameDirty = false', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.findingNameDirty).toBe(false)
+    })
+
+    it('sets findingNameDirty to false when modal is hidden', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ findingNameDirty: true })
+
+      wrapper.vm.$emit('hidden')
+      await wrapper.setData({ findingNameDirty: false })
+
+      expect(wrapper.vm.findingNameDirty).toBe(false)
+    })
+
+    it('state is null when findingNameDirty is false regardless of name value', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: false,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(null)
+    })
+
+    it('state is false when findingNameDirty is true and name is empty', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(false)
+    })
+
+    it('state is false when findingNameDirty is true and name is only whitespace', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '   ' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(false)
+    })
+
+    it('state is null when findingNameDirty is true and name has content', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: 'My finding' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(null)
+    })
+  })
+
+  describe('canEdit gating (read-only user protection)', () => {
+    it('defaults canEdit to false when not provided', () => {
+      const { wrapper } = createWrapper({ canEdit: undefined })
+      expect(wrapper.vm.canEdit).toBe(false)
+    })
+
+    it('updateListName does not call Api.patch when canEdit is false', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+
+    it('confirmRemoveList does not call Api.post when canEdit is false, even with a valid id', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+
+      expect(Api.post).not.toHaveBeenCalled()
+    })
+
+    it('saveReferencesList does not call Api.patch when canEdit is false', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      await wrapper.setData({ selected_list_index: 0, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+
+    it('confirmRemoveList still calls Api.post when canEdit is true (regression)', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper({ canEdit: true })
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+
+      expect(Api.post).toHaveBeenCalled()
+    })
+
+    it('edit-finding-name ok-disabled is true when canEdit is false, even with a valid name', () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      wrapper.vm.editFindingName.name = 'My finding'
+      const disabled = !wrapper.vm.canEdit || !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('remove-finding modal ok-disabled reflects canEdit', () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      expect(wrapper.find('#remove-finding').attributes('ok-disabled')).toBe('true')
+    })
+
+    it('remove-finding modal is enabled when canEdit is true (regression)', () => {
+      const { wrapper } = createWrapper({ canEdit: true })
+      expect(wrapper.find('#remove-finding').attributes('ok-disabled')).toBeUndefined()
+    })
+  })
+})
+
+// El padre corre un sondeo que recarga `lists` cuando otra persona cambia algo. Repintar
+// la tabla debajo de un modal abierto descartaría el borrador de quien esté escribiendo,
+// así que ViewTable tiene que decir cuándo hay uno abierto. Los modales viven acá y el
+// mixin de frescura vive en el padre: la señal va por evento.
+describe('ViewTable.vue — aviso de editor abierto', () => {
+  it('avisa al abrirse y al cerrarse el modal de nombre/categoría', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('edit-finding-name')
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+
+    wrapper.vm.onEditFindingNameHidden()
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  it('el modal de referencias avisa por su handler de cierre', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('modal-references-list')
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+
+    wrapper.vm.handleReferencesModalHidden()
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  // El de borrado abre encima del de referencias en algunos flujos de advertencia: si
+  // cerrar uno bastara para decir "no hay editores", el refresco entraría con el otro
+  // todavía abierto.
+  it('sólo avisa que no hay editores cuando se cerraron todos', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('modal-references-list')
+    wrapper.vm.noteModalShown('remove-finding')
+    wrapper.vm.noteModalHidden('remove-finding')
+
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+    wrapper.destroy()
+  })
+
+  it('abrir dos veces el mismo modal no lo cuenta dos veces', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('edit-finding-name')
+    wrapper.vm.noteModalShown('edit-finding-name')
+    wrapper.vm.noteModalHidden('edit-finding-name')
+
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  // El modal de referencias queda abierto a propósito mientras se muestra una advertencia
+  // (pendingSaveReferences); el aviso de cierre no debe adelantarse a eso.
+  it('el cierre del modal de referencias no limpia la selección si hay un guardado pendiente', () => {
+    const { wrapper } = createWrapper()
+    wrapper.setData({ pendingSaveReferences: true, selected_references: ['ref1'] })
+
+    wrapper.vm.handleReferencesModalHidden()
+
+    expect(wrapper.vm.selected_references).toEqual(['ref1'])
+    wrapper.destroy()
+  })
+})
+
+// Quitar todas las referencias de un finding publicado pasa el proyecto a privado. Iban en
+// paralelo: si pasar a privado fallaba, las referencias se borraban igual y quedaba un
+// proyecto público sin referencias.
+describe('ViewTable.vue — pasar a privado antes de quitar las referencias', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('si pasar a privado falla, no quita las referencias y avisa', async () => {
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn(), show: jest.fn() }
+    const saveRefs = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_projects/p1', method: 'patch' } }))
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(saveRefs).not.toHaveBeenCalled()
+    expect($notify.error).toHaveBeenCalledWith('notifications.make_private_error')
+    wrapper.destroy()
+  })
+
+  it('si pasa a privado, recién entonces quita las referencias', async () => {
+    const { wrapper } = createWrapper()
+    wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn(), show: jest.fn() }
+    const orden = []
+    Api.patch.mockImplementationOnce(() => { orden.push('privado'); return Promise.resolve({ data: {} }) })
+    jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => { orden.push('referencias') })
+    await wrapper.vm.confirmSavePrivateProject()
+    await flush()
+    expect(orden).toEqual(['privado', 'referencias'])
+    wrapper.destroy()
+  })
+})
+
+// Si la carga de findings falla, la tabla quedaba vacía diciendo «no hay findings, agregue uno»:
+// una invitación a duplicar trabajo que ya existe. Una carga fallida no es un proyecto vacío.
+describe('ViewTable.vue — no se pudo cargar no es vacío', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sin datos: dice que falló la carga, y apaga el «agregue un finding»', async () => {
+    const { wrapper } = createWrapper({ lists: [], loadError: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('soqf_table.load_error')
+    expect(wrapper.html()).not.toContain('soqf_table.load_error_stale')
+    expect(wrapper.find('#findings').attributes('show-empty')).toBeUndefined()
+    wrapper.destroy()
+  })
+
+  it('con datos viejos: los deja a la vista y avisa que pueden estar desactualizados', async () => {
+    const { wrapper } = createWrapper({ loadError: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).toContain('soqf_table.load_error_stale')
+    wrapper.destroy()
+  })
+
+  it('Reintentar vuelve a pedir los findings', async () => {
+    const { wrapper } = createWrapper({ lists: [], loadError: true })
+    await wrapper.vm.$nextTick()
+    wrapper.find('[data-test="findings-retry"]').trigger('click')
+    expect(wrapper.emitted('get-lists')).toBeTruthy()
+    wrapper.destroy()
+  })
+
+  it('sin error no hay aviso, y el vacío de siempre sigue', async () => {
+    const { wrapper } = createWrapper({ lists: [] })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.html()).not.toContain('soqf_table.load_error')
+    expect(wrapper.find('#findings').attributes('show-empty')).toBeTruthy()
+    wrapper.destroy()
+  })
+})
+
+// Abrir el modal de referencias o resolver el finding pide datos al servidor; si fallaba, el
+// modal no se abría y nada lo decía.
+describe('ViewTable.vue — lo que no se pudo cargar al abrir un modal se dice', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('resolveFindingId', async () => {
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'findingIdOf').mockReturnValue(null)
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    const id = await wrapper.vm.resolveFindingId('list1')
+    expect(id).toBeNull()
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+
+  it('sin conexión no suma aviso: ya lo dice OfflineIndicator', async () => {
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'findingIdOf').mockReturnValue(null)
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('offline'), { isOfflineError: true, response: { status: 0 } }))
+    await wrapper.vm.resolveFindingId('list1')
+    await flush()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+describe('ViewTable.vue — abrir el modal de borrar un finding que no carga', () => {
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  beforeEach(() => jest.clearAllMocks())
+
+  it('lo dice: el modal no se abre y antes no pasaba nada visible', async () => {
+    const { wrapper, $notify } = createWrapper()
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.removeModalFinding({ index: 0, item: { id: 'list1' } })
+    await flush()
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+})
+

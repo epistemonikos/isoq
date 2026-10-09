@@ -6,10 +6,15 @@
           <b-form @submit.stop.prevent>
             <b-card
               v-if="ui.main"
-              header="Reset your password">
+              :header="$t('account.reset_password')">
+              <!-- La solicitud no llegó o el servidor falló. El «no registrado» sigue en el
+                   propio campo: es otra cosa, y la persona lo corrige escribiendo. -->
+              <b-alert :show="!!ui.requestError" variant="danger">
+                {{ ui.requestError ? $t(ui.requestError) : '' }}
+              </b-alert>
               <b-form-group
                 id="recovery_input_email"
-                label="Email:"
+                :label="$t('account.email_label')"
                 label-for="recovery_email">
                 <b-form-input
                   id="recovery_email"
@@ -17,28 +22,28 @@
                   required
                   :state="ui.error"
                   aria-describedby="input-live-feedback"
-                  placeholder="Enter a valid email"
+                  :placeholder="$t('account.email_placeholder')"
                   v-model="username">
                 </b-form-input>
                 <b-form-invalid-feedback
                   v-if="!ui.error"
                   id="input-live-feedback">
-                  This email is not registered
+                  {{ $t('account.email_not_registered') }}
                 </b-form-invalid-feedback>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link> -->
+                <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link> -->
               </b-card-text>
               <div slot="footer" class="text-right">
                 <b-button
                   variant="outline-primary"
-                  @click="recoverPass">Recover</b-button>
+                  @click="recoverPass">{{ $t('common.recover') }}</b-button>
               </div>
             </b-card>
             <b-card
               v-if="ui.sent"
-              header="Sent">
-              <p>An email was sent to you with instructions for resetting your password.</p>
+              :header="$t('common.sent')">
+              <p>{{ $t('account.email_sent') }}</p>
             </b-card>
           </b-form>
         </b-col>
@@ -48,7 +53,8 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import { requestFailureKey } from '@/utils/writeErrors'
 
 export default {
   data () {
@@ -56,7 +62,8 @@ export default {
       ui: {
         main: true,
         sent: false,
-        error: null
+        error: null,
+        requestError: ''
       },
       username: '',
       tmpUsername: ''
@@ -76,7 +83,8 @@ export default {
       let params = {
         username: this.username
       }
-      axios.post(`/auth/recover`, params)
+      this.ui.requestError = ''
+      Api.post(`/auth/recover`, params)
         .then((response) => {
           if (response.data.status === 'sent') {
             this.ui.main = false
@@ -87,7 +95,10 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          // Antes sólo `console.error`: la persona apretaba «Recuperar», no pasaba nada y no
+          // sabía si esperar el correo.
+          console.error(error)
+          this.ui.requestError = requestFailureKey(error) || 'common.server_failed'
         })
     }
   }

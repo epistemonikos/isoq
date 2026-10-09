@@ -45,6 +45,11 @@ module.exports = {
         target: 'http://localhost:8080',
         changeOrigin: true,
         logLevel: 'debug'
+      },
+      '/admin': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        logLevel: 'debug'
       }
     },
 
@@ -92,15 +97,14 @@ module.exports = {
      * Source Maps
      */
 
-    productionSourceMap: false,
-    // https://webpack.js.org/configuration/devtool/#production
-    // devtool: '#source-map',
+    productionSourceMap: true,
+    devtool: 'hidden-source-map',
 
     // Gzip off by default as many popular static hosts such as
     // Surge or Netlify already gzip all static assets for you.
     // Before setting to `true`, make sure to:
     // npm install --save-dev compression-webpack-plugin
-    productionGzip: false,
+    productionGzip: true,
     productionGzipExtensions: ['js', 'css'],
 
     // Run the build command with an extra argument to

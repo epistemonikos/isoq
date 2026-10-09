@@ -1,0 +1,950 @@
+import { shallowMount, createLocalVue } from '@vue/test-utils'
+import viewProject from '@/components/project/viewProject.vue'
+import BootstrapVue from 'bootstrap-vue'
+import Api from '@/utils/Api'
+
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+jest.mock('@/utils/Api', () => ({
+  get: jest.fn().mockResolvedValue({ data: [] }),
+  post: jest.fn().mockResolvedValue({ data: {} }),
+  patch: jest.fn().mockResolvedValue({ data: {} }),
+  delete: jest.fn().mockResolvedValue({ data: {} })
+}))
+
+jest.mock('@/services/lockService', () => ({
+  fetchRefLocks: jest.fn().mockResolvedValue([]),
+  releaseRef: jest.fn()
+}))
+
+jest.mock('vuedraggable', () => ({ render: h => h('div') }))
+
+const localVue = createLocalVue()
+localVue.use(BootstrapVue)
+
+const stubs = {
+  'action-buttons': true, 'propertiesProject': true, 'UploadReferences': true,
+  'InclusionExclusioCriteria': true, 'crudTables': true, 'PrintViewTable': true,
+  'ViewTable': true, 'CamelotStepThree': true, 'CamelotStepFour': true,
+  'videoHelp': true, 'back-to-top': true, 'content-guidance': true
+}
+
+function createWrapper () {
+  const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const wrapper = shallowMount(viewProject, {
+    localVue,
+    mocks: {
+      $t: (key) => key,
+      $route: { params: { id: 'proj1', org_id: 'org1' }, query: {} },
+      $router: { push: jest.fn() },
+      $store: { state: { user: { personal_organization: 'org1', id: 1 } } },
+      $notify,
+      isOnline: true
+    },
+    stubs
+  })
+  return { wrapper, $notify }
+}
+
+describe('viewProject.vue — createList()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sets sort=1 when lists is empty', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'Finding 1' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ lists: [], summarized_review: 'My finding' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ sort: 1 }))
+    wrapper.destroy()
+  })
+
+  it('sets sort=last.sort+1 when lists has items', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list2', name: 'Finding 2' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ lists: [{ sort: 3 }, { sort: 5 }], summarized_review: 'New finding' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ sort: 6 }))
+    wrapper.destroy()
+  })
+
+  // Regresión CRITICAL 2: this.lists es la salida de sortFindings, ordenada por
+  // (categoría, sort) — NO por sort. Ahora que sortFindings ya no renumera sort (commit
+  // 9ec4b08), el último elemento por orden de categoría puede llevar cualquier sort
+  // persistido, no necesariamente el máximo. slice(-1)[0].sort + 1 debe dejar de asumir que
+  // el último elemento en pantalla es el de mayor sort.
+  it('sets sort=max(sort)+1 even when the last list by display order is not the max', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list3', name: 'Finding 3' } })
+    const { wrapper } = createWrapper()
+    // Orden de categoría puso primero al sort:5 y último al sort:2 — el máximo real es 5.
+    await wrapper.setData({ lists: [{ sort: 5 }, { sort: 2 }], summarized_review: 'New finding' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ sort: 6 }))
+    wrapper.destroy()
+  })
+
+  it('copies is_public=true from project', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ project: { is_public: true }, summarized_review: 'F' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ is_public: true }))
+    wrapper.destroy()
+  })
+
+  // `editing` was the legacy per-finding lock flag (see editList.returnTo.spec.js).
+  // Nothing reads it since 2022, so new documents must not be born carrying it.
+  it('no incluye el flag legado "editing" en el payload', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ lists: [], summarized_review: 'F' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    const payload = Api.post.mock.calls.find(c => c[0] === '/isoqf_lists')[1]
+    expect(payload).not.toHaveProperty('editing')
+    wrapper.destroy()
+  })
+
+  it('calls createFinding with listId and listName on success', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list99', name: 'My List' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ summarized_review: 'My List' })
+    const createFindingSpy = jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(createFindingSpy).toHaveBeenCalledWith('list99', 'My List')
+    wrapper.destroy()
+  })
+
+  it('clears summarized_review and list_categories.selected after success', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({
+      summarized_review: 'Something',
+      list_categories: { options: [], selected: 'cat1' }
+    })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(wrapper.vm.summarized_review).toBe('')
+    expect(wrapper.vm.list_categories.selected).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('shows error notification on failure', async () => {
+    Api.post.mockRejectedValueOnce(new Error('network'))
+    const { wrapper, $notify } = createWrapper()
+    await wrapper.setData({ summarized_review: 'F' })
+    wrapper.vm.createList()
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('notifications.create_error')
+    wrapper.destroy()
+  })
+
+  it('does not send a separate last_update PATCH (the backend seals it on write)', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ summarized_review: 'F' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    const lastUpdatePatch = Api.patch.mock.calls.find(
+      c => typeof c[0] === 'string' && c[0].startsWith('/isoqf_projects/') &&
+        c[1] && Object.prototype.hasOwnProperty.call(c[1], 'last_update')
+    )
+    expect(lastUpdatePatch).toBeUndefined()
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — createFinding()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('posts to /isoqf_findings with full evidence_profile structure', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'finding1' } })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'My Finding')
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_findings', expect.objectContaining({
+      list_id: 'list1',
+      name: 'My Finding',
+      evidence_profile: expect.objectContaining({
+        methodological_limitations: expect.any(Object),
+        coherence: expect.any(Object),
+        adequacy: expect.any(Object),
+        relevance: expect.any(Object),
+        cerqual: expect.any(Object)
+      })
+    }))
+    wrapper.destroy()
+  })
+
+  it('does not write the isoqf_id mirror, at the top level or inside evidence_profile', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'finding1' } })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'My Finding')
+    await flushPromises()
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('isoqf_id')
+    expect(payload.evidence_profile).not.toHaveProperty('isoqf_id')
+    wrapper.destroy()
+  })
+
+  it('calls createExtractedData with the new finding id', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'finding99' } })
+    const { wrapper } = createWrapper()
+    const spy = jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith('finding99')
+    wrapper.destroy()
+  })
+
+  it('shows success notification on success', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'f1' } })
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect($notify.success).toHaveBeenCalledWith('notifications.created')
+    wrapper.destroy()
+  })
+
+  it('shows error notification on failure', async () => {
+    Api.post.mockRejectedValueOnce(new Error('network'))
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('notifications.create_error')
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — saveSortedLists()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  // Guardar exige el lock del orden y releer la lista: acá la persona lo tiene, está en
+  // línea, y nadie creó ni borró findings desde que abrió el modal. Los casos de lock y de
+  // lista cambiada viven en viewProject.findingsOrderLock.spec.js.
+  function listoParaGuardar (wrapper, lists) {
+    wrapper.vm.findingsOrderLock = { status: 'held', lockedBy: null }
+    jest.spyOn(wrapper.vm, 'fetchFreshLists').mockResolvedValue(lists.map(l => ({ ...l })))
+    wrapper.vm.sorted_lists = lists
+  }
+
+  it('patches each list with incremental sort values starting at 1', async () => {
+    Api.patch.mockResolvedValue({ data: {} })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    listoParaGuardar(wrapper, [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }])
+    wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
+    wrapper.vm.saveSortedLists()
+    await flushPromises()
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_lists/l1', { sort: 1 })
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_lists/l2', { sort: 2 })
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_lists/l3', { sort: 3 })
+    wrapper.destroy()
+  })
+
+  it('does N writes, not 2N: patches exactly the two lists and nothing on isoqf_findings', async () => {
+    Api.patch.mockResolvedValue({ data: {} })
+    // Un mock plano {data: []} para Api.get deja pasar al código viejo sin
+    // fallar (ver viewProject.findingNumber.spec.js): reponse.data[0].id
+    // revienta antes del PATCH a isoqf_findings y el propio catch se lo
+    // traga. Con un finding real por lista, el viejo updateFindingSort()
+    // sí llega a emitir ese PATCH, y esta aserción lo detecta.
+    Api.get.mockImplementation((url, params) => {
+      if (String(url).includes('isoqf_findings')) {
+        const listId = params && params.list_id
+        return Promise.resolve({ data: [{ id: `finding-${listId}`, list_id: listId }] })
+      }
+      return Promise.resolve({ data: [] })
+    })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    listoParaGuardar(wrapper, [{ id: 'l1' }, { id: 'l2' }])
+    wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
+    wrapper.vm.saveSortedLists()
+    await flushPromises()
+    const patchedUrls = Api.patch.mock.calls.map(c => c[0])
+    expect(patchedUrls).toEqual(['/isoqf_lists/l1', '/isoqf_lists/l2'])
+    wrapper.destroy()
+  })
+
+  it('shows success notification and hides modal on Promise.all success', async () => {
+    Api.patch.mockResolvedValue({ data: {} })
+    const { wrapper, $notify } = createWrapper()
+    jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    const hideMock = jest.fn()
+    wrapper.vm.$refs['modal-sort-findings'] = { hide: hideMock }
+    listoParaGuardar(wrapper, [{ id: 'l1' }])
+    wrapper.vm.saveSortedLists()
+    await flushPromises()
+    expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    expect(hideMock).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('shows error notification on failure', async () => {
+    Api.patch.mockRejectedValue(new Error('network'))
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
+    listoParaGuardar(wrapper, [{ id: 'l1' }])
+    wrapper.vm.saveSortedLists()
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — route watchers', () => {
+  let wrapper
+
+  beforeEach(async () => {
+    wrapper = createWrapper().wrapper
+    await flushPromises()
+    jest.clearAllMocks()
+  })
+
+  afterEach(() => wrapper.destroy())
+
+  it.each([
+    ['Project-Property', 0],
+    ['My-Data', 1],
+    ['iSoQ', 2],
+    ['Guidance-on-applying-GRADE-CERQual', 3]
+  ])('$route.query.tab "%s" maps tabOpened to %d', (tab, expected) => {
+    wrapper.vm.$options.watch['$route.query.tab'].call(wrapper.vm, tab)
+    expect(wrapper.vm.tabOpened).toBe(expected)
+  })
+
+  it('unknown tab value does not change tabOpened', () => {
+    wrapper.vm.tabOpened = 1
+    wrapper.vm.$options.watch['$route.query.tab'].call(wrapper.vm, 'unknown-tab')
+    expect(wrapper.vm.tabOpened).toBe(1)
+  })
+
+  it('$route.query.step sets stepStage to parseInt(val)-1', () => {
+    wrapper.vm.$options.watch['$route.query.step'].call(wrapper.vm, '3')
+    expect(wrapper.vm.stepStage).toBe(2)
+  })
+
+  it('$route.query.step ignores falsy values', () => {
+    wrapper.vm.stepStage = 2
+    wrapper.vm.$options.watch['$route.query.step'].call(wrapper.vm, '')
+    expect(wrapper.vm.stepStage).toBe(2)
+  })
+})
+
+describe('viewProject.vue — getFindings() replaces instead of appends (duplication regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('replaces this.findings so calling it twice does not duplicate findings', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ findings: [] })
+
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }, { id: 'f2' }] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toHaveLength(2)
+
+    // A second load (e.g. duplicate getLists on open, or a category edit) must not
+    // stack a second copy of the same findings into memory.
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }, { id: 'f2' }] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toHaveLength(2)
+    expect(wrapper.vm.findings.map(f => f.id)).toEqual(['f1', 'f2'])
+    wrapper.destroy()
+  })
+
+  it('clears previously loaded findings when the response is empty', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ findings: [{ id: 'stale' }] })
+
+    Api.get.mockResolvedValueOnce({ data: [] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toEqual([])
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — list_categories.options watcher (no duplicate getLists on open)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('does NOT call getLists on the initial load (getProject already triggers it)', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: true })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [{ id: 'c1' }])
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('DOES call getLists when categories change after the initial load', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [{ id: 'c1' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // `processGetListCategories` reasigna `list_categories.options` a un array NUEVO en cada
+  // getListCategories(), así que un watcher que mire la referencia se dispara aunque nada
+  // haya cambiado. Costaba dos cosas: abrir el gestor de categorías pedía isoqf_lists +
+  // findings de gusto, y el refresco automático los pedía dos veces.
+  it('does NOT call getLists when the catalog is reassigned with identical content', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    const antes = [{ id: 'c1', text: 'A', extra_info: 'x' }]
+    const despues = [{ id: 'c1', text: 'A', extra_info: 'x' }]
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, despues, antes)
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('DOES call getLists when a category is renamed', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(
+      wrapper.vm, [{ id: 'c1', text: 'A renombrada' }], [{ id: 'c1', text: 'A' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // processLists() lee category_extra_info para pintar la fila, así que también cuenta.
+  it('DOES call getLists when only extra_info changes', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(
+      wrapper.vm, [{ id: 'c1', text: 'A', extra_info: 'nuevo' }], [{ id: 'c1', text: 'A', extra_info: 'viejo' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('does NOT call getLists when categories become empty', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [])
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('clears initialLoad after mount so later category changes reload lists', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    expect(wrapper.vm.initialLoad).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — mounted() parallel load (perf: categories + references)', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('starts getReferences without waiting for getListCategories to resolve', async () => {
+    let catResolved = false
+    let refSawCatResolved = null
+    jest.spyOn(viewProject.methods, 'getListCategories').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { catResolved = true; resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getReferences').mockImplementation(async () => {
+      refSawCatResolved = catResolved
+    })
+    jest.spyOn(viewProject.methods, 'getProject').mockResolvedValue()
+    jest.spyOn(viewProject.methods, 'getCharacteristicsData').mockImplementation(() => {})
+    jest.spyOn(viewProject.methods, 'getAssessmentsData').mockImplementation(() => {})
+
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    // If the two loads run in parallel, getReferences executes before
+    // getListCategories has resolved → it observes catResolved still false.
+    expect(refSawCatResolved).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('loads the project only after both categories and references resolve', async () => {
+    const order = []
+    jest.spyOn(viewProject.methods, 'getListCategories').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { order.push('cat'); resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getReferences').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { order.push('ref'); resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getProject').mockImplementation(async () => { order.push('proj') })
+    jest.spyOn(viewProject.methods, 'getCharacteristicsData').mockImplementation(() => {})
+    jest.spyOn(viewProject.methods, 'getAssessmentsData').mockImplementation(() => {})
+
+    const { wrapper } = createWrapper()
+    // mounted chains several awaits; flush enough microtask/nextTick rounds to finish it.
+    for (let i = 0; i < 5; i++) await flushPromises()
+    // getProject (and therefore getLists, which needs categories AND refs) runs last.
+    expect(order[order.length - 1]).toBe('proj')
+    expect(order).toContain('cat')
+    expect(order).toContain('ref')
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — processLists() reference matching (O(n^2) refactor guard)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('builds raw_ref per list in reference-id order, filtered to each list', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      // Deliberately unsorted so the id-order guarantee is meaningful.
+      references: [
+        { id: 3, authors: 'Cccc' },
+        { id: 1, authors: 'Aaaa' },
+        { id: 2, authors: 'Bbbb' }
+      ],
+      list_categories: { options: [], selected: null }
+    })
+    const lists = [
+      { id: 'lA', name: 'A', sort: 1, cerqual: { option: null, explanation: '' }, references: [3, 1] },
+      { id: 'lB', name: 'B', sort: 2, cerqual: { option: null, explanation: '' }, references: [2] }
+    ]
+
+    const result = await wrapper.vm.processLists({ data: lists })
+
+    const byId = Object.fromEntries(result.map(l => [l.id, l]))
+    expect(byId.lA.raw_ref.map(r => r.id)).toEqual([1, 3])
+    expect(byId.lB.raw_ref.map(r => r.id)).toEqual([2])
+    // ref_list is the concatenation of parsed authors in that same id order.
+    expect(byId.lA.ref_list).toBe('AaaaCccc')
+    expect(byId.lB.ref_list).toBe('Bbbb')
+    wrapper.destroy()
+  })
+
+  it('sorts the references array once, not once per list', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const references = [{ id: 2, authors: 'B' }, { id: 1, authors: 'A' }]
+    await wrapper.setData({ references, list_categories: { options: [], selected: null } })
+    const lists = Array.from({ length: 5 }, (_, i) => ({
+      id: `l${i}`, name: `L${i}`, sort: i, cerqual: { option: null, explanation: '' }, references: [1, 2]
+    }))
+    const sortSpy = jest.spyOn(Array.prototype, 'sort')
+
+    await wrapper.vm.processLists({ data: lists })
+
+    // The references-by-id sort must be hoisted out of the per-list loop: with 5 lists,
+    // the old code sorted references 5 times. Allow a small budget for unrelated sorts
+    // (e.g. Commons.sortFindings) but reject the per-list explosion.
+    expect(sortSpy.mock.calls.length).toBeLessThan(5)
+    sortSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  // Real-world granular-update shape: the list mirror lost its evidence_profile.cerqual
+  // key, but the authoritative top-level cerqual is present. The old reader crashed on
+  // list.evidence_profile.cerqual.option, leaving table_settings.isBusy stuck at true.
+  const malformedList = {
+    id: 'l1',
+    name: 'Finding A',
+    cerqual: { option: null, explanation: '' },
+    references: [],
+    evidence_profile: {
+      methodological_limitations: { option: '1', explanation: 'x' },
+      coherence: { option: '1', explanation: 'x' },
+      adequacy: { option: '1', explanation: 'x' },
+      relevance: { option: '0', explanation: '' }
+    }
+  }
+
+  it('does not throw and turns off isBusy when evidence_profile has no cerqual key', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    let result
+    await expect(
+      (async () => { result = await wrapper.vm.processLists({ data: [malformedList] }) })()
+    ).resolves.toBeUndefined()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    expect(result[0].status).toBe('unfinished') // cerqual.option === null → unfinished
+    wrapper.destroy()
+  })
+
+  it('backfills missing evidence_profile sections so the notes v-if cannot throw', async () => {
+    // Reported crash: a new finding saved only some sections granularly →
+    // evidence_profile lacks adequacy/relevance → ViewTable reads adequacy.notes → TypeError.
+    const partialList = {
+      id: 'l2',
+      name: 'Finding B',
+      cerqual: { option: null, explanation: '' },
+      references: [],
+      evidence_profile: {
+        methodological_limitations: { option: '1', explanation: 'x', notes: '' },
+        coherence: { option: '0', explanation: '', notes: '' }
+      }
+    }
+    const { wrapper } = createWrapper()
+    const [processed] = await wrapper.vm.processLists({ data: [partialList] })
+    for (const s of ['methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual']) {
+      expect(processed.evidence_profile[s]).toBeDefined()
+      expect(() => processed.evidence_profile[s].notes).not.toThrow()
+    }
+    wrapper.destroy()
+  })
+
+  it('parses each unique reference at most once, regardless of how many lists cite it', async () => {
+    // parseReference(r, true) is pure for a fixed reference, so building the authors
+    // string once per (list, ref) match wastes work: with 2 refs cited by 3 lists the
+    // old code called it 6 times. Memoizing per reference id must cap it at 1 call/ref.
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const references = [{ id: 1, authors: 'Aaaa' }, { id: 2, authors: 'Bbbb' }]
+    await wrapper.setData({ references, list_categories: { options: [], selected: null } })
+    const lists = Array.from({ length: 3 }, (_, i) => ({
+      id: `l${i}`, name: `L${i}`, sort: i, cerqual: { option: null, explanation: '' }, references: [1, 2]
+    }))
+    const parseSpy = jest.spyOn(wrapper.vm, 'parseReference')
+
+    const result = await wrapper.vm.processLists({ data: lists })
+
+    // One call per unique reference (2), not one per (list, ref) pair (6).
+    expect(parseSpy.mock.calls.length).toBeLessThanOrEqual(references.length)
+    // Correctness must be preserved: every list still lists both authors in id order.
+    for (const l of result) {
+      expect(l.ref_list).toBe('AaaaBbbb')
+      expect(l.raw_ref.map(r => r.id)).toEqual([1, 2])
+    }
+    parseSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  it('getLists resets isBusy even when processLists rejects', async () => {
+    Api.get.mockResolvedValueOnce({ data: [malformedList] })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    jest.spyOn(wrapper.vm, 'processLists').mockRejectedValueOnce(new Error('boom'))
+    jest.spyOn(wrapper.vm, 'getFindings').mockImplementation(() => {})
+    wrapper.vm.getLists()
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — processLists() lists_print_version numbering (print view regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('propagates displayNumber (not cnt) onto lists_print_version items; category headers stay unnumbered', async () => {
+    // Category (Alpha) wins over raw sort, and sort/isoqf_id/expected-position are three
+    // distinct values per item so the assertion cannot pass by accident on the wrong field.
+    const L1 = '66b1ff0000000000000000b1'
+    const L2 = '66b1ff0000000000000000b2'
+    const CAT_A = '66b1ff0000000000000000c1'
+    const CAT_Z = '66b1ff0000000000000000c2'
+
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      references: [],
+      list_categories: {
+        options: [
+          { id: CAT_A, text: 'Alpha', label: 'Alpha', extra_info: '' },
+          { id: CAT_Z, text: 'Zeta', label: 'Zeta', extra_info: '' }
+        ],
+        selected: null
+      }
+    })
+    const lists = [
+      { id: L1, name: 'Finding uno', category: CAT_Z, sort: 5, isoqf_id: 41, cerqual: { option: null, explanation: '' }, references: [] },
+      { id: L2, name: 'Finding dos', category: CAT_A, sort: 9, isoqf_id: 42, cerqual: { option: null, explanation: '' }, references: [] }
+    ]
+
+    await wrapper.vm.processLists({ data: lists })
+
+    const items = wrapper.vm.lists_print_version.filter(i => i.id === L1 || i.id === L2)
+    // L2 is in category Alpha, so it prints first even though its raw sort (9) is higher.
+    expect(items.map(i => [i.id, i.displayNumber])).toEqual([[L2, 1], [L1, 2]])
+    // No leftover cnt anywhere on the finding rows.
+    expect(items.every(i => !Object.prototype.hasOwnProperty.call(i, 'cnt'))).toBe(true)
+
+    // Category header rows never carry a display number.
+    const headers = wrapper.vm.lists_print_version.filter(i => i.is_category)
+    expect(headers.length).toBeGreaterThan(0)
+    expect(headers.every(h => h.displayNumber === undefined)).toBe(true)
+
+    wrapper.destroy()
+  })
+})
+
+// Sin conexión el alta ya no se encola: `Api.post` rechaza con el error offline y
+// OfflineIndicator explica por qué. Encima de eso, «error al crear» es un segundo cartel
+// que no dice nada nuevo. Y el alta no puede seguir encadenando: sin lista no hay finding.
+describe('viewProject.vue — alta de finding sin conexión', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const offline = () => Object.assign(new Error('offline'), { isOfflineError: true })
+
+  it('createList no encadena el finding ni suma el aviso genérico', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper, $notify } = createWrapper()
+    await wrapper.setData({ summarized_review: 'F' })
+    const createFinding = jest.spyOn(wrapper.vm, 'createFinding')
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(createFinding).not.toHaveBeenCalled()
+    expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.success).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('createList conserva lo escrito para reintentar', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ summarized_review: 'Lo que escribí' })
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(wrapper.vm.summarized_review).toBe('Lo que escribí')
+    wrapper.destroy()
+  })
+
+  // `createList` pone la tabla en «Loading…» al empezar. Sin esto, cualquier fallo —el de
+  // conexión ahora es el camino normal— la dejaba cargando para siempre, hasta recargar.
+  it.each([
+    ['sin conexión', () => Object.assign(new Error('offline'), { isOfflineError: true })],
+    ['con un error del servidor', () => Object.assign(new Error('500'), { response: { status: 500 } })]
+  ])('createList saca la tabla de «Loading…» si falla %s', async (_caso, error) => {
+    const { wrapper } = createWrapper()
+    // La carga del montaje también apaga `isBusy` al terminar: si llega después del alta,
+    // tapa el bug y el test pasa sin el arreglo. Se deja asentar primero.
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockRejectedValueOnce(error())
+    await wrapper.setData({ summarized_review: 'F' })
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('createFinding saca la tabla de «Loading…» si falla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockRejectedValueOnce(offline())
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('createFinding no suma el aviso genérico', async () => {
+    Api.post.mockRejectedValueOnce(offline())
+    const { wrapper, $notify } = createWrapper()
+    wrapper.vm.createFinding('list1', 'F')
+    await flushPromises()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+// Si la tabla de datos extraídos no se crea, el finding queda sin ella para siempre: nadie
+// la vuelve a crear. Antes `createExtractedData` no devolvía la promesa, así que `createFinding`
+// decía «creado» sin esperar, y el fallo terminaba en `printErrors`.
+describe('viewProject.vue — la tabla de datos extraídos que no se crea', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('createExtractedData espera la escritura y la propaga si falla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    jest.spyOn(wrapper.vm, 'parseReference').mockResolvedValue('A 2020')
+    Api.post.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: {} } }))
+    await expect(wrapper.vm.createExtractedData('f1')).rejects.toBeTruthy()
+    wrapper.destroy()
+  })
+
+  it('createFinding avisa que el finding se creó sin su tabla, y no dice «creado» a secas', async () => {
+    const { wrapper, $notify } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.post.mockResolvedValueOnce({ data: { id: 'f1' } })
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockRejectedValue(Object.assign(new Error('500'), { response: { status: 500, data: {} } }))
+    const getLists = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'F')
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect($notify.success).not.toHaveBeenCalled()
+    expect($notify.warning).toHaveBeenCalledWith('notifications.extracted_data_create_error')
+    // El finding sí existe: la lista se refresca igual para que aparezca.
+    expect(getLists).toHaveBeenCalled()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+// `crudTables` es el único que emite `print-errors`, y `viewProject` lo mandaba a
+// `printErrors`, que no muestra nada: crear, renombrar, reordenar o borrar columnas y guardar
+// filas fallaban sin aviso. Se prueba el CABLEADO real: el evento del hijo llega a un aviso.
+describe('viewProject.vue — lo que crudTables no pudo hacer se ve', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  async function emitirDesdeLaTabla (wrapper, error) {
+    for (let i = 0; i < 5; i++) await flushPromises()
+    await wrapper.setData({ project: { ...wrapper.vm.project, use_camelot: false } })
+    const tabla = wrapper.findAllComponents({ name: 'crudTables' })
+    // Si el stub no se encuentra, el test tiene que fallar: no es verde por no probar nada.
+    expect(tabla.length).toBeGreaterThan(0)
+    tabla.at(0).vm.$emit('print-errors', error)
+  }
+
+  it('una escritura que falla: «no se pudo guardar»', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_characteristics/c1/field/column_1', method: 'delete' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    wrapper.destroy()
+  })
+
+  it('una lectura que falla: «no se pudo cargar», no «no se pudo guardar»', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_characteristics', method: 'get' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.load_error')
+    wrapper.destroy()
+  })
+
+  it('un 403 en una escritura dice que no tiene permiso', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('403'), { response: { status: 403, data: {} }, config: { url: '/isoqf_characteristics/c1', method: 'patch' } }))
+    expect($notify.error).toHaveBeenCalledWith('notifications.write_forbidden')
+    wrapper.destroy()
+  })
+
+  it('sin conexión no suma aviso', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await emitirDesdeLaTabla(wrapper, Object.assign(new Error('offline'), { isOfflineError: true, response: { status: 0 }, config: { method: 'post' } }))
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — la carga de findings que falla se marca, no se muestra como vacío', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('getLists que falla prende listsLoadError y se lo pasa a la tabla', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    wrapper.vm.getLists()
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.listsLoadError).toBe(true)
+    const tabla = wrapper.findComponent({ name: 'ViewTable' })
+    expect(tabla.exists()).toBe(true)
+    // `ViewTable` está stubbeado como `true` en este spec: el stub no declara props, así que
+    // el valor llega como atributo.
+    expect(tabla.attributes('loaderror')).toBe('true')
+    wrapper.destroy()
+  })
+
+  it('la siguiente carga que sale bien lo apaga', async () => {
+    const { wrapper } = createWrapper()
+    for (let i = 0; i < 5; i++) await flushPromises()
+    await wrapper.setData({ listsLoadError: true })
+    Api.get.mockResolvedValue({ data: [] })
+    wrapper.vm.getLists()
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.listsLoadError).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+// Las cinco cargas del proyecto fallaban en silencio y cada una se veía como otra cosa: sin
+// referencias la pestaña iSoQ queda DESHABILITADA y el Paso 1 invita a subirlas de nuevo; sin
+// grupos cambia la numeración de los findings; sin características o assessments el exportable
+// sale sin esas tablas. Un solo aviso a nivel de proyecto nombra lo que faltó.
+describe('viewProject.vue — lo que no se pudo cargar del proyecto se dice', () => {
+  // La reposición del mock va acá y no al final de cada test: si un test falla antes de
+  // reponerlo, el rechazo contamina al siguiente.
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+  })
+
+  async function montado () {
+    const r = createWrapper()
+    for (let i = 0; i < 6; i++) await flushPromises()
+    return r
+  }
+
+  it.each([
+    ['references', 'getReferences', '/isoqf_references'],
+    ['categories', 'getListCategories', '/isoqf_list_categories'],
+    ['findings', 'getFindings', '/findings'],
+    ['characteristics', 'getCharacteristicsData', '/isoqf_characteristics'],
+    ['assessments', 'getAssessmentsData', '/isoqf_assessments']
+  ])('%s: si falla, el aviso lo nombra', async (part, method, url) => {
+    const { wrapper } = await montado()
+    Api.get.mockImplementation((u) => u === url ? Promise.reject(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } }, config: { method: 'get' } })) : Promise.resolve({ data: [] }))
+    await wrapper.vm[method]('')
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.loadErrors[part]).toBe(true)
+    // El `$t` de este spec ignora los parámetros, así que el nombre de la parte no llega al
+    // texto: se afirma sobre la lista que el aviso interpola, más que el aviso esté en el DOM.
+    expect(wrapper.vm.failedLoadParts).toContain(part)
+    // LoadErrorAlert está stubbeado por shallowMount: se comprueba que le llegue la parte (su
+    // propio spec fija cómo la dibuja).
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toContain(part)
+    wrapper.destroy()
+  })
+
+  // La nota de numeración la decide LoadErrorAlert (su spec lo fija); acá, que le llegue la parte.
+  it('sin los grupos, se lo pasa al aviso', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, categories: true } })
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toContain('categories')
+    wrapper.destroy()
+  })
+
+  it('sin errores no hay partes que avisar', async () => {
+    const { wrapper } = await montado()
+    expect(wrapper.findComponent({ name: 'LoadErrorAlert' }).props('parts')).toEqual([])
+    wrapper.destroy()
+  })
+
+  it('una carga que sale bien apaga su marca', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, references: true } })
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+    await wrapper.vm.getReferences(false)
+    for (let i = 0; i < 3; i++) await flushPromises()
+    expect(wrapper.vm.loadErrors.references).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('Reintentar vuelve a pedir SÓLO lo que falló', async () => {
+    const { wrapper } = await montado()
+    await wrapper.setData({ loadErrors: { ...wrapper.vm.loadErrors, references: true, assessments: true } })
+    const refs = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+    const ass = jest.spyOn(wrapper.vm, 'getAssessmentsData').mockResolvedValue()
+    const cats = jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    wrapper.findComponent({ name: 'LoadErrorAlert' }).vm.$emit('retry')
+    await flushPromises()
+    expect(refs).toHaveBeenCalled()
+    expect(ass).toHaveBeenCalled()
+    expect(cats).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
