@@ -106,7 +106,8 @@ const ACTION_KEYS = [
   'update_user',
   'update_flags',
   'force_logout',
-  'admin_unpublish_project'
+  'admin_unpublish_project',
+  'project_ownership_transferred'
 ]
 
 const ACTION_VARIANTS = {
@@ -117,7 +118,8 @@ const ACTION_VARIANTS = {
   update_user: 'secondary',
   update_flags: 'primary',
   force_logout: 'warning',
-  admin_unpublish_project: 'danger'
+  admin_unpublish_project: 'danger',
+  project_ownership_transferred: 'info'
 }
 
 export default {
@@ -211,6 +213,20 @@ export default {
       if (!details || typeof details !== 'object') return ''
       if (details.fields) return details.fields.join(', ')
       if (details.tokens_deleted != null) return `${details.tokens_deleted} token(s)`
+      // project_ownership_transferred: va a nombre de quien hereda; la vía dice quién decidió el
+      // borrado de la cuenta anterior.
+      if (details.via && details.project_id) {
+        const parts = [`${this.$t('admin.transfer_via_' + details.via)} (${details.project_id})`]
+        if (details.heir_notified === false) parts.push(this.$t('admin.audit_heir_not_notified'))
+        return parts.join(' · ')
+      }
+      // Borrado de una cuenta: `transferred_to` son ids, así que se cuenta en vez de listarlos.
+      if (details.transferred_to) {
+        const parts = details.reason ? [`reason: ${details.reason}`] : []
+        const count = Object.keys(details.transferred_to).length
+        parts.push(this.$t('admin.audit_projects_transferred', { count }))
+        return parts.join(' · ')
+      }
       // admin_unpublish_project: el motivo es un código de lista cerrada; el proyecto, su id.
       if (details.reason && details.project_id) {
         const parts = [`${this.$t('admin.unpublish_reason_' + details.reason)} (${details.project_id})`]

@@ -225,3 +225,38 @@ describe('AdminAuditTab.vue — despublicación por admin', () => {
     expect(wrapper.vm.actionVariant('admin_unpublish_project')).toBe('danger')
   })
 })
+
+// ─── Traspaso de proyectos al borrar una cuenta ───────────────────────────────
+//
+// `project_ownership_transferred` va a nombre de quien hereda, con la vía (self | admin |
+// inactivity) y si se le avisó. El borrado lleva `transferred_to` con los ids.
+describe('AdminAuditTab.vue — traspaso de proyectos', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('el filtro de acción lo ofrece', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.actionOptions.map(o => o.value)).toContain('project_ownership_transferred')
+  })
+
+  it('muestra la vía traducida y el proyecto', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    const details = { project_id: 'p1', via: 'admin', heir_notified: true }
+    expect(wrapper.vm.formatDetails(details)).toBe('admin.transfer_via_admin (p1)')
+  })
+
+  it('dice si a quien hereda no le llegó el correo', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    const details = { project_id: 'p1', via: 'self', heir_notified: false }
+    expect(wrapper.vm.formatDetails(details)).toBe('admin.transfer_via_self (p1) · admin.audit_heir_not_notified')
+  })
+
+  it('en el borrado dice cuántos proyectos se traspasaron, junto al motivo', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    const details = { reason: 'violation', transferred_to: { p1: 'u1', p2: 'u2' } }
+    expect(wrapper.vm.formatDetails(details)).toBe('reason: violation · admin.audit_projects_transferred')
+  })
+})
