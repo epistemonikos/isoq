@@ -217,6 +217,7 @@ import Api from '@/utils/Api'
 import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import Commons from '@/utils/commons'
 import { withDerivedRows } from '@/utils/derivedRows'
+import { sortByStudyLabel } from '@/utils/tableDataUtils'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -481,16 +482,7 @@ export default {
               // translated label, so filtering keeps working in any language.
               list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual.option] || ''
               list.cerqual_explanation = list.cerqual.explanation
-              list.ref_list = ''
-              list.raw_ref = []
-              for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
-                for (let ref of list.references) {
-                  if (ref === r.id) {
-                    list.ref_list = list.ref_list + this.parseReference(r, true)
-                    list.raw_ref.push(r)
-                  }
-                }
-              }
+              this.setCitedReferences(list)
               this.getFinding(this.$route.params.org_id, list.id)
             }
 
@@ -626,6 +618,22 @@ export default {
           console.log(error)
           // this.printErrors(error)
         })
+    },
+    /**
+     * `ref_list` y `raw_ref` de un finding: sus citas en orden alfabético.
+     *
+     * Antes se recorría `[...this.references].sort((a, b) => a.id - b.id)`, pero los ids son
+     * el string hex de un ObjectId: la resta da NaN, el sort no hacía nada y las citas salían
+     * en el orden de subida de las referencias al proyecto.
+     */
+    setCitedReferences: function (list) {
+      const cited = new Set(list.references || [])
+      const refs = this.references
+        .filter(r => cited.has(r.id))
+        .map(r => ({ ref: r, label: this.parseReference(r, true) }))
+      const sorted = sortByStudyLabel(refs, r => r.label)
+      list.ref_list = sorted.map(r => r.label).join('')
+      list.raw_ref = sorted.map(r => r.ref)
     },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
@@ -802,16 +810,7 @@ export default {
               // translated label, so filtering keeps working in any language.
               list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual && list.cerqual.option] || ''
               list.cerqual_explanation = list.cerqual ? list.cerqual.explanation : ''
-              list.ref_list = ''
-              list.raw_ref = []
-              for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
-                for (let ref of list.references) {
-                  if (ref === r.id) {
-                    list.ref_list = list.ref_list + this.parseReference(r, true)
-                    list.raw_ref.push(r)
-                  }
-                }
-              }
+              this.setCitedReferences(list)
             }
 
             if (this.list_categories.options.length) {

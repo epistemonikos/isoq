@@ -43,6 +43,7 @@
 <script>
 import AssessmentCircle from '@/components/camelot/AssessmentCircle.vue'
 import Commons from '@/utils/commons'
+import { sortByAuthors } from '@/utils/tableDataUtils'
 import { ASSESSMENT_CELLS } from '@/utils/camelotAssessmentKeys'
 
 export default {
@@ -118,7 +119,7 @@ export default {
       }
 
       // Enrich each row with the raw reference (needed for author/year formatting)
-      return items.map(item => {
+      const enriched = items.map(item => {
         const ref = this.references && this.references.find(r => String(r.id) === String(item.ref_id))
         if (ref) {
           return {
@@ -129,6 +130,11 @@ export default {
         }
         return item
       })
+
+      // Las filas del padre vienen en el orden de `list.references` (el de las casillas) y
+      // las de estudios sin evaluación se agregan al final: sin ordenar, el estudio agregado
+      // después quedaba último. Igual que `CamelotCharacteristicsTablePreview`.
+      return sortByAuthors(enriched)
     }
   }
 }

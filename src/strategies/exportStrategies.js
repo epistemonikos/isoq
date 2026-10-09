@@ -4,6 +4,7 @@ import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
 import Commons from '@/utils/commons'
+import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils/documentHelpers'
 
 // Helper para generar explicaciones con prefijo
@@ -209,13 +210,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
   formatReferenceList (refIds) {
     if (!refIds || refIds.length === 0) return ''
 
-    const refs = refIds
+    // Orden alfabético por la etiqueta que se lee. Era `a.id - b.id`: con los ids reales —el
+    // string hex de un ObjectId— daba NaN y dejaba las citas en el orden de las casillas.
+    const labels = refIds
       .map(id => this.data.references?.find(r => r.id === id))
       .filter(Boolean)
-      .sort((a, b) => a.id - b.id)
       .map(ref => Commons.parseReference(ref, true, false))
 
-    return refs.join('; ')
+    return sortByStudyLabel(labels, label => label).join('; ')
   }
 
   getConcernLevelText (option) {
@@ -1151,15 +1153,20 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     }
   }
 
+  /**
+   * Las citas del finding, en orden alfabético por la etiqueta que se lee. Antes se ordenaba
+   * con `a.id - b.id`, que con los ids reales daba NaN y no ordenaba nada.
+   */
+  listReferenceLabels () {
+    const listReferences = this.list.references || []
+    const labels = this.references
+      .filter(reference => listReferences.indexOf(reference.id) !== -1)
+      .map(reference => Commons.parseReference(reference, true, false))
+    return sortByStudyLabel(labels, label => label)
+  }
+
   generateReferences () {
-    const allReferences = JSON.parse(JSON.stringify(this.references)).sort((a, b) => a.id - b.id)
-    const listReferences = JSON.parse(JSON.stringify(this.list.references))
-    let epReferences = []
-    for (let reference of allReferences) {
-      if (listReferences.indexOf(reference.id) !== -1) {
-        epReferences.push(Commons.parseReference(reference, true, false))
-      }
-    }
+    const epReferences = this.listReferenceLabels()
     let arr = []
     for (let epr of epReferences) {
       arr.push(new Paragraph({
@@ -1349,14 +1356,16 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     const refs = this.data.references || []
     const listRefs = this.data.list?.references || []
 
-    return refIds
+    // `refIds` viene en el orden en que se marcaron las casillas: sin ordenar, el estudio
+    // agregado después quedaba último.
+    const contents = refIds
       .filter(id => listRefs.includes(id))
       .map(id => {
         const ref = refs.find(r => r.id === id)
         return ref ? ref.content : ''
       })
       .filter(content => content)
-      .join('\n\n')
+    return sortByStudyLabel(contents, content => content).join('\n\n')
   }
 
   displayOption (option) {

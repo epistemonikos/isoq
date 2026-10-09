@@ -2,6 +2,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import editList from '@/components/list/editList.vue'
 import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [] }),
@@ -574,5 +575,98 @@ describe('editList.vue — la siembra de datos extraídos dejó de escribir', ()
 
   it('ya no existe la función que sembraba por documento completo', () => {
     expect(wrapper.vm.updateMyData).toBeUndefined()
+  })
+})
+
+// ─── orden de los estudios ───────────────────────────────────────────────────
+
+// Reporte: se agregan tres estudios a un finding y después un cuarto, y el cuarto sale al
+// final de la tabla en vez de en su lugar alfabético. `list.references` se guarda en el
+// orden en que se marcaron las casillas, así que recorrerla tal cual pone último al nuevo.
+// El orden es de presentación: se deriva de la etiqueta «Autor Año» que muestra la tabla.
+describe('editList.vue — los estudios salen en orden alfabético', () => {
+  let wrapper
+
+  // Smith y Adams se agregaron primero; Moore, después.
+  const fullreferences = [
+    { id: 'rS', label: 'Smith 2020' },
+    { id: 'rA', label: 'Adams 2019' },
+    { id: 'rM', label: 'Moore 2021' }
+  ]
+  const references = ['rS', 'rA', 'rM']
+  const fields = [{ key: 'ref_id' }, { key: 'authors' }, { key: 'q0' }, { key: 'q1' }]
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    Commons.parseReference.mockImplementation((ref) => ref.label || `Author-${ref.id || ''}`)
+    wrapper = createWrapper()
+    await wrapper.setData({ project: { use_camelot: false } })
+  })
+
+  afterEach(() => {
+    wrapper.destroy()
+    Commons.parseReference.mockImplementation((ref) => `Author-${ref.id || ''}`)
+  })
+
+  it('evaluación metodológica: el estudio agregado después queda en su lugar', async () => {
+    await wrapper.setData({
+      list: { ...wrapper.vm.list, references, fullreferences, assessments: [{ fields, items: [] }] }
+    })
+    wrapper.vm.getMethAssessments()
+    expect(wrapper.vm.meth_assessments.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+  })
+
+  it('características de los estudios: el estudio agregado después queda en su lugar', async () => {
+    await wrapper.setData({
+      list: { ...wrapper.vm.list, references, fullreferences, characteristics: [{ fields, items: [] }] }
+    })
+    wrapper.vm.getCharsOfStudies()
+    expect(wrapper.vm.characteristics_studies.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+  })
+
+  it('datos extraídos: la fila derivada del estudio nuevo no va al final', async () => {
+    await wrapper.setData({ list: { references, fullreferences } })
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'column_0' }],
+      items: [
+        { ref_id: 'rS', authors: 'Smith 2020', column_0: 's' },
+        { ref_id: 'rA', authors: 'Adams 2019', column_0: 'a' }
+      ]
+    }])
+    expect(wrapper.vm.extracted_data.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+  })
+
+  // El editor abre `items[data.index]` y el editor en sitio compara `item.index`, que es la
+  // posición en `original_items`: ordenar sin mantener los dos alineados escribiría en otra fila.
+  it('datos extraídos: cada fila sigue siendo direccionable por su índice', async () => {
+    await wrapper.setData({ list: { references, fullreferences } })
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'column_0' }],
+      items: [
+        { ref_id: 'rS', authors: 'Smith 2020', column_0: 's' },
+        { ref_id: 'rA', authors: 'Adams 2019', column_0: 'a' }
+      ]
+    }])
+    for (const row of wrapper.vm.extracted_data.items) {
+      expect(wrapper.vm.extracted_data.items[row.index].ref_id).toBe(row.ref_id)
+      expect(wrapper.vm.extracted_data.original_items[row.index].ref_id).toBe(row.ref_id)
+    }
+  })
+
+  // Con `<`, una minúscula inicial se iba detrás de la Z.
+  it('datos extraídos: una minúscula inicial no se va al final', async () => {
+    await wrapper.setData({ list: { references: ['rZ', 'rV', 'rB'], fullreferences: [] } })
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'column_0' }],
+      items: [
+        { ref_id: 'rZ', authors: 'Zhang 2018', column_0: 'z' },
+        { ref_id: 'rV', authors: 'de Vries 2017', column_0: 'v' },
+        { ref_id: 'rB', authors: 'Brown 2016', column_0: 'b' }
+      ]
+    }])
+    expect(wrapper.vm.extracted_data.items.map(i => i.ref_id)).toEqual(['rB', 'rV', 'rZ'])
   })
 })

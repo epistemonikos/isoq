@@ -239,8 +239,9 @@ describe('previewContentWorksheet.vue', () => {
       await new Promise(process.nextTick)
 
       expect(wrapper.vm.characteristics_studies.items).toHaveLength(3)
-      expect(wrapper.vm.characteristics_studies.items.map(i => i.ref_id)).toEqual(['r1', 'r2', 'r3'])
-      expect(wrapper.vm.characteristics_studies.items.map(i => i.authors)).toEqual(['Smith', 'Garcia', 'Chen'])
+      // En orden alfabético, no en el de `list.references` (ver «orden de los estudios»).
+      expect(wrapper.vm.characteristics_studies.items.map(i => i.ref_id)).toEqual(['r3', 'r2', 'r1'])
+      expect(wrapper.vm.characteristics_studies.items.map(i => i.authors)).toEqual(['Chen', 'Garcia', 'Smith'])
     })
 
     it('builds one methodological-assessment row per reference even when isoqf_assessments has no document', async () => {
@@ -261,8 +262,8 @@ describe('previewContentWorksheet.vue', () => {
       await new Promise(process.nextTick)
 
       expect(wrapper.vm.meth_assessments.items).toHaveLength(3)
-      expect(wrapper.vm.meth_assessments.items.map(i => i.ref_id)).toEqual(['r1', 'r2', 'r3'])
-      expect(wrapper.vm.meth_assessments.items.map(i => i.authors)).toEqual(['Smith', 'Garcia', 'Chen'])
+      expect(wrapper.vm.meth_assessments.items.map(i => i.ref_id)).toEqual(['r3', 'r2', 'r1'])
+      expect(wrapper.vm.meth_assessments.items.map(i => i.authors)).toEqual(['Chen', 'Garcia', 'Smith'])
     })
   })
 
@@ -325,6 +326,196 @@ describe('previewContentWorksheet.vue', () => {
       await new Promise(process.nextTick)
 
       expect(wrapper.vm.ui.adequacy.extracted_data.display_warning).toBe(true)
+      wrapper.destroy()
+    })
+  })
+
+  // Reporte: tres estudios en un finding y después un cuarto; el cuarto salía al final en vez
+  // de en su lugar alfabético. `list.references` está en el orden en que se marcaron las
+  // casillas, y la preview la recorría tal cual. Smith y Adams primero; Moore, después.
+  describe('orden de los estudios', () => {
+    const list = {
+      project_id: 'p1',
+      references: ['rS', 'rA', 'rM'],
+      fullreferences: [
+        { id: 'rS', authors: 'Smith', publication_year: '2020' },
+        { id: 'rA', authors: 'Adams', publication_year: '2019' },
+        { id: 'rM', authors: 'Moore', publication_year: '2021' }
+      ]
+    }
+    const tabla = {
+      id: 't1',
+      fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'q0' }, { key: 'q1' }],
+      items: []
+    }
+
+    function montar () {
+      return shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false, public_type: 'fully', sharedToken: 'token' },
+            list,
+            findings: { id: 'f1' }
+          }
+        }
+      })
+    }
+
+    it('características: el estudio agregado después queda en su lugar', async () => {
+      Api.get.mockResolvedValue({ data: [tabla] })
+      const wrapper = montar()
+      wrapper.vm.getCharsOfStudies()
+      await new Promise(process.nextTick)
+      expect(wrapper.vm.characteristics_studies.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+      wrapper.destroy()
+    })
+
+    it('evaluación metodológica: el estudio agregado después queda en su lugar', async () => {
+      Api.get.mockResolvedValue({ data: [tabla] })
+      const wrapper = montar()
+      wrapper.vm.getMethAssessments()
+      await new Promise(process.nextTick)
+      expect(wrapper.vm.meth_assessments.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+      wrapper.destroy()
+    })
+
+    it('datos extraídos: la fila derivada del estudio nuevo no va al final', async () => {
+      Api.get.mockResolvedValue({
+        data: [{
+          id: 'ed1',
+          fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+          items: [
+            { ref_id: 'rS', authors: 'Smith 2020', column_0: 's' },
+            { ref_id: 'rA', authors: 'Adams 2019', column_0: 'a' }
+          ]
+        }]
+      })
+      const wrapper = montar()
+      wrapper.vm.getExtractedData()
+      await new Promise(process.nextTick)
+      expect(wrapper.vm.extracted_data.items.map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+      wrapper.destroy()
+    })
+
+    it('celda References impresa: las citas en orden alfabético', () => {
+      Api.get.mockResolvedValue({ data: [] })
+      const wrapper = montar()
+      wrapper.setData({
+        references: [
+          { id: 'rS', content: 'Smith 2020; ' },
+          { id: 'rA', content: 'Adams 2019; ' },
+          { id: 'rM', content: 'Moore 2021; ' }
+        ]
+      })
+      const field = wrapper.vm.evidence_profile_fields_print_version.find(f => f.key === 'references')
+      expect(field.formatter(['rS', 'rA', 'rM'])).toBe('Adams 2019; Moore 2021; Smith 2020; ')
+      wrapper.destroy()
+    })
+  })
+
+  // La preview pide la lista por la ruta genérica, que no trae `fullreferences`: el autor de
+  // un estudio sin fila guardada —justamente el agregado después— no se podía resolver y la
+  // fila salía en blanco. Se resuelve con las referencias del proyecto, que la preview ya pide.
+  describe('estudios agregados después, sin fullreferences', () => {
+    const projectRefs = [
+      { id: 'rS', authors: ['Smith, John'], publication_year: '2020' },
+      { id: 'rA', authors: ['Adams, Ann'], publication_year: '2019' },
+      { id: 'rJ', authors: ['Jones, Jack'], publication_year: '2018' }
+    ]
+    const list = { id: 'l1', project_id: 'p1', references: ['rS', 'rA', 'rJ'] }
+
+    function mockApi (tables) {
+      Api.get.mockImplementation((url) => {
+        if (url.includes('isoqf_references')) return Promise.resolve({ data: projectRefs })
+        for (const [key, data] of Object.entries(tables)) {
+          if (url.includes(key)) return Promise.resolve({ data })
+        }
+        return Promise.resolve({ data: [] })
+      })
+    }
+
+    function montar () {
+      return shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false, public_type: 'fully', sharedToken: 'token' },
+            list,
+            findings: { id: 'f1' }
+          }
+        }
+      })
+    }
+
+    const stored = {
+      id: 't1',
+      fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'q0' }, { key: 'q1' }],
+      items: [
+        { ref_id: 'rS', authors: 'Smith 2020', q0: 's' },
+        { ref_id: 'rA', authors: 'Adams 2019', q0: 'a' }
+      ]
+    }
+
+    it('evaluación metodológica: el estudio nuevo tiene autor y queda en su lugar', async () => {
+      mockApi({ isoqf_assessments: [stored] })
+      const wrapper = montar()
+      wrapper.vm.getAllReferences()
+      wrapper.vm.getMethAssessments()
+      await new Promise(process.nextTick)
+      await new Promise(process.nextTick)
+      const rows = wrapper.vm.meth_assessments.items
+      expect(rows.map(i => i.ref_id)).toEqual(['rA', 'rJ', 'rS'])
+      expect(rows.find(i => i.ref_id === 'rJ').authors).toMatch(/Jones/)
+      wrapper.destroy()
+    })
+
+    it('características: el estudio nuevo tiene autor', async () => {
+      mockApi({ isoqf_characteristics: [stored] })
+      const wrapper = montar()
+      wrapper.vm.getAllReferences()
+      wrapper.vm.getCharsOfStudies()
+      await new Promise(process.nextTick)
+      await new Promise(process.nextTick)
+      expect(wrapper.vm.characteristics_studies.items.find(i => i.ref_id === 'rJ').authors).toMatch(/Jones/)
+      wrapper.destroy()
+    })
+
+    it('datos extraídos: la fila derivada tiene autor y queda en su lugar', async () => {
+      mockApi({
+        isoqf_extracted_data: [{
+          id: 'ed1',
+          fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+          items: [
+            { ref_id: 'rS', authors: 'Smith 2020', column_0: 's' },
+            { ref_id: 'rA', authors: 'Adams 2019', column_0: 'a' }
+          ]
+        }]
+      })
+      const wrapper = montar()
+      wrapper.vm.getAllReferences()
+      wrapper.vm.getExtractedData()
+      await new Promise(process.nextTick)
+      await new Promise(process.nextTick)
+      const rows = wrapper.vm.extracted_data.items
+      expect(rows.map(i => i.ref_id)).toEqual(['rA', 'rJ', 'rS'])
+      expect(rows.find(i => i.ref_id === 'rJ').authors).toMatch(/Jones/)
+      wrapper.destroy()
+    })
+
+    // El endpoint de identidad escribe las referencias sólo en la lista (CLAUDE.md del
+    // servidor, §7): la copia del finding queda vieja. La hoja editable ya las toma de la
+    // lista; la preview leía la del finding y no mostraba los estudios agregados después.
+    it('la celda References toma las referencias de la lista, no la copia del finding', async () => {
+      mockApi({
+        isoqf_findings: [{ id: 'f1', evidence_profile: { references: ['rS', 'rA'] } }]
+      })
+      const wrapper = montar()
+      wrapper.vm.getStageOneData()
+      await new Promise(process.nextTick)
+      expect(wrapper.vm.evidence_profile[0].references).toEqual(['rS', 'rA', 'rJ'])
       wrapper.destroy()
     })
   })

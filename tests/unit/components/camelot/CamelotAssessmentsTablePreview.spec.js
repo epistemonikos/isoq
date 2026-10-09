@@ -45,3 +45,30 @@ describe('CamelotAssessmentsTablePreview.vue', () => {
     expect(wrapper.find('.assessment-circle.circle-filled').exists()).toBe(true)
   })
 })
+
+// Reporte: un estudio agregado al finding después de los demás salía al final en vez de en
+// su lugar alfabético. Acá llegaba por dos caminos: las filas del padre en el orden de
+// `list.references`, y las de estudios sin evaluación guardada agregadas al final.
+describe('CamelotAssessmentsTablePreview.vue — orden de los estudios', () => {
+  const references = [
+    { id: 'rS', authors: 'Smith', publication_year: '2020' },
+    { id: 'rA', authors: 'Adams', publication_year: '2019' },
+    { id: 'rM', authors: 'Moore', publication_year: '2021' }
+  ]
+  const tableItems = (items) => mount(CamelotAssessmentsTablePreview, {
+    localVue,
+    propsData: { methodologicalTableRefs: { items }, references },
+    mocks: { $t: (msg) => msg },
+    stubs: { 'font-awesome-icon': true }
+  }).vm.tableItems
+
+  it('ordena las filas que llegan del padre en el orden de las casillas', () => {
+    const items = ['rS', 'rA', 'rM'].map(id => ({ ...buildItem(null, ''), ref_id: id }))
+    expect(tableItems(items).map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+  })
+
+  it('el estudio sin evaluación guardada no va al final', () => {
+    const items = ['rS', 'rA'].map(id => ({ ...buildItem(null, ''), ref_id: id }))
+    expect(tableItems(items).map(i => i.ref_id)).toEqual(['rA', 'rM', 'rS'])
+  })
+})

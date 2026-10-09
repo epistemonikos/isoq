@@ -58,3 +58,21 @@ describe('Commons.parseReference formatting', () => {
     })
   })
 })
+
+// La impresión del perfil de evidencia lista las citas con `referencesWithNames`. Ordenaba
+// con `.sort()` por código de carácter: una minúscula inicial («de Vries») o un acento
+// («Álvarez») se iban detrás de la Z. El criterio es el mismo de todas las tablas.
+describe('Commons.referencesWithNames — orden', () => {
+  const references = [
+    { id: 'rZ', authors: ['Zhang, L.'], publication_year: '2018' },
+    { id: 'rV', authors: ['de Vries, J.'], publication_year: '2017' },
+    { id: 'rA', authors: ['Álvarez, M.'], publication_year: '2016' },
+    { id: 'rB', authors: ['Brown, K.'], publication_year: '2015' }
+  ]
+
+  it('ordena alfabéticamente sin mandar minúsculas ni acentos al final', () => {
+    const result = Commons.referencesWithNames(['rZ', 'rV', 'rA', 'rB'], references)
+    const surnames = result.split('; ').filter(Boolean).map(s => s.replace(/ \d{4}$/, ''))
+    expect(surnames).toEqual(['Álvarez', 'Brown', 'de Vries', 'Zhang'])
+  })
+})

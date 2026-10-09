@@ -685,6 +685,7 @@ import { writeErrorMessageKey } from '@/utils/writeErrors'
 import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
+import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 import {
@@ -848,11 +849,13 @@ export default {
           key: 'references',
           label: this.$t('soqf_table.references'),
           formatter: value => {
-            return value
-              .map(refId => {
-                const ref = this.references.find(r => r.id === refId)
-                return ref ? ref.content : ''
-              })
+            // `value` viene en el orden en que se marcaron las casillas: sin ordenar, el
+            // estudio agregado después quedaba último.
+            const refs = value
+              .map(refId => this.references.find(r => r.id === refId))
+              .filter(Boolean)
+            return sortByStudyLabel(refs, ref => ref.content)
+              .map(ref => ref.content)
               .join('')
           }
         }
