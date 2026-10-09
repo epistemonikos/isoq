@@ -105,7 +105,8 @@ const ACTION_KEYS = [
   'deactivate_user',
   'update_user',
   'update_flags',
-  'force_logout'
+  'force_logout',
+  'admin_unpublish_project'
 ]
 
 const ACTION_VARIANTS = {
@@ -115,7 +116,8 @@ const ACTION_VARIANTS = {
   deactivate_user: 'warning',
   update_user: 'secondary',
   update_flags: 'primary',
-  force_logout: 'warning'
+  force_logout: 'warning',
+  admin_unpublish_project: 'danger'
 }
 
 export default {
@@ -209,6 +211,13 @@ export default {
       if (!details || typeof details !== 'object') return ''
       if (details.fields) return details.fields.join(', ')
       if (details.tokens_deleted != null) return `${details.tokens_deleted} token(s)`
+      // admin_unpublish_project: el motivo es un código de lista cerrada; el proyecto, su id.
+      if (details.reason && details.project_id) {
+        const parts = [`${this.$t('admin.unpublish_reason_' + details.reason)} (${details.project_id})`]
+        if (details.shared_link_revoked) parts.push(this.$t('admin.audit_shared_link_revoked'))
+        if (details.owner_notified === false) parts.push(this.$t('admin.audit_owner_not_notified'))
+        return parts.join(' · ')
+      }
       if (details.before || details.after) {
         const keys = Object.keys(details.after || {})
         return keys.map(k => `${k}: ${(details.before || {})[k]} → ${(details.after || {})[k]}`).join(', ')

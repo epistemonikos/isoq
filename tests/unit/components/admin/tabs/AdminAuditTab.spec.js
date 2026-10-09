@@ -187,3 +187,41 @@ describe('AdminAuditTab.vue — filtros por email', () => {
     expect(params).not.toHaveProperty('target_id')
   })
 })
+
+// ─── Despublicar desde el panel ───────────────────────────────────────────────
+//
+// `admin_unpublish_project` lleva en details el proyecto y un motivo de lista cerrada. Sin
+// entrada propia caía en JSON crudo y el filtro de acción no lo ofrecía.
+describe('AdminAuditTab.vue — despublicación por admin', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('el filtro de acción lo ofrece', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.actionOptions.map(o => o.value)).toContain('admin_unpublish_project')
+  })
+
+  it('muestra el motivo traducido y el proyecto', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    const details = { project_id: 'p1', reason: 'personal_data', previous_public_type: 'open_access' }
+    expect(wrapper.vm.formatDetails(details)).toBe('admin.unpublish_reason_personal_data (p1)')
+  })
+
+  it('dice si se revocó el enlace y si el correo no salió', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    const details = {
+      project_id: 'p1', reason: 'personal_data', owner_notified: false, shared_link_revoked: true
+    }
+    expect(wrapper.vm.formatDetails(details)).toBe(
+      'admin.unpublish_reason_personal_data (p1) · admin.audit_shared_link_revoked · admin.audit_owner_not_notified'
+    )
+  })
+
+  it('se marca como acción de peligro', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.actionVariant('admin_unpublish_project')).toBe('danger')
+  })
+})

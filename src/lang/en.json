@@ -1764,6 +1764,9 @@
     "action_update_user": "Data edit",
     "action_update_flags": "Permission change",
     "action_force_logout": "Forced logout",
+    "action_admin_unpublish_project": "Project unpublished by admin",
+    "audit_shared_link_revoked": "Share link disabled",
+    "audit_owner_not_notified": "Owner not emailed",
     "delete_violation_label": "Account closed for a serious violation of the terms",
     "delete_violation_help": "Blocks new sign-ups with this email for 90 days. Only a keyed hash of the email is kept, and it is deleted automatically when the period ends.",
     "error_registration_block_unavailable": "The server is not configured to block re-registration (REGISTRATION_BLOCK_KEY). The account was not deleted.",
@@ -1791,7 +1794,22 @@
     "project_role_write": "Can edit",
     "project_role_read": "Can view",
     "project_published": "Published",
-    "project_private": "Private"
+    "project_private": "Private",
+    "unpublish": "Unpublish",
+    "unpublish_confirm": "Unpublish \"{name}\"? It will stop being visible to the public, and its owner will have to confirm the personal-data statement again to republish it.",
+    "unpublish_audit_note": "This action is recorded in the audit log with your account, the project, the reason, whether the email was sent and whether the link was disabled. The owner receives this record in their personal data export, without your identity.",
+    "unpublish_reason_label": "Reason",
+    "unpublish_reason_placeholder": "Choose a reason",
+    "unpublish_reason_personal_data": "Contains personal data or identifies participants",
+    "unpublish_reason_not_publishable": "Does not meet the publication requirements",
+    "unpublish_reason_owner_request": "Requested by the owner",
+    "unpublish_reason_other": "Other",
+    "unpublish_success": "\"{name}\" was unpublished.",
+    "unpublish_already_private": "\"{name}\" was no longer published.",
+    "unpublish_owner_notice_note": "The owner will receive an email with the reason. It does not say who unpublished the project.",
+    "unpublish_shared_link_note": "Because of this reason, the anonymous share link of the project will also be disabled.",
+    "unpublish_shared_link_revoked": "Its anonymous share link was disabled.",
+    "unpublish_owner_not_notified": "The project was unpublished, but the email to the owner could not be sent. Let them know through another channel."
   },
   "gdpr": {
     "privacyAndTerms": {
