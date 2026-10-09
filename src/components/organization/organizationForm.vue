@@ -162,6 +162,7 @@
                   </a>
                 </template>
               </i18n>
+              <videoHelp class="d-inline-block" tag="none" urlId="1184125421"></videoHelp>
             </template>
             <b-form-radio-group
               :disabled="!canEdit"

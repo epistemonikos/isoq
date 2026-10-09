@@ -86,7 +86,10 @@
               </b-tab>
               <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length ? false : true">
                 <h4 v-if="!project.use_camelot" v-html="$t('characteristics.step_title')"></h4>
-                <h4 v-else v-html="$t('characteristics.step_title_camelot')"></h4>
+                <h4 v-else>
+                  <span v-html="$t('characteristics.step_title_camelot')"></span>
+                  <videoHelp class="d-inline-block" style="font-size: 1rem;" tag="none" urlId="1184125421"></videoHelp>
+                </h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="formattedCamelotDescription">
                 </p>
                 <p class="font-weight-light" v-else>
@@ -117,7 +120,10 @@
                 </div>
               </b-tab>
               <b-tab :title="$t('steps.step_4_methodological')" :disabled="references.length ? false : true">
-                <h4 v-if="project.use_camelot" v-html="$t('steps.step_4_description_camelot')"></h4>
+                <h4 v-if="project.use_camelot">
+                  <span v-html="$t('steps.step_4_description_camelot')"></span>
+                  <videoHelp class="d-inline-block" style="font-size: 1rem;" tag="none" urlId="1184125421"></videoHelp>
+                </h4>
                 <h4 v-else v-html="$t('steps.step_4_description')"></h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="$t('camelot.step_four.description')">
                 </p>
