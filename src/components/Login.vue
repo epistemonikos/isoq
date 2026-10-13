@@ -100,7 +100,7 @@
         {{ $t('gdpr.terms.acceptLabel') }}
       </b-form-checkbox>
       <b-form-checkbox v-model="newsletterAccepted">
-        {{ $t('gdpr.terms.newsletterLabel') }}
+        {{ $t('gdpr.preferences.newsletter') }}
       </b-form-checkbox>
 
       <b-alert :show="!!termsError" variant="danger" class="mt-3">
@@ -162,6 +162,7 @@
 import Api from '@/utils/Api'
 import { requestFailureKey } from '@/utils/writeErrors'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 import { isGdprEnabled } from '@/constants/gdpr'
 import { downloadPersonalData } from '@/services/personalDataExport'
 import { isBackendTrue } from '@/constants/backendBoolean'
@@ -323,10 +324,14 @@ export default {
       this.termsError = ''
       this.isAcceptingTerms = true
       try {
+        // La casilla muestra el texto versionado del newsletter (el mismo del alta y
+        // del perfil), y su versión viaja con él: el servidor la guarda en
+        // consent_history como prueba de qué se leyó (src/constants/consents.js).
         await Api.patch('/users/update_my_profile', {
           terms_accepted: true,
           terms_version: TERMS_VERSION,
-          newsletter: this.newsletterAccepted
+          newsletter: this.newsletterAccepted,
+          consent_text_version: CONSENT_TEXT_VERSION
         })
 
         // El store se actualiza con lo que se acaba de persistir, así el guard

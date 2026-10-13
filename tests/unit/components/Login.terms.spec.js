@@ -13,6 +13,7 @@ import VueI18n from 'vue-i18n'
 import Login from '@/components/Login'
 import en from '@/lang/en.json'
 import { TERMS_VERSION } from '@/constants/terms'
+import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 
 const Api = require('@/utils/Api').default
 const localVue = createLocalVue()
@@ -192,7 +193,8 @@ describe('Login.vue — aceptación de términos', () => {
       expect(Api.patch).toHaveBeenCalledWith('/users/update_my_profile', {
         terms_accepted: true,
         terms_version: TERMS_VERSION,
-        newsletter: false
+        newsletter: false,
+        consent_text_version: CONSENT_TEXT_VERSION
       })
     })
 
@@ -376,12 +378,37 @@ describe('Login.vue — aceptación de términos', () => {
     })
   })
 
+  // ─── Constancia del consentimiento (GDPR Art. 7.1) ───────────────────────────
+  //
+  // El servidor guarda cada cambio de newsletter en consent_history junto con la
+  // versión del texto que se mostró. Este modal mandaba el newsletter sin esa
+  // versión y con un texto propio que ninguna versión describía: el consentimiento
+  // dado aquí quedaba registrado sin poder demostrar qué se leyó.
+
+  describe('constancia del consentimiento al newsletter', () => {
+    it('muestra en la casilla el texto versionado del newsletter', () => {
+      const { wrapper } = build({ user: NOT_ACCEPTED })
+      const modal = wrapper.find('#modal-terms-acceptance').text()
+
+      expect(modal).toContain(en.gdpr.preferences.newsletter)
+    })
+
+    it('manda la versión del texto de las casillas junto con el newsletter', async () => {
+      const { wrapper } = build()
+      wrapper.setData({ termsAccepted: true, newsletterAccepted: true })
+      await wrapper.vm.acceptTerms()
+      await flushPromises()
+
+      expect(Api.patch.mock.calls[0][1].consent_text_version).toBe(CONSENT_TEXT_VERSION)
+    })
+  })
+
   // ─── i18n ────────────────────────────────────────────────────────────────────
 
   it('tiene traducidas las claves del modal', () => {
     const { wrapper } = build()
     const keys = ['modalTitle', 'intro', 'reviewHere', 'acceptLabel',
-      'newsletterLabel', 'accept', 'cancel', 'error']
+      'accept', 'cancel', 'error']
 
     keys.forEach(key => {
       const full = `gdpr.terms.${key}`
