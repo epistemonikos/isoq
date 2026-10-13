@@ -3,7 +3,7 @@ jest.mock('@/utils/Api', () => ({
   default: { post: jest.fn() }
 }))
 
-import { downloadPersonalData } from '@/services/personalDataExport'
+import { downloadPersonalData, downloadUserDataAsAdmin } from '@/services/personalDataExport'
 
 const Api = require('@/utils/Api').default
 
@@ -84,6 +84,47 @@ describe('downloadPersonalData', () => {
 
     await expect(downloadPersonalData('u1', 'mala')).rejects.toMatchObject({
       backendMessage: null
+    })
+  })
+})
+
+
+// Un superadmin genera la copia de otra persona que no puede entrar (Art. 12.3). El servidor
+// exige su contraseña y que declare haber verificado la identidad de quien la pidió.
+describe('downloadUserDataAsAdmin', () => {
+  const createObjectURL = window.URL.createObjectURL
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.post.mockResolvedValue({ data: new Blob(['zip']) })
+    createObjectURL.mockReturnValue('blob:fake')
+  })
+
+  it('pide el zip de esa persona con la contraseña del admin y la verificación declarada', async () => {
+    await downloadUserDataAsAdmin('u9', 'clave-admin')
+
+    expect(Api.post).toHaveBeenCalledWith(
+      '/admin/users/u9/export',
+      { password: 'clave-admin', identity_verified: true },
+      { responseType: 'blob' }
+    )
+  })
+
+  it('dispara la descarga con un nombre que identifica a la persona', async () => {
+    const appendChild = jest.spyOn(document.body, 'appendChild')
+    await downloadUserDataAsAdmin('u9', 'clave-admin')
+
+    const link = appendChild.mock.calls[0][0]
+    expect(link.getAttribute('download')).toBe('user_data_u9.zip')
+    appendChild.mockRestore()
+  })
+
+  it('propaga el mensaje del servidor al fallar', async () => {
+    const body = new Blob([JSON.stringify({ result: 'invalid_password', message: 'Incorrect password' })])
+    Api.post.mockRejectedValueOnce({ response: { status: 403, data: body } })
+
+    await expect(downloadUserDataAsAdmin('u9', 'mala')).rejects.toMatchObject({
+      backendMessage: 'Incorrect password'
     })
   })
 })

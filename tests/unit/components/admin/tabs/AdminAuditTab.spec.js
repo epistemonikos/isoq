@@ -260,3 +260,23 @@ describe('AdminAuditTab.vue — traspaso de proyectos', () => {
     expect(wrapper.vm.formatDetails(details)).toBe('reason: violation · admin.audit_projects_transferred')
   })
 })
+
+// ─── Copia de datos generada por un superadmin ─────────────────────────────────
+//
+// `admin_user_data_export` va a nombre de la persona; details dice si se le avisó.
+describe('AdminAuditTab.vue — copia de datos generada por un admin', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('el filtro de acción lo ofrece', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.actionOptions.map(o => o.value)).toContain('admin_user_data_export')
+  })
+
+  it('dice si el correo a la persona no salió', () => {
+    Api.get.mockResolvedValueOnce(makeResponse())
+    const wrapper = makeWrapper()
+    expect(wrapper.vm.formatDetails({ person_notified: false })).toBe('admin.audit_person_not_notified')
+    expect(wrapper.vm.formatDetails({ person_notified: true })).toBe('')
+  })
+})

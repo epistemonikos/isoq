@@ -82,6 +82,10 @@
             {{ $t('admin.force_logout') }}
           </b-dropdown-item>
           <b-dropdown-divider v-if="isSuperAdmin" />
+          <b-dropdown-item v-if="isSuperAdmin" @click="openExport(item)">
+            <font-awesome-icon icon="file-export" class="mr-1" />
+            {{ $t('admin.export_data') }}
+          </b-dropdown-item>
           <b-dropdown-item v-if="isSuperAdmin" @click="openManageFlags(item)">
             <font-awesome-icon icon="key" class="mr-1" />
             {{ $t('admin.manage_flags') }}
@@ -164,6 +168,11 @@
       :user="selectedUser"
     />
 
+    <export-user-data-modal
+      ref="exportModal"
+      :user="selectedUser"
+    />
+
     <delete-user-modal
       ref="deleteModal"
       :user="selectedUser"
@@ -182,6 +191,7 @@ import ManageFlagsModal from '../modals/ManageFlagsModal'
 import ForceLogoutModal from '../modals/ForceLogoutModal'
 import UserProjectsModal from '../modals/UserProjectsModal'
 import DeleteUserModal from '../modals/DeleteUserModal'
+import ExportUserDataModal from '../modals/ExportUserDataModal'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
@@ -193,7 +203,8 @@ export default {
     ManageFlagsModal,
     ForceLogoutModal,
     UserProjectsModal,
-    DeleteUserModal
+    DeleteUserModal,
+    ExportUserDataModal
   },
   data () {
     return {
@@ -357,6 +368,12 @@ export default {
       this.selectedUser = user
       this.$nextTick(() => {
         this.$refs.forceLogoutModal.show()
+      })
+    },
+    openExport (user) {
+      this.selectedUser = user
+      this.$nextTick(() => {
+        this.$refs.exportModal.show()
       })
     },
     openDelete (user) {

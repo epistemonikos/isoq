@@ -107,7 +107,8 @@ const ACTION_KEYS = [
   'update_flags',
   'force_logout',
   'admin_unpublish_project',
-  'project_ownership_transferred'
+  'project_ownership_transferred',
+  'admin_user_data_export'
 ]
 
 const ACTION_VARIANTS = {
@@ -119,7 +120,8 @@ const ACTION_VARIANTS = {
   update_flags: 'primary',
   force_logout: 'warning',
   admin_unpublish_project: 'danger',
-  project_ownership_transferred: 'info'
+  project_ownership_transferred: 'info',
+  admin_user_data_export: 'warning'
 }
 
 export default {
@@ -233,6 +235,10 @@ export default {
         if (details.shared_link_revoked) parts.push(this.$t('admin.audit_shared_link_revoked'))
         if (details.owner_notified === false) parts.push(this.$t('admin.audit_owner_not_notified'))
         return parts.join(' · ')
+      }
+      // admin_user_data_export: va a nombre de la persona; sólo importa si el aviso no salió.
+      if (details.person_notified != null) {
+        return details.person_notified === false ? this.$t('admin.audit_person_not_notified') : ''
       }
       if (details.before || details.after) {
         const keys = Object.keys(details.after || {})

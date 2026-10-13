@@ -62,9 +62,28 @@ async function backendMessageFrom (error) {
  *   null si no lo hay. Quien llame decide qué mostrar en ese caso.
  */
 export async function downloadPersonalData (userId, password) {
+  await downloadZip(ENDPOINT, { user_id: userId, password: password }, FILENAME)
+}
+
+/**
+ * Un superadmin descarga la copia de los datos de otra persona, que no puede entrar a
+ * pedirla (cuenta desactivada, correo perdido; GDPR Art. 12.3). El servidor exige la
+ * contraseña del admin y que declare haber verificado la identidad de quien la pidió
+ * (Art. 12.6); el modal sólo deja llamar con la casilla marcada.
+ *
+ * @param {string} userId - la persona cuyos datos se exportan
+ * @param {string} password - contraseña del admin
+ * @throws {Error} con `backendMessage`, como downloadPersonalData
+ */
+export async function downloadUserDataAsAdmin (userId, password) {
+  await downloadZip(`/admin/users/${userId}/export`,
+    { password: password, identity_verified: true }, `user_data_${userId}.zip`)
+}
+
+async function downloadZip (endpoint, body, filename) {
   let response
   try {
-    response = await Api.post(ENDPOINT, { user_id: userId, password: password }, { responseType: 'blob' })
+    response = await Api.post(endpoint, body, { responseType: 'blob' })
   } catch (error) {
     const failure = new Error('personal data export failed')
     failure.backendMessage = await backendMessageFrom(error)
@@ -75,7 +94,7 @@ export async function downloadPersonalData (userId, password) {
   const url = window.URL.createObjectURL(new Blob([response.data]))
   const link = document.createElement('a')
   link.href = url
-  link.setAttribute('download', FILENAME)
+  link.setAttribute('download', filename)
   document.body.appendChild(link)
   link.click()
   // Sin estas dos líneas queda un <a> huérfano por cada descarga y el blob
