@@ -1,150 +1,150 @@
-// El DSN de Sentry sale del entorno, no de una edición local del archivo.
+// The Sentry DSN comes from the environment, not from a local edit of the file.
 //
-// `config/prod.env.js` mezcla dos cosas que no se comportan igual: feature flags, que TIENEN
-// que viajar con el código, y valores propios de cada host, que no pueden. Mientras el
-// secreto se completara editando el archivo, cada servidor quedaba con un archivo trackeado
-// modificado — y eso rompe el `git pull` en cuanto un commit toca ese mismo archivo.
+// `config/prod.env.js` mixes two things that do not behave the same: feature flags, which MUST
+// travel with the code, and per-host values, which cannot. As long as the secret was filled in by
+// editing the file, every server ended up with a modified tracked file — and that breaks
+// `git pull` as soon as a commit touches that same file.
 //
-// Pasó: `2d6185e9` (2026-08-20) modificó `config/prod.env.js`, el pull del servidor de
-// pruebas abortó, y el checkout quedó clavado once días mientras los builds seguían
-// corriendo sobre código viejo. El archivo que bloquea el pull es justamente el que lleva los
-// flags, así que el cambio con más probabilidad de no llegar es un cambio de flag — y
-// `2d6185e9` era literalmente encender uno.
+// It happened: `2d6185e9` (2026-08-20) modified `config/prod.env.js`, the pull on the test server
+// aborted, and the checkout stayed stuck for eleven days while builds kept running on old code.
+// The file that blocks the pull is precisely the one carrying the flags, so the change most likely
+// not to arrive is a flag change — and `2d6185e9` was literally turning one on.
 
 const path = require('path')
 
-// El cargador del `.env` queda simulado: si no, un `.env` real en la máquina de quien corre la
-// suite cambiaría lo que estos tests ven. Lo que hace el cargador se prueba en `entorno.spec.js`.
-jest.mock('../../../config/entorno', () => ({
-  ...jest.requireActual('../../../config/entorno'),
-  cargarArchivoEnv: jest.fn()
+// The `.env` loader is mocked: otherwise a real `.env` on the machine running the suite would
+// change what these tests see. What the loader does is tested in `env.spec.js`.
+jest.mock('../../../config/env', () => ({
+  ...jest.requireActual('../../../config/env'),
+  loadEnvFile: jest.fn()
 }))
 
 const prodEnvPath = path.resolve(__dirname, '../../../config/prod.env.js')
 
-// Los valores van doblemente citados a propósito: `DefinePlugin` los sustituye tal cual en
-// el código, así que lo que se guarda acá es el *literal fuente*, no el string.
-const cargar = () => {
+// Values are double-quoted on purpose: `DefinePlugin` substitutes them verbatim into the code, so
+// what is stored here is the *source literal*, not the string.
+const load = () => {
   jest.resetModules()
   return require(prodEnvPath)
 }
 
-describe('config/prod.env.js — el DSN de Sentry', () => {
-  const entornoOriginal = process.env.SENTRY_DSN
+describe('config/prod.env.js — the Sentry DSN', () => {
+  const originalDsn = process.env.SENTRY_DSN
 
   afterEach(() => {
-    if (entornoOriginal === undefined) delete process.env.SENTRY_DSN
-    else process.env.SENTRY_DSN = entornoOriginal
+    if (originalDsn === undefined) delete process.env.SENTRY_DSN
+    else process.env.SENTRY_DSN = originalDsn
   })
 
-  it('toma el DSN de la variable de entorno', () => {
+  it('takes the DSN from the environment variable', () => {
     process.env.SENTRY_DSN = 'https://abc@o1.ingest.sentry.io/2'
-    expect(cargar().SENTRY_DSN).toBe('"https://abc@o1.ingest.sentry.io/2"')
+    expect(load().SENTRY_DSN).toBe('"https://abc@o1.ingest.sentry.io/2"')
   })
 
-  it('sin la variable queda vacío, no con un marcador de posición', () => {
-    // El valor anterior era `"YOUR_SENTRY_DSN_HERE"`, que es **truthy**. `main.js` hace
-    // `if (process.env.SENTRY_DSN)`, así que cualquier host que no editara el archivo
-    // arrancaba Sentry con un DSN inválido en vez de saltearlo. Vacío es falsy y se saltea,
-    // que es lo que la guarda de `main.js` siempre quiso decir.
+  it('without the variable it stays empty, not a placeholder', () => {
+    // The previous value was `"YOUR_SENTRY_DSN_HERE"`, which is **truthy**. `main.js` does
+    // `if (process.env.SENTRY_DSN)`, so any host that did not edit the file started Sentry with an
+    // invalid DSN instead of skipping it. Empty is falsy and gets skipped, which is what the
+    // `main.js` guard always meant.
     delete process.env.SENTRY_DSN
-    expect(cargar().SENTRY_DSN).toBe('""')
+    expect(load().SENTRY_DSN).toBe('""')
   })
 
-  it('el literal siempre es JSON válido, incluso con comillas en el valor', () => {
-    // Se arma con `JSON.stringify` y no concatenando comillas: un valor con una comilla
-    // rompería el literal y el bundle no compilaría, o peor, compilaría cualquier cosa.
-    process.env.SENTRY_DSN = 'raro"con-comilla'
-    expect(() => JSON.parse(cargar().SENTRY_DSN)).not.toThrow()
-    expect(JSON.parse(cargar().SENTRY_DSN)).toBe('raro"con-comilla')
+  it('the literal is always valid JSON, even with quotes in the value', () => {
+    // Built with `JSON.stringify`, not by concatenating quotes: a value with a quote would break
+    // the literal and the bundle would not compile — or worse, would compile anything.
+    process.env.SENTRY_DSN = 'odd"with-quote'
+    expect(() => JSON.parse(load().SENTRY_DSN)).not.toThrow()
+    expect(JSON.parse(load().SENTRY_DSN)).toBe('odd"with-quote')
   })
 
-  it('SENTRY_RELEASE llega al bundle con el mismo fallback que usa el plugin de sourcemaps', () => {
-    // `main.js` le pasa `process.env.SENTRY_RELEASE` a `Sentry.init`, pero nadie lo definía
-    // para `DefinePlugin`: en el navegador valía `undefined`. Mientras tanto el plugin subía
-    // los sourcemaps con `SENTRY_RELEASE || package.json version`, así que los eventos y los
-    // sourcemaps nunca compartían release y los stack traces quedaban minificados.
+  it('SENTRY_RELEASE reaches the bundle with the same fallback the sourcemaps plugin uses', () => {
+    // `main.js` passes `process.env.SENTRY_RELEASE` to `Sentry.init`, but nobody defined it for
+    // `DefinePlugin`: in the browser it was `undefined`. Meanwhile the plugin uploaded sourcemaps
+    // with `SENTRY_RELEASE || package.json version`, so events and sourcemaps never shared a
+    // release and stack traces stayed minified.
     delete process.env.SENTRY_RELEASE
-    expect(cargar().SENTRY_RELEASE).toBe(JSON.stringify(require('../../../package.json').version))
+    expect(load().SENTRY_RELEASE).toBe(JSON.stringify(require('../../../package.json').version))
     process.env.SENTRY_RELEASE = 'isoq@abc123'
-    expect(cargar().SENTRY_RELEASE).toBe('"isoq@abc123"')
+    expect(load().SENTRY_RELEASE).toBe('"isoq@abc123"')
     delete process.env.SENTRY_RELEASE
   })
 
-  it('las credenciales del plugin de sourcemaps NO llegan al bundle', () => {
-    // SENTRY_AUTH_TOKEN/ORG/PROJECT las lee `webpack.prod.conf.js` en tiempo de build. Todo
-    // lo que esté en este archivo termina como literal en el JS que baja cualquier visitante.
-    process.env.SENTRY_AUTH_TOKEN = 'secreto'
-    const env = cargar()
+  it('the sourcemaps plugin credentials do NOT reach the bundle', () => {
+    // SENTRY_AUTH_TOKEN/ORG/PROJECT are read by `webpack.prod.conf.js` at build time. Everything in
+    // this file ends up as a literal in the JS any visitor downloads.
+    process.env.SENTRY_AUTH_TOKEN = 'secret'
+    const env = load()
     delete process.env.SENTRY_AUTH_TOKEN
     expect(Object.keys(env)).not.toContain('SENTRY_AUTH_TOKEN')
-    expect(Object.values(env).join()).not.toContain('secreto')
+    expect(Object.values(env).join()).not.toContain('secret')
   })
 })
 
-describe('config/prod.env.js — los feature flags', () => {
-  // El valor por defecto vive en el archivo y viaja con el código: un host que no configura
-  // nada obtiene lo que decidió el último commit. La variable de entorno sólo lo pisa en el
-  // host que la define, sin editar el archivo trackeado — que es lo que dejaba el checkout
-  // sucio, el build con sello `-dirty` y el `git pull` abortado.
+describe('config/prod.env.js — feature flags', () => {
+  // The default lives in the file and travels with the code: a host that configures nothing gets
+  // what the last commit decided. The environment variable only overrides it on the host that
+  // defines it, without editing the tracked file — which is what left the checkout dirty, the
+  // build stamped `-dirty` and `git pull` aborted.
   const FLAGS = {
     ENABLE_CONCURRENCY_CONTROL: '"on"',
     ENABLE_REGISTRATION: '"true"',
-    ENABLE_GDPR: '"true"'
+    ENABLE_GDPR: '"true"',
+    ENABLE_CAMELOT: '"false"'
   }
-  const originales = {}
+  const originals = {}
 
   beforeEach(() => {
-    Object.keys(FLAGS).forEach(f => { originales[f] = process.env[f]; delete process.env[f] })
+    Object.keys(FLAGS).forEach(f => { originals[f] = process.env[f]; delete process.env[f] })
   })
 
   afterEach(() => {
     Object.keys(FLAGS).forEach(f => {
-      if (originales[f] === undefined) delete process.env[f]
-      else process.env[f] = originales[f]
+      if (originals[f] === undefined) delete process.env[f]
+      else process.env[f] = originals[f]
     })
   })
 
-  it.each(Object.entries(FLAGS))('%s sin variable toma el default commiteado', (flag, porDefecto) => {
-    expect(cargar()[flag]).toBe(porDefecto)
+  it.each(Object.entries(FLAGS))('%s without the variable takes the committed default', (flag, fallback) => {
+    expect(load()[flag]).toBe(fallback)
   })
 
-  it.each(Object.keys(FLAGS))('%s se puede pisar desde el entorno', (flag) => {
+  it.each(Object.keys(FLAGS))('%s can be overridden from the environment', (flag) => {
     process.env[flag] = 'off'
-    expect(cargar()[flag]).toBe('"off"')
+    expect(load()[flag]).toBe('"off"')
   })
 
-  it.each(Object.entries(FLAGS))('%s con la variable vacía cae al default, no a apagado', (flag, porDefecto) => {
-    // `FLAG= npm run build` es casi siempre un export a medio escribir, no una decisión. Que
-    // eso apagara GDPR o el control de concurrencia en silencio sería el peor error posible.
+  it.each(Object.entries(FLAGS))('%s with an empty variable falls back to the default, not to off', (flag, fallback) => {
+    // `FLAG= npm run build` is almost always a half-written export, not a decision. Silently
+    // turning GDPR or concurrency control off because of it would be the worst possible mistake.
     process.env[flag] = ''
-    expect(cargar()[flag]).toBe(porDefecto)
+    expect(load()[flag]).toBe(fallback)
   })
 })
 
-describe('config/*.env — el .env de la raíz', () => {
-  it('prod.env.js carga el .env al leerse', () => {
-    // Es el único punto de carga: dev.env y test.env.js heredan de prod.env.js vía
-    // webpack-merge, y webpack.prod.conf.js lo requiere antes de leer SENTRY_AUTH_TOKEN.
-    // Se pide el mock DESPUÉS de `cargar()`: `resetModules` crea una instancia nueva del
-    // mock, y la de antes no ve la llamada.
-    cargar()
-    const { cargarArchivoEnv } = require('../../../config/entorno')
-    expect(cargarArchivoEnv).toHaveBeenCalledTimes(1)
+describe('config/*.env — the root .env', () => {
+  it('prod.env.js loads .env when read', () => {
+    // It is the only load point: dev.env and test.env.js inherit from prod.env.js through
+    // webpack-merge, and webpack.prod.conf.js requires it before reading SENTRY_AUTH_TOKEN.
+    // The mock is required AFTER `load()`: `resetModules` creates a new mock instance, and the
+    // previous one does not see the call.
+    load()
+    const { loadEnvFile } = require('../../../config/env')
+    expect(loadEnvFile).toHaveBeenCalledTimes(1)
   })
 
   it.each([
     ['dev.env', 'ENABLE_GDPR', '"false"'],
     ['test.env.js', 'ENABLE_REGISTRATION', '"false"']
-  ])('%s mantiene su default propio y también se pisa desde el entorno', (archivo, flag, porDefecto) => {
-    const ruta = path.resolve(__dirname, '../../../config', archivo)
+  ])('%s keeps its own default and can also be overridden from the environment', (file, flag, fallback) => {
+    const filePath = path.resolve(__dirname, '../../../config', file)
     const original = process.env[flag]
     delete process.env[flag]
     jest.resetModules()
-    expect(require(ruta)[flag]).toBe(porDefecto)
+    expect(require(filePath)[flag]).toBe(fallback)
     process.env[flag] = 'on'
     jest.resetModules()
-    expect(require(ruta)[flag]).toBe('"on"')
+    expect(require(filePath)[flag]).toBe('"on"')
     if (original === undefined) delete process.env[flag]
     else process.env[flag] = original
   })

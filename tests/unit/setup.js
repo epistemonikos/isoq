@@ -68,6 +68,11 @@ if (typeof window.crypto === 'undefined' || !window.crypto.getRandomValues) {
 // que prueban. Los specs del caso apagado lo sobreescriben y lo restauran.
 process.env.ENABLE_GDPR = 'on'
 
+// CAMELOT on for the whole suite, for the same reason: the specs written before the flag describe
+// CAMELOT as available, even though the production default is now off (src/constants/camelot.js).
+// The specs for the off case override it and restore it.
+process.env.ENABLE_CAMELOT = 'on'
+
 // Suppress Bootstrap Vue warnings
 Vue.config.silent = true
 

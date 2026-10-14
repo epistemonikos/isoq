@@ -157,6 +157,7 @@ import CloneProjectModal from './modals/CloneProjectModal'
 import LeaveProjectModal from './modals/LeaveProjectModal'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import { deriveUserState } from '@/utils/userState'
+import { isCamelotEnabled } from '@/constants/camelot'
 
 export default {
   name: 'viewOrganization',
@@ -230,7 +231,7 @@ export default {
         temporaryUrl: '',
         invite_emails: [],
         tmp_invite_emails: [],
-        use_camelot: true
+        use_camelot: isCamelotEnabled()
       },
       buffer_project: {},
       users_allowed: [],

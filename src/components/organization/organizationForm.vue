@@ -152,6 +152,7 @@
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
+            v-if="camelotEnabled"
             label-for="input-project-use-camelot"
             :description="!formData.id ? $t('project.use_camelot_desc') : ''">
             <template v-slot:label>
@@ -327,6 +328,7 @@
 import Api from '@/utils/Api'
 import Project from '@/utils/project'
 import { needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
+import { isCamelotEnabled } from '@/constants/camelot'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
@@ -337,7 +339,7 @@ export default {
     formData: {
       type: Object,
       default: () => ({
-        use_camelot: true
+        use_camelot: isCamelotEnabled()
       })
     },
     canEdit: Boolean,
@@ -595,6 +597,9 @@ export default {
     }
   },
   computed: {
+    camelotEnabled () {
+      return isCamelotEnabled()
+    },
     yes_or_no () {
       return [
         { value: false, text: this.$t('common.no') },
