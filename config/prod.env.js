@@ -1,48 +1,49 @@
 'use strict'
 
-// Los flags y SENTRY_* se configuran por servidor en el `.env` de la raíz (plantilla:
-// `.env.example`), nunca editando este archivo. Ver `config/entorno.js`.
-const { cargarArchivoEnv, desdeEntorno } = require('./entorno')
+// Flags and SENTRY_* are configured per server in the root `.env` (template: `.env.example`),
+// never by editing this file. See `config/env.js`.
+const { loadEnvFile, fromEnv } = require('./env')
 
-cargarArchivoEnv()
+loadEnvFile()
 
 module.exports = {
   NODE_ENV: '"production"',
   BASE_URL: '"/"',
   API_URL: '"/api"',
   PUBLIC_PATH: '"/"',
-  // Locking granular de toda la app: cajas de criterios del Paso 2, identidad del
-  // finding en el tab iSoQ, estudios y columnas de los Pasos 3/4, y hojas de
-  // evaluación del Paso 4. Encendido junto con el bloqueo de la identidad del
-  // finding (rama feature/isoq-tab-freshness-and-finding-locks).
+  // App-wide granular locking: Step 2 criteria boxes, finding identity in the iSoQ tab, studies
+  // and columns in Steps 3/4, and Step 4 assessment leaves. Enabled together with finding
+  // identity locking (branch feature/isoq-tab-freshness-and-finding-locks).
   //
-  // OJO con lo que este flag NO cubre: los PATCH de documento completo a
-  // isoqf_lists/isoqf_findings no pasan por @verify_ref_lock en el backend, así
-  // que ahí el lock coordina la UI pero no impide la escritura. Deja de ser
-  // advisory cuando exista el endpoint de docs/spec-backend-endpoint-identidad-finding.md.
+  // NOTE what this flag does NOT cover: full-document PATCHes to isoqf_lists/isoqf_findings do
+  // not go through @verify_ref_lock in the backend, so there the lock coordinates the UI but does
+  // not prevent the write. It stops being advisory once the endpoint in
+  // docs/spec-backend-endpoint-identidad-finding.md exists.
   //
-  // El refresco automático entre usuarios (projectFreshnessMixin) es
-  // independiente de este flag y funciona con él apagado.
-  ENABLE_CONCURRENCY_CONTROL: desdeEntorno('ENABLE_CONCURRENCY_CONTROL', 'on'),
-  ENABLE_REGISTRATION: desdeEntorno('ENABLE_REGISTRATION', 'true'),
-  // Toda la superficie GDPR: obligación de aceptar los términos, página de
-  // Privacidad y Términos, preferencias de consentimiento y gestión de datos
-  // del perfil. En 'on' para preservar el comportamiento actual de producción.
+  // Automatic refresh between users (projectFreshnessMixin) is independent of this flag and
+  // works with it off.
+  ENABLE_CONCURRENCY_CONTROL: fromEnv('ENABLE_CONCURRENCY_CONTROL', 'on'),
+  ENABLE_REGISTRATION: fromEnv('ENABLE_REGISTRATION', 'true'),
+  // The whole GDPR surface: mandatory terms acceptance, the Privacy and Terms page, consent
+  // preferences and profile data management. 'on' to preserve current production behavior.
   //
-  // NO apagarlo mientras ENABLE_REGISTRATION esté en 'true': el backend rechaza
-  // POST /create_user sin terms_accepted (auth_server/controllers/router.py),
-  // así que el alta de cuentas devolvería 400 hasta que el backend lea su
-  // propio ENABLE_GDPR. Medido contra la rama isoqf_310 el 2026-08-17.
-  ENABLE_GDPR: desdeEntorno('ENABLE_GDPR', 'true'),
-  // Vacío por defecto y no un marcador de posición: `main.js` hace `if (process.env.SENTRY_DSN)`,
-  // y `"YOUR_SENTRY_DSN_HERE"` era truthy — un host sin configurar arrancaba Sentry con un DSN
-  // inválido en vez de saltearlo. Antes se completaba editando este archivo; así quedó clavado
-  // once días el checkout del servidor de pruebas (`2d6185e9`, 2026-08-20).
-  SENTRY_DSN: desdeEntorno('SENTRY_DSN', ''),
-  // El mismo fallback que usa `SentryWebpackPlugin` en `build/webpack.prod.conf.js`: si los
-  // eventos y los sourcemaps no comparten release, los stack traces llegan minificados.
+  // Do NOT turn it off while ENABLE_REGISTRATION is 'true' unless the backend has its own
+  // ENABLE_GDPR off as well: otherwise POST /create_user answers 400 for lack of terms_accepted.
+  ENABLE_GDPR: fromEnv('ENABLE_GDPR', 'true'),
+  // Offer CAMELOT when creating a project or changing its methodology. When off, only the
+  // classic methodology is offered; projects that are already CAMELOT keep showing as such
+  // (src/constants/camelot.js). Off by default: the GDPR release goes out without CAMELOT. To
+  // enable it on a server: ENABLE_CAMELOT=true in that server's `.env`, and rebuild.
+  ENABLE_CAMELOT: fromEnv('ENABLE_CAMELOT', 'false'),
+  // Empty by default rather than a placeholder: `main.js` does `if (process.env.SENTRY_DSN)`, and
+  // `"YOUR_SENTRY_DSN_HERE"` was truthy — an unconfigured host started Sentry with an invalid DSN
+  // instead of skipping it. It used to be filled in by editing this file; that is how the test
+  // server checkout got stuck for eleven days (`2d6185e9`, 2026-08-20).
+  SENTRY_DSN: fromEnv('SENTRY_DSN', ''),
+  // Same fallback as `SentryWebpackPlugin` in `build/webpack.prod.conf.js`: if events and
+  // sourcemaps do not share a release, stack traces arrive minified.
   //
-  // SENTRY_AUTH_TOKEN/ORG/PROJECT NO van acá: son del plugin, se leen en tiempo de build, y
-  // todo lo que está en este archivo termina como literal en el JS que baja cualquier visitante.
-  SENTRY_RELEASE: desdeEntorno('SENTRY_RELEASE', require('../package.json').version)
+  // SENTRY_AUTH_TOKEN/ORG/PROJECT do NOT go here: they belong to the plugin and are read at build
+  // time, and everything in this file ends up as a literal in the JS any visitor downloads.
+  SENTRY_RELEASE: fromEnv('SENTRY_RELEASE', require('../package.json').version)
 }
