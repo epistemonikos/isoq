@@ -470,6 +470,35 @@ describe('CreateAccount.vue — invalid_terms_version con GDPR encendido', () =>
   })
 })
 
+// The email used to travel in the URL (GET ?email=): every check landed in the server's access
+// logs and in Sentry's breadcrumbs. Now it goes in the body of a POST, and that POST is a read:
+// it must never be queued for offline replay.
+describe('CreateAccount.vue — the email check keeps the address out of the URL', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+  })
+
+  it('sends the trimmed address in the body of a POST that is never queued', async () => {
+    const wrapper = mountCreateAccount()
+    await wrapper.setData({ user: { ...wrapper.vm.user, username: '  ana@example.test ' } })
+    Api.post.mockResolvedValueOnce({ data: { error: false } })
+    wrapper.vm.checkEmailExist()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/users/check_email', { email: 'ana@example.test' }, { noQueue: true })
+    expect(Api.get).not.toHaveBeenCalled()
+  })
+
+  it('an address that already has an account is not valid', async () => {
+    const wrapper = mountCreateAccount()
+    await wrapper.setData({ user: { ...wrapper.vm.user, username: 'ana@example.test' } })
+    Api.post.mockResolvedValueOnce({ data: { error: 'Mail already exists' } })
+    wrapper.vm.checkEmailExist()
+    await flushPromises()
+    expect(wrapper.vm.ui.username_validation).toBe(false)
+  })
+})
+
 // Si fallaba la comprobación del correo, el botón «Crear cuenta» quedaba deshabilitado sin
 // ninguna explicación. Ahora se dice en el propio campo, como el «ya existe».
 describe('CreateAccount.vue — la comprobación del correo que falla', () => {
@@ -481,7 +510,7 @@ describe('CreateAccount.vue — la comprobación del correo que falla', () => {
   it('lo dice en el campo, con el motivo', async () => {
     const wrapper = mountCreateAccount()
     await wrapper.setData({ user: { ...wrapper.vm.user, username: 'ana@example.test' } })
-    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    Api.post.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
     wrapper.vm.checkEmailExist()
     await flushPromises()
     expect(wrapper.html()).toContain('account.email_check_failed')
@@ -493,10 +522,10 @@ describe('CreateAccount.vue — la comprobación del correo que falla', () => {
   it('la siguiente comprobación que sale bien lo quita', async () => {
     const wrapper = mountCreateAccount()
     await wrapper.setData({ user: { ...wrapper.vm.user, username: 'ana@example.test' } })
-    Api.get.mockRejectedValueOnce(Object.assign(new Error('x'), { request: {} }))
+    Api.post.mockRejectedValueOnce(Object.assign(new Error('x'), { request: {} }))
     wrapper.vm.checkEmailExist()
     await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: { error: false } })
+    Api.post.mockResolvedValueOnce({ data: { error: false } })
     wrapper.vm.checkEmailExist()
     await flushPromises()
     expect(wrapper.html()).not.toContain('account.email_check_failed')
