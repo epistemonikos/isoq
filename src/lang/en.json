@@ -325,7 +325,8 @@
   "presence": {
     "reviewing_one": "{users} is assessing this review finding",
     "reviewing_many": "{users} are assessing this review finding",
-    "and": "and"
+    "and": "and",
+    "step_one_others": "Warning! Another user is working in Step 1. We recommend you view only (no editing)."
   },
   "version_conflict": {
     "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",

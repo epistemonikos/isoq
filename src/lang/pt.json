@@ -325,7 +325,8 @@
   "presence": {
     "reviewing_one": "{users} está a avaliar esta descoberta da revisão",
     "reviewing_many": "{users} estão a avaliar esta descoberta da revisão",
-    "and": "e"
+    "and": "e",
+    "step_one_others": "Atenção! Outra pessoa está trabalhando na Etapa 1. Recomendamos apenas visualizar (sem editar)."
   },
   "version_conflict": {
     "message": "Outra pessoa salvou alterações neste estudo enquanto você o editava. Seu texto não foi salvo. Abaixo está o que ficou salvo e o que você tentou salvar, para que possa refazer sua alteração sem perder a da outra pessoa.",

@@ -68,3 +68,35 @@ describe('viewProject — presencia', () => {
     jest.useRealTimers()
   })
 })
+
+// #399: whoever can edit and has Step 1 open marks presence on it, so others see the
+// banner; leaving Step 1, the My Data tab or the project removes the mark.
+describe('viewProject — presence on Step 1', () => {
+  const { STEP_ONE_PRESENCE } = require('@/utils/stepOnePresence')
+  const viewProject = require('@/components/project/viewProject.vue').default
+  const fakeVm = (over = {}) => ({
+    tabOpened: 1, stepStage: 0, isEditing: true, $route: { params: { id: 'p1' } },
+    ...over,
+    get onStepOne () { return viewProject.computed.onStepOne.call(this) }
+  })
+
+  beforeEach(() => { PresenceService.enter.mockClear(); PresenceService.leave.mockClear() })
+
+  it('is on Step 1 only with the My Data tab and its first step open, and the right to edit', () => {
+    expect(fakeVm().onStepOne).toBe(true)
+    expect(fakeVm({ tabOpened: 2 }).onStepOne).toBe(false)
+    expect(fakeVm({ stepStage: 1 }).onStepOne).toBe(false)
+    expect(fakeVm({ isEditing: false }).onStepOne).toBe(false)
+  })
+
+  it('marks presence on Step 1 when arriving', () => {
+    viewProject.methods.syncStepOnePresence.call(fakeVm(), true)
+    expect(PresenceService.enter).toHaveBeenCalledWith('p1', STEP_ONE_PRESENCE)
+  })
+
+  it('removes the mark when leaving', () => {
+    viewProject.methods.syncStepOnePresence.call(fakeVm(), false)
+    expect(PresenceService.leave).toHaveBeenCalled()
+    expect(PresenceService.enter).not.toHaveBeenCalled()
+  })
+})

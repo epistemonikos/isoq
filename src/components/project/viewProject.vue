@@ -50,6 +50,8 @@
             <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap"
               active-nav-item-class="btn-success" v-model="stepStage" lazy>
               <b-tab :title="$t('steps.step_1_references')">
+                <StepOnePresenceAlert :presence="activePresence"
+                  :current-user-id="$store.state.user && $store.state.user.id" />
                 <UploadReferences :canEdit="isEditing" :loadReferences="loadReferences" :references="references"
                   :lists="lists" :charsOfStudies="charsOfStudies" :methodologicalTableRefs="methodologicalTableRefs"
                   :useCamelot="project.use_camelot" :activeRefLocks="activeRefLocks" @CallGetReferences="getReferences"
@@ -503,6 +505,8 @@ import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
 import { isAlreadyGone } from '@/utils/replayOutcome'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
+import StepOnePresenceAlert from './StepOnePresenceAlert.vue'
+import { STEP_ONE_PRESENCE } from '@/utils/stepOnePresence'
 import draggable from 'vuedraggable'
 import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
@@ -558,6 +562,7 @@ export default {
     'action-buttons': actionButtons,
     propertiesProject,
     UploadReferences,
+    StepOnePresenceAlert,
     InclusionExclusioCriteria,
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
@@ -823,6 +828,7 @@ export default {
     // stay held until the server TTL. Verified live before this was added.
     this.$_alive = false
     LockService.releaseRef()
+    if (this.onStepOne) this.syncStepOnePresence(false)
     window.removeEventListener('permission-denied', this.onPermissionDenied)
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     this.stopProjectPolling()
@@ -896,6 +902,13 @@ export default {
     },
     fetchAndUpdateRefLocks: async function () {
       this.activeRefLocks = await LockService.fetchRefLocks(this.$route.params.id)
+    },
+    syncStepOnePresence: function (on) {
+      if (on) {
+        PresenceService.enter(this.$route.params.id, STEP_ONE_PRESENCE)
+      } else {
+        PresenceService.leave()
+      }
     },
     fetchPresence: async function () {
       this.activePresence = await PresenceService.fetch(this.$route.params.id)
@@ -2023,6 +2036,11 @@ export default {
     }
   },
   watch: {
+    // #399: whoever can edit and has Step 1 open is shown to the others there.
+    onStepOne: {
+      immediate: true,
+      handler (on) { this.syncStepOnePresence(on) }
+    },
     // El reloj de inactividad corre sólo mientras uno de los dos modales tiene su lock: es
     // lo único de esta vista que retiene algo para el resto del equipo. Un solo reloj para
     // los dos porque no se pueden tener abiertos a la vez.
@@ -2079,6 +2097,10 @@ export default {
     }
   },
   computed: {
+    /** My Data open on Step 1, by someone who can edit: the presence #399 shows. */
+    onStepOne () {
+      return this.tabOpened === 1 && this.stepStage === 0 && Boolean(this.isEditing)
+    },
     failedLoadParts () {
       return Object.keys(this.loadErrors).filter(part => this.loadErrors[part])
     },
