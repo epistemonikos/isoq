@@ -310,6 +310,11 @@ export default {
     }
   },
   props: {
+    // StepFour remembers a "do it later" for this cell (#396): Save does not warn again.
+    explanationDeferred: {
+      type: Boolean,
+      default: false
+    },
     selectedMeta: {
       type: Number,
       default: 0
@@ -436,6 +441,11 @@ export default {
     },
     selected (newValue) {
       this.checkChanges()
+      // A new judgement needs its explanation again: the deferral ends (#396). A change
+      // that only brings in what is stored (a re-hydration) is not the person's.
+      if (this.explanationDeferred && newValue !== (this.hydratedLeaf && this.hydratedLeaf.option)) {
+        this.$emit('explanation-deferred', { stage: this.modalStage, meta: this.selectedMeta, deferred: false })
+      }
     },
     text1 (newValue) {
       this.checkChanges()
@@ -536,11 +546,12 @@ export default {
       })
     },
     doItLater () {
+      this.$emit('explanation-deferred', { stage: this.modalStage, meta: this.selectedMeta, deferred: true })
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.saveNow()
     },
     save () {
-      if (this.isIncomplete) {
+      if (this.isIncomplete && !this.explanationDeferred) {
         this.returnFocusTarget = null
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return

@@ -183,3 +183,48 @@ describe('AssessmentForm — saves of one cell go one after another (#395)', () 
     wrapper.destroy()
   })
 })
+
+// #396: the form's own Save warning respects a "do it later" StepFour remembers.
+describe('AssessmentForm — "do it later" (#396)', () => {
+  const mountDeferred = (explanationDeferred) => mount(AssessmentForm, {
+    localVue,
+    propsData: { selectedMeta: 0, modalStage: 0, modalIndex: 0, refId: 'ref1', assessments: assessmentsWith({ _v: 1 }), explanationDeferred },
+    mocks: { $t: key => key, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal: { show: jest.fn(), hide: jest.fn() }, $notify },
+    stubs: { 'b-card': true, 'b-form-group': true, 'b-form-radio-group': true, 'b-form-radio': true, 'b-form-textarea': true, 'b-button': true, 'b-modal': true }
+  })
+
+  beforeEach(() => { jest.clearAllMocks(); Api.patch.mockResolvedValue({ data: {} }) })
+
+  it('saves without warning when the cell was already deferred', async () => {
+    const wrapper = mountDeferred(true)
+    await wrapper.setData({ selected: 'B', text1: '' })
+    wrapper.vm.save()
+    await flushPromises()
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalled()
+    expect(Api.patch).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('still warns when it was not', async () => {
+    const wrapper = mountDeferred(false)
+    await wrapper.setData({ selected: 'B', text1: '' })
+    wrapper.vm.save()
+    expect(wrapper.vm.$bvModal.show).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('reports its "do it later" so the other exits stay quiet', async () => {
+    const wrapper = mountDeferred(false)
+    await wrapper.setData({ selected: 'B', text1: '' })
+    wrapper.vm.doItLater()
+    expect(wrapper.emitted('explanation-deferred')).toEqual([[{ stage: 0, meta: 0, deferred: true }]])
+    wrapper.destroy()
+  })
+
+  it('reports a change of option, which ends the deferral', async () => {
+    const wrapper = mountDeferred(true)
+    await wrapper.setData({ selected: 'C' })
+    expect(wrapper.emitted('explanation-deferred')).toEqual([[{ stage: 0, meta: 0, deferred: false }]])
+    wrapper.destroy()
+  })
+})
