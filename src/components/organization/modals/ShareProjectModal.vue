@@ -91,7 +91,7 @@
               <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') }}</p>
             </template>
           </b-table>
-          <p class="text-muted small mt-2">
+          <p v-if="usersAllowed.some(u => u.state === 'inactive')" class="text-muted small mt-2">
             <span class="font-italic">*{{ $t('common.inactive_user_note') || 'Inactive user - cannot modify permissions' }}</span>
           </p>
           <!-- Usuarios pendientes (sin cuenta) -->

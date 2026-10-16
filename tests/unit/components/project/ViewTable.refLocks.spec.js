@@ -709,6 +709,23 @@ describe('ViewTable — aviso de «editando las referencias»', () => {
     wrapper.destroy()
   })
 
+  // #402: someone who can only read will not be able to edit when it disappears.
+  it('tells an editor they will be able to edit once the references are free', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs() })
+    const text = wrapper.find('[data-testid="finding-references-editing"]').text()
+    expect(text).toContain('lock.editing_references')
+    expect(text).not.toContain('lock.editing_references_readonly')
+    wrapper.destroy()
+  })
+
+  it('does not promise editing to someone who can only read', () => {
+    const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs(), canEdit: false })
+    const text = wrapper.find('[data-testid="finding-references-editing"]').text()
+    expect(text).toContain('lock.editing_references_readonly')
+    expect(text).toContain('Ana Pérez')
+    wrapper.destroy()
+  })
+
   it('dibuja un b-alert en la celda de referencias con el nombre', () => {
     const wrapper = mountReal({ fields: REFS_FIELDS, refLocks: editingRefs() })
     const alerta = wrapper.find('[data-testid="finding-references-editing"]')

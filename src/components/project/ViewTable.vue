@@ -168,7 +168,7 @@
         <b-alert v-if="referencesEditorFor(data.item.id)" show variant="warning"
           class="references-editing-notice mb-2 p-2 small" data-testid="finding-references-editing">
           <font-awesome-icon icon="user"></font-awesome-icon>
-          {{ $t('lock.editing_references', { user: referencesEditorFor(data.item.id) }) }}
+          {{ $t(mode === 'edit' && canEdit ? 'lock.editing_references' : 'lock.editing_references_readonly', { user: referencesEditorFor(data.item.id) }) }}
         </b-alert>
         <template v-if="!(mode === 'edit' && canEdit)">
           {{ data.item.ref_list }}

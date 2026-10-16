@@ -661,6 +661,19 @@ describe('editListEvidenceProfile.vue — aviso de «editando las referencias»'
     foreignLock(FINDING_ID, user), foreignLock(`${FINDING_ID}::references`, user)
   ]
 
+  // #402: someone who can only read will not be able to edit when it disappears.
+  it('does not promise editing to someone who can only read', () => {
+    const wrapper = createWrapper({ activeRefLocks: editingRefs(), permission: false })
+    const text = wrapper.find('[data-testid="ep-references-editing"]').text()
+    expect(text).toContain('lock.editing_references_readonly')
+    expect(text).toContain('Ana Pérez')
+  })
+
+  it('tells an editor they will be able to edit once the references are free', () => {
+    const text = createWrapper({ activeRefLocks: editingRefs() }).find('[data-testid="ep-references-editing"]').text()
+    expect(text).not.toContain('lock.editing_references_readonly')
+  })
+
   it('dibuja un b-alert sobre la tabla con el nombre de quien edita las referencias', () => {
     const wrapper = createWrapper({ activeRefLocks: editingRefs() })
     const alerta = wrapper.find('[data-testid="ep-references-editing"]')

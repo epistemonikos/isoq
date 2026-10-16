@@ -59,6 +59,22 @@ describe('ShareProjectModal — la columna de usuario siempre muestra un nombre'
     expect(html).toContain('line-through')
   })
 
+  // #398: the footnote explains the asterisk of an inactive row; with nobody
+  // inactive it read as a warning about the people listed.
+  it('omits the inactive-user footnote when nobody listed is inactive', async () => {
+    const html = await renderedHtml([
+      { id: 'u1', username: 'ana@example.com', first_name: 'Ana', last_name: 'S', user_can: 1, state: 'active' }
+    ])
+    expect(html).not.toMatch(/inactive_user_note|Inactive user - cannot modify/)
+  })
+
+  it('shows the inactive-user footnote when someone listed is inactive', async () => {
+    const html = await renderedHtml([
+      { id: 'u1', username: 'viejo@example.com', first_name: 'V', last_name: 'C', user_can: 0, state: 'inactive' }
+    ])
+    expect(html).toMatch(/inactive_user_note|Inactive user - cannot modify/)
+  })
+
   it('no deja la celda vacía con un state que este cliente no conoce', async () => {
     // Mismo criterio que la allowlist de `lockErrors.js`: un valor que el cliente todavía
     // no conoce cae en el comportamiento por defecto, nunca en la nada.
