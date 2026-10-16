@@ -26,12 +26,16 @@ const EVICTED = 'evicted_granularity_conflict'
 // nunca tuvo el lock, así que el texto no explica una pérdida.
 const DENIED_OTHER_GRANULARITY = 'locked_at_another_granularity'
 const EXPIRED = 'lock_expired'
+// A write without the lock (#404): nobody else holds it, the permissions did not change.
+const NOT_HELD = 'lock_not_held'
 
 /** Clave i18n del cartel cuando el latido nos quitó el lock. */
 export function lockLostMessageKey (reason, lockedBy) {
   if (reason === EVICTED) return 'lock.evicted_granularity'
   if (reason === EXPIRED) return 'lock.lock_expired'
-  return lockedBy ? 'lock.ref_locked_by' : 'lock.permissions_revoked'
+  if (lockedBy) return 'lock.ref_locked_by'
+  if (reason === NOT_HELD) return 'lock.lock_not_held'
+  return 'lock.permissions_revoked'
 }
 
 /** Clave i18n del cartel cuando el acquire nos negó el lock al abrir el editor. */

@@ -293,6 +293,7 @@
     "lost_while_editing_no_user": "Este achado passou a somente leitura: seu bloqueio de edição expirou. O que você digitou desde então não foi salvo; copie antes de fechar.",
     "evicted_granularity": "{user} está editando outra parte deste estudo, então isto ficou somente leitura. Você poderá continuar assim que a pessoa terminar, ou em alguns minutos se a página dela fechou de repente.",
     "lock_expired": "Seu bloqueio de edição expirou, então isto ficou somente leitura. Abra novamente para continuar editando.",
+    "lock_not_held": "Você não tem mais o bloqueio de edição desta entrada, então sua alteração não foi salva. Copie seu texto, feche e abra o editor novamente para tentar de novo.",
     "locked_at_another_granularity": "{user} está editando outra parte deste estudo, então você ainda não pode abri-lo. Poderá fazê-lo assim que a pessoa terminar, ou em alguns minutos se a página dela fechou de repente.",
     "cerqual_locked_by": "{user} está a terminar a avaliação GRADE-CERQual de confiança, portanto esta alteração ainda não pode ser aplicada — apagaria o trabalho dessa pessoa. Tente novamente num instante.",
     "evaluating_section": "{user} está a avaliar {section}",

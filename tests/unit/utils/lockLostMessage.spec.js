@@ -113,3 +113,22 @@ describe('lockDeniedNoticeKey()', () => {
       .toBe('lock.ref_locked_by')
   })
 })
+
+// #404: a write answered 409 lock_not_held (nobody else holds it) used to fall into
+// "Your access to this project changed to read-only", which is false: nothing changed
+// in the permissions, the editor just no longer holds the lock.
+describe('lockLostMessageKey — lock_not_held', () => {
+  it('says the edit lock is no longer held, not that permissions changed', () => {
+    expect(lockLostMessageKey('lock_not_held', null)).toBe('lock.lock_not_held')
+  })
+
+  it('still names the holder when someone else has the key', () => {
+    expect(lockLostMessageKey('lock_not_held', 'Ana')).toBe('lock.ref_locked_by')
+  })
+
+  it('has the text in every language', () => {
+    for (const lang of ['en', 'es', 'pt']) {
+      expect(require(`@/lang/${lang}.json`).lock.lock_not_held).toEqual(expect.any(String))
+    }
+  })
+})
