@@ -88,10 +88,10 @@
         id="modal-extracted-data-remove-data-item"
         ref="modal-extracted-data-remove-data-item"
         :title="$t('characteristics.remove_content')"
-        @ok="extractedDataRemoveDataItem"
+        @ok="onRemoveRowOk"
         @hide="onRowEditorHide"
         @hidden="onRowEditorHidden"
-        :ok-disabled="isRowReadOnly"
+        :ok-disabled="rowWriteBlocked"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <b-alert v-if="isRowReadOnly" show variant="warning">
@@ -104,10 +104,10 @@
         :title="$t('characteristics.edit_data')"
         id="modal-extracted-data-data"
         ref="modal-extracted-data-data"
-        @ok="saveDataExtractedData"
+        @ok="onRowEditorOk"
         @hide="onRowEditorHide"
         @hidden="onRowEditorHidden"
-        :ok-disabled="isRowReadOnly"
+        :ok-disabled="rowWriteBlocked"
         cancel-variant="outline-secondary"
         ok-variant="outline-success"
         :ok-title="$t('common.save')">
@@ -144,7 +144,7 @@ import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
-import { isVersionRejection } from '@/utils/lockErrors'
+import { isLockRejection, isVersionRejection } from '@/utils/lockErrors'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
@@ -190,6 +190,10 @@ export default {
       // Ref-lock state of the row being edited/removed. Endpoint C demands the
       // caller holds the lock of that row's ref_id.
       isRowReadOnly: false,
+      // The row lock is still being asked for, or the row's PATCH is on its way:
+      // Save waits for both (#404).
+      rowLockPending: false,
+      rowSaving: false,
       rowLockedBy: null,
       // El motivo del latido (`ref-lock-lost`) o del acquire, para que el cartel diga si
       // se destraba solo. Ver `lockLostMessage.js`.
@@ -225,6 +229,10 @@ export default {
     }
   },
   computed: {
+    // Save is off while read-only, while the lock is being asked for and while saving.
+    rowWriteBlocked: function () {
+      return this.isRowReadOnly || this.rowLockPending || this.rowSaving
+    },
     // Mismo criterio que crudTables: un lock perdido gana sobre uno negado, porque es lo
     // último que pasó. El cartel es el único aviso; no hay toast encima.
     rowLockMessageKey () {
@@ -234,6 +242,29 @@ export default {
     }
   },
   methods: {
+    /**
+     * Save keeps the editor open until the PATCH answers (#404). Closing at once
+     * let its `hidden` release the row lock while the PATCH was still on its way:
+     * the server answered 409 lock_not_held and the text was gone with the editor.
+     * Now the lock is released by `hidden` only after a successful save, and a
+     * failed one leaves the text in the open editor.
+     */
+    onRowEditorOk: function (bvEvent) {
+      this.confirmRowWrite(bvEvent, this.saveDataExtractedData, 'modal-extracted-data-data')
+    },
+    onRemoveRowOk: function (bvEvent) {
+      this.confirmRowWrite(bvEvent, this.extractedDataRemoveDataItem, 'modal-extracted-data-remove-data-item')
+    },
+    // `modalId` is also the modal's ref; closing by id survives re-renders.
+    confirmRowWrite: function (bvEvent, write, modalId) {
+      if (bvEvent) bvEvent.preventDefault()
+      if (this.rowWriteBlocked) return
+      this.rowSaving = true
+      write().then((saved) => {
+        this.rowSaving = false
+        if (saved) this.$bvModal.hide(modalId)
+      })
+    },
     getReferenceInfo: function (refId) {
       for (let ref of this.refsWithTitle) {
         if (ref.id === refId) {
@@ -267,7 +298,8 @@ export default {
       this.staleHiddenPending = this.closingInFlight
       this.rowEditorOpen = true
       this.rowEditorStudy = refId
-      this.acquireRowLock(this.rowLockKeyOf(refId))
+      this.rowLockPending = true
+      this.acquireRowLock(this.rowLockKeyOf(refId)).finally(() => { this.rowLockPending = false })
     },
     // La fila de ESTE documento, no el estudio: ver `extractedDataLockKeys.js`.
     rowLockKeyOf: function (refId) {
@@ -363,7 +395,7 @@ export default {
       // /item/<ref_id> sub-resource. No $pull, no whole-array rewrite (endpoint C).
       const item = this.localExtractedData.items[this.buffer_extracted_data.remove_index_item]
       // Writing without this row's lock is a guaranteed 409.
-      if (this.isRowReadOnly) return Promise.resolve()
+      if (this.isRowReadOnly) return Promise.resolve(false)
       // La fila se arma con las claves que el reset escribe, no con un spread del ítem: lo
       // que se borra son las columnas de datos. Pero el `_v` no es una columna de datos —
       // es la metadata con la que el servidor comprueba que nadie escribió mientras tanto—,
@@ -375,6 +407,7 @@ export default {
         .then(() => {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
+          return true
         })
         .catch((error) => this.onRowWriteError(error))
     },
@@ -383,7 +416,7 @@ export default {
       // so concurrent edits to other rows are not overwritten (endpoint C).
       const _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
       // Writing without this row's lock is a guaranteed 409.
-      if (this.isRowReadOnly) return Promise.resolve()
+      if (this.isRowReadOnly) return Promise.resolve(false)
       // Mismo motivo que en el reset: el `_v` viaja aparte porque no es un campo del
       // usuario. `_item` es el buffer del editor, clonado de la fila del servidor, así que
       // trae el contador que corresponde a lo que la persona abrió.
@@ -398,26 +431,37 @@ export default {
           this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}
           this.buffer_extracted_data_items = {}
+          return true
         })
         .catch((error) => this.onRowWriteError(error))
     },
     /**
-     * El modal se cierra al confirmar (`@ok`), así que el fallo llega con el editor ya
-     * cerrado: es un evento, y el aviso va por toast. `printErrors` del padre no muestra
-     * nada, y sólo con él este guardado fallaba sin decirlo.
+     * The editor stays open with the text when a save fails (see onRowEditorOk);
+     * the failure is still announced by toast. Always resolves to `false`.
+     * A lock rejection is already toasted by the Api interceptor (OfflineIndicator):
+     * here the editor only turns read-only, so the text can be copied but a retry
+     * does not repeat the same 409.
      */
     onRowWriteError: function (error) {
       this.$emit('printErrors', error)
-      if (!this.$notify) return
+      if (isLockRejection(error)) {
+        const data = (error.response && error.response.data) || {}
+        this.isRowReadOnly = true
+        this.rowLockedBy = data.locked_by || null
+        this.rowLockLostReason = data.reason || null
+        return false
+      }
+      if (!this.$notify) return false
       // La fila cambió desde que se leyó: se trae al día para que la persona, al reabrir,
       // parta de lo que guardó la otra.
       if (isVersionRejection(error)) {
         this.$emit('getExtractedData', true)
         this.$notify.warning(this.$t('version_conflict.reloaded'))
-        return
+        return false
       }
       const key = writeErrorMessageKey(error, 'notifications.save_error')
       if (key) this.$notify.error(this.$t(key))
+      return false
     }
   },
   mounted () {
