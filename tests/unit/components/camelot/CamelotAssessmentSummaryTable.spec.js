@@ -231,6 +231,13 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       expect(dropdown.props('boundary')).toBe('viewport')
       expect(dropdown.props('popperOpts')).toEqual(expect.objectContaining({ positionFixed: true }))
     })
+
+    // Popper measures the menu while it still sits in the narrow modal; without a
+    // width of its own the menu widened after being placed and ran off the right edge.
+    it('gives the menu a width that does not depend on where it is positioned', () => {
+      const menu = mountWithFilter().find('#dropdown-filter-assessments .dropdown-menu')
+      expect(menu.classes()).toContain('modal-safe-menu')
+    })
   })
 
   describe('empty explanation feedback in row-details', () => {

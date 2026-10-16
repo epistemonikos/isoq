@@ -17,7 +17,9 @@
  */
 export const MODAL_SAFE_DROPDOWN = {
   boundary: 'viewport',
-  popperOpts: { positionFixed: true }
+  popperOpts: { positionFixed: true },
+  // Intrinsic width: see `.modal-safe-menu` in src/assets/styles/main.scss.
+  menuClass: 'modal-safe-menu'
 }
 
 export const MODAL_SAFE_MENU_STYLE = {

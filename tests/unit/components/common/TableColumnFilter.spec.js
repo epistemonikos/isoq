@@ -26,6 +26,10 @@ describe('TableColumnFilter (#397)', () => {
     expect(dropdown.props('popperOpts')).toEqual(expect.objectContaining({ positionFixed: true }))
   })
 
+  it('gives the menu a width that does not depend on where it is positioned', () => {
+    expect(mountFilter().find('.dropdown-menu').classes()).toContain('modal-safe-menu')
+  })
+
   it('keeps a long menu scrollable within the viewport height', () => {
     // b-dropdown-form puts the style on its <li> wrapper, the box that scrolls.
     const menuBox = mountFilter().find('.b-dropdown-form').element.parentElement

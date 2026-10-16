@@ -728,3 +728,14 @@ html[data-theme="dark"] {
 .lock-notice {
   color: var(--lock-notice-color);
 }
+
+/* Menu of a dropdown placed with MODAL_SAFE_DROPDOWN (src/utils/modalSafeDropdown.js).
+   Popper measures the menu once, while it still sits inside the modal, where its
+   shrink-to-fit width is capped by the modal's width; once it is `position: fixed`
+   the cap is the viewport and the menu widens past the spot Popper computed (#391:
+   it ran off the right edge). An intrinsic width is the same in both contexts, and
+   the max-width lets long labels wrap on narrow screens instead of overflowing. */
+.modal-safe-menu {
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
