@@ -34,7 +34,7 @@ module.exports = {
   'services/presenceService.js::leave': TTL,
   'store.js::getLogginInfo': PARSE + ' (el usuario guardado en localStorage).',
   'utils/Api.js::cacheResponse': CACHE,
-  'utils/Api.js::purgeConflictDrafts': 'Barrido de borradores viejos de localStorage que nadie lee (#404): si el almacenamiento está bloqueado no hay nada que barrer, y la persona no puede hacer nada distinto.',
+  'utils/Api.js::purgeConflictDrafts': 'Sweep of old localStorage drafts nobody reads (#404): with storage blocked there is nothing to sweep, and the person could do nothing differently.',
   'utils/Api.js::tryOptimisticUpdate': CACHE,
   'utils/Api.js::tryOptimisticUpdate#2': CACHE,
   'utils/Api.js::tryOptimisticUpdate#3': CACHE,

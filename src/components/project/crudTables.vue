@@ -882,7 +882,14 @@ export default {
      * A column is saved when its input loses focus: that is when the title is written.
      * Doing it as the row appears would bring a column into existence untitled.
      */
-    onEditFieldBlur: async function (index) {
+    // The modal's close waits for this write (#393): releasing the fields lock under a
+    // create in flight made it a 409 and the column was lost.
+    onEditFieldBlur: function (index) {
+      const write = this.commitEditField(index)
+      this.$_columnWrite = write
+      return write
+    },
+    commitEditField: async function (index) {
       this.$set(this.dataTableFieldsModalEdit.touched, index, true)
 
       const field = this.dataTableFieldsModalEdit.fields[index]
@@ -903,20 +910,16 @@ export default {
           // column and a second blur would create it all over again.
           this.$set(field, 'key', key)
           this.committedColumnLabels[key] = label
-          // El servidor la agrega al final (`$push`) y el modal la muestra arriba, donde el
-          // usuario la creó. Se corrige EN EL ACTO y no al cerrar: diferirlo deja la columna
-          // al fondo de la tabla mientras el modal sigue abierto, y en la base si el cierre
-          // no llega a mandar el orden. Mismo criterio que `ManageColumnsButton`.
-          //
-          // Este envío lleva el orden completo del modal, arrastres previos incluidos, así
-          // que baja el pendiente: repetirlo al cerrar sería un request de más.
+          // The server already inserts the new column first (#393). This order also carries
+          // the drags made so far in the modal, so it clears the pending one: repeating it
+          // on close would be one request too many. Same as `ManageColumnsButton`.
           const order = this.columnsOrderFromModal()
           this.pendingColumnsOrder = false
           if (order.length) {
             try {
               await columnService.reorderColumns(this.type, this.dataTable.id, order)
             } catch (error) {
-              // La columna ya existe, al final. El cierre del modal lo reintenta.
+              // The column exists already; closing the modal retries the order.
               this.pendingColumnsOrder = true
               throw error
             }
@@ -986,6 +989,8 @@ export default {
       this.pendingColumnsOrder = true
     },
     onColumnsEditModalHidden: async function () {
+      if (this.$_columnWrite) await this.$_columnWrite.catch(() => null)
+      this.$_columnWrite = null
       // El estado local se baja PRIMERO, antes de cualquier await: si uno falla, dejar el
       // flag en true hace que `hasOpenEditor()` mienta para siempre y el refresco periódico
       // no vuelva a aplicarse nunca. Es lo que pasaba cuando `releaseRef` rechazaba porque la

@@ -154,7 +154,14 @@ export default {
       this.columnsLockHeld = true
       return true
     },
-    async onFieldCommitted (field) {
+    // The modal's close waits for this write (#393): releasing the fields lock under a
+    // create in flight made it a 409 and the column was lost.
+    onFieldCommitted (field) {
+      const write = this.commitField(field)
+      this.$_columnWrite = write
+      return write
+    },
+    async commitField (field) {
       if (!this.canEdit || !(await this.ensureColumnsLock())) return
 
       const label = (field.label || '').trim()
@@ -177,14 +184,9 @@ export default {
           this.createdKeys.push(key)
           this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, key])
           this.emitSaved(response)
-          // El servidor la agrega al final (`$push`) y el modal la muestra arriba, que es
-          // donde el usuario la creó. Esa discrepancia se corrige EN EL ACTO y no al
-          // cerrar: entre medio están las 24 claves CAMELOT sembradas, así que diferirlo
-          // deja la columna recién creada al fondo de la tabla mientras el modal sigue
-          // abierto — y si el cierre no llega a disparar el flush, también en la base.
-          //
-          // El arrastre sí se sigue acumulando hasta el cierre: es conmutativo y no tiene
-          // ninguna discrepancia que corregir.
+          // The server already inserts the new column first (#393); this order also
+          // carries the drags made so far. Drags keep accumulating until close: they are
+          // commutative and have nothing to correct.
           this.pendingOrder = true
           await this.flushPendingOrder()
         }
@@ -272,6 +274,8 @@ export default {
       }
     },
     async onModalHidden () {
+      if (this.$_columnWrite) await this.$_columnWrite.catch(() => null)
+      this.$_columnWrite = null
       await this.flushPendingOrder()
 
       if (this.columnsLockHeld) {
