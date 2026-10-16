@@ -265,7 +265,8 @@ export default {
       // The one view state of the summary (#391): 'all' and 'none' show and hide
       // the details of every study; a position key ('0-0' … '3-0') shows only that
       // assessment, in every study. Opening or closing the menu never changes it.
-      selectedAssessment: 'all',
+      // It starts on 'none': details appear only once the person applies a filter.
+      selectedAssessment: 'none',
       modalSafeDropdown: MODAL_SAFE_DROPDOWN,
       filterMenuStyle: { minWidth: '320px', ...MODAL_SAFE_MENU_STYLE }
     }
@@ -389,10 +390,10 @@ export default {
     isAssessmentVisible (stageIdx, oIdx) {
       return this.visibleAssessments.includes(`${stageIdx}-${oIdx}`)
     },
-    // Called when the modal opens: Show all, with every detail shown.
+    // Called when the modal opens: Hide all, until the person applies a filter.
     resetTableState () {
-      this.selectedAssessment = 'all'
-      this.expandAllDetails(true)
+      this.selectedAssessment = 'none'
+      this.expandAllDetails(false)
     },
     getOptionColor (optionValue) {
       const response = this.responses.find(r => r.value === optionValue)
