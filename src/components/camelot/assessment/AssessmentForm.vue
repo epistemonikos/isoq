@@ -139,6 +139,14 @@ import {
   emptyAssessmentItem
 } from '@/utils/camelotAssessmentKeys'
 
+// Same option, explanation and notes; a missing text or note is the empty one.
+function sameLeafContent (a, b) {
+  const option = leaf => (leaf.option === undefined ? null : leaf.option)
+  return option(a) === option(b) &&
+    (a.text || '') === (b.text || '') &&
+    (a.notes || '') === (b.notes || '')
+}
+
 export default {
   mixins: [pendingEditsMixin],
   name: 'AssessmentForm',
@@ -568,8 +576,10 @@ export default {
       // Devuelve la escritura para que quien se va pueda esperarla: soltar el ref-lock con
       // el PATCH en vuelo lo deja llegar sin permiso (409 `lock_not_held`), y el texto se
       // pierde igual. `flush()` es no-op sin nada agendado, y ahí devuelve undefined.
-      if (!this.autoSaveDebounced) return
-      return this.autoSaveDebounced.flush()
+      // A manual save already on its way counts too: with no autosave pending `flush()`
+      // gives nothing, and the lock was released under it (#395, same class as #404).
+      const flushed = this.autoSaveDebounced ? this.autoSaveDebounced.flush() : undefined
+      return flushed || this.$_saveInFlight || undefined
     },
     clearSelection () {
       this.selected = null
@@ -588,7 +598,39 @@ export default {
       // agendaría un auto-guardado de lo que acaba de llegar del servidor.
       this.$nextTick(() => { if (this.autoSaveDebounced) this.autoSaveDebounced.cancel() })
     },
-    async performSave (silent = false) {
+    /**
+     * Saves of this cell go one after another (#395). The autosave went out with
+     * `_v=N`, Save (or "Do it later") went out before its answer with the same N, and
+     * the second PATCH met N+1: "someone else saved changes here", with identical
+     * content, to a person working alone. A save asked for while another is on its way
+     * waits for it, then reads the fields and the version it left; several asked for
+     * meanwhile collapse into one (manual if any of them was). The returned promise
+     * settles after that save, so whoever releases the lock can wait for it.
+     */
+    performSave (silent = false) {
+      const queued = this.$_queuedSave
+      if (queued) {
+        queued.silent = queued.silent && silent
+        return queued.promise
+      }
+      const next = { silent }
+      const run = () => {
+        if (this.$_queuedSave === next) this.$_queuedSave = null
+        return this.writeLeaf(next.silent)
+      }
+      if (this.$_saveInFlight) {
+        this.$_queuedSave = next
+        next.promise = this.$_saveInFlight.then(run, run)
+      } else {
+        next.promise = run()
+      }
+      const tracked = next.promise.finally(() => {
+        if (this.$_saveInFlight === tracked) this.$_saveInFlight = null
+      })
+      this.$_saveInFlight = tracked
+      return tracked
+    },
+    async writeLeaf (silent = false) {
       if (this.isReadOnly) return
       // Con la celda desactualizada, cada guardado mandaría la misma versión vieja: un 409
       // por tecla. Se sigue cuando la persona trae la versión al día.
@@ -617,6 +659,9 @@ export default {
           const written = leafInDocument(response && response.data, this.refId, target.stageKey, target.optionIndex)
           if (written) this.leafVersion = leafVersionOf(written)
         }
+        // The cell of the shared document gets the new version too: a re-hydration from
+        // it before the refetch lands would otherwise bring the old one back (#395).
+        if (localLeaf && leafVersionOf(localLeaf) !== this.leafVersion) localLeaf[VERSION_FIELD] = this.leafVersion
         // Lo que acabamos de escribir pasa a ser "lo guardado", y antes de pedir el
         // refetch: si no, el documento que vuelve encontraría los campos marcados como
         // borrador y no se aplicaría nunca más. Si la persona siguió editando mientras el
@@ -654,6 +699,15 @@ export default {
       // Deshace el pintado anticipado de la grilla (ver `localLeaf` abajo).
       let revertLocalLeaf = null
       const onError = (error) => {
+        // A version conflict over exactly what was sent is not a conflict: the cell already
+        // holds it (an earlier save of this same content got there first). Taken as saved,
+        // with the version the server reports, instead of a panel showing two equal texts.
+        const stored = isVersionRejection(error) && error.response && error.response.data && error.response.data.option
+        if (stored && sameLeafContent(stored, leaf)) {
+          this.leafVersion = leafVersionOf(stored)
+          onSuccess(null)
+          return
+        }
         console.error('Error saving assessment data:', error)
         if (revertLocalLeaf) revertLocalLeaf()
         this.isSaving = false
