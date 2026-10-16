@@ -50,6 +50,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 import NotifyPlugin from './plugins/notify'
+import { purgeConflictDrafts } from './utils/Api'
 
 library.add(faChevronUp, faChevronDown, faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamation, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle)
 
@@ -228,6 +229,9 @@ router.beforeEach((to, from, next) => {
     }
   })
 })
+
+// Lock-conflict drafts left by older clients (#404): nothing reads them.
+purgeConflictDrafts()
 
 // Esperar a que el router esté listo antes de crear la instancia de Vue
 Trans.changeLanguage(Trans.getUserSupportedLang()).then(() => {

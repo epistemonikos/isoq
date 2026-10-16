@@ -134,9 +134,7 @@ describe('Api.syncPendingOperations() — locks al reproducir la cola', () => {
       // This one really did happen offline, so the offline wording is the honest one.
       source: 'replay'
     })
-    expect(Storage.prototype.setItem).toHaveBeenCalledWith(
-      'conflict_ref_ref1', expect.stringContaining('Ana Pérez')
-    )
+    expect(Storage.prototype.setItem).not.toHaveBeenCalledWith(expect.stringMatching(/^conflict_ref_/), expect.anything())
   })
 
   it('descarta de la cola la operación en conflicto para no reintentar para siempre', async () => {

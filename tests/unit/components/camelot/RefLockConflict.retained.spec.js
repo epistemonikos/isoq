@@ -161,8 +161,7 @@ describe('canal de conflicto — el 409 que llega después del cierre', () => {
     conflict('R1::s1::o2')
     await flushPromises()
     expect(wrapper.vm.conflictData).not.toBeNull()
-    // La clave que se le pasa al modal es la CRUDA: RefLockConflictModal hace
-    // localStorage.removeItem('conflict_ref_' + refId), y con la base quedaría huérfana.
+    // La clave que se le pasa al modal es la CRUDA, la misma que nombra el evento.
     expect(wrapper.vm.conflictRefId).toBe('R1::s1::o2')
 
     wrapper.destroy()
