@@ -138,7 +138,8 @@ async function queuedLockContext (url) {
  */
 function reportRefLockConflict (refId, failedData, lockedBy, source = 'live') {
   if (typeof window === 'undefined') return
-  localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy, source }))
+  // The typed text travels in the event, to whoever shows it. It is not copied to
+  // localStorage: nothing read that copy, and it left people's text in the browser.
   window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
     detail: { refId, failedData, lockedBy, source }
   }))
@@ -153,6 +154,20 @@ function reportRefLockConflict (refId, failedData, lockedBy, source = 'live') {
  * del suyo. Por eso el `item` al día viaja en el evento — el servidor ya lo manda en el
  * cuerpo del 409, y pedirlo de nuevo sería una segunda vuelta al mismo estado.
  */
+/**
+ * Sweeps the `conflict_ref_<key>` drafts older clients left in localStorage on every
+ * lock 409 (#404): nothing ever read them. Called once at startup.
+ */
+export function purgeConflictDrafts () {
+  try {
+    Object.keys(localStorage)
+      .filter(key => key.startsWith('conflict_ref_'))
+      .forEach(key => localStorage.removeItem(key))
+  } catch (e) {
+    // Storage blocked or unavailable: there is nothing to sweep.
+  }
+}
+
 function reportVersionConflict (refId, error, source) {
   if (typeof window === 'undefined') return
   const data = (error.response && error.response.data) || {}

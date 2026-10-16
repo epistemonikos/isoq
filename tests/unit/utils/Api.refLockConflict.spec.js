@@ -47,10 +47,8 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
       // picks depends on telling them apart.
       source: 'live'
     })
-    expect(setItemSpy).toHaveBeenCalledWith(
-      'conflict_ref_ref1',
-      expect.stringContaining('Ana')
-    )
+    // The typed text travels in the event; nothing reads a copy in localStorage (#404).
+    expect(setItemSpy).not.toHaveBeenCalledWith(expect.stringMatching(/^conflict_ref_/), expect.anything())
   })
 
   // El control de versión por ítem contesta con el mismo 409 y por la misma URL granular,
@@ -188,10 +186,7 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
 
       const event = dispatched.find(e => e.type === 'ref-lock-conflict')
       expect(event.detail.refId).toBe('ref4::s0::o2')
-      expect(setItemSpy).toHaveBeenCalledWith(
-        'conflict_ref_ref4::s0::o2',
-        expect.stringContaining('Dana')
-      )
+      expect(setItemSpy).not.toHaveBeenCalledWith(expect.stringMatching(/^conflict_ref_/), expect.anything())
     })
 
     it('conserva el payload de la hoja que falló', async () => {

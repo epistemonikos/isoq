@@ -57,7 +57,6 @@ export default {
       this.$bvModal.show('modal-ref-lock-conflict')
     },
     onClose () {
-      localStorage.removeItem(`conflict_ref_${this.refId}`)
       this.$emit('closed')
     },
     copyToClipboard (text) {
