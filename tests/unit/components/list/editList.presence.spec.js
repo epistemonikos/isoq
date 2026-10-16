@@ -110,37 +110,15 @@ describe('editList — presencia', () => {
 
     expect(vm.activePresence).toEqual([])
   })
-
-  it('el aviso nombra a los OTROS, nunca a uno mismo', () => {
-    const vm = {
-      activePresence: [
-        { finding_id: 'f1', user_id: 'u-yo', user_name: 'Yo Mismo' },
-        { finding_id: 'f1', user_id: 'u-ana', user_name: 'Ana Soto' }
-      ],
-      foreignRefLocks: [],
-      findings: { id: 'f1' },
-      currentUserId: 'u-yo',
-      $t: (key, params) => key === 'presence.reviewing_one'
-        ? `${params.users} está revisando este hallazgo` : key,
-      presenceNotice: editList.computed.presenceNotice
-    }
-
-    expect(vm.presenceNotice.call(vm)).toBe('Ana Soto está revisando este hallazgo')
-  })
 })
 
-describe('editList — el aviso de presencia no se imprime', () => {
-  // "Ana Soto is reviewing this finding" impreso en un worksheet exportado es ruido
-  // en un documento citable, igual que #progress-status (su hermano inmediato en el
-  // template) ya tiene `d-print-none`.
+// #403: the worksheet no longer announces who else is looking at it: it read as
+// "don't edit", while editing different things at the same time is supported.
+// Presence is still recorded here (enterPresence): the iSoQ findings list uses it.
+describe('editList — no presence banner on the worksheet', () => {
   const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
-  it('el b-alert de presencia lleva la clase d-print-none', async () => {
-    // Mismo aislamiento que editList.scroll.spec.js: getList() dispara siete
-    // cascadas sin promesa propia (getProject, syncOrderWithProject,
-    // getAllReferences, getFinding, getCharsOfStudies, getMethAssessments,
-    // getExtractedData); se stubean para no ejercitarlas — lo que se prueba acá
-    // es sólo la clase del aviso de presencia.
+  it('shows no presence banner even when someone else is on the finding', async () => {
     const CASCADE = [
       'getProject', 'syncOrderWithProject', 'getAllReferences', 'getFinding',
       'getCharsOfStudies', 'getMethAssessments', 'getExtractedData'
@@ -164,17 +142,16 @@ describe('editList — el aviso de presencia no se imprime', () => {
         'table-meth-assessments': true, 'table-extracted-data': true,
         'font-awesome-icon': true
       },
-      methods: stubbedMethods,
-      computed: {
-        presenceNotice: () => 'Ana Soto está revisando este hallazgo'
-      }
+      methods: stubbedMethods
     })
     await flushPromises()
-    await wrapper.vm.$nextTick()
+    await wrapper.setData({
+      findings: { id: 'f1' },
+      activePresence: [{ finding_id: 'f1', user_id: 'u-ana', user_name: 'Ana Soto' }]
+    })
 
-    const aviso = wrapper.find('[data-testid="worksheet-presence"]')
-    expect(aviso.exists()).toBe(true)
-    expect(aviso.classes()).toContain('d-print-none')
+    expect(wrapper.find('[data-testid="worksheet-presence"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('presence.reviewing')
 
     wrapper.destroy()
   })

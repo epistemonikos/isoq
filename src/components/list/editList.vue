@@ -52,12 +52,6 @@
         </b-col>
       </b-row>
 
-      <b-alert v-if="presenceNotice" show variant="info" class="mb-3 d-print-none"
-        data-testid="worksheet-presence">
-        <font-awesome-icon icon="user"></font-awesome-icon>
-        {{ presenceNotice }}
-      </b-alert>
-
       <b-row class="mt-4">
         <b-col cols="12">
           <div id="progress-status" v-if="mode === 'edit'" class="d-print-none">
@@ -122,7 +116,6 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
-import { presentReviewersOf, presenceNoticeText } from '@/utils/findingPresence'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByAuthors } from '@/utils/tableDataUtils'
@@ -377,19 +370,6 @@ export default {
     currentUserId: function () {
       return (this.$store && this.$store.state && this.$store.state.user &&
         this.$store.state.user.id) || null
-    },
-    /**
-     * Los OTROS que están en este hallazgo. Informa, no bloquea nada.
-     *
-     * La frase completa es `presenceNoticeText` (`@/utils/findingPresence`): ya la
-     * pedían las dos superficies de `ViewTable.vue` (fila y modal), y una tercera
-     * copia escrita a mano acá era la primera oportunidad de que se desincronizaran.
-     */
-    presenceNotice: function () {
-      const nombres = presentReviewersOf(
-        this.activePresence, this.foreignRefLocks,
-        this.findings && this.findings.id, this.currentUserId)
-      return presenceNoticeText(nombres, this.$t.bind(this))
     }
   },
   mounted () {

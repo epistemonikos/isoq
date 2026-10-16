@@ -19,7 +19,7 @@
       class="d-print-none"
       data-testid="ep-references-editing">
       <font-awesome-icon icon="user"></font-awesome-icon>
-      {{ $t('lock.editing_references', { user: referencesEditor }) }}
+      {{ $t(permission ? 'lock.editing_references' : 'lock.editing_references_readonly', { user: referencesEditor }) }}
     </b-alert>
     <b-table
       class="d-print-none"
