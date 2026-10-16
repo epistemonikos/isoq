@@ -226,9 +226,9 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       expect(radios(w).at(0).element.checked).toBe(false)
     })
 
-    it('positions the menu against the window so the scrollable modal body cannot clip it', () => {
+    it('positions the menu against the visible viewport so the scrollable modal body cannot clip it', () => {
       const dropdown = mountWithFilter().findComponent({ name: 'BDropdown' })
-      expect(dropdown.props('boundary')).toBe('window')
+      expect(dropdown.props('boundary')).toBe('viewport')
       expect(dropdown.props('popperOpts')).toEqual(expect.objectContaining({ positionFixed: true }))
     })
   })

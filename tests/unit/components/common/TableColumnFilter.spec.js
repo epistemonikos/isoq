@@ -20,9 +20,9 @@ function mountFilter () {
 describe('TableColumnFilter (#397)', () => {
   // The filter also opens inside scrollable modals (Adequacy, Relevance), where
   // the modal body clipped the top of the menu and hid "Show all".
-  it('positions the menu against the window so a scrollable modal body cannot clip it', () => {
+  it('positions the menu against the visible viewport so a scrollable modal body cannot clip it', () => {
     const dropdown = mountFilter().findComponent({ name: 'BDropdown' })
-    expect(dropdown.props('boundary')).toBe('window')
+    expect(dropdown.props('boundary')).toBe('viewport')
     expect(dropdown.props('popperOpts')).toEqual(expect.objectContaining({ positionFixed: true }))
   })
 

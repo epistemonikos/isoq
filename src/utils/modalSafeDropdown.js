@@ -9,12 +9,14 @@
  * the menu is still clipped by its overflow ancestor.
  *
  * `positionFixed` makes the menu's containing block the viewport (a shown
- * `.modal-dialog` has no transform), so no overflow ancestor clips it, and the
- * `window` boundary keeps it on screen. Pair it with MODAL_SAFE_MENU_STYLE so a
- * long menu scrolls inside itself instead of running off the bottom.
+ * `.modal-dialog` has no transform), so no overflow ancestor clips it. The
+ * boundary must be `viewport` (the visible area), not `window`: in Popper v1
+ * `window` is the whole document, so on a long, scrolled page (the worksheet)
+ * the menu was allowed to open hundreds of pixels above the top of the screen.
+ * Pair it with MODAL_SAFE_MENU_STYLE so a long menu scrolls inside itself.
  */
 export const MODAL_SAFE_DROPDOWN = {
-  boundary: 'window',
+  boundary: 'viewport',
   popperOpts: { positionFixed: true }
 }
 
