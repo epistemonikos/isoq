@@ -57,6 +57,7 @@
     "no_results_for": "Nenhum resultado para \"{query}\"",
     "filter_columns": "Filtrar colunas",
     "show_all": "Mostrar todas",
+    "hide_all": "Ocultar todas",
     "share": "Compartilhar",
     "shared": "Compartilhado",
     "leave": "Sair",
