@@ -8,7 +8,7 @@
       </b-button>
 
       <b-dropdown id="dropdown-filter-assessments" variant="outline-primary" size="sm" no-caret right
-        class="assessment-filter-dropdown" v-bind="modalSafeDropdown" @show="handleFilterDropdownShow">
+        class="assessment-filter-dropdown" v-bind="modalSafeDropdown">
         <template #button-content>
           {{ $t('camelot.step_four.show_details_across_studies') }}
           <font-awesome-icon icon="filter" class="ml-1" />
@@ -17,7 +17,8 @@
           <h6 class="dropdown-header px-0 mb-2 font-weight-bold">{{ $t('common.filter_columns') }}</h6>
 
           <b-form-radio-group v-model="selectedAssessment" name="assessment-filter" stacked>
-            <b-form-radio value="all" class="mb-2 font-weight-bold">{{ $t('common.show_all') }}</b-form-radio>
+            <b-form-radio value="all" class="mb-1 font-weight-bold">{{ $t('common.show_all') }}</b-form-radio>
+            <b-form-radio value="none" class="mb-2 font-weight-bold">{{ $t('common.hide_all') }}</b-form-radio>
             <b-form-radio v-for="opt in filterOptions" :key="opt.value" :value="opt.value" class="mb-1">
               {{ opt.label }}
             </b-form-radio>
@@ -261,8 +262,10 @@ export default {
         { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
       ],
-      visibleAssessments: [...ASSESSMENT_POSITION_KEYS],
-      allVisible: true,
+      // The one view state of the summary (#391): 'all' and 'none' show and hide
+      // the details of every study; a position key ('0-0' … '3-0') shows only that
+      // assessment, in every study. Opening or closing the menu never changes it.
+      selectedAssessment: 'all',
       modalSafeDropdown: MODAL_SAFE_DROPDOWN,
       filterMenuStyle: { minWidth: '320px', ...MODAL_SAFE_MENU_STYLE }
     }
@@ -305,20 +308,14 @@ export default {
         value: positionKeyOf(cell.key)
       }))
     },
-    // The radio is a view over visibleAssessments, which stays an array: the
-    // row details and the header click already speak that shape.
-    selectedAssessment: {
-      get () {
-        if (this.allVisible) return 'all'
-        return this.visibleAssessments.length === 1 ? this.visibleAssessments[0] : null
-      },
-      set (value) {
-        if (value === 'all') {
-          this.toggleAllAssessments(true)
-        } else {
-          this.visibleAssessments = [value]
-        }
-      }
+    // What the row details show. With 'none' a row opened by hand shows everything.
+    visibleAssessments () {
+      return ASSESSMENT_POSITION_KEYS.includes(this.selectedAssessment)
+        ? [this.selectedAssessment]
+        : [...ASSESSMENT_POSITION_KEYS]
+    },
+    detailsShownBySelection () {
+      return this.selectedAssessment !== 'none'
     },
     tableItems () {
       if (!this.assessments || !this.assessments.items) return []
@@ -353,17 +350,21 @@ export default {
         }
       }
       return active
-    },
-    allAssessmentValues () {
-      return this.filterOptions.map(o => o.value)
     }
   },
   watch: {
-    visibleAssessments (newVal) {
-      this.allVisible = newVal.length === this.allAssessmentValues.length
-      // Al cambiar los filtros, nos aseguramos de que todos los detalles estén abiertos si hay filtros activos
-      if (newVal.length < this.allAssessmentValues.length && newVal.length > 0) {
-        this.expandAllDetails(true)
+    selectedAssessment () {
+      this.expandAllDetails(this.detailsShownBySelection)
+    },
+    // Studies that arrive later (first load, reload after a save) follow the
+    // current selection; a row already opened or closed by hand keeps its state.
+    tableItems: {
+      immediate: true,
+      handler (items) {
+        if (this.hideActions) return
+        items.forEach(item => {
+          if (item._showDetails === undefined) this.$set(item, '_showDetails', this.detailsShownBySelection)
+        })
       }
     }
   },
@@ -371,29 +372,13 @@ export default {
     handleHeaderClick (assessmentKey) {
       if (!this.clickableHeaders) return
 
-      this.visibleAssessments = [assessmentKey]
+      this.selectedAssessment = assessmentKey
+      // Clicking the header already selected still shows every study again.
       this.expandAllDetails(true)
     },
-    handleFilterDropdownShow () {
-      // Al abrir el filtro, si hay algún estudio abierto, los cerramos todos.
-      const anyShowing = this.tableItems.some(item => item._showDetails)
-      if (anyShowing) {
-        this.expandAllDetails(false)
-      } else {
-        // Si no hay ninguno abierto, abrimos todos (mostrando la información filtrada)
-        this.expandAllDetails(true)
-      }
-    },
+    // A row's own Show/Hide button opens or closes only that row, with the
+    // current selection; it does not touch the selection or the other rows.
     handleToggleDetails (data) {
-      // Al presionar show o hide individual, se cierran todos los demás y se resetean los filtros
-      const currentItemId = data.item.ref_id
-      this.tableItems.forEach(item => {
-        if (item.ref_id !== currentItemId) {
-          this.$set(item, '_showDetails', false)
-        }
-      })
-
-      this.toggleAllAssessments(true)
       data.toggleDetails()
     },
     expandAllDetails (show) {
@@ -401,21 +386,13 @@ export default {
         this.$set(item, '_showDetails', show)
       })
     },
-    toggleAllAssessments (checked) {
-      if (checked) {
-        this.visibleAssessments = [...this.allAssessmentValues]
-      } else {
-        this.visibleAssessments = []
-      }
-    },
     isAssessmentVisible (stageIdx, oIdx) {
       return this.visibleAssessments.includes(`${stageIdx}-${oIdx}`)
     },
+    // Called when the modal opens: Show all, with every detail shown.
     resetTableState () {
-      // Restablecer filtros a "todos visibles"
-      this.toggleAllAssessments(true)
-      // Colapsar todos los detalles
-      this.expandAllDetails(false)
+      this.selectedAssessment = 'all'
+      this.expandAllDetails(true)
     },
     getOptionColor (optionValue) {
       const response = this.responses.find(r => r.value === optionValue)

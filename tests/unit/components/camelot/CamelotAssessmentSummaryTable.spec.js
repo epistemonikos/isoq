@@ -47,123 +47,49 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     })
   })
 
-  it('keeps all table columns regardless of visibleAssessments', async () => {
-    // Inicialmente todos están visibles
+  it('keeps all table columns regardless of the selected assessment', async () => {
     expect(wrapper.vm.fields.length).toBe(12)
-
-    // Filtramos
-    await wrapper.setData({ visibleAssessments: ['0-0'] })
-    
-    // Las columnas de la tabla principal NO deben cambiar
+    await wrapper.setData({ selectedAssessment: '0-0' })
+    // The filter narrows the row details, never the columns of the main table.
     expect(wrapper.vm.fields.length).toBe(12)
     const visibleFieldKeys = wrapper.vm.fields.map(f => f.key)
     expect(visibleFieldKeys).toContain('fa2')
     expect(visibleFieldKeys).toContain('fa9')
   })
 
-  it('filters activeStages in row-details based on visibleAssessments', async () => {
-    // Filtramos para ver solo una evaluación del primer grupo (0-0)
-    await wrapper.setData({ visibleAssessments: ['0-0'] })
-    
-    // activeStages debe contener solo el índice 0
+  it('narrows activeStages in row-details to the selected assessment', async () => {
+    await wrapper.setData({ selectedAssessment: '0-0' })
     expect(wrapper.vm.activeStages).toEqual([0])
-
-    // Filtramos para ver una del grupo 0 y otra del grupo 3
-    await wrapper.setData({ visibleAssessments: ['0-0', '3-0'] })
-    expect(wrapper.vm.activeStages).toEqual([0, 3])
-  })
-
-  it('resets filters and closes other rows when individual Show button is clicked', async () => {
-    // Simulamos que hay filtros activos y varios ítems
-    const items = [
-      { ref_id: '1', authors: 'A1', _showDetails: true },
-      { ref_id: '2', authors: 'A2', _showDetails: false }
-    ]
-    await wrapper.setProps({ assessments: { items } })
-    await wrapper.setData({ visibleAssessments: ['0-0'], allVisible: false })
-    
-    // Obtenemos el botón de toggle para el SEGUNDO ítem
-    const dataMock = { 
-      item: items[1], 
-      toggleDetails: jest.fn(),
-      detailsShowing: false 
-    }
-    
-    wrapper.vm.handleToggleDetails(dataMock)
-    await wrapper.vm.$nextTick()
-    
-    // Debe resetear filtros
-    expect(wrapper.vm.allVisible).toBe(true)
-    
-    // Debe cerrar el primer ítem
-    expect(items[0]._showDetails).toBe(false)
-    
-    // Debe llamar al toggle del ítem actual
-    expect(dataMock.toggleDetails).toHaveBeenCalled()
-  })
-
-  it('toggles all rows when global filter dropdown is clicked', async () => {
-    const items = [
-      { ref_id: '1', _showDetails: false },
-      { ref_id: '2', _showDetails: false }
-    ]
-    await wrapper.setProps({ assessments: { items } })
-    
-    // Al abrir el dropdown por primera vez (ninguno abierto) -> debe abrir todos
-    wrapper.vm.handleFilterDropdownShow()
-    expect(items[0]._showDetails).toBe(true)
-    expect(items[1]._showDetails).toBe(true)
-    
-    // Al abrir el dropdown cuando ya hay abiertos -> debe cerrar todos
-    wrapper.vm.handleFilterDropdownShow()
-    expect(items[0]._showDetails).toBe(false)
-    expect(items[1]._showDetails).toBe(false)
+    await wrapper.setData({ selectedAssessment: '3-0' })
+    expect(wrapper.vm.activeStages).toEqual([3])
   })
 
   it('hides header and actions column when hideActions prop is true', async () => {
     await wrapper.setProps({ hideActions: true })
-    
+
     // Header section should be hidden
     expect(wrapper.find('.d-flex.justify-content-between.align-items-center.mb-3').exists()).toBe(false)
-    
+
     // Actions column should be removed from fields
     const visibleFieldKeys = wrapper.vm.fields.map(f => f.key)
     expect(visibleFieldKeys).not.toContain('actions')
-    
+
     // Top row should not have the extra empty th
     expect(wrapper.find('th.border-bottom-0.bg-grey-light[v-if="!hideActions"]').exists()).toBe(false)
   })
 
-  it('filters and expands all rows when a header is clicked and clickableHeaders is true', async () => {
-    await wrapper.setProps({ clickableHeaders: true })
-    
-    // Simular clic en la cabecera FA1 (assessmentKey '0-0')
-    wrapper.vm.handleHeaderClick('0-0')
-    await wrapper.vm.$nextTick()
-    
-    expect(wrapper.vm.visibleAssessments).toEqual(['0-0'])
-    expect(wrapper.vm.allVisible).toBe(false)
-    expect(wrapper.vm.tableItems.every(item => item._showDetails)).toBe(true)
-  })
-
-  it('resets table state correctly using resetTableState method', async () => {
-    // Estado alterado
-    await wrapper.setData({ visibleAssessments: ['0-0'], allVisible: false })
-    wrapper.vm.expandAllDetails(true)
-
-    wrapper.vm.resetTableState()
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.vm.allVisible).toBe(true)
-    expect(wrapper.vm.visibleAssessments.length).toBe(wrapper.vm.allAssessmentValues.length)
-    expect(wrapper.vm.tableItems.every(item => !item._showDetails)).toBe(true)
-  })
-
   describe('filter dropdown (#391)', () => {
-    function mountWithFilter () {
+    const twoStudies = () => ({
+      items: [
+        { ref_id: '1', authors: 'A1', stages: assessments.items[0].stages },
+        { ref_id: '2', authors: 'A2', stages: assessments.items[0].stages }
+      ]
+    })
+
+    function mountWithFilter (data = twoStudies()) {
       return mount(CamelotAssessmentSummaryTable, {
         localVue,
-        propsData: { assessments: JSON.parse(JSON.stringify(assessments)), clickableHeaders: true },
+        propsData: { assessments: data, clickableHeaders: true },
         mocks: { $t },
         stubs: {
           'b-table': { template: '<div></div>', props: ['items', 'fields'] },
@@ -176,54 +102,136 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     const radios = w => w.findAll('#dropdown-filter-assessments input[type="radio"]')
     const radioLabels = w => w.findAll('#dropdown-filter-assessments .custom-radio label')
       .wrappers.map(l => l.text())
+    const shown = w => w.vm.tableItems.map(item => item._showDetails)
+    const pick = (w, index) => radios(w).at(index).setChecked()
+    // Order of the radios: Show all, Hide all, FA 1 … FA 9, OA.
+    const FA = n => n + 1
+    const OA = 11
 
-    it('offers one radio per assessment plus Show all, and no checkboxes', () => {
+    it('offers Show all, Hide all and one radio per assessment, and no checkboxes', () => {
       const w = mountWithFilter()
-      expect(radios(w).length).toBe(11)
+      expect(radios(w).length).toBe(12)
       expect(w.findAll('#dropdown-filter-assessments input[type="checkbox"]').length).toBe(0)
     })
 
-    it('labels the radios Show all, FA 1 to FA 9 and OA, in that order', () => {
+    it('labels the radios Show all, Hide all, FA 1 to FA 9 and OA, in that order', () => {
       expect(radioLabels(mountWithFilter())).toEqual([
         'common.show_all',
+        'common.hide_all',
         ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `camelot.step_four.filter_options.fa${n}`),
         'camelot.step_four.filter_options.oa'
       ])
     })
 
-    it('starts on Show all', () => {
+    it('starts on Show all with the details of every study shown', async () => {
       const w = mountWithFilter()
+      await w.vm.$nextTick()
       expect(radios(w).at(0).element.checked).toBe(true)
+      expect(shown(w)).toEqual([true, true])
+      expect(w.vm.activeStages).toEqual([0, 1, 2, 3])
     })
 
-    it('shows only the chosen assessment when a radio is picked', async () => {
+    it('shows only the chosen assessment, in every study, when a radio is picked', async () => {
       const w = mountWithFilter()
-      await radios(w).at(3).setChecked() // FA 3
+      await pick(w, FA(3))
       expect(w.vm.visibleAssessments).toEqual(['0-2'])
       expect(w.vm.activeStages).toEqual([0])
+      expect(shown(w)).toEqual([true, true])
     })
 
     it('maps FA 9 and OA to their stages', async () => {
       const w = mountWithFilter()
-      await radios(w).at(9).setChecked()
+      await pick(w, FA(9))
       expect(w.vm.visibleAssessments).toEqual(['2-0'])
-      await radios(w).at(10).setChecked()
+      await pick(w, OA)
       expect(w.vm.visibleAssessments).toEqual(['3-0'])
     })
 
-    it('goes back to every assessment when Show all is picked', async () => {
+    it('hides the details of every study with Hide all', async () => {
       const w = mountWithFilter()
-      await radios(w).at(5).setChecked()
-      await radios(w).at(0).setChecked()
-      expect(w.vm.visibleAssessments).toEqual(w.vm.allAssessmentValues)
+      await pick(w, 1)
+      expect(shown(w)).toEqual([false, false])
     })
 
-    it('checks the matching radio when a column header is clicked', async () => {
+    it('brings every detail back with Show all after Hide all', async () => {
       const w = mountWithFilter()
+      await pick(w, 1)
+      await pick(w, 0)
+      expect(shown(w)).toEqual([true, true])
+      expect(w.vm.visibleAssessments).toEqual(w.vm.filterOptions.map(o => o.value))
+    })
+
+    // The reported bug: opening the menu toggled every row, so the second opening
+    // hid FA 1 while the radio still said FA 1.
+    it('keeps the selection and the details when the menu is opened and closed again', async () => {
+      // b-dropdown opens on an animation frame (a timer in jsdom) and needs the DOM.
+      const frame = () => new Promise(resolve => setTimeout(resolve, 30))
+      const w = mount(CamelotAssessmentSummaryTable, {
+        localVue,
+        attachTo: document.body,
+        propsData: { assessments: twoStudies(), clickableHeaders: true },
+        mocks: { $t },
+        stubs: { 'b-table': { template: '<div></div>', props: ['items', 'fields'] }, 'b-sidebar': true, 'font-awesome-icon': true }
+      })
+      const dropdown = w.findComponent({ name: 'BDropdown' })
+      await pick(w, FA(1))
+      for (let i = 0; i < 2; i++) {
+        dropdown.vm.show()
+        await frame()
+        expect(dropdown.vm.visible).toBe(true)
+        expect(shown(w)).toEqual([true, true])
+        dropdown.vm.hide()
+        await frame()
+      }
+      expect(radios(w).at(FA(1)).element.checked).toBe(true)
+      expect(w.vm.visibleAssessments).toEqual(['0-0'])
+      expect(shown(w)).toEqual([true, true])
+      w.destroy()
+    })
+
+    it('checks the matching radio and shows every study when a column header is clicked', async () => {
+      const w = mountWithFilter()
+      await pick(w, 1) // Hide all
       w.vm.handleHeaderClick('1-0') // FA 5
       await w.vm.$nextTick()
-      expect(radios(w).at(5).element.checked).toBe(true)
-      expect(radios(w).at(0).element.checked).toBe(false)
+      expect(radios(w).at(FA(5)).element.checked).toBe(true)
+      expect(shown(w)).toEqual([true, true])
+    })
+
+    it('toggles only its own row with the row button, leaving the selection alone', async () => {
+      const w = mountWithFilter()
+      await pick(w, FA(2))
+      const [first, second] = w.vm.tableItems
+      w.vm.handleToggleDetails({ item: first, toggleDetails: () => w.vm.$set(first, '_showDetails', !first._showDetails) })
+      await w.vm.$nextTick()
+      expect(first._showDetails).toBe(false)
+      expect(second._showDetails).toBe(true)
+      expect(w.vm.visibleAssessments).toEqual(['0-1'])
+    })
+
+    it('shows every assessment in a row opened by hand while Hide all is selected', async () => {
+      const w = mountWithFilter()
+      await pick(w, 1)
+      expect(w.vm.activeStages).toEqual([0, 1, 2, 3])
+    })
+
+    it('applies the current selection to studies that arrive later', async () => {
+      const w = mountWithFilter()
+      await pick(w, 1) // Hide all
+      await w.setProps({ assessments: twoStudies() })
+      expect(shown(w)).toEqual([false, false])
+      await pick(w, FA(1))
+      await w.setProps({ assessments: twoStudies() })
+      expect(shown(w)).toEqual([true, true])
+    })
+
+    it('goes back to Show all with every detail shown when the table is reset', async () => {
+      const w = mountWithFilter()
+      await pick(w, FA(4))
+      w.vm.resetTableState()
+      await w.vm.$nextTick()
+      expect(radios(w).at(0).element.checked).toBe(true)
+      expect(shown(w)).toEqual([true, true])
     })
 
     it('positions the menu against the visible viewport so the scrollable modal body cannot clip it', () => {
