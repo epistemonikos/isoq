@@ -559,3 +559,78 @@ describe('StepFour.vue — contabilidad de celdas incompletas', () => {
     expect(evt.preventDefault).toHaveBeenCalled()
   })
 })
+
+// #396: Save warned (the form's dialog), "Do it later", and the next FA tab warned again
+// (StepFour's dialog). One "do it later" now covers the cell for every exit, as asked in
+// #381, until the cell is complete, its option changes or another study is opened.
+describe('StepFour.vue — one "do it later" per cell (#396)', () => {
+  const defer = (w, stage, meta, deferred = true) => w.vm.onCellExplanationDeferred({ stage, meta, deferred })
+
+  it('does not warn again on the tab change after the form\'s "do it later"', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    defer(wrapper, 0, 0)
+
+    const evt = tabEvent()
+    wrapper.vm.onActivateTab(1, 0, evt)
+
+    expect(evt.defaultPrevented).toBe(false)
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalledWith('explanation-guard-modal')
+  })
+
+  it('does not warn again on the next exit after its own "do it later"', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    // First exit: closing (the hide is a spy, so the modal stays on this stage and cell).
+    wrapper.vm.requestModalClose()
+    wrapper.vm.explanationGuardDoItLater()
+    wrapper.vm.$bvModal.show.mockClear()
+
+    const evt = tabEvent()
+    wrapper.vm.onActivateTab(1, 0, evt)
+
+    expect(evt.defaultPrevented).toBe(false)
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalledWith('explanation-guard-modal')
+  })
+
+  it('tells the form the cell is deferred, so its Save does not warn either', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    wrapper.vm.requestModalClose()
+    wrapper.vm.explanationGuardDoItLater()
+    expect(wrapper.vm.isExplanationDeferred(0, 0)).toBe(true)
+    expect(wrapper.vm.isExplanationDeferred(0, 1)).toBe(false)
+  })
+
+  it('warns again once the cell was completed and then left without explanation', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    defer(wrapper, 0, 0)
+    markIncomplete(wrapper, 0, 0, false)
+    markIncomplete(wrapper, 0, 0)
+
+    const evt = tabEvent()
+    wrapper.vm.onActivateTab(1, 0, evt)
+    expect(evt.defaultPrevented).toBe(true)
+  })
+
+  it('warns again when the option of the deferred cell changes', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    defer(wrapper, 0, 0)
+    defer(wrapper, 0, 0, false)
+
+    const evt = tabEvent()
+    wrapper.vm.onActivateTab(1, 0, evt)
+    expect(evt.defaultPrevented).toBe(true)
+  })
+
+  it('forgets the deferrals when the modal is opened for another study', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0)
+    defer(wrapper, 0, 0)
+    wrapper.vm.openModal(0, { index: 1, item: { ref_id: 'ref2', authors: 'Other 2020' } }, 0)
+    await flushPromises()
+    expect(wrapper.vm.isExplanationDeferred(0, 0)).toBe(false)
+  })
+})

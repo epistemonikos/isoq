@@ -115,13 +115,13 @@
 
                         <!-- Columna 2.2: Assessment Evaluation -->
                         <b-col cols="6">
-                          <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
+                          <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex" :explanation-deferred="isExplanationDeferred(modal.stage, dIndex)"
                             :refId="refId" :modalIndex="modal.index"
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
                             :locked-by-user="cellLockedBy(modal.stage, dIndex)"
                             :show-lock-notice="!isRefReadOnly"
                             :lock-notice-key="cellLockNoticeKey(modal.stage, dIndex)"
-                            @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                            @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
                             @option-saved="onAssessmentOptionSaved"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
@@ -170,11 +170,11 @@
 
                 <!-- Columna 3: Assessment Evaluation -->
                 <b-col cols="4">
-                  <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
+                  <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(2, 0)" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
                     :locked-by-user="cellLockedBy(2, 0)"
                     :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(2, 0)"
-                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                    @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
                     @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -252,11 +252,11 @@
 
                 <!-- Columna 4: Evaluación de ajuste final -->
                 <b-col cols="3" class="">
-                  <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
+                  <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(3, 0)" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
                     :locked-by-user="cellLockedBy(3, 0)"
                     :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(3, 0)"
-                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
+                    @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
                     @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -498,6 +498,12 @@ export default {
       // lo empujan los AssessmentForm por evento: viven detrás de `b-tabs` + `v-for` dentro
       // de un `v-if` por etapa, donde `$refs` no llega (ver `pendingEditsMixin`).
       incompleteCells: {},
+      // Cells whose missing explanation the person put off with "do it later" (#396):
+      // no exit, and no Save, warns about them again until the cell is complete, its
+      // option changes or another study is opened.
+      deferredCells: {},
+      // The cells the open warning is about, to defer them on "do it later".
+      pendingDeferMetas: [],
       // La salida que el aviso dejó en suspenso, a ejecutar si eligen "más tarde".
       pendingNavigation: null,
       // La celda a la que lleva "hacerlo ahora", y el textarea que hay que enfocar una vez
@@ -736,6 +742,8 @@ export default {
         .filter(key => key.startsWith(prefix) && this.incompleteCells[key])
         .map(key => Number(key.slice(prefix.length)))
         .filter(meta => !this.isCellReadOnly(this.modal.stage, meta))
+        // A "do it later" covers the cell for every exit (#396).
+        .filter(meta => !this.isExplanationDeferred(this.modal.stage, meta))
         .sort((a, b) => a - b)
     },
     /**
@@ -850,7 +858,20 @@ export default {
         this.$set(this.incompleteCells, key, true)
       } else {
         this.$delete(this.incompleteCells, key)
+        this.$delete(this.deferredCells, key)
       }
+    },
+    /** A form's "do it later" (deferred) or a change of its option (not deferred). */
+    onCellExplanationDeferred ({ stage, meta, deferred }) {
+      const key = `${stage}-${meta}`
+      if (deferred) {
+        this.$set(this.deferredCells, key, true)
+      } else {
+        this.$delete(this.deferredCells, key)
+      }
+    },
+    isExplanationDeferred (stage, meta) {
+      return Boolean(this.deferredCells[`${stage}-${meta}`])
     },
     /**
      * Puerta única de las salidas del formulario. Si alguna de las celdas indicadas quedó
@@ -917,6 +938,7 @@ export default {
         return
       }
       this.pendingNavigation = action
+      this.pendingDeferMetas = blocking
       this.explanationGuardFocusMeta = blocking[0]
       // Sin esto el aviso arrancaría con el destino de foco del ciclo anterior, que ya no
       // tiene por qué ser la celda de la que estamos hablando ahora.
@@ -991,6 +1013,9 @@ export default {
      * y medio se perdería justo en el camino que la persona eligió para irse.
      */
     explanationGuardDoItLater () {
+      // Before the action: it may move to another stage.
+      this.pendingDeferMetas.forEach(meta => this.onCellExplanationDeferred({ stage: this.modal.stage, meta, deferred: true }))
+      this.pendingDeferMetas = []
       this.$bvModal.hide('explanation-guard-modal')
       const action = this.pendingNavigation
       this.pendingNavigation = null
@@ -1360,6 +1385,8 @@ export default {
         })
     },
     openModal: function (stage = 0, data, tab = 0, faLabel = null) {
+      // A "do it later" belongs to the study it was said on.
+      if (this.refId !== data.item.ref_id) this.deferredCells = {}
       this.getCharacteristics()
       this.modal.stage = stage
       this.modal.index = data.index
