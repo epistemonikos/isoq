@@ -1,5 +1,5 @@
 import Api from './Api'
-import { needsPersonalDataConfirmation } from './personalDataConfirmation'
+import { needsPersonalDataConfirmation, PERSONAL_DATA_CONFIRMED } from './personalDataConfirmation'
 
 function validEmail (email) {
   var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
@@ -9,8 +9,12 @@ function validUrl (url) {
   var re = /^(http|https):\/\/[^ "]+$/
   return re.test(url)
 }
+// Only what the server reads: it takes the properties from the database. Sending the whole form
+// put the authors' contact email in the URL, so in access logs and Sentry breadcrumbs.
 async function canPublish (project) {
-  return Api.get('/api/project/can_publish', project)
+  const params = { id: project.id, [PERSONAL_DATA_CONFIRMED]: project[PERSONAL_DATA_CONFIRMED] }
+  if (project.isModal !== undefined) params.isModal = project.isModal
+  return Api.get('/api/project/can_publish', params)
 }
 
 export default class Project {
