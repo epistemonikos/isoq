@@ -159,6 +159,80 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     expect(wrapper.vm.tableItems.every(item => !item._showDetails)).toBe(true)
   })
 
+  describe('filter dropdown (#391)', () => {
+    function mountWithFilter () {
+      return mount(CamelotAssessmentSummaryTable, {
+        localVue,
+        propsData: { assessments: JSON.parse(JSON.stringify(assessments)), clickableHeaders: true },
+        mocks: { $t },
+        stubs: {
+          'b-table': { template: '<div></div>', props: ['items', 'fields'] },
+          'b-sidebar': true,
+          'font-awesome-icon': true
+        }
+      })
+    }
+
+    const radios = w => w.findAll('#dropdown-filter-assessments input[type="radio"]')
+    const radioLabels = w => w.findAll('#dropdown-filter-assessments .custom-radio label')
+      .wrappers.map(l => l.text())
+
+    it('offers one radio per assessment plus Show all, and no checkboxes', () => {
+      const w = mountWithFilter()
+      expect(radios(w).length).toBe(11)
+      expect(w.findAll('#dropdown-filter-assessments input[type="checkbox"]').length).toBe(0)
+    })
+
+    it('labels the radios Show all, FA 1 to FA 9 and OA, in that order', () => {
+      expect(radioLabels(mountWithFilter())).toEqual([
+        'common.show_all',
+        ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `camelot.step_four.filter_options.fa${n}`),
+        'camelot.step_four.filter_options.oa'
+      ])
+    })
+
+    it('starts on Show all', () => {
+      const w = mountWithFilter()
+      expect(radios(w).at(0).element.checked).toBe(true)
+    })
+
+    it('shows only the chosen assessment when a radio is picked', async () => {
+      const w = mountWithFilter()
+      await radios(w).at(3).setChecked() // FA 3
+      expect(w.vm.visibleAssessments).toEqual(['0-2'])
+      expect(w.vm.activeStages).toEqual([0])
+    })
+
+    it('maps FA 9 and OA to their stages', async () => {
+      const w = mountWithFilter()
+      await radios(w).at(9).setChecked()
+      expect(w.vm.visibleAssessments).toEqual(['2-0'])
+      await radios(w).at(10).setChecked()
+      expect(w.vm.visibleAssessments).toEqual(['3-0'])
+    })
+
+    it('goes back to every assessment when Show all is picked', async () => {
+      const w = mountWithFilter()
+      await radios(w).at(5).setChecked()
+      await radios(w).at(0).setChecked()
+      expect(w.vm.visibleAssessments).toEqual(w.vm.allAssessmentValues)
+    })
+
+    it('checks the matching radio when a column header is clicked', async () => {
+      const w = mountWithFilter()
+      w.vm.handleHeaderClick('1-0') // FA 5
+      await w.vm.$nextTick()
+      expect(radios(w).at(5).element.checked).toBe(true)
+      expect(radios(w).at(0).element.checked).toBe(false)
+    })
+
+    it('positions the menu against the window so the scrollable modal body cannot clip it', () => {
+      const dropdown = mountWithFilter().findComponent({ name: 'BDropdown' })
+      expect(dropdown.props('boundary')).toBe('window')
+      expect(dropdown.props('popperOpts')).toEqual(expect.objectContaining({ positionFixed: true }))
+    })
+  })
+
   describe('empty explanation feedback in row-details', () => {
     function createWrapperWithSlotContent (assessmentData) {
       return shallowMount(CamelotAssessmentSummaryTable, {

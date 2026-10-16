@@ -1541,7 +1541,19 @@
         "2": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Research conduct domains (FA9). In the first two columns you will see the data you extracted for each domain and any comments you made.  In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context.",
         "3": "It is here that you make an overall assessment (OA) of concerns, taking into consideration concerns identified in all of the nine fit assessments (FA1-FA9). In the first three columns are your nine fit assessments. In the final column is where you make an overall assessment of concerns regarding the fit between CAMELOT domains.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or interest holders involved in the study, and/or; (3) is suitable given the study context."
       },
-      "fit_assessments": "Fit assessments"
+      "fit_assessments": "Fit assessments",
+      "filter_options": {
+        "fa1": "FA 1 - Research design domains and Research aim & question(s)",
+        "fa2": "FA 2 - Research design domains and Interest holders",
+        "fa3": "FA 3 - Research design domains and Researchers",
+        "fa4": "FA 4 - Research design domains and Context",
+        "fa5": "FA 5 - Research conduct domains and Research aim & question(s)",
+        "fa6": "FA 6 - Research conduct domains and Interest holders",
+        "fa7": "FA 7 - Research conduct domains and Researchers",
+        "fa8": "FA 8 - Research conduct domains and Context",
+        "fa9": "FA 9 - Research design and Research conduct domains",
+        "oa": "OA - Overall assessment"
+      }
     },
     "responses": {
       "explanation": "Explanation",
