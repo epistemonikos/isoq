@@ -25,7 +25,7 @@
         <ToggleConcernsButton class="ml-2" v-model="showComments" :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys" :camelot="camelot" />
         <TableColumnFilter class="ml-2" :all-columns="filterableColumns" v-model="visibleColumnKeys" />
-        <ExportCSVButton class="ml-2" :fields="tableFields" :items="tableItems" />
+        <ExportCSVButton class="ml-2" :fields="exportFields" :items="tableItems" />
       </div>
 
       <b-table :items="tableItems" :fields="tableFields" striped hover responsive>
@@ -354,49 +354,15 @@ export default {
       return this.camelot && Array.isArray(this.camelot.fields) ? this.camelot.fields : []
     },
     availableTableFields () {
-      // Base fields (authors)
-      const baseFields = this.fields.filter(f => f.key === 'authors')
-      const orderedFields = []
-
-      if (this.charsData && Array.isArray(this.charsData.fields)) {
-        this.charsData.fields.forEach(field => {
-          if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
-
-          if (field.key.endsWith('_comments')) {
-            if (this.showComments) {
-              let label = field.label
-              if (this.camelot && Array.isArray(this.camelot.categories)) {
-                for (const cat of this.camelot.categories) {
-                  const opt = cat.options && cat.options.find(o => o.key === field.key)
-                  if (opt) { label = opt.label; break }
-                }
-              }
-              orderedFields.push({ key: field.key, label: label, isCamelot: true })
-            }
-            return
-          }
-
-          if (field.key.endsWith('_extractedData')) {
-            let label = field.label
-            if (this.camelot && Array.isArray(this.camelot.categories)) {
-              const catMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
-              if (catMatch) label = catMatch.label
-            }
-            orderedFields.push({ key: field.key, label: label, isCamelot: true })
-            return
-          }
-
-          if (isCustomField(field.key)) {
-            orderedFields.push({ key: field.key, label: field.label, customField: true })
-          }
-        })
-      }
-
-      const editFields = this.fields.filter(f => f.key === 'edit')
-      const actionFields = this.fields.filter(f => f.key === 'actions')
-
-      // Return the combination maintaining the custom order
-      return [...baseFields, ...editFields, ...orderedFields, ...actionFields]
+      return this.buildTableFields({ includeComments: this.showComments })
+    },
+    /**
+     * The export has the whole table, whatever the filter or the comments toggle show
+     * (#394). A spreadsheet has no grouped headers, so each comment column is named
+     * after its domain, as its extracted-data column already is.
+     */
+    exportFields () {
+      return this.buildTableFields({ includeComments: true, forExport: true })
     },
     filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)
@@ -430,6 +396,51 @@ export default {
     }
   },
   methods: {
+    /** The table's columns, in the stored order: base, edit, data (and comments), actions. */
+    buildTableFields ({ includeComments, forExport = false }) {
+      const baseFields = this.fields.filter(f => f.key === 'authors')
+      const orderedFields = []
+
+      if (this.charsData && Array.isArray(this.charsData.fields)) {
+        this.charsData.fields.forEach(field => {
+          if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
+
+          if (field.key.endsWith('_comments')) {
+            if (includeComments) {
+              let label = field.label
+              if (this.camelot && Array.isArray(this.camelot.categories)) {
+                for (const cat of this.camelot.categories) {
+                  const opt = cat.options && cat.options.find(o => o.key === field.key)
+                  if (opt) { label = forExport ? `${cat.label} - ${opt.label}` : opt.label; break }
+                }
+              }
+              orderedFields.push({ key: field.key, label: label, isCamelot: true })
+            }
+            return
+          }
+
+          if (field.key.endsWith('_extractedData')) {
+            let label = field.label
+            if (this.camelot && Array.isArray(this.camelot.categories)) {
+              const catMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
+              if (catMatch) label = catMatch.label
+            }
+            orderedFields.push({ key: field.key, label: label, isCamelot: true })
+            return
+          }
+
+          if (isCustomField(field.key)) {
+            orderedFields.push({ key: field.key, label: field.label, customField: true })
+          }
+        })
+      }
+
+      const editFields = this.fields.filter(f => f.key === 'edit')
+      const actionFields = this.fields.filter(f => f.key === 'actions')
+
+      // Return the combination maintaining the custom order
+      return [...baseFields, ...editFields, ...orderedFields, ...actionFields]
+    },
     formatAuthors (item) {
       return Commons.parseReference(item, true, false)
     },
