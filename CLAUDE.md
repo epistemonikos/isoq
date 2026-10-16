@@ -1,327 +1,222 @@
-# iSoQ Web
+# iSoQ Web — guía para agentes
 
-## RULES [non-negotiable]
-1. npm only
-2. npm run test → implement → npm run test
-3. ALL user strings: $t('key') + en.json + es.json + pt.json
+Frontend de iSoQ (GRADE-CERQual). El backend es `isoq_server` (Flask, rama `isoqf_310`), con su propio
+`CLAUDE.md`; al final hay un resumen del contrato entre los dos.
 
----
+## Reglas [no negociables]
 
-## STACK
-Vue 2.7.16 (package.json pide ^2.6.12) · Vuex 3.6.2 · Vue Router 3.6.5 hash · Bootstrap-Vue 2.23.1 · Webpack 4 · Axios 1.7.9 · Dexie 3.2.7 · vue-i18n 8.28.2 · Sentry @sentry/vue ^7 · Node>=14 · v1.2.8
+1. npm only.
+2. TDD: `npm test` en rojo → implementar → `npm test` en verde. Pedirle al usuario que corra la suite
+   completa y pegue el resultado.
+3. Todo texto visible: `$t('key')` + `src/lang/{en,es,pt}.json`.
+4. **Un test verde sobre el estado no prueba que se vea.** Si el dato termina en pantalla, la aserción
+   va sobre el DOM renderizado, y la puerta final es el navegador.
 
----
+## Stack
 
-## MUST-USE PATTERNS
-- HTTP: always `Api` class (`src/utils/Api.js`), never raw axios — GET=IndexedDB-cached, mutations=offline-queued
-- State: Vuex actions/mutations only, never `this.$store.state.x = y`
-- Routes: lazy load `() => import(/* webpackChunkName: "x" */ '@/components/...')`
-- Auth guard: `meta.requiresAuth` · `meta.requiresAdmin` (checks `user.flags`: superadmin|support)
-- Options API only — no `<script setup>`, no Composition API in components
-- Icons: `@fortawesome/vue-fontawesome` registered in main.js
-- i18n files: `src/lang/{en,es,pt}.json`
-- Errores: `Commons.printErrors` NO muestra nada. Una escritura que falla avisa con `writeErrorMessageKey()`
-  (`src/utils/writeErrors.js`: calla sólo lo que otro canal ya avisó); una carga que falla no se muestra como
-  vacío (`LoadErrorAlert.vue` o el `b-alert` + Reintentar de la pantalla). Seguir el patrón de aviso que la
-  pantalla ya tenga (toast, `b-alert`, feedback de campo). `tests/unit/guards/silentCatches.spec.js` falla ante
-  un `catch` nuevo que sólo loguea: si callar es correcto, va a su allowlist CON el motivo.
-- Toast vs `b-alert` — **un evento, un canal**:
-  - `b-alert` = **estado** que sigue siendo cierto mientras la persona mira ese editor o pantalla y cambia
-    lo que puede hacer ahí: solo lectura por lock negado/perdido, carga fallida + Reintentar, conflicto de
-    versión + Recargar, inactividad, advertencias preventivas, errores de formularios que no se cierran.
-  - Toast = **evento** que no deja huella en la pantalla actual: guardado ok, fallo de un editor que ya se
-    cerró, editor cerrado por estudio borrado, replay offline, permisos cambiados, lock negado sin editor
-    abierto donde poner el cartel (columnas, cerqual).
-  - Si el componente va a dibujar un `b-alert` para ese estado, **no** dispara toast. Un mismo evento que
-    llega por varios caminos (interceptor + listener + `catch`) lo avisa sólo su dueño: el 403 de escritura
-    es de `permission-denied` (toast en viewProject/editList), y por eso `writeErrorMessageKey` lo calla.
+Vue 2.7 (Options API; sin `<script setup>` ni Composition API) · Vuex 3 · Vue Router 3 (hash, sin
+prefijo de idioma) · Bootstrap-Vue 2.23 (`<b-table>`, `<b-modal>`, `<b-form-*>`) · Webpack 4 (config real
+en `build/`) · Axios · Dexie (cache offline) · vue-i18n 8 · Sentry · Node 14 · Jest 27 + vue-test-utils.
 
----
+- Tests: `npx jest` (todo) o `npx jest <ruta>`. Specs en `tests/unit/**/*.spec.js`.
+- Lint: `npx eslint --ext .js,.vue src`. Los specs no tienen el entorno de Jest configurado en ESLint
+  (errores de `describe`/`it` esperables); hay `no-unused-vars` heredados en `for…of`: comparar contra
+  `develop` antes de atribuirse un error.
+- Dev: `npm run dev` (puerto 8090; el proxy de `config/index.js` apunta a `localhost:8080`). Build del
+  host de pruebas: `npm run build:test`.
 
-## DATA MODEL
+## Patrones obligatorios
+
+- **HTTP: siempre `Api`** (`src/utils/Api.js`), nunca axios directo. GET cacheado en IndexedDB;
+  POST/PATCH/DELETE encolados offline y reproducidos al reconectar.
+- Estado: acciones/mutaciones de Vuex (`src/store.js`), nunca `this.$store.state.x = y`.
+- Rutas: lazy load `() => import(/* webpackChunkName: "x" */ '@/components/...')`; guardas
+  `meta.requiresAuth` y `meta.requiresAdmin` (`user.flags`: superadmin | support).
+- **Errores**: `Commons.printErrors` NO muestra nada. Una escritura que falla avisa con
+  `writeErrorMessageKey()` (`src/utils/writeErrors.js`, que calla sólo lo que otro canal ya avisó);
+  una carga que falla no se muestra como vacío (`LoadErrorAlert.vue` o el `b-alert` + Reintentar de la
+  pantalla). `tests/unit/guards/silentCatches.spec.js` falla ante un `catch` nuevo que sólo loguea: si
+  callar es correcto, va a `tests/unit/guards/silentCatchAllowlist.js` con el motivo.
+- **Toast vs `b-alert`: un evento, un canal.**
+  - `b-alert` = **estado** que sigue siendo cierto mientras la persona mira esa pantalla y cambia lo
+    que puede hacer ahí: solo lectura por lock, carga fallida + Reintentar, conflicto de versión +
+    Recargar, inactividad, advertencias preventivas.
+  - Toast = **evento** sin huella en la pantalla actual: guardado ok, fallo de un editor ya cerrado,
+    estudio borrado, replay offline, permisos cambiados.
+  - Si el componente dibuja un `b-alert` para ese estado, no dispara toast. Un evento que llega por
+    varios caminos lo avisa sólo su dueño (el 403 de escritura es de `permission-denied`).
+- **Reglas compartidas, no reimplementadas**: si una regla ya tiene función (`sortFindings`,
+  `sortByStudyLabel`, `withDerivedRows`, `lockLostMessage`, `isLockRejection`…), usarla. Cada regla
+  duplicada terminó produciendo resultados distintos entre vistas.
+
+## Modelo de datos
+
 ```
-isoqf_projects (use_camelot:bool → changes step3/4)
+isoqf_projects (use_camelot → cambia los pasos 3/4)
   ├─ isoqf_references
   ├─ isoqf_list_categories
-  ├─ isoqf_lists
-  │    └─ isoqf_findings  (evidence_profile: methodological_limitations|coherence|adequacy|relevance|cerqual)
-  │         └─ isoqf_extracted_data  (1 row/reference)
-  ├─ isoqf_characteristics  (step3)
-  └─ isoqf_assessments      (step4)
+  ├─ isoqf_characteristics   (Paso 3, una fila por referencia)
+  ├─ isoqf_assessments       (Paso 4; CAMELOT: stages[k].options[i])
+  └─ isoqf_lists ── isoqf_findings (evidence_profile) ── isoqf_extracted_data (una fila por referencia)
 ```
-evidence_profile options 0-3: no/minor/moderate/serious · cerqual 0-3: high/moderate/low/verylow
+evidence_profile: options 0-3 = no/minor/moderate/serious; cerqual 0-3 = high/moderate/low/very low.
 
----
+- **Las referencias de un finding se leen de `list.references`**, nunca de
+  `finding.evidence_profile.references`: el endpoint `/identity` escribe sólo en la lista y esa copia
+  queda vieja (`editList` las sincroniza desde la lista; la preview de la hoja también).
+- La lista y su finding son 1:1 por convención, no por integridad.
+- El `cerqual` autoritativo es el top-level de la lista: `Commons.resolveCerqual`.
 
-## NÚMERO DEL FINDING (el "#" / "No.")
+## El número del finding
 
-**Es POSICIÓN, no identidad, y se DERIVA al vuelo. Nunca se lee de la DB para mostrar.**
+**Es POSICIÓN, no identidad, y se deriva al vuelo.** Posición = índice + 1 sobre
+`Commons.sortFindings` (por categoría y luego por `sort`), igual en pantalla y en exportables. Toda
+vista que lo muestre necesita **listas + categorías**.
 
-Regla única: posición = índice + 1 sobre la colección ordenada (`Commons.sortFindings`, que ordena por
-categoría y luego por `sort`). Vale igual para la visualización y para los exportables.
+- Único campo persistido: `isoqf_lists.sort` = el orden que eligió el usuario. Lo escriben sólo el alta
+  (máximo + 1) y el modal de reordenar (ref-lock `findings_order`, que reconcilia con
+  `reconcileFindingsOrder` antes de guardar). El servidor no renumera: los huecos son válidos.
+- `isoqf_id` (finding y evidence_profile) es legado: no escribir ni leer. `list.cnt` no existe.
+- Exportables: nunca caer a `id` ni a literales tipo `'1'`.
 
-Un solo campo persistido, con un rol único: **`isoqf_lists.sort` = el orden que el usuario eligió** con
-el modal de arrastrar. No es el número; es de dónde se deriva el número. No se puede sacar: es el único
-lugar donde vive ese orden.
+## El orden de los estudios
 
-Cero campos persistidos para el número. `isoqf_findings.isoqf_id` y
-`isoqf_findings.evidence_profile.isoqf_id` son espejos legados: **no escribir en proyectos nuevos, no
-leer nunca**. Los proyectos viejos los conservan como dato muerto; no hace falta migrarlos justamente
-porque nadie los lee. `list.cnt` no existe más.
+**También es de presentación**: `list.references` se guarda en el orden en que se marcaron las
+casillas, y el servidor no ordena nada. Toda tabla o lista de citas por estudio ordena al mostrar con
+`sortByStudyLabel` / `sortByAuthors` (`src/utils/tableDataUtils.js`: `localeCompare` sobre la etiqueta
+«Autor Año» que se lee, estable).
 
-Consecuencias al tocar esto:
-- Toda vista que muestre el # necesita **listas + categorías** para derivarlo. Sin categorías la
-  agrupación cambia y el número sale distinto que en el resto de la app.
-- Los exportables usan **una sola** precedencia: la posición derivada. Prohibido caer a `id`
-  (es un ObjectId) o a literales tipo `'1'` — un número plausible pero falso en un documento que
-  alguien va a citar es peor que un vacío.
-- No reimplementar la regla: si necesitás el número en un componente nuevo, usá la función compartida.
-  Ya estuvo duplicada (`sortFindings` + un bucle `cnt` propio) y produjo numeraciones distintas.
+- `withDerivedRows` (`src/utils/derivedRows.js`) agrega al final las filas de estudios sin fila
+  guardada, por contrato: **ordena quien llama, después de derivar**.
+- En datos extraídos (`editList.processExtractedData`) se ordena antes de fijar `original_items`: el
+  editor abre `items[data.index]` y el editor en sitio compara `item.index`. No usar `sort-by` del
+  `b-table` ahí.
+- No ordenar `references` antes del PATCH: no arreglaría lo ya guardado.
+- Nunca `sort((a, b) => a.id - b.id)`: los ids son strings hex y la resta da `NaN`.
 
-Por qué importa: los usuarios coordinan con este número ("yo trabajo en el finding 3, tú en el 4").
-Si dos vistas muestran números distintos para el mismo finding, trabajan sobre el equivocado.
+## Archivos clave
 
-Backend confirmó (2026-08-06) que **no hay consumidores server-side de `isoqf_id`**: no está en ningún
-esquema ni whitelist, y la relación finding→proyecto se resuelve siempre por `list_id`. Falta sólo
-limpiarlo de la base. Hay un motivo para hacerlo: la clonación de proyectos copia el finding entero y
-sólo remapea `list_id`, así que un `isoqf_id` residual queda apuntando al proyecto original.
-
-`POST /finding/remove` **no** renumera `isoqf_lists.sort`: el hueco que deja es válido, la densidad no es
-parte del contrato. `isoqf_findings` no tiene campo `sort`.
-
-`sort` lo escriben sólo dos caminos: el alta (máximo + 1) y el modal de reordenar. Ninguna otra edición
-del finding lo toca (`/identity` lo rechaza por whitelist; el PATCH genérico es `$set` parcial), así que
-editar título, grupo, referencias o worksheet no pisa el orden. El modal de reordenar toma el ref-lock
-`findings_order` y, antes de guardar, relee la lista y reconcilia (`reconcileFindingsOrder`) si alguien
-creó o borró findings mientras estaba abierto.
-
-Antecedente de por qué la regla es tan tajante: hubo **cuatro** atributos compitiendo por este número, y
-tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) mostrando vacío o `NaN`.
-
----
-
-## KEY FILES
 ```
-src/utils/Api.js               HTTP client + offline queue + 409 lock interceptor
-src/utils/project.js           Project.validations() for publish
-src/store/store.js             Vuex · getLogginInfo action · isOnline state
-src/services/lockService.js    concurrency — ref-locks: acquireRef/releaseRef/heartbeat(30s)
-src/services/db.js             Dexie schema for offline cache
-src/strategies/exportStrategies.js  CSV/Word export (45KB)
-src/services/wordExportService.js / risExportService.js
-src/plugins/Translation.js     legacy :lang logic — current routes have NO lang prefixes
+src/utils/Api.js                    HTTP + cola offline + interceptor de 409 de lock
+src/store.js                        Vuex (getLogginInfo, isOnline)
+src/services/lockService.js         ref-locks: acquireRef/releaseRef, latido 30 s (HEARBEAT_INTERVAL)
+src/services/db.js                  esquema Dexie
+src/utils/lockErrors.js             isLockRejection, VERSION_REASONS (allowlist)
+src/utils/lockLostMessage.js        qué cartel corresponde a cada `reason`
+src/utils/referenceDeleted.js       evento único `reference-deleted`
+src/utils/leafVersion.js            `_v` de la celda del Paso 4
+src/utils/tableDataUtils.js         sortByStudyLabel / sortByAuthors
+src/utils/derivedRows.js            filas de estudios sin fila guardada
+src/utils/project.js                Project.validations / create / update (PATCH /api/publish)
+src/components/project/PublishModal.vue   publicación (can_publish + confirmación de datos personales)
+src/strategies/exportStrategies.js  exports Word/CSV
+src/mixins/preserveScrollMixin.js   conservar el scroll al recargar tablas
+src/mixins/fixedRefLockMixin.js     locks de clave fija de los modales del Paso 2
 ```
 
----
+## Publicación
 
-## PUBLISH FLOW
-```
-actionButtons.vue
-  → Project.validations(): name≥3 · authors · author≥3 · author_email · review_question≥3
-      · license_type(if public) · complete_by_author · lists_authors(if !complete_by_author)
-      · url_doi(if published_status → must be valid URL)
-  → GET /api/project/can_publish: ≥1 ref · ≥1 list w/refs · ≥1 list w/cerqual.explanation
-  → PATCH /api/publish
-```
+`PublishModal.vue` → `Project.validations()` (propiedades) → `GET /api/project/can_publish` (≥1
+referencia y ≥1 finding **completo**: referencias + nivel de confianza + explicación en el mismo
+finding) → `PATCH /api/publish`. Para todo guardado público el servidor exige
+`no_personal_data_confirmed: true` (400 `personal_data_confirmation_required`); la casilla se precarga
+con el valor almacenado y despublicar la borra. `PATCH /api/publish` es también el guardado de
+Propiedades.
 
----
+## Concurrencia
 
-## CONCURRENCY
-409 de una escritura granular → Api.js interceptor → canal `ref-lock-conflict` (cartel en el editor)
-lockService: sólo ref-locks (`acquireRef`/`releaseRef`), latido POST /api/lock/:id/ref/:ref/heartbeat cada 30s (`HEARBEAT_INTERVAL`, lockService.js:7). **El lock de proyecto se retiró** (2026-10-01): no existe `acquire()`, ni `IDLE_TIMEOUT`, ni los eventos `lock-lost`/`lock-idle`/`axios-refresh-lock`
+- **Sólo ref-locks.** El lock de proyecto se retiró en los dos repos (2026-10-01): no existe
+  `acquire()`, `IDLE_TIMEOUT` ni los eventos `lock-lost`/`lock-idle`/`axios-refresh-lock`. No
+  reintroducirlo: congelaba los pasos 1–4 para todo el equipo.
+- Claves: estudio `R`, hoja `R::sK::oM`, datos extraídos `<doc>::ed::R`
+  (`extractedDataLockKeys.js`), columnas `<doc>::fields`, evidence profile e identidad `finding_id`, y
+  fijas: `project_properties` (Propiedades, modal de la lista, Publicar), `list_categories` («Review
+  finding groups») y `findings_order` («Re-order your review findings»). El servidor exige las fijas.
+- **TTL del servidor (180 s) y latido (30 s) son un solo contrato**: el TTL tolera tres latidos
+  perdidos (Chrome lleva `setInterval` a 1/min en pestañas ocultas). Si cambia `HEARBEAT_INTERVAL`,
+  avisar a backend. Además la cadencia sostiene el texto de `evicted_granularity_conflict` («podrás
+  seguir en cuanto termine»): no subirla.
+- `revalidateLocks()` late al volver la pestaña al frente. Un latido sobre un lock vencido lo revive,
+  salvo conflicto de granularidad.
+- Motivos de 409 (`reason` + `locked_by` en el `detail` de `ref-lock-lost`):
 
-### El TTL del servidor y el latido del cliente son UN SOLO contrato
+  | `reason` | dónde | se destraba solo |
+  |---|---|---|
+  | `evicted_granularity_conflict` | latido | sí, cuando el otro suelte |
+  | `locked_by_other_user` | latido / acquire | no |
+  | `lock_expired` | latido (sin `locked_by`) | no |
+  | `locked_at_another_granularity` | acquire | — (orienta si esperar) |
+  | `reference_deleted` (+ `deleted_by`) | escritura / latido / acquire | no |
 
-`LOCK_TIMEOUT` = **180 s** en el backend (`auth_server/controllers/lock.py`, mismo valor para
-`project_locks` y `ref_locks`) contra `HEARBEAT_INTERVAL` = 30 s acá. No son dos números
-independientes: el TTL está dimensionado para **tolerar tres latidos perdidos**.
+  **Los chequeos son allowlists** (`VERSION_REASONS`, `lockLostMessage.js`): un motivo desconocido
+  cae en el comportamiento por defecto. Antes del motivo hay una guarda de URL
+  (`refLockKeyFromUrl`: `/section/`, `/identity`, `/item/`, `/field/`): un 409 de otra ruta no dispara
+  el evento de lock.
+- **Perder el lock tiene que ser visible**: todo editor con ref-lock escucha `ref-lock-lost` y
+  muestra un cartel. No sumarle el error genérico de guardado: `isLockRejection()` antes de notificar.
+- **Estudio borrado con gente trabajando**: no hay lock al entrar al Paso 1; se advierte quién lo
+  usa (`studyHolders()`). Los tres caminos del servidor terminan en un solo evento
+  `reference-deleted`: `OfflineIndicator` (un toast por estudio), `projectFreshnessMixin` (refresca),
+  `referenceDeletedMixin` (cierra el editor de ese estudio; un editor nuevo de estudio se suma ahí).
+  No sale por `ref-lock-lost` ni `ref-lock-conflict`.
+- En `crudTables` el modal de edición se renderiza cerrado: la guarda es sobre la fila, no sobre el
+  largo del arreglo.
 
-Por qué hizo falta ese margen: Chrome ralentiza `setInterval` en pestañas ocultas y, tras ~5
-minutos, lo lleva a **un disparo por minuto**. Con el TTL viejo de 60 s el lock caducaba con el
-editor abierto y la persona dentro de la sesión, y otro usuario lo tomaba legítimamente.
+### Versiones (`_v`)
 
-**Si alguna vez cambiás `HEARBEAT_INTERVAL`, avisale a backend**: sus tests miden el margen contra
-este intervalo, no contra el literal 180.
+- Por **fila** (endpoints B/C): viaja dentro del ítem; el cliente lo devuelve tal cual y **absorbe el
+  `_v` nuevo de la respuesta**. Reconstruir la fila desde `fields` (`getCleanedItems`,
+  `customFieldsHelper`) lo pierde: usar `copyItemMetadata` (`src/utils/itemMetadata.js`).
+- Por **celda** del Paso 4 (endpoint D): `stages[k].options[i]._v`; sin contador = 0; el cliente manda
+  siempre un entero (`leafVersion.js`). En `AssessmentForm` la versión va atada a la hidratación; tras
+  guardar se lee de la respuesta (o +1 si quedó en la cola offline). El 409 trae `option` al día.
+- 409 `version_conflict` trae el ítem fresco: mostrarlo, no tirarlo a `console.error`.
+- **El servidor puede instrumentar lo que el cliente le manda, nunca lo que el cliente descarta.**
+  Para todo campo de respuesta (`reason`, `_v`, `item`) la única red es un test de este lado que
+  compruebe que el camino no se pierda (patrón: `lockErrors.spec.js` con un motivo inexistente).
 
-El lock de proyecto **se retiró** en los dos repos (2026-10-01). Las propiedades usan el
-ref-lock `project_properties` (`src/utils/propertiesLock.js`, `src/mixins/propertiesLockMixin.js`),
-compartido por la pestaña Propiedades, el modal de la lista y el modal Publicar; el servidor lo
-exige en `PATCH /api/publish` y `toggle_camelot`. Dos modales del Paso 2 usan sus propias claves
-fijas, con la fábrica `src/mixins/fixedRefLockMixin.js` (un anfitrión, temporizador de inactividad):
-`list_categories` («Review finding groups»; el servidor la exige en `isoqf_list_categories`) y
-`findings_order` («Re-order your review findings»; el servidor la exige en los PATCH/PUT de
-`isoqf_lists` que traen `sort`). **No reintroducir un lock de proyecto**: el
-viejo hacía que el backend rechazara escrituras ajenas en siete colecciones y congelaba los pasos
-1–4 para todo el equipo.
+## Offline / PWA
 
-`revalidateLocks()` late apenas la pestaña vuelve al frente (`visibilitychange`): es el momento en
-que la persona va a escribir, y sin eso el aviso de pérdida podía tardar hasta un ciclo entero.
+`state.isOnline` vía eventos de `window` → `this.isOnline` (mixin global). Api encola mutaciones y las
+reproduce al reconectar; Service Worker con workbox. Un 404 al reproducir un DELETE es éxito
+(`isAlreadyGone()`); un 409 `duplicate_key` o de versión se descarta con aviso, no se reencola
+(repetiría el mismo 409 y trabaría la cola).
 
-Un heartbeat sobre un lock **vencido** lo revive a propósito — es lo que salva a quien estuvo
-throttleado — salvo que otro tenga el mismo estudio en otra granularidad, y ahí devuelve 409.
+## Scroll al guardar
 
-Ese 409 trae **tres `reason` distintos** (desde 2026-08-26), y la diferencia que le importa a la
-persona no es quién tiene el lock: es **si va a poder seguir**.
+`scrollBehavior: () => ({x: 0, y: 0})` (`main.js`) es incondicional: **cualquier** `$router.push`,
+aunque sólo cambie `query` o `hash`, manda al tope. No agregar navegaciones «inocuas». Al recargar una
+tabla, el slot `table-busy` acorta el documento y el navegador clampea el scroll:
+`preserveScrollMixin.holdScrollPosition()` antes de recargar (ya está en `crudTables.getData()` y
+`editList.getList()`). jsdom no tiene layout: verificar en navegador.
 
-| `reason` | qué pasó | `locked_by` | ¿se destraba solo? |
-|---|---|---|---|
-| `evicted_granularity_conflict` | otro tiene otra granularidad del mismo estudio y el desempate por antigüedad nos desalojó | sí | **sí**, cuando suelte |
-| `locked_by_other_user` | lo tomaron | sí | no |
-| `lock_expired` | caducó, o nunca se tomó | no | no |
+## Configuración y despliegue
 
-`reason` y `locked_by` viajan en el `detail` de `ref-lock-lost`. **La regla de qué cartel corresponde
-vive en `src/utils/lockLostMessage.js`** y no en cada handler: son siete los que lo muestran.
+- Lo propio de cada servidor va en **`.env`** (raíz, no versionado; plantilla `.env.example`), nunca
+  editando `config/*.env.js` (trackeados: dejan el checkout sucio, el build sale `-dirty` y el
+  `git pull` aborta). Precedencia (`config/env.js`): shell > `.env` > default commiteado; un valor
+  vacío cae al default. Nada secreto en `config/*.env.js`: termina en el bundle.
+- **Qué código sirve un host**: `curl -s <host>/ | grep build-commit` (lo estampa `build/buildInfo.js`;
+  un config nuevo de webpack tiene que pasárselo). Las fechas de `dist/` no lo dicen. Un deploy
+  exitoso no prueba que el código esté al día.
+- Sin `SENTRY_DSN` Sentry no arranca (`main.js`). `SENTRY_AUTH_TOKEN` sólo en `.env`.
+- `src/plugins/Translation.js` tiene lógica legada de prefijo `:lang`: ignorarla.
+- Cypress está instalado pero no se usa.
 
-El **acquire** tiene sus propios dos motivos, y el de granularidad es un valor **distinto** a
-propósito: ahí la persona nunca tuvo el lock, así que el cartel no explica una pérdida sino si vale
-esperar. `lockDeniedMessageKey()` los mapea.
+## Contrato con el backend (resumen)
 
-| `reason` del acquire | qué pasó | `locked_by` |
-|---|---|---|
-| `locked_at_another_granularity` | otro tiene otra granularidad del mismo estudio | sí |
-| `locked_by_other_user` | la misma clave, tomada por otra persona | sí |
+- 409 con `reason` en el nivel superior del cuerpo y `locked_by` cuando hay titular.
+- `PATCH /api/<colección>/<id>` responde `{status, id}`, no el documento; leen la respuesta sólo
+  `/api/sharedLink`, `/share/project/<id>/options-update` y los tres de `isoqf_characteristics`.
+- La ruta genérica PUT/PATCH de characteristics/assessments/extracted_data puede responder 405 si el
+  servidor la bloquea (`GENERIC_TABLE_WRITE_BLOCKED`): escribir por los endpoints por ítem.
+- `/identity` puede devolver `dropped_references`.
+- `ENABLE_GDPR` y `ENABLE_CONCURRENCY_CONTROL` tienen que coincidir con los del backend
+  (`/api/health` muestra los efectivos).
+- Orden de despliegue: frontend primero cuando el servidor endurece un contrato; servidor primero
+  cuando el cliente empieza a mandar algo que uno viejo rechaza.
 
-Dos cosas que no hay que romper. El chequeo es una **allowlist** (`VERSION_REASONS` en
-`lockErrors.js`, y las comparaciones de `lockLostMessage.js`): un `reason` que este cliente no
-conozca cae por default en el comportamiento anterior. Escrito al revés —una denylist— cualquier
-motivo nuevo del servidor caería en la rama equivocada, y ya hubo tres altas de motivos en una
-semana. Y **la cadencia del latido sostiene una promesa de interfaz**: el texto de
-`evicted_granularity_conflict` dice «podrás seguir en cuanto termine», así que un ciclo más largo que
-el desalojo convertiría ese cartel en mentira. Son dos razones independientes para no subir
-`HEARBEAT_INTERVAL`; la otra es el bloqueo mutuo.
+## Git
 
-### Borrar un estudio con otros trabajando en él (2026-10-02)
-
-**No hay lock al entrar al Paso 1**, por decisión: bloquear todo lo relacionado con estudios era el
-lock de proyecto con otro nombre. Quien borra puede borrar siempre; el Paso 1 le **advierte** quién
-está usando el estudio (`studyHolders()`, cualquier granularidad: `R`, `R::sK::oM`, `<doc>::ed::R`).
-
-El servidor no deja que lo tardío resucite el estudio: las escrituras por ítem y el latido/acquire
-devuelven `409 reason: reference_deleted` + `deleted_by`, y `/identity` guarda sin los ids borrados
-y los devuelve en `dropped_references`. Los tres caminos terminan en **un solo evento**,
-`reference-deleted` (`src/utils/referenceDeleted.js`), con el estudio y no la clave de lock:
-- `OfflineIndicator` muestra **un** toast por estudio (el mismo borrado llega por varios latidos);
-- `projectFreshnessMixin` refresca la vista (respetando editores abiertos);
-- `referenceDeletedMixin` cierra el editor de ese estudio (ED, crudTables, EditReferenceModal,
-  StepFour). Un editor nuevo de un estudio se suma ahí.
-
-**No sale por `ref-lock-lost` ni `ref-lock-conflict`**: sus carteles dicen «lo tiene X» y acá no hay
-nadie. `isLockRejection` y `writeErrorMessageKey` lo excluyen.
-
-Trampa medida en navegador: el modal de edición de crudTables se renderiza **cerrado**; cuando la
-fila seleccionada desaparecía, `items[selected_item_index]` era `undefined`, el render tiraba y la
-tabla dejaba de repintarse con la fila borrada en pantalla. La guarda es sobre la fila, no sobre el
-largo del arreglo.
-
-### Lo que el servidor puede atrapar, y lo que no
-
-Backend instrumenta con warnings los datos que **le mandamos** y que dejamos caer: el contador `_v`
-ausente en una escritura por ítem, las filas que pierden `stages` en una escritura genérica. Si un
-camino nuestro los pierde, aparece en sus logs.
-
-**Los campos de respuesta no tienen esa red.** Lo que hagamos con un `reason`, un `_v` devuelto o un
-`item` fresco del 409 les es invisible: sale del servidor y ahí termina lo que pueden ver.
-
-> El servidor puede instrumentar lo que el cliente le manda, nunca lo que el cliente descarta.
-
-Ya pasó **cinco** veces en el mismo tramo, y las cinco fueron la misma cosa —un dato que llegaba y se
-perdía en el camino—: el cuerpo de la respuesta con el `_v` nuevo, `stages` en la reconstrucción de la
-fila, el `reason` en el reintento de la cola offline, otra vez el `_v` de la respuesta (el del segundo
-guardado seguido, que `EditReferenceModal` no absorbía) y el `409 version_conflict` entero, que llegaba
-con el `item` fresco y moría en un `console.error`. Sólo la primera y la segunda las habría atrapado un
-warning del servidor.
-
-Así que para todo campo de respuesta la única red es un test de este lado, y tiene que comprobar **que
-el camino no se pierda**, no que un valor esté bien. El patrón está en `lockErrors.spec.js`: entre los
-casos hay un `un_motivo_que_todavia_no_existe`, que no verifica ningún valor real — verifica que un
-motivo desconocido siga cayendo en la rama correcta.
-
-Las dos últimas agregan un corolario que los tests no daban: **un test verde sobre el estado no prueba
-que se vea**. El 409 seteaba un estado que la plantilla no dibujaba en ninguna rama, y las dos cajas del
-cartel estaban rotuladas con `placeholder` —invisible en cuanto hay valor, que es siempre—. Las dos
-pasaron revisión de código y suite. Si el dato termina en pantalla, la afirmación va sobre el DOM
-renderizado, y la puerta final es el navegador.
-
-### Versión por celda en el Paso 4 (endpoint D, 2026-10-05)
-
-Además del `_v` de la fila (endpoints B/C), cada celda del Paso 4 lleva el suyo:
-`stages[k].options[i]._v`, que el endpoint D compara. Es de la **celda** y no de la fila a propósito:
-dos personas en dos celdas del mismo estudio no se invalidan. Contrato (backend
-`tests/test_assessment_leaf_version.py`): una celda sin contador está en la **versión 0** y el cliente
-manda siempre un entero (`src/utils/leafVersion.js`). En `AssessmentForm` la versión va atada a la
-**hidratación**, no al documento que llega —con un borrador abierto no se absorbe la de una escritura
-ajena—; tras guardar se lee de la respuesta, y si quedó en la cola offline se suma 1. El 409 trae
-`option` (la celda al día): el cartel la muestra junto a lo propio y «Traer la versión al día» sigue
-desde esa versión. Vive detrás de `ENABLE_ITEM_VERSIONS` del backend; **desplegar el servidor
-primero**: uno viejo rechaza el `_v` en el body con 400.
-
-### Perder el lock tiene que ser visible
-
-Un editor en solo lectura y mudo es peor que uno bloqueado: la gente sigue escribiendo. Todo editor
-que sostenga un ref-lock escucha `ref-lock-lost` y muestra un cartel — evidence profile (incluida su
-fila inline), assessment del Paso 4, editor de estudios del Paso 3, filas de `crudTables`.
-
-El 409/403 de una escritura granular **ya se le avisa al usuario** por el canal de conflicto. No le
-agregues encima el error genérico de guardado: usá `isLockRejection()` (`src/utils/lockErrors.js`)
-antes de notificar. "Intente nuevamente" es un consejo falso mientras el lock sea de otra persona.
-
----
-
-## OFFLINE/PWA
-isOnline: `state.isOnline` via window events → `this.isOnline` (global mixin)
-Offline: Api queues POST/PATCH/DELETE → replays on reconnect · Service Worker via workbox
-
----
-
-## SCROLL AL GUARDAR
-
-`main.js:117` tiene `scrollBehavior: () => ({x: 0, y: 0})` **incondicional**: ignora el `savedPosition`
-que vue-router le pasa. Consecuencia que no es obvia: **cualquier** `$router.push`, incluso uno que
-sólo cambia el `query` o el `hash` de la vista actual, manda la página al tope. No agregues
-navegaciones "inocuas" para reflejar estado en la URL — son un salto al tope garantizado.
-
-Al recargar una tabla, el salto tiene una segunda causa independiente: el slot `table-busy` de
-Bootstrap-Vue reemplaza el `tbody` completo, el documento se acorta y el navegador **clampea** la
-posición del usuario. Un `scrollTo` inmediato se pierde en silencio.
-
-Para eso está `src/mixins/preserveScrollMixin.js` (`holdScrollPosition()`): insiste con la posición
-durante ~600ms de frames hasta que el contenido vuelve, y cede si el usuario scrollea (`wheel`,
-`touchmove`). Llamalo antes de disparar la recarga; desde `mounted` es no-op. Ya está en `getData()`
-de `crudTables.vue` y en `getList()` de `editList.vue`.
-
-No se puede testear en jsdom que la posición aterrice (no hay layout, `scrollTo` no mueve
-`pageYOffset`): los specs fijan el protocolo de reintento. **Verificá en navegador.**
-
----
-
-## GOTCHAS
-- **La configuración propia de cada servidor va en `.env`** (raíz, no se versiona; plantilla
-  `.env.example`), nunca editando `config/*.env.js`. Esos archivos son código trackeado: editarlos en un
-  host deja el checkout sucio, el sello del build sale `-dirty` y `git pull` aborta en cuanto un commit
-  toca el mismo archivo. Pasó: `2d6185e9` lo modificó el 2026-08-20 y el checkout de `isoqf-test` quedó
-  clavado once días mientras los builds seguían. Que estuvieran en `.gitignore` no hacía nada: no aplica
-  a lo ya trackeado.
-  Precedencia (`config/entorno.js`): variable de la shell > `.env` > default commiteado. El default
-  vive en el código para que un flag nuevo llegue a todos los servidores con el pull; por eso no se
-  descommitean los `config/*.env.js` (además, el pull que los des-trackea los BORRA en cada servidor).
-  Un valor vacío cae al default, no apaga. Sin `SENTRY_DSN` Sentry no arranca (`main.js:120`).
-  `SENTRY_AUTH_TOKEN` va en `.env` pero NUNCA en `config/*.env.js`: todo lo que está ahí termina en el
-  bundle público.
-- **Qué código sirve un host**: `curl -s <host>/ | grep build-commit`. El `<meta>` lo estampa
-  `build/buildInfo.js` desde los tres configs de webpack. Existe porque `dist/` NO lo dice: sus
-  timestamps cuentan cuándo corrió webpack, y un build de hoy sobre un checkout viejo los deja todos
-  con la fecha de hoy — pasó en `isoqf-test` el 2026-08-31 y hubo que datar las claves i18n del bundle
-  contra el `git log` para descubrirlo. Un `-dirty` en el sello significa que el SHA no describe lo
-  compilado. El template `index.html` lee `buildInfo` sin condicionales: si agregás un config nuevo de
-  webpack, tenés que pasárselo o el build del HTML falla.
-- webpack.config.js at root = compat wrapper only (real config in build/)
-- Bootstrap 4.6.2 — use `<b-table>` `<b-modal>` `<b-form-*>`
-- Translation.js has legacy :lang URL logic — ignore it, no lang prefixes in routes
-- Sentry init in main.js lines 119-133; user identity set in store after login
-- `src/composables/` is Vue 3 composables pattern adapted for Vue 2 (plain JS reactivity)
-- Cypress installed but not wired into CI
-
----
-
-## GIT
-master(prod) · develop(dev) · feature → PR→develop → PR→master
+`master` (prod) · `develop` (dev, desplegado en `isoqf-test`) · ramas `feature/*`/`fix/*` → merge
+`--no-ff` a `develop`.
