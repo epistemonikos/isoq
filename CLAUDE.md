@@ -147,11 +147,16 @@ Propiedades.
   | `lock_expired` | latido (sin `locked_by`) | no |
   | `locked_at_another_granularity` | acquire | — (orienta si esperar) |
   | `reference_deleted` (+ `deleted_by`) | escritura / latido / acquire | no |
+  | `lock_not_held` (`locked_by` sólo si otro lo tiene) | escritura | no |
 
   **Los chequeos son allowlists** (`VERSION_REASONS`, `lockLostMessage.js`): un motivo desconocido
   cae en el comportamiento por defecto. Antes del motivo hay una guarda de URL
   (`refLockKeyFromUrl`: `/section/`, `/identity`, `/item/`, `/field/`): un 409 de otra ruta no dispara
   el evento de lock.
+- **Un editor con ref-lock no suelta el lock con un guardado en vuelo.** Cerrar al confirmar
+  dejaba que `hidden` soltara el lock antes de que llegara el PATCH (409 `lock_not_held`, texto
+  perdido, #404): el `@ok` cancela el cierre, espera el PATCH y cierra sólo si salió bien
+  (`confirmRowWrite` en `editListExtractedData.vue`; en el Paso 4, `settlePendingWrites`).
 - **Perder el lock tiene que ser visible**: todo editor con ref-lock escucha `ref-lock-lost` y
   muestra un cartel. No sumarle el error genérico de guardado: `isLockRejection()` antes de notificar.
 - **Estudio borrado con gente trabajando**: no hay lock al entrar al Paso 1; se advierte quién lo
