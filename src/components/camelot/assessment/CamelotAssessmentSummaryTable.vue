@@ -8,28 +8,20 @@
       </b-button>
 
       <b-dropdown id="dropdown-filter-assessments" variant="outline-primary" size="sm" no-caret right
-        class="assessment-filter-dropdown" @show="handleFilterDropdownShow">
+        class="assessment-filter-dropdown" v-bind="modalSafeDropdown" @show="handleFilterDropdownShow">
         <template #button-content>
           {{ $t('camelot.step_four.show_details_across_studies') }}
           <font-awesome-icon icon="filter" class="ml-1" />
         </template>
-        <b-dropdown-form class="p-3" style="min-width: 320px; max-height: 500px; overflow-y: auto;">
+        <b-dropdown-form class="p-3" :style="filterMenuStyle">
           <h6 class="dropdown-header px-0 mb-2 font-weight-bold">{{ $t('common.filter_columns') }}</h6>
 
-          <b-form-checkbox v-model="allVisible" class="mb-2 font-weight-bold" @change="toggleAllAssessments">
-            {{ $t('common.show_all') }}
-          </b-form-checkbox>
-
-          <div v-for="(group, gIdx) in filterGroups" :key="gIdx" class="filter-group-section mt-3">
-            <div class="filter-group-title text-muted small font-weight-bold text-uppercase border-bottom mb-2 pb-1">
-              {{ group.title }}
-            </div>
-            <div v-for="opt in group.options" :key="opt.value" class="mb-1 ml-2">
-              <b-form-checkbox v-model="visibleAssessments" :value="opt.value">
-                {{ opt.label }}
-              </b-form-checkbox>
-            </div>
-          </div>
+          <b-form-radio-group v-model="selectedAssessment" name="assessment-filter" stacked>
+            <b-form-radio value="all" class="mb-2 font-weight-bold">{{ $t('common.show_all') }}</b-form-radio>
+            <b-form-radio v-for="opt in filterOptions" :key="opt.value" :value="opt.value" class="mb-1">
+              {{ opt.label }}
+            </b-form-radio>
+          </b-form-radio-group>
         </b-dropdown-form>
       </b-dropdown>
     </div>
@@ -232,6 +224,7 @@ import {
   ASSESSMENT_POSITION_KEYS,
   positionKeyOf
 } from '@/utils/camelotAssessmentKeys'
+import { MODAL_SAFE_DROPDOWN, MODAL_SAFE_MENU_STYLE } from '@/utils/modalSafeDropdown'
 
 library.add(faChevronUp, faChevronDown, faFilter)
 
@@ -269,7 +262,9 @@ export default {
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
       ],
       visibleAssessments: [...ASSESSMENT_POSITION_KEYS],
-      allVisible: true
+      allVisible: true,
+      modalSafeDropdown: MODAL_SAFE_DROPDOWN,
+      filterMenuStyle: { minWidth: '320px', ...MODAL_SAFE_MENU_STYLE }
     }
   },
   computed: {
@@ -302,39 +297,28 @@ export default {
 
       return fields
     },
-    filterGroups () {
-      return [
-        {
-          title: this.getStageTitle(0),
-          options: [
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_1'), value: '0-0' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_2'), value: '0-1' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_3'), value: '0-2' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_4'), value: '0-3' }
-          ]
-        },
-        {
-          title: this.getStageTitle(1),
-          options: [
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_1'), value: '1-0' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_2'), value: '1-1' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_3'), value: '1-2' },
-            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_4'), value: '1-3' }
-          ]
-        },
-        {
-          title: this.getStageTitle(2),
-          options: [
-            { label: this.$t('camelot.step_four.sections.fit_between_design_conduct'), value: '2-0' }
-          ]
-        },
-        {
-          title: this.getStageTitle(3),
-          options: [
-            { label: this.$t('camelot.step_four.tabs.overall'), value: '3-0' }
-          ]
+    // One radio per assessment (#391): the filter shows one assessment across
+    // studies, or all of them. Derived from the grid so it cannot drift from it.
+    filterOptions () {
+      return ASSESSMENT_CELLS.map(cell => ({
+        label: this.$t(`camelot.step_four.filter_options.${cell.key}`),
+        value: positionKeyOf(cell.key)
+      }))
+    },
+    // The radio is a view over visibleAssessments, which stays an array: the
+    // row details and the header click already speak that shape.
+    selectedAssessment: {
+      get () {
+        if (this.allVisible) return 'all'
+        return this.visibleAssessments.length === 1 ? this.visibleAssessments[0] : null
+      },
+      set (value) {
+        if (value === 'all') {
+          this.toggleAllAssessments(true)
+        } else {
+          this.visibleAssessments = [value]
         }
-      ]
+      }
     },
     tableItems () {
       if (!this.assessments || !this.assessments.items) return []
@@ -371,7 +355,7 @@ export default {
       return active
     },
     allAssessmentValues () {
-      return this.filterGroups.flatMap(g => g.options.map(o => o.value))
+      return this.filterOptions.map(o => o.value)
     }
   },
   watch: {
@@ -574,11 +558,6 @@ export default {
       border-radius: 0.5rem;
       box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     }
-  }
-
-  .filter-group-title {
-    color: #1065AB !important;
-    letter-spacing: 0.02em;
   }
 
   .stage-header {

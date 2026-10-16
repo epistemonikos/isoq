@@ -1541,7 +1541,19 @@
         "2": "Aquí es donde evalúa si tiene inquietudes con respecto a la adecuación del ajuste entre los cuatro dominios de Diseño de la investigación y los cuatro dominios de Realización de la investigación (FA9). En las dos primeras columnas verá los datos que extrajo para cada dominio y cualquier comentario que haya hecho. En la columna final selecciona un nivel de inquietud sobre la adecuación del ajuste y agrega una explicación para su juicio.<br><br>El término adecuación del ajuste en CAMELOT se refiere al grado en que el diseño y la realización del estudio: (1) es adecuado para abordar el objetivo y/o las preguntas de la investigación, (2) se alinea con los investigadores y/o las partes interesadas involucradas en el estudio, y/o; (3) es adecuado dado el contexto del estudio.",
         "3": "Aquí es donde realiza una evaluación general (OA) de las inquietudes, teniendo en cuenta las inquietudes identificadas en las nueve evaluaciones de ajuste (FA1-FA9). En las tres primeras columnas están sus nueve evaluaciones de ajuste. En la columna final es donde realiza una evaluación general de las inquietudes con respecto al ajuste entre los dominios de CAMELOT.<br><br>El término adecuación del ajuste en CAMELOT se refiere al grado en que el diseño y la realización del estudio: (1) es adecuado para abordar el objetivo y/o las preguntas de la investigación, (2) se alinea con los investigadores y/o las partes interesadas involucradas en el estudio, y/o; (3) es adecuado dado el contexto del estudio."
       },
-      "fit_assessments": "Evaluaciones de ajuste"
+      "fit_assessments": "Evaluaciones de ajuste",
+      "filter_options": {
+        "fa1": "FA 1 - Dominios de diseño de la investigación y Objetivo y pregunta(s) de investigación",
+        "fa2": "FA 2 - Dominios de diseño de la investigación y Partes interesadas",
+        "fa3": "FA 3 - Dominios de diseño de la investigación y Investigadores",
+        "fa4": "FA 4 - Dominios de diseño de la investigación y Contexto",
+        "fa5": "FA 5 - Dominios de realización de la investigación y Objetivo y pregunta(s) de investigación",
+        "fa6": "FA 6 - Dominios de realización de la investigación y Partes interesadas",
+        "fa7": "FA 7 - Dominios de realización de la investigación y Investigadores",
+        "fa8": "FA 8 - Dominios de realización de la investigación y Contexto",
+        "fa9": "FA 9 - Dominios de diseño y de realización de la investigación",
+        "oa": "OA - Evaluación general"
+      }
     },
     "responses": {
       "explanation": "Explicación",

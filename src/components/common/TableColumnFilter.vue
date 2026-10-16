@@ -3,8 +3,7 @@
     variant="primary"
     size="sm"
     no-caret
-    left
-    boundary="viewport"
+    v-bind="modalSafeDropdown"
     class="table-column-filter"
     ref="dropdown"
   >
@@ -13,7 +12,7 @@
       <font-awesome-icon icon="filter" class="ml-1" />
     </template>
 
-    <b-dropdown-form class="p-2" style="min-width: 250px; max-height: 400px; overflow-y: auto;">
+    <b-dropdown-form class="p-2" :style="menuStyle">
       <b-form-checkbox
         :checked="allSelected"
         :indeterminate="indeterminate"
@@ -39,8 +38,17 @@
 </template>
 
 <script>
+import { MODAL_SAFE_DROPDOWN, MODAL_SAFE_MENU_STYLE } from '@/utils/modalSafeDropdown'
+
 export default {
   name: 'TableColumnFilter',
+  data () {
+    return {
+      // Also used inside scrollable modals (Adequacy, Relevance): see #397.
+      modalSafeDropdown: MODAL_SAFE_DROPDOWN,
+      menuStyle: { minWidth: '250px', ...MODAL_SAFE_MENU_STYLE }
+    }
+  },
   props: {
     allColumns: {
       type: Array,
