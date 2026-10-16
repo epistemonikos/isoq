@@ -330,7 +330,9 @@ export default {
       if (!this.user.username) return
       const email = this.user.username.trim()
       this.ui.username_check_failed = ''
-      Api.get('/users/check_email', { email })
+      // In the body, not the URL: a URL ends up in access logs and Sentry breadcrumbs.
+      // A read, so it is never queued for offline replay.
+      Api.post('/users/check_email', { email }, { noQueue: true })
         .then((response) => {
           this.ui.username_validation = response.data.error === false
         })
