@@ -123,10 +123,17 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       ])
     })
 
-    it('starts on Show all with the details of every study shown', async () => {
+    // Details appear only once the person applies a filter; the radio says so.
+    it('starts on Hide all with the details of every study hidden', async () => {
       const w = mountWithFilter()
       await w.vm.$nextTick()
-      expect(radios(w).at(0).element.checked).toBe(true)
+      expect(radios(w).at(1).element.checked).toBe(true)
+      expect(shown(w)).toEqual([false, false])
+    })
+
+    it('shows every detail once Show all is picked', async () => {
+      const w = mountWithFilter()
+      await pick(w, 0)
       expect(shown(w)).toEqual([true, true])
       expect(w.vm.activeStages).toEqual([0, 1, 2, 3])
     })
@@ -149,6 +156,7 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
 
     it('hides the details of every study with Hide all', async () => {
       const w = mountWithFilter()
+      await pick(w, FA(2))
       await pick(w, 1)
       expect(shown(w)).toEqual([false, false])
     })
@@ -225,13 +233,14 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       expect(shown(w)).toEqual([true, true])
     })
 
-    it('goes back to Show all with every detail shown when the table is reset', async () => {
+    // The modal calls this every time it opens.
+    it('goes back to Hide all with every detail hidden when the table is reset', async () => {
       const w = mountWithFilter()
       await pick(w, FA(4))
       w.vm.resetTableState()
       await w.vm.$nextTick()
-      expect(radios(w).at(0).element.checked).toBe(true)
-      expect(shown(w)).toEqual([true, true])
+      expect(radios(w).at(1).element.checked).toBe(true)
+      expect(shown(w)).toEqual([false, false])
     })
 
     it('positions the menu against the visible viewport so the scrollable modal body cannot clip it', () => {
