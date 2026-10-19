@@ -78,7 +78,8 @@
               </b-col>
 
               <!-- Columna 2: Navigation and Dynamic content -->
-              <b-col cols="8">
+              <!-- Stays in view while the domain values on the left scroll (#405). -->
+              <b-col cols="8" class="modal-sticky-column">
                 <div id="navegacion">
                   <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
@@ -169,7 +170,8 @@
                 </b-col>
 
                 <!-- Columna 3: Assessment Evaluation -->
-                <b-col cols="4">
+                <!-- Stays in view while the domain values on the left scroll (#405). -->
+                <b-col cols="4" class="modal-sticky-column">
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(2, 0)" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
                     :locked-by-user="cellLockedBy(2, 0)"
@@ -251,7 +253,8 @@
                 </b-col>
 
                 <!-- Columna 4: Evaluación de ajuste final -->
-                <b-col cols="3" class="">
+                <!-- Stays in view while the fit summaries on the left scroll (#405). -->
+                <b-col cols="3" class="modal-sticky-column">
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(3, 0)" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
                     :locked-by-user="cellLockedBy(3, 0)"
@@ -2159,6 +2162,28 @@ export default {
   max-height: max-content;
   overflow-y: auto;
   padding-right: 10px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #D8DAE5;
+    border-radius: 3px;
+  }
+}
+
+// The assessment column of the Step 4 modal (#405): sticky, and scrolling inside itself when
+// it is taller than the window. The modal is not `scrollable`, so what scrolls is `.modal`,
+// the size of the window: `top` and `max-height` are measured against it. `align-self` is
+// needed because `.row` is flex and stretches the column to the row's height, which would
+// leave it no room to stick.
+.modal-sticky-column {
+  position: sticky;
+  top: 0.5rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 1rem);
+  overflow-y: auto;
 
   &::-webkit-scrollbar {
     width: 6px;
