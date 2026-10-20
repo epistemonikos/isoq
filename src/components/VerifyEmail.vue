@@ -50,7 +50,8 @@ export default {
     verifyToken () {
       const token = this.$route.params.token
       this.status = 'verifying'
-      Api.get(`/auth/verify_email/${token}`)
+      // In the body, not the URL: a URL ends up in access logs and Sentry breadcrumbs.
+      Api.post('/auth/verify_email', { token })
         .then((response) => {
           if (response.data.status === 'verified') {
             this.status = 'verified'

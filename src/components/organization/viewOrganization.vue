@@ -133,7 +133,7 @@
 
       <ShareProjectModal ref="shareProjectModal" :project="buffer_project" :usersAllowed="users_allowed"
         :initialTab="ui.tabIndex" @hidden="cleanProject" @processing="setProcessing" @project-shared="onProjectShared"
-        @user-unshared="onUserUnshared" @invited-unshared="onInvitedUnshared"
+        @user-unshared="onUserUnshared"
         @permission-changed="onPermissionChanged" @shared-link-generated="onSharedLinkGenerated" />
 
       <CloneProjectModal ref="cloneProjectModal" :project="buffer_project" :uiCopy="ui.copy"
@@ -600,12 +600,6 @@ export default {
         console.log('onUserUnshared - error:', error)
         if (!(error && error.isOfflineError)) this.$notify.error(this.$t('notifications.load_error'))
       })
-    },
-    onInvitedUnshared: function (response) {
-      let _response = response
-      _response.tmp_invite_emails = []
-      this.buffer_project.invite_emails = _response.invite_emails
-      this.updateProjectInList(_response)
     },
     onPermissionChanged: function (project) {
       this.buffer_project = project
