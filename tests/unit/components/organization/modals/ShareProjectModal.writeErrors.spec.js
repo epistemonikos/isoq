@@ -62,7 +62,7 @@ describe('ShareProjectModal — lo que falla se dice', () => {
   it('quitar una invitación pendiente', async () => {
     const { wrapper, $notify } = createWrapper()
     Api.post.mockRejectedValueOnce(error500())
-    wrapper.vm.unshareInvited('ana@example.com')
+    wrapper.vm.unshare(0, { email: 'ana@example.com' })
     await flushPromises()
     expect($notify.error).toHaveBeenCalledWith('notifications.share_unshare_error')
   })
@@ -104,7 +104,7 @@ describe('ShareProjectModal — lo que falla se dice', () => {
   it('sin conexión no suma un aviso: ya lo dio OfflineIndicator', async () => {
     const { wrapper, $notify } = createWrapper()
     Api.post.mockRejectedValueOnce(offline())
-    wrapper.vm.unshareInvited('ana@example.com')
+    wrapper.vm.unshare(0, { email: 'ana@example.com' })
     await flushPromises()
     expect($notify.error).not.toHaveBeenCalled()
   })

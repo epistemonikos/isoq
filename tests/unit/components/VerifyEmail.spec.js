@@ -2,7 +2,7 @@ import { shallowMount } from '@vue/test-utils'
 import VerifyEmail from '@/components/VerifyEmail'
 
 jest.mock('@/utils/Api', () => ({
-  get: jest.fn()
+  post: jest.fn()
 }))
 
 const Api = require('@/utils/Api')
@@ -27,19 +27,20 @@ describe('VerifyEmail.vue', () => {
   })
 
   it('starts in verifying state', () => {
-    Api.get.mockReturnValue(new Promise(() => {}))
+    Api.post.mockReturnValue(new Promise(() => {}))
     const wrapper = mountVerifyEmail()
     expect(wrapper.vm.status).toBe('verifying')
   })
 
-  it('calls verify_email API with token from route on created', () => {
-    Api.get.mockResolvedValue({ data: { status: 'verified' } })
+  it('sends the token from the route in the body, never in the URL', () => {
+    // A URL ends up in the access logs and in Sentry breadcrumbs.
+    Api.post.mockResolvedValue({ data: { status: 'verified' } })
     mountVerifyEmail('my-token-123')
-    expect(Api.get).toHaveBeenCalledWith('/auth/verify_email/my-token-123')
+    expect(Api.post).toHaveBeenCalledWith('/auth/verify_email', { token: 'my-token-123' })
   })
 
   it('sets status to verified on successful response', async () => {
-    Api.get.mockResolvedValue({ data: { status: 'verified' } })
+    Api.post.mockResolvedValue({ data: { status: 'verified' } })
     const wrapper = mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
@@ -47,7 +48,7 @@ describe('VerifyEmail.vue', () => {
   })
 
   it('redirects to Login after 2s when verified', async () => {
-    Api.get.mockResolvedValue({ data: { status: 'verified' } })
+    Api.post.mockResolvedValue({ data: { status: 'verified' } })
     mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
@@ -57,7 +58,7 @@ describe('VerifyEmail.vue', () => {
   })
 
   it('sets status to failed when API returns non-verified status', async () => {
-    Api.get.mockResolvedValue({ data: { status: 'invalid_token' } })
+    Api.post.mockResolvedValue({ data: { status: 'invalid_token' } })
     const wrapper = mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
@@ -68,7 +69,7 @@ describe('VerifyEmail.vue', () => {
   // en el catch es que la petición no llegó o el servidor falló. Decir «la verificación falló»
   // ahí mandaba a pedir otro correo cuando el enlace estaba bien.
   it('un error de la petición no es un enlace inválido: lo dice y deja reintentar', async () => {
-    Api.get.mockRejectedValue(Object.assign(new Error('Network error'), { request: {} }))
+    Api.post.mockRejectedValue(Object.assign(new Error('Network error'), { request: {} }))
     const wrapper = mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
@@ -79,13 +80,13 @@ describe('VerifyEmail.vue', () => {
   })
 
   it('reintentar vuelve a verificar', async () => {
-    Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
+    Api.post.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
     const wrapper = mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()
     await wrapper.vm.$nextTick()
     expect(wrapper.html()).toContain('common.server_failed')
-    Api.get.mockResolvedValueOnce({ data: { status: 'verified' } })
+    Api.post.mockResolvedValueOnce({ data: { status: 'verified' } })
     wrapper.vm.verifyToken()
     await Promise.resolve()
     await Promise.resolve()
@@ -93,7 +94,7 @@ describe('VerifyEmail.vue', () => {
   })
 
   it('does not redirect if verification fails', async () => {
-    Api.get.mockRejectedValue(new Error('Network error'))
+    Api.post.mockRejectedValue(new Error('Network error'))
     mountVerifyEmail()
     await Promise.resolve()
     await Promise.resolve()

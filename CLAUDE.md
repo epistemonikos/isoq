@@ -205,6 +205,10 @@ tabla, el slot `table-busy` acorta el documento y el navegador clampea el scroll
   un config nuevo de webpack tiene que pasárselo). Las fechas de `dist/` no lo dicen. Un deploy
   exitoso no prueba que el código esté al día.
 - Sin `SENTRY_DSN` Sentry no arranca (`main.js`). `SENTRY_AUTH_TOKEN` sólo en `.env`.
+- **Lo que va a Sentry pasa por `src/utils/sentryPrivacy.js`** (`...sentryPrivacyOptions` al final
+  del `init`): sin query strings, emails y tokens (≥ 32 hex) redactados, sin props ni argumentos de
+  consola, usuario sólo por `id`. Igual, **nada de emails ni tokens en una URL de la API**: van en el
+  cuerpo (la URL queda además en los logs de nginx).
 - `src/plugins/Translation.js` tiene lógica legada de prefijo `:lang`: ignorarla.
 - Cypress está instalado pero no se usa.
 

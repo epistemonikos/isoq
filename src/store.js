@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import Api from '@/utils/Api'
 import * as Sentry from '@sentry/vue'
+import { sentryUser } from '@/utils/sentryPrivacy'
 
 Vue.use(Vuex)
 
@@ -43,7 +44,7 @@ export const store = new Vuex.Store({
         localStorage.setItem('l_s', token)
       }
       localStorage.setItem('user-data', JSON.stringify(state.user))
-      Sentry.setUser({ id: user.id, email: user.email, username: user.email })
+      Sentry.setUser(sentryUser(user))
     },
     auth_error (state) {
       state.status = 'error'

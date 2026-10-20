@@ -91,9 +91,24 @@ describe('ShareProjectModal.vue', () => {
     Api.post.mockResolvedValue({ status: 200 })
     Api.get.mockResolvedValue({ status: 200, data: [{ id: 'test-id' }] })
 
-    await wrapper.vm.unshare(0, 'user-2')
+    await wrapper.vm.unshare(0, { id: 'user-2' })
 
-    expect(Api.post).toHaveBeenCalledWith('/share/project/test-id/unshare', null, expect.any(Object))
+    expect(Api.post).toHaveBeenCalledWith('/share/project/test-id/unshare', {
+      org_id: 'org-123', current_user: 'user-1', user_id: 'user-2'
+    })
+  })
+
+  it('sends the email of a pending invitation in the body, never in the URL', async () => {
+    // A URL ends up in the access logs and in Sentry breadcrumbs.
+    Api.post.mockResolvedValue({ status: 200 })
+    Api.get.mockResolvedValue({ status: 200, data: [{ id: 'test-id' }] })
+
+    await wrapper.vm.unshare(0, { email: 'ana@example.com' })
+
+    const [url, body, config] = Api.post.mock.calls[0]
+    expect(url).toBe('/share/project/test-id/unshare')
+    expect(body).toEqual({ org_id: 'org-123', current_user: 'user-1', email: 'ana@example.com' })
+    expect(config).toBeUndefined()
   })
 
   it('llama PATCH con { params: { project_id, enable: true } } al activar el toggle', async () => {

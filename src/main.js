@@ -5,6 +5,7 @@ import axios from 'axios'
 import Router from 'vue-router'
 import App from './App'
 import * as Sentry from '@sentry/vue'
+import { sentryPrivacyOptions } from './utils/sentryPrivacy'
 
 import { store } from './store'
 import routes from './router/index'
@@ -130,7 +131,8 @@ if (process.env.SENTRY_DSN) {
     tracesSampleRate: 0.1,
     environment: process.env.NODE_ENV,
     release: process.env.SENTRY_RELEASE,
-    logErrors: true
+    logErrors: true,
+    ...sentryPrivacyOptions
   })
 }
 

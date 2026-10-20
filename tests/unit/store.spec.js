@@ -9,9 +9,12 @@ jest.mock('@/utils/Api', () => ({
   }
 }))
 
+jest.mock('@sentry/vue', () => ({ setUser: jest.fn() }))
+
 
 import { store, parseUserFromResponse } from '@/store'
 import Api from '@/utils/Api'
+import * as Sentry from '@sentry/vue'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -144,6 +147,11 @@ describe('Vuex store', () => {
       store.commit('auth_success', { status: 'active' })
       const lsWrites = setItemSpy.mock.calls.filter(([key]) => key === 'l_s')
       expect(lsWrites).toHaveLength(0)
+    })
+
+    it('identifies the person to Sentry by id only, never by email', () => {
+      store.commit('auth_success', { id: 'u1', access_token: 'new-token', status: 'active', email: 'test@example.com' })
+      expect(Sentry.setUser).toHaveBeenLastCalledWith({ id: 'u1' })
     })
 
     it('writes l_s exactly once per auth_success call', () => {

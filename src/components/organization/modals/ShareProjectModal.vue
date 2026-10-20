@@ -295,7 +295,9 @@ export default {
     },
     removeUser: async function (project, params) {
       try {
-        const data = await Api.post(`/share/project/${project}/unshare`, null, {params: params})
+        // In the body, not the URL: a pending invitation carries an email, and a URL
+        // ends up in access logs and Sentry breadcrumbs.
+        const data = await Api.post(`/share/project/${project}/unshare`, params)
         return data
       } catch (error) {
         this.notifyShareError(error, 'notifications.share_unshare_error')
@@ -322,20 +324,6 @@ export default {
             this.$emit('user-unshared', projectId)
           }
         }).finally(() => {
-          this.$emit('processing', false)
-        })
-    },
-    unshareInvited: function (email) {
-      const projectId = this.project.id
-      this.$emit('processing', true)
-      Api.post(`/share/project/${projectId}/unshare?email=${email}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
-        .then((response) => {
-          this.$emit('invited-unshared', response.data)
-        })
-        .catch((error) => {
-          this.notifyShareError(error, 'notifications.share_unshare_error')
-        })
-        .finally(() => {
           this.$emit('processing', false)
         })
     },
