@@ -31,7 +31,7 @@
                 </tr>
                 <!-- Second header row: CAMELOT options, and "Extracted data" under each custom column -->
                 <tr v-if="subHeaders.length > 0">
-                    <th v-for="subHeader in subHeaders" :key="subHeader.key">{{ subHeader.label }}</th>
+                    <th v-for="subHeader in subHeaders" :key="subHeader.key" class="text-nowrap">{{ subHeader.label }}</th>
                 </tr>
             </thead>
             <tbody>
