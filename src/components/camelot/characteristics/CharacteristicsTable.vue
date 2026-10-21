@@ -25,12 +25,11 @@
                     <th
                         v-for="header in unifiedHeaders"
                         :key="header.key"
-                        :rowspan="header.type === 'custom' ? 2 : 1"
                         :colspan="header.colspan">
                         {{ header.label }}
                     </th>
                 </tr>
-                <!-- Segunda fila de cabecera - solo para opciones CAMELOT -->
+                <!-- Second header row: CAMELOT options, and "Extracted data" under each custom column -->
                 <tr v-if="subHeaders.length > 0">
                     <th v-for="subHeader in subHeaders" :key="subHeader.key">{{ subHeader.label }}</th>
                 </tr>
@@ -161,6 +160,9 @@ export default {
             if (!this.showComments && option.key.endsWith('_comments')) continue
             subH.push(option)
           }
+        } else {
+          // A custom column holds extracted data too, and is labelled like a CAMELOT domain.
+          subH.push({ key: header.key, label: this.$t('camelot.step_four.camelot_mixin.extracted_data') })
         }
       }
       return subH
