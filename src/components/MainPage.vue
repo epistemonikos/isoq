@@ -8,14 +8,14 @@
       <b-container fluid class="mb-auto">
         <b-row>
           <b-col cols="12" md="3" class="pt-5">
-            <h2>iSoQ <span>Version 1.0</span></h2>
-            <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
+            <h2>iSoQ <span>{{ $t('home.version') }}</span></h2>
+            <i18n path="home.slogan" tag="p" class="slogan"><a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a></i18n>
           </b-col>
           <b-col cols="12">
             <ul id="main-page-nav" class="unstyled-list">
-              <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
-              <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
-              <li><b-link href="https://vimeo.com/687899560" target="_blank">Watch a short video</b-link></li>
+              <li><b-link :to="{ name: 'About' }">{{ $t('home.learn_more') }}</b-link></li>
+              <li><b-link :to="{ name: 'Browse' }">{{ $t('menu.browse') }}</b-link></li>
+              <li><b-link href="https://vimeo.com/687899560" target="_blank">{{ $t('home.watch_video') }}</b-link></li>
             </ul>
           </b-col>
         </b-row>
@@ -23,29 +23,39 @@
       <b-container fluid class="bg-black py-3">
         <b-row>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" alt="NIPH"></b-img>
+            <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" :alt="$t('home.niph_alt')"></b-img>
           </b-col>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
+            <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" :alt="$t('home.epistemonikos_alt')"></b-img>
           </b-col>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
+            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" :alt="$t('home.nust_alt')"></b-img>
           </b-col>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
+            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" :alt="$t('home.hvl_alt')"></b-img>
           </b-col>
         </b-row>
       </b-container>
       <div class="">
         <b-col align-self="center">
-          <p class="text-center credit">Image by Sarah Rosenbaum, Norway</p>
+          <p class="text-center credit">{{ $t('home.image_credit') }}</p>
         </b-col>
+      </div>
+      <!-- Única vía de navegación al aviso legal: la ruta es pública, pero sin
+           esto sólo se llega escribiendo la URL o desde el modal de términos y
+           el perfil, ambos detrás del login. -->
+      <div v-if="gdprEnabled" class="text-center pb-4">
+        <router-link :to="{ name: 'PrivacyAndTerms' }" class="text-reset legal-link">
+          {{ $t('gdpr.privacyAndTerms.title') }}
+        </router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { isGdprEnabled } from '@/constants/gdpr'
+
 export default {
   name: 'MainPage',
   data () {
@@ -53,6 +63,11 @@ export default {
       ui: {
         error: null
       }
+    }
+  },
+  computed: {
+    gdprEnabled () {
+      return isGdprEnabled()
     }
   }
 }
@@ -83,5 +98,9 @@ export default {
     }
   .credit {
     font-size: 0.75rem;
+  }
+  .legal-link {
+    font-size: 0.85rem;
+    text-decoration: underline;
   }
 </style>
