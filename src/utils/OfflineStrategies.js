@@ -6,6 +6,7 @@ import {
   getWorksheet,
   getWorksheetsByProject,
   saveFinding,
+  getFinding,
   getFindingsByWorksheet,
   saveReference,
   getReferencesByProject,
