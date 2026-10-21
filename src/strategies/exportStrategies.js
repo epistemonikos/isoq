@@ -534,10 +534,9 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       })
     ]
 
-    // Custom Fields (Rowspan 2)
+    // Custom Fields (their "Extracted data" goes in row 2, as a Camelot category's does)
     customFields.forEach(fieldKey => {
       headerRow1Cells.push(new TableCell({
-        rowSpan: 2,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
         children: [new Paragraph({ children: [new TextRun({ text: customFieldLabels[fieldKey] || fieldKey, bold: true, size: 22 })] })]
@@ -554,8 +553,15 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       }))
     })
 
-    // Row 2: Camelot Options
+    // Row 2: "Extracted data" under each custom field, then Camelot Options
     const headerRow2Cells = []
+    customFields.forEach(() => {
+      headerRow2Cells.push(new TableCell({
+        verticalAlign: VerticalAlign.CENTER,
+        shading: { fill: '#EEEEEE' },
+        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.camelot_mixin.extracted_data'), bold: true, size: 22 })] })]
+      }))
+    })
     camelotConfig.categories.forEach(category => {
       category.options.forEach(option => {
         headerRow2Cells.push(new TableCell({

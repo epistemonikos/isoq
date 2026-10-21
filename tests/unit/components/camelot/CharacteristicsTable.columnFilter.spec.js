@@ -97,8 +97,8 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
     expect(cellTexts(wrapper)).not.toContain('research-comment')
     // El otro dominio sigue con sus dos subcolumnas.
     expect(cellTexts(wrapper)).toEqual(expect.arrayContaining(['stake-data', 'stake-comment']))
-    // Encabezados de la segunda fila: sólo las dos subcolumnas del dominio visible.
-    expect(wrapper.findAll('thead tr').at(1).findAll('th').length).toBe(2)
+    // Second header row: "Extracted data" under Country, then the visible domain's two sub-columns.
+    expect(wrapper.findAll('thead tr').at(1).findAll('th').length).toBe(3)
   })
 
   it('volver a mostrar el dominio repone sus comments si siguen activos', async () => {
@@ -119,8 +119,10 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
     await filterCheckbox(wrapper, STAKEHOLDERS).setChecked(false)
 
     expect(toggle().attributes('disabled')).toBe('disabled')
-    expect(wrapper.find('thead tr').exists()).toBe(true)
-    expect(wrapper.findAll('thead tr').length).toBe(1)
+    // Only the custom column is left, still with "Extracted data" under its name.
+    expect(wrapper.findAll('thead tr').length).toBe(2)
+    expect(wrapper.findAll('thead tr').at(1).findAll('th').wrappers.map(th => th.text()))
+      .toEqual(['camelot.step_four.camelot_mixin.extracted_data'])
   })
 
   it('una columna que aparece con la tabla abierta entra visible', async () => {

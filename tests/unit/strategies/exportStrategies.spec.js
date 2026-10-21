@@ -449,6 +449,42 @@ describe('ExportStrategies', () => {
         expect(table).toBeDefined()
         // We can check if it returns a Table object (mocked or real)
       })
+
+      // The two header rows of the docx XML tree (`root` only: `options` repeats the content).
+      // A cell is its text and whether it is vertically merged; a rowSpan leaves a merged
+      // continuation cell in the row below, which is not a header of its own.
+      const headerRows = table => {
+        const find = (node, key, out = []) => {
+          if (Array.isArray(node)) node.forEach(n => find(n, key, out))
+          else if (node && typeof node === 'object') {
+            if (node.rootKey === key) out.push(node)
+            else find(node.root, key, out)
+          }
+          return out
+        }
+        const text = cell => find(cell, 'w:t').map(t => t.root.filter(x => typeof x === 'string').join('')).join('')
+        const [top, sub] = find(table, 'w:tr').slice(0, 2).map(row =>
+          find(row, 'w:tc').map(cell => ({ text: text(cell), merged: find(cell, 'w:vMerge').length > 0 })))
+        return [top, sub.filter(cell => !cell.merged)]
+      }
+
+      it('labels a custom column like a CAMELOT domain: its name on top, "Extracted data" below', () => {
+        const charData = {
+          fields: [{ key: 'column_1', label: 'Custom 1' }],
+          items: [{ ref_id: 1, authors: 'Author A', year: '2021', column_1: 'Val 1' }]
+        }
+        const strategy = new CamelotExportStrategy(mockProject, { ...mockData, characteristicStudies: charData })
+        const [top, sub] = headerRows(strategy.createCharacteristicsTable(charData))
+        const domains = strategy.getCamelotConfig().categories
+
+        const custom = top.find(c => c.text === 'Custom 1')
+        expect(custom.merged).toBe(false)
+        // Row 2 follows row 1: the custom column first, then each domain's two options.
+        expect(sub).toHaveLength(1 + domains.length * 2)
+        expect(sub[0].text).toBe('camelot.step_four.camelot_mixin.extracted_data')
+        expect(sub[1].text).toBe('camelot.step_four.camelot_mixin.extracted_data')
+        expect(sub[2].text).toBe('camelot.step_four.camelot_mixin.concerns')
+      })
     })
 
     describe('createMethodologicalAssessmentTable', () => {
