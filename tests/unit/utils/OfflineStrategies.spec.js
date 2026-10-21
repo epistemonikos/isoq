@@ -292,5 +292,35 @@ describe('OfflineStrategies', () => {
         ])
       })
     })
+
+    // getFinding was never imported: every write to a finding threw a ReferenceError,
+    // which Api.js swallowed, so the offline cache of findings never saw the change.
+    describe('update()', () => {
+      it('merges the write into the cached finding and saves it', async () => {
+        db.getFinding.mockResolvedValue({ id: 'f1', worksheetId: 'list1', data: { id: 'f1', name: 'Old', notes: 'n' } })
+
+        const result = await strategy().update({ id: 'f1', name: 'New' }, '/isoqf_findings/f1')
+
+        expect(db.getFinding).toHaveBeenCalledWith('f1')
+        expect(db.saveFinding).toHaveBeenCalledWith({
+          id: 'f1',
+          worksheetId: 'list1',
+          data: { id: 'f1', name: 'New', notes: 'n' }
+        })
+        expect(result).toEqual({ id: 'f1', name: 'New', notes: 'n' })
+      })
+
+      it('does nothing when the finding is not cached', async () => {
+        db.getFinding.mockResolvedValue(undefined)
+
+        expect(await strategy().update({ id: 'f1', name: 'New' }, '/isoqf_findings/f1')).toBeNull()
+        expect(db.saveFinding).not.toHaveBeenCalled()
+      })
+
+      it('does nothing when data has no id', async () => {
+        expect(await strategy().update({ name: 'New' }, '/isoqf_findings/f1')).toBeNull()
+        expect(db.getFinding).not.toHaveBeenCalled()
+      })
+    })
   })
 })
