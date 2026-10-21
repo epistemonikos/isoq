@@ -54,4 +54,13 @@ describe('CharacteristicsTable — custom column header in the worksheet', () =>
     await wrapper.find('[data-testid="toggle-comments"]').trigger('click')
     expect(texts(headerRows(wrapper)[1])).toHaveLength(cells())
   })
+
+  // "Extracted data" wrapped onto two lines in some columns and not in others.
+  it('keeps every sub-header on one line', async () => {
+    const wrapper = createWrapper()
+    const nowrap = () => headerRows(wrapper)[1].findAll('th').wrappers.map(th => th.classes('text-nowrap'))
+    expect(nowrap()).toEqual([true, true])
+    await wrapper.find('[data-testid="toggle-comments"]').trigger('click')
+    expect(nowrap()).toEqual([true, true, true])
+  })
 })
