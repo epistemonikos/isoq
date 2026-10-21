@@ -118,8 +118,8 @@ describe('StepThree — the export has the whole table (#394)', () => {
 
   it('names each comment column after its domain, since a spreadsheet has no grouped headers', async () => {
     const byKey = Object.fromEntries(exported(wrapper).map(f => [f.key, f.label]))
-    expect(byKey.research_comments).toBe('Research question - Comments')
-    expect(byKey.context_comments).toBe('Context - Comments')
+    expect(byKey.research_comments).toBe('Comments - Research question')
+    expect(byKey.context_comments).toBe('Comments - Context')
     expect(byKey.research_extractedData).toBe('Research question')
   })
 

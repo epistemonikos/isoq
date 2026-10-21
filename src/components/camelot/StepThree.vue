@@ -411,7 +411,7 @@ export default {
               if (this.camelot && Array.isArray(this.camelot.categories)) {
                 for (const cat of this.camelot.categories) {
                   const opt = cat.options && cat.options.find(o => o.key === field.key)
-                  if (opt) { label = forExport ? `${cat.label} - ${opt.label}` : opt.label; break }
+                  if (opt) { label = forExport ? `${opt.label} - ${cat.label}` : opt.label; break }
                 }
               }
               orderedFields.push({ key: field.key, label: label, isCamelot: true })
