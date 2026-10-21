@@ -1,7 +1,6 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
-import axios from 'axios'
 import Router from 'vue-router'
 import App from './App'
 import * as Sentry from '@sentry/vue'
@@ -237,7 +236,7 @@ purgeConflictDrafts()
 
 // Esperar a que el router esté listo antes de crear la instancia de Vue
 Trans.changeLanguage(Trans.getUserSupportedLang()).then(() => {
-  new Vue({
+  new Vue({ // eslint-disable-line no-new -- mounting the app is the side effect
     el: '#app',
     router,
     store,

@@ -32,7 +32,7 @@ import {
   HeightRule,
   TableLayoutType
 } from 'docx'
-import { sanitizeText, sanitizeWithLimit, safeText, TEXT_LIMITS } from '@/utils/textSanitizer'
+import { sanitizeWithLimit, safeText, TEXT_LIMITS } from '@/utils/textSanitizer'
 
 export class WordDocumentBuilder {
   constructor (options = {}) {

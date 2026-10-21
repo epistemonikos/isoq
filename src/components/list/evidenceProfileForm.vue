@@ -981,6 +981,7 @@ export default {
         if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option']?.show()
+        // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-ml-explanation')
         }
@@ -991,6 +992,7 @@ export default {
         if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option']?.show()
+        // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-coherence-explanation')
         }
@@ -1001,6 +1003,7 @@ export default {
         if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option']?.show()
+        // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-adequacy-explanation')
         }
@@ -1011,6 +1014,7 @@ export default {
         if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option']?.show()
+        // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-relevance-explanation')
         }
@@ -1481,7 +1485,7 @@ export default {
           .catch((error) => this.onSaveError(error, 'notifications.save_error'))
       } else {
         // New finding: no id yet to target /section/, create it with the full profile.
-        const { type, title, isoqf_id, displayNumber, ...evidenceProfileData } = this.selectedOptions
+        const { type, title, isoqf_id: legacyIsoqfId, displayNumber, ...evidenceProfileData } = this.selectedOptions
         Api.post(`/isoqf_findings`, {
           organization: this.list.organization,
           list_id: this.list.id,

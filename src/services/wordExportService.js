@@ -16,7 +16,6 @@
 
 import { ExportStrategyFactory } from '@/strategies/exportStrategies'
 import { DocumentGenerator } from '@/utils/documentGenerator'
-import { sanitizeText } from '@/utils/textSanitizer'
 import { i18n } from '@/plugins/i18n'
 
 export class WordExportService {

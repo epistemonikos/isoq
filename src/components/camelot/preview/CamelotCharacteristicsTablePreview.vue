@@ -77,7 +77,7 @@
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
 import Commons from '@/utils/commons'
-import { isCustomField, extractCustomFields } from '@/utils/customFieldsHelper'
+import { isCustomField } from '@/utils/customFieldsHelper'
 
 export default {
   name: 'CamelotCharacteristicsTablePreview',

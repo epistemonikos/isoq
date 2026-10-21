@@ -94,12 +94,14 @@ export const store = new Vuex.Store({
             if (data.status === 'email_not_verified') {
               commit('auth_error')
               localStorage.removeItem('token')
+              // eslint-disable-next-line prefer-promise-reject-errors -- shaped like an axios error, as callers read it
               reject({ response: { data } })
               return
             }
             if (data.status === 'password_compromised') {
               commit('auth_error')
               localStorage.removeItem('token')
+              // eslint-disable-next-line prefer-promise-reject-errors -- shaped like an axios error, as callers read it
               reject({ response: { data } })
               return
             }

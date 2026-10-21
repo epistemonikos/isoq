@@ -82,7 +82,6 @@
 <script>
 import Api from '@/utils/Api'
 import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
-import backToTop from '../backToTop'
 import { exportToWord } from '@/services/wordExportService'
 import evidenceProfile from '../list/editListEvidenceProfile.vue'
 import charsOfStudies from '../list/editListCharsOfStudies.vue'
@@ -102,7 +101,6 @@ export default {
   mixins: [camelotMixin],
   components: {
     LoadErrorAlert,
-    'back-to-top': backToTop,
     'evidence-profile': evidenceProfile,
     'chars-of-studies': charsOfStudies,
     'methodological-assessments': methAssessments,
