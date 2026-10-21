@@ -322,5 +322,106 @@ describe('OfflineStrategies', () => {
         expect(db.getFinding).not.toHaveBeenCalled()
       })
     })
+
+    // /section/<name> and /identity carry the finding's id in the URL, not in the body, so
+    // update() did nothing with them and an offline reader kept the old finding. They are
+    // applied the way the server applies them (core.py), mirror to the parent list included.
+    describe('update() of /section and /identity', () => {
+      const cachedFinding = () => ({
+        id: 'f1',
+        worksheetId: 'list1',
+        data: {
+          id: 'f1',
+          list_id: 'list1',
+          name: 'Old',
+          notes: 'old notes',
+          evidence_profile: { coherence: { option: '1', explanation: 'old' }, adequacy: { option: '2' } }
+        }
+      })
+      const cachedList = () => ({
+        id: 'list1',
+        projectId: 'p1',
+        data: {
+          id: 'list1',
+          project_id: 'p1',
+          name: 'Old',
+          category: 'c1',
+          references: ['r1'],
+          cerqual: { option: '0' },
+          evidence_profile: { coherence: { option: '1', explanation: 'old' } }
+        }
+      })
+      const savedFinding = () => db.saveFinding.mock.calls[0][0]
+      const savedList = () => db.saveWorksheet.mock.calls[0][0]
+
+      beforeEach(() => {
+        db.getFinding.mockResolvedValue(cachedFinding())
+        db.getWorksheet.mockResolvedValue(cachedList())
+      })
+
+      it('replaces one evidence profile section and leaves the others', async () => {
+        const section = { option: '3', explanation: 'new' }
+        await strategy().update(section, '/isoqf_findings/f1/section/coherence')
+
+        expect(db.getFinding).toHaveBeenCalledWith('f1')
+        expect(savedFinding()).toEqual({
+          id: 'f1',
+          worksheetId: 'list1',
+          data: { ...cachedFinding().data, evidence_profile: { coherence: section, adequacy: { option: '2' } } }
+        })
+      })
+
+      it('mirrors the section to the parent list, without touching its top-level cerqual', async () => {
+        const section = { option: '3', explanation: 'new' }
+        await strategy().update(section, '/isoqf_findings/f1/section/coherence')
+
+        expect(db.getWorksheet).toHaveBeenCalledWith('list1')
+        expect(savedList()).toEqual({
+          id: 'list1',
+          projectId: 'p1',
+          data: { ...cachedList().data, evidence_profile: { coherence: section } }
+        })
+      })
+
+      it('also sets the list top-level cerqual when the section is cerqual', async () => {
+        const cerqual = { option: '2', explanation: 'moderate' }
+        await strategy().update(cerqual, '/isoqf_findings/f1/section/cerqual')
+
+        expect(savedList().data.cerqual).toEqual(cerqual)
+        expect(savedList().data.evidence_profile.cerqual).toEqual(cerqual)
+      })
+
+      it('writes name and notes on the finding, and all four identity fields on the list', async () => {
+        const identity = { name: 'New', notes: 'new notes', category: 'c2', references: ['r1', 'r2'] }
+        await strategy().update(identity, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data).toEqual({ ...cachedFinding().data, name: 'New', notes: 'new notes' })
+        expect(savedList().data).toEqual({ ...cachedList().data, ...identity })
+      })
+
+      it('writes only the fields the identity body carries', async () => {
+        await strategy().update({ category: 'c2' }, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data).toEqual(cachedFinding().data)
+        expect(savedList().data).toEqual({ ...cachedList().data, category: 'c2' })
+      })
+
+      it('does nothing when the finding is not cached', async () => {
+        db.getFinding.mockResolvedValue(undefined)
+
+        expect(await strategy().update({ option: '1' }, '/isoqf_findings/f1/section/coherence')).toBeNull()
+        expect(db.saveFinding).not.toHaveBeenCalled()
+        expect(db.saveWorksheet).not.toHaveBeenCalled()
+      })
+
+      it('still updates the finding when its list is not cached', async () => {
+        db.getWorksheet.mockResolvedValue(undefined)
+
+        await strategy().update({ name: 'New' }, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data.name).toBe('New')
+        expect(db.saveWorksheet).not.toHaveBeenCalled()
+      })
+    })
   })
 })
