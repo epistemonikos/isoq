@@ -20,8 +20,10 @@ en `build/`) · Axios · Dexie (cache offline) · vue-i18n 8 · Sentry · Node 1
 
 - Tests: `npx jest` (todo) o `npx jest <ruta>`. Specs en `tests/unit/**/*.spec.js`.
 - Lint: `npx eslint --ext .js,.vue src`. Los specs no tienen el entorno de Jest configurado en ESLint
-  (errores de `describe`/`it` esperables); hay `no-unused-vars` heredados en `for…of`: comparar contra
-  `develop` antes de atribuirse un error.
+  (errores de `describe`/`it` esperables). Parser `@babel/eslint-parser` (lee `.babelrc`); el viejo
+  `babel-eslint` 8 daba por no usada toda variable de `for…of` (lo fija
+  `tests/unit/guards/eslintParser.spec.js`). Quedan ~55 errores heredados en `src`: comparar contra
+  `develop` antes de atribuirse uno.
 - Dev: `npm run dev` (puerto 8090; el proxy de `config/index.js` apunta a `localhost:8080`). Build del
   host de pruebas: `npm run build:test`.
 
