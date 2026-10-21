@@ -74,10 +74,10 @@ export default {
 }
 
 // Assessed, but the explanation is still missing. The fill stays — it is what
-// the grid reads at a glance — and the dashed ring carries the warning. Both
-// the ring and the icon colour come inline, from the mixin's contrast check.
+// the grid reads at a glance — and the exclamation mark alone carries the
+// warning; its colour comes inline, from the mixin's contrast check.
 .circle-incomplete {
-  border: 2px dashed;
+  border: none;
 }
 
 .circle-warning-icon {

@@ -33,13 +33,13 @@ describe('AssessmentCircle.vue', () => {
     expect(build(null, '').find('.fa-stub').exists()).toBe(false)
   })
 
-  it('keeps the assessment colour as fill and rings it when the explanation is missing', () => {
+  it('keeps the assessment colour as fill, with no ring, when the explanation is missing', () => {
     const circle = build('A', '').find('.assessment-circle')
     expect(circle.classes()).toContain('circle-incomplete')
-    // jsdom serialises background-color as rgb() and border-color as the hex
+    // jsdom serialises background-color as rgb()
     const style = circle.attributes('style').toLowerCase()
     expect(style).toContain('background-color: rgb(16, 101, 171)')
-    expect(style).toContain('border-color: #ffffff')
+    expect(style).not.toContain('border')
   })
 
   it('describes the missing explanation for assistive tech', () => {
