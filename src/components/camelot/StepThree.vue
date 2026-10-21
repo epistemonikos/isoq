@@ -408,11 +408,11 @@ export default {
           if (field.key.endsWith('_comments')) {
             if (includeComments) {
               let label = field.label
-              if (this.camelot && Array.isArray(this.camelot.categories)) {
-                for (const cat of this.camelot.categories) {
-                  const opt = cat.options && cat.options.find(o => o.key === field.key)
-                  if (opt) { label = forExport ? `${opt.label} - ${cat.label}` : opt.label; break }
-                }
+              const categories = this.camelot && Array.isArray(this.camelot.categories) ? this.camelot.categories : []
+              const cat = categories.find(c => c.options && c.options.some(o => o.key === field.key))
+              if (cat) {
+                const opt = cat.options.find(o => o.key === field.key)
+                label = forExport ? `${opt.label} - ${cat.label}` : opt.label
               }
               orderedFields.push({ key: field.key, label: label, isCamelot: true })
             }
