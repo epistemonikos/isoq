@@ -52,11 +52,10 @@ describe('camelotCircleMixin', () => {
 
   describe('getCircleStyle', () => {
     // The colour is the first thing the grid communicates, so an incomplete cell
-    // keeps its fill and gains a dashed ring plus a legible exclamation mark.
-    it('keeps the fill and adds a dashed ring when the explanation is missing', () => {
+    // keeps its fill and gains a legible exclamation mark — and no ring.
+    it('keeps the fill and only adds the exclamation colour when the explanation is missing', () => {
       expect(vm.getCircleStyle(0, 0, itemWith('A', ''))).toEqual({
         backgroundColor: '#1065AB',
-        borderColor: '#FFFFFF',
         color: '#FFFFFF'
       })
     })
@@ -64,7 +63,6 @@ describe('camelotCircleMixin', () => {
     it('darkens the exclamation mark over a light assessment colour', () => {
       expect(vm.getCircleStyle(0, 0, itemWith('B', ''))).toEqual({
         backgroundColor: '#8EC4DE',
-        borderColor: '#212529',
         color: '#212529'
       })
     })
@@ -72,7 +70,6 @@ describe('camelotCircleMixin', () => {
     it('lightens it over a dark assessment colour', () => {
       expect(vm.getCircleStyle(0, 0, itemWith('D', ''))).toEqual({
         backgroundColor: '#B31529',
-        borderColor: '#FFFFFF',
         color: '#FFFFFF'
       })
     })
@@ -86,7 +83,6 @@ describe('camelotCircleMixin', () => {
     it('falls back to grey when the option has no matching response', () => {
       expect(vm.getCircleStyle(0, 0, itemWith('Z', ''))).toEqual({
         backgroundColor: '#B3B3B3',
-        borderColor: '#212529',
         color: '#212529'
       })
     })

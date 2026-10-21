@@ -5,8 +5,8 @@ const ON_DARK = '#FFFFFF'
 const ON_LIGHT = '#212529'
 
 // WCAG relative luminance. A fixed white exclamation mark would vanish on the
-// two light assessment colours (#8EC4DE, #F6A482), so the mark and the dashed
-// ring pick their side from the fill they sit on.
+// two light assessment colours (#8EC4DE, #F6A482), so the mark picks its side
+// from the fill it sits on.
 function relativeLuminance (hex) {
   const value = String(hex).replace('#', '')
   if (value.length !== 6) return 1
@@ -38,10 +38,10 @@ export default {
       const color = response ? response.color : FALLBACK_COLOR
 
       // Missing explanation: keep the fill — the colour is what the grid reads
-      // at a glance — and add a dashed ring plus a legible exclamation mark.
+      // at a glance — and add a legible exclamation mark, with no ring: a dashed
+      // ring is what an unassessed cell looks like.
       if (!isLeafComplete(item, stage, optionIndex)) {
-        const ink = contrastOn(color)
-        return { backgroundColor: color, borderColor: ink, color: ink }
+        return { backgroundColor: color, color: contrastOn(color) }
       }
       return { backgroundColor: color }
     },

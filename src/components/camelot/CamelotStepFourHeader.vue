@@ -131,7 +131,7 @@ export default {
       // takes fill and ink from the assessment colour. #6C757D is a neutral stand-in
       // for "any colour"; white is what contrastOn() returns for it, so the swatch
       // matches the real thing and carries its own ground in both themes.
-      border: 2px dashed #FFFFFF;
+      border: none;
       background-color: #6C757D;
       color: #FFFFFF;
     }
