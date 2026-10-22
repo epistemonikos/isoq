@@ -49,11 +49,9 @@
 
 <script>
 import Commons from '@/utils/commons'
-import { displayExplanation } from '../utils/commons'
 import PublishModal from '@/components/project/PublishModal'
 import { getWordExportService } from '@/services/wordExportService'
 import { getRisExportService } from '@/services/risExportService'
-const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   name: 'actionButtons',
@@ -82,7 +80,6 @@ export default {
     printableItems: Array
   },
   components: {
-    videoHelp,
     PublishModal
   },
   data () {

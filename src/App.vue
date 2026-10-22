@@ -24,8 +24,7 @@ export default {
   },
   data () {
     return {
-      excluded: ['viewProject', 'editList'],
-      _osThemeListener: null
+      excluded: ['viewProject', 'editList']
     }
   },
   mounted () {

@@ -58,7 +58,7 @@ export default {
         this.$refs.modal.hide()
       } catch (err) {
         const data = err.response && err.response.data
-        const msg = (data && data.message || '').toLowerCase()
+        const msg = ((data && data.message) || '').toLowerCase()
         if (msg.includes('own') || msg.includes('yourself')) {
           this.error = this.$t('admin.error_self_action')
         } else {

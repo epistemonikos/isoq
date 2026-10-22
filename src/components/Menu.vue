@@ -35,7 +35,6 @@
             <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("common.login") }}</b-nav-item>
           </template>
           <accessibility :isMenu="true"/>
-          <!-- <switch-language/> -->
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -43,7 +42,6 @@
 </template>
 
 <script>
-const SwitchLanguage = () => import(/* webpackChunkName: "switchlang" */ './LanguageSelector')
 const Accessibility = () => import(/* webpackChunkName: "accessibility" */ '@/components/Accessibility')
 
 export default {
@@ -52,7 +50,7 @@ export default {
       iconUrl: require('../assets/cerqual-web.png')
     }
   },
-  components: { SwitchLanguage, Accessibility },
+  components: { Accessibility },
   computed: {
     username: function () {
       if (this.$store.state.user.first_name.length) {

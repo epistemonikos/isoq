@@ -425,7 +425,6 @@ export default {
       ]
     },
     filterItemsByReferences: function (items, references, fields) {
-      const referencesSet = new Set(references)
       const itemsMap = new Map()
       for (const item of items) {
         itemsMap.set(item.ref_id, item)

@@ -406,12 +406,10 @@ export default {
 
         if (response.data && response.data.references) {
           this.localReferences = response.data.references
-          const _references = JSON.parse(JSON.stringify(this.localReferences))
-
         }
 
-        const { parsed = 0, saved = 0, duplicates = 0, duplicate_list = [] } = response.data || {}
-        this.uploadResult = { parsed, saved, duplicates, duplicate_list }
+        const { parsed = 0, saved = 0, duplicates = 0, duplicate_list: duplicateList = [] } = response.data || {}
+        this.uploadResult = { parsed, saved, duplicates, duplicate_list: duplicateList }
         this.showDuplicates = false
 
         this.pre_references = ''
@@ -642,14 +640,12 @@ export default {
           return ref
         })
 
-        const response = await Api.post('/isoqf_references/batch-import', {
+        await Api.post('/isoqf_references/batch-import', {
           references: refsToImport,
           operation_id: operationId,
           organization: this.$route.params.org_id,
           project_id: this.$route.params.id
         })
-
-        const importedRefs = (response.data && response.data.references) ? response.data.references : []
 
         this.pubmed_request = ''
         this.pubmed_requested = []

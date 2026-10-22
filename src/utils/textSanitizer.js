@@ -215,6 +215,7 @@ export class TextSanitizer {
    */
   removeControlCharacters (text) {
     // Remove control characters except \n (0x0A) and \t (0x09)
+    // eslint-disable-next-line no-control-regex -- matching control characters is the point
     return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
   }
 

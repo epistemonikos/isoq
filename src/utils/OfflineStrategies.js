@@ -96,12 +96,12 @@ export const strategies = [
       // 1. Single worksheet by ID in regex
       const singleMatch = url.match(/getLists\?id=([a-zA-Z0-9]+)/)
       if (singleMatch) {
-        return await hydrateWorksheet(singleMatch[1])
+        return hydrateWorksheet(singleMatch[1])
       }
 
       // 2. Single worksheet by ID in params
       if ((url === '/getLists' || url === '/getLists/') && params && params.id) {
-        return await hydrateWorksheet(params.id)
+        return hydrateWorksheet(params.id)
       }
 
       // 3. By Project ID in regex
@@ -223,7 +223,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        return await getCharacteristicsByProject(pId)
+        return getCharacteristicsByProject(pId)
       }
       return null
     },
@@ -245,7 +245,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        return await getAssessmentsByProject(pId)
+        return getAssessmentsByProject(pId)
       }
       return null
     }
@@ -325,7 +325,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        return await getListCategoriesByProject(pId)
+        return getListCategoriesByProject(pId)
       }
       return null
     }
