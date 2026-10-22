@@ -20,6 +20,50 @@ import {
   getListCategoriesByProject
 } from '@/services/db'
 
+// /isoqf_findings/<id>/section/<name> and /isoqf_findings/<id>/identity carry the id in the
+// URL, not in the body.
+const FINDING_SUBRESOURCE = /^\/isoqf_findings\/([^/?]+)\/(?:section\/([^/?]+)|identity)\/?$/
+const FINDING_OWN_IDENTITY_FIELDS = ['name', 'notes']
+const LIST_IDENTITY_FIELDS = ['name', 'notes', 'category', 'references']
+
+const pick = (data, keys) => keys.reduce((out, key) => {
+  if (Object.prototype.hasOwnProperty.call(data, key)) out[key] = data[key]
+  return out
+}, {})
+
+/**
+ * Applies a /section or /identity write to the cached finding and its list, the way the
+ * server does (auth_server/controllers/core.py): a section replaces
+ * `evidence_profile.<name>` on both, and `cerqual` also the list's top-level `cerqual`;
+ * identity writes `name` and `notes` on the finding and all four fields on the list.
+ * Without it an offline reader kept showing the finding as it was before the write.
+ */
+async function applyFindingSubresourceWrite (findingId, section, data) {
+  const existing = await getFinding(findingId)
+  if (!existing) return null
+
+  let findingPatch, listPatch
+  if (section) {
+    findingPatch = { evidence_profile: { ...(existing.data.evidence_profile || {}), [section]: data } }
+    listPatch = list => ({
+      evidence_profile: { ...(list.evidence_profile || {}), [section]: data },
+      ...(section === 'cerqual' ? { cerqual: data } : {})
+    })
+  } else {
+    findingPatch = pick(data, FINDING_OWN_IDENTITY_FIELDS)
+    listPatch = () => pick(data, LIST_IDENTITY_FIELDS)
+  }
+
+  const newData = { ...existing.data, ...findingPatch }
+  await saveFinding({ id: findingId, worksheetId: existing.worksheetId, data: newData })
+
+  const list = existing.worksheetId ? await getWorksheet(existing.worksheetId) : null
+  if (list) {
+    await saveWorksheet({ id: list.id, projectId: list.projectId, data: { ...list.data, ...listPatch(list.data) } })
+  }
+  return newData
+}
+
 export const strategies = [
   {
     name: 'projects-list',
@@ -171,6 +215,11 @@ export const strategies = [
       return null
     },
     update: async (data, url) => {
+      const subresource = data && typeof url === 'string' ? url.match(FINDING_SUBRESOURCE) : null
+      if (subresource) {
+        return applyFindingSubresourceWrite(subresource[1], subresource[2], data)
+      }
+
       // Handle PATCH /isoqf_findings/:id where data has id
       if (data && data.id) {
         const existing = await getFinding(data.id)
