@@ -7,6 +7,9 @@ import * as Sentry from '@sentry/vue'
 import { sentryPrivacyOptions } from './utils/sentryPrivacy'
 
 import { store } from './store'
+// In the entry chunk on purpose: Api reaches it with import() to queue an offline write,
+// and offline that import cannot fetch a chunk (tests/unit/guards/lockServiceInMainChunk.spec.js).
+import '@/services/lockService'
 import routes from './router/index'
 import { needsTermsAcceptance } from './constants/terms'
 import { isGdprEnabled } from './constants/gdpr'
