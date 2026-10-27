@@ -5,7 +5,9 @@ const rutaPorPath = (path) => routes.find(r => r.path === path)
 
 // Las tres URLs que master publicó y que tienen que seguir resolviendo si
 // alguien las compartió (ver el comentario en src/router/index.js).
-const URLS_LEGADAS = ['/terms-and-conditions', '/privacy-policy', '/intellectual-property']
+const URLS_LEGADAS = ['/terms-and-conditions', '/privacy-policy', '/intellectual-property',
+  // One page per part of the legal package (v1.0): the two parts that did not exist before.
+  '/cookie-policy', '/data-processing-terms']
 
 describe('ruta PrivacyAndTerms — gate por ENABLE_GDPR', () => {
   afterEach(() => {

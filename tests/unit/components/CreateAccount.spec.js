@@ -2,6 +2,8 @@ import { shallowMount } from '@vue/test-utils'
 import CreateAccount from '@/components/CreateAccount'
 import { TERMS_VERSION } from '@/constants/terms'
 import { CONSENT_TEXT_VERSION } from '@/constants/consents'
+import { AGREEMENT_PARTS, NOTICE_PARTS } from '@/constants/legal'
+import LegalLinks from '@/components/legal/LegalLinks'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn(),
@@ -12,7 +14,10 @@ const Api = require('@/utils/Api')
 const mockPush = jest.fn()
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
-const mountCreateAccount = (query = {}) => shallowMount(CreateAccount, {
+// The acceptance box starts ticked so the tests about the rest of the form can create the
+// account; `termsAccepted: null` mounts with the component's own default.
+const mountCreateAccount = (query = {}, { termsAccepted = true } = {}) => shallowMount(CreateAccount, {
+  ...(termsAccepted === null ? {} : { data: () => ({ termsAccepted }) }),
   mocks: {
     $t: (key) => key,
     $route: { query },
@@ -397,9 +402,20 @@ describe('CreateAccount.vue — con ENABLE_GDPR apagado', () => {
     const wrapper = mountCreateAccount()
     const texto = wrapper.text()
 
-    expect(texto).not.toContain('gdpr.signup.privacyNote')
-    expect(texto).not.toContain('gdpr.signup.termsNote')
+    expect(texto).not.toContain('gdpr.legal.noticeLabel')
+    expect(texto).not.toContain('gdpr.legal.acceptLabel')
     expect(texto).not.toContain('gdpr.preferences.newsletter')
+  })
+
+  it('the acceptance box does not hold the account back', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount({}, { termsAccepted: false })
+    wrapper.setData({ ui: { username_validation: true, password_validation: true, isProcessing: false } })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('b-button').attributes('disabled')).toBeUndefined()
+    await wrapper.vm.createAccount()
+    expect(Api.post).toHaveBeenCalled()
   })
 
   // ─── El 400 predecible ───────────────────────────────────────────────────────
@@ -554,5 +570,50 @@ describe('CreateAccount.vue — email bloqueado', () => {
     expect(wrapper.vm.errorMessage).toBe('account.registration_unavailable')
     expect(wrapper.vm.ui.isProcessing).toBe(false)
     expect(mockPush).not.toHaveBeenCalled()
+  })
+})
+
+// Clause 2.2 of the Terms: people accept «by ticking the acceptance box and clicking "Create
+// account"». The box names the Agreement (A, D and E); the Privacy Policy and the Cookie Policy
+// are linked apart, as notices.
+describe('CreateAccount.vue — the acceptance box', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+  })
+
+  const validForm = async (wrapper) => {
+    wrapper.setData({ ui: { username_validation: true, password_validation: true, isProcessing: false } })
+    await wrapper.vm.$nextTick()
+  }
+
+  it('starts unticked', () => {
+    expect(mountCreateAccount({}, { termsAccepted: null }).vm.termsAccepted).toBe(false)
+  })
+
+  it('shows the box with the Agreement, and the notices apart', () => {
+    const wrapper = mountCreateAccount({}, { termsAccepted: null })
+
+    expect(wrapper.find('[data-test="terms-accepted"]').text()).toBe('gdpr.legal.acceptLabel')
+    expect(wrapper.findAllComponents(LegalLinks).wrappers.map(link => link.props('parts')))
+      .toEqual([AGREEMENT_PARTS, NOTICE_PARTS])
+  })
+
+  it('keeps the button disabled until the box is ticked', async () => {
+    const wrapper = mountCreateAccount({}, { termsAccepted: false })
+    await validForm(wrapper)
+    expect(wrapper.find('b-button').attributes('disabled')).toBe('true')
+
+    wrapper.setData({ termsAccepted: true })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('b-button').attributes('disabled')).toBeUndefined()
+  })
+
+  it('does not create the account without the box, whatever calls it', async () => {
+    const wrapper = mountCreateAccount({}, { termsAccepted: false })
+    await wrapper.vm.createAccount()
+
+    expect(Api.post).not.toHaveBeenCalled()
+    expect(wrapper.vm.ui.isProcessing).toBe(false)
   })
 })
