@@ -44,6 +44,13 @@ describe.each([['en', en], ['es', es], ['pt', pt]])('legal UI texts in %s', (_, 
     expect(resolve(dict, key)).toBeUndefined()
   })
 
+  // The translations were made with AI and nobody has reviewed them against the original: the
+  // notice says so, besides saying that English prevails.
+  it('the translation notice says the text was translated with artificial intelligence', () => {
+    expect(resolve(dict, 'gdpr.privacyAndTerms.translationNotice'))
+      .toMatch(/artificial intelligence|inteligencia artificial|inteligência artificial/i)
+  })
+
   // The Privacy Policy and the Cookie Policy are notices: people acknowledge them, they do not
   // accept them (clause 1.3 of the Terms). The box names only the Agreement.
   it('the acceptance box does not ask to accept the privacy policy', () => {
