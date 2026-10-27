@@ -1845,45 +1845,28 @@
   "gdpr": {
     "privacyAndTerms": {
       "title": "Privacy and Terms",
-      "tabOverview": "Overview",
-      "tabTerms": "Terms and Conditions",
-      "tabPrivacy": "Privacy Policy",
-      "tabProperty": "Intellectual Property",
-      "faqTitle": "Frequently Asked Questions",
-      "faq": {
-        "q1": "What is iSoQ and who is it for?",
-        "a1": "iSoQ (Interactive Summary of Qualitative Findings) is a tool developed by the Epistemonikos Foundation to help researchers create and share structured summaries of qualitative research evidence using the GRADE-CERQual approach. It is designed for systematic review authors, guideline developers, and evidence synthesis teams.",
-        "q2": "How is my personal data used?",
-        "a2": "Your personal data is used solely to provide and improve the iSoQ service. We collect only the information necessary to create and manage your account, collaborate on projects, and communicate service-related updates. We do not sell or share your data with third parties for marketing purposes.",
-        "q3": "Who can see my projects and data?",
-        "a3": "Projects are private by default and visible only to workspace members you invite. You can choose to publish a project publicly, at which point a read-only preview becomes accessible to anyone. You have full control over the visibility of your work at all times.",
-        "q4": "Can I delete my account and data?",
-        "a4": "Yes. You may request deletion of your account and associated personal data at any time by contacting us. Upon verified request, we will remove your personal information from our active systems within a reasonable timeframe, subject to any legal retention obligations.",
-        "q5": "What cookies does iSoQ use?",
-        "a5": "iSoQ uses session cookies required for authentication and to keep you logged in during your visit. We do not use third-party advertising or tracking cookies. You can manage cookie preferences through your browser settings, though disabling session cookies will prevent you from logging in.",
-        "q6": "How do I report a concern or request support?",
-        "a6": "For privacy concerns, data requests, or technical support, please contact the Epistemonikos team through the official contact channels listed on the Epistemonikos Foundation website. We aim to respond to all inquiries within 5 business days."
+      "tabs": {
+        "terms": "Terms and Conditions",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy",
+        "property": "Intellectual Property",
+        "processing": "Data Processing Terms",
+        "faq": "FAQ"
       },
-      "terms": {
-        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
-        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
-      },
-      "privacy": {
-        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
-        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
-      },
-      "property": {
-        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam."
-      }
+      "translationNotice": "This is a courtesy translation. If it differs from the English version, the English version prevails (clause 11.4 of the Terms and Conditions).",
+      "originalNotice": "You are reading the original English version, which prevails over any translation.",
+      "showOriginal": "Read the English original",
+      "showTranslation": "Back to the translation",
+      "loadError": "We could not load the legal documents."
+    },
+    "legal": {
+      "agreementLinks": "Read them:",
+      "acceptLabel": "I accept the Terms and Conditions and the Intellectual Property Terms, and the Data Processing Terms where they apply.",
+      "noticeLabel": "The Privacy Policy and the Cookie Policy explain how we process your personal data:"
     },
     "terms": {
       "modalTitle": "Updated Terms and Conditions",
-      "intro": "We have updated our Terms and Conditions, Privacy Policy and Intellectual Property. You must accept them to continue using iSoQ.",
-      "reviewHere": "You can review them here.",
-      "acceptLabel": "I have read and accept the Terms and Conditions, Privacy Policy and Intellectual Property.",
+      "intro": "We have updated the iSoQ legal documents. To keep using iSoQ, you need to accept the Terms and Conditions and the Intellectual Property Terms.",
       "accept": "Accept",
       "cancel": "Cancel",
       "error": "We could not save your acceptance. Please try again.",
@@ -1964,10 +1947,6 @@
     },
     "manageData": {
       "title": "Manage profile data"
-    },
-    "signup": {
-      "privacyNote": "Your personal data is processed for the provision of the service according to our",
-      "termsNote": "By creating an account, you accept our"
     }
   },
   "organization": {

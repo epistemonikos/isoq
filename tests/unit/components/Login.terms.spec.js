@@ -14,6 +14,8 @@ import Login from '@/components/Login'
 import en from '@/lang/en.json'
 import { TERMS_VERSION } from '@/constants/terms'
 import { CONSENT_TEXT_VERSION } from '@/constants/consents'
+import { AGREEMENT_PARTS, NOTICE_PARTS } from '@/constants/legal'
+import LegalLinks from '@/components/legal/LegalLinks'
 
 const Api = require('@/utils/Api').default
 const localVue = createLocalVue()
@@ -407,13 +409,29 @@ describe('Login.vue — aceptación de términos', () => {
 
   it('tiene traducidas las claves del modal', () => {
     const { wrapper } = build()
-    const keys = ['modalTitle', 'intro', 'reviewHere', 'acceptLabel',
-      'accept', 'cancel', 'error']
+    const keys = ['gdpr.terms.modalTitle', 'gdpr.terms.intro', 'gdpr.legal.agreementLinks',
+      'gdpr.legal.acceptLabel', 'gdpr.legal.noticeLabel', 'gdpr.terms.accept',
+      'gdpr.terms.cancel', 'gdpr.terms.error']
 
     keys.forEach(key => {
-      const full = `gdpr.terms.${key}`
-      expect(wrapper.vm.$t(full)).not.toBe(full)
+      expect(wrapper.vm.$t(key)).not.toBe(key)
     })
+  })
+
+  // ─── What is accepted (clause 1.3 of the Terms) ──────────────────────────────
+
+  it('links the documents people accept, and apart those they are only told about', () => {
+    const { wrapper } = build()
+    const links = wrapper.find('#modal-terms-acceptance').findAllComponents(LegalLinks)
+
+    expect(links.wrappers.map(link => link.props('parts'))).toEqual([AGREEMENT_PARTS, NOTICE_PARTS])
+  })
+
+  it('the acceptance box names the Agreement, not the Privacy Policy', () => {
+    const { wrapper } = build()
+    const box = wrapper.find('#modal-terms-acceptance b-form-checkbox-stub')
+
+    expect(box.text()).toBe(en.gdpr.legal.acceptLabel)
   })
 })
 

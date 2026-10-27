@@ -79,6 +79,15 @@ var routes = [
     path: '/intellectual-property',
     redirect: { name: 'PrivacyAndTerms', query: { tab: 'property' } }
   },
+  // The legal package asks for one page per part; these two parts are new in v1.0.
+  {
+    path: '/cookie-policy',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'cookies' } }
+  },
+  {
+    path: '/data-processing-terms',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'processing' } }
+  },
   {
     path: '/login',
     name: 'Login',

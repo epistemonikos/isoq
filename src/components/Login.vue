@@ -91,14 +91,19 @@
       hide-header-close>
       <p>{{ $t('gdpr.terms.intro') }}</p>
       <p>
-        <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'terms'}}" target="_blank">
-          {{ $t('gdpr.terms.reviewHere') }}
-        </router-link>
+        {{ $t('gdpr.legal.agreementLinks') }}
+        <legal-links :parts="agreementParts" />
       </p>
 
       <b-form-checkbox v-model="termsAccepted" class="mb-2">
-        {{ $t('gdpr.terms.acceptLabel') }}
+        {{ $t('gdpr.legal.acceptLabel') }}
       </b-form-checkbox>
+      <!-- The Privacy Policy and the Cookie Policy are notices: linked, not accepted
+           (clause 1.3 of the Terms). -->
+      <p class="small text-muted">
+        {{ $t('gdpr.legal.noticeLabel') }}
+        <legal-links :parts="noticeParts" />
+      </p>
       <b-form-checkbox v-model="newsletterAccepted">
         {{ $t('gdpr.preferences.newsletter') }}
       </b-form-checkbox>
@@ -166,8 +171,11 @@ import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 import { isGdprEnabled } from '@/constants/gdpr'
 import { downloadPersonalData } from '@/services/personalDataExport'
 import { isBackendTrue } from '@/constants/backendBoolean'
+import { AGREEMENT_PARTS, NOTICE_PARTS } from '@/constants/legal'
+import LegalLinks from '@/components/legal/LegalLinks'
 
 export default {
+  components: { LegalLinks },
   data () {
     return {
       username: null,
@@ -184,6 +192,8 @@ export default {
       // rechazar: con el servidor caído, el aviso de credenciales destellaba.
       credentialsRejected: false,
       termsAccepted: false,
+      agreementParts: AGREEMENT_PARTS,
+      noticeParts: NOTICE_PARTS,
       newsletterAccepted: false,
       termsError: '',
       isAcceptingTerms: false,

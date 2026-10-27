@@ -1,0 +1,918 @@
+{
+  "parts": {
+    "terms": {
+      "heading": "Parte A — Términos y Condiciones de Uso",
+      "meta": "Versión 1.0 · Fecha de entrada en vigor: 1 de diciembre de 2026 · Última actualización: 27 de octubre de 2026",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "**En resumen.** iSoQ es una herramienta gratuita para aplicar el enfoque GRADE-CERQual y elaborar tablas de Resumen de Hallazgos Cualitativos. Conservas la titularidad de tu trabajo. Epistemonikos opera la Plataforma, aloja tu contenido en la Unión Europea y no lo revisa. No subas información que identifique a participantes de investigaciones. Puedes exportar tus datos y eliminar tu cuenta en cualquier momento. Tus datos personales se tratan según se describe en nuestra Política de Privacidad."
+        },
+        {
+          "type": "h2",
+          "text": "1. Sobre iSoQ y estos Términos"
+        },
+        {
+          "type": "p",
+          "text": "**1.1 Proveedor.** La Plataforma iSoQ, disponible en https://isoq.epistemonikos.org (la \"**Plataforma**\"), es proporcionada y operada por Fundación Epistemonikos, fundación chilena sin fines de lucro, RUT 65.071.808-9, con domicilio en Mariano Sánchez Fontecilla 368, Las Condes, Santiago, Chile (\"**Epistemonikos**\", \"**nosotros**\", \"**nos**\"). Puedes contactarnos en isoq@epistemonikos.org."
+        },
+        {
+          "type": "p",
+          "text": "**1.2 La Plataforma.** iSoQ (interactive Summary of Qualitative Findings) fue desarrollada y financiada conjuntamente por Epistemonikos y el Instituto Noruego de Salud Pública (\"**NIPH**\"). Epistemonikos opera y mantiene la Plataforma y es la única responsable de su funcionamiento técnico y su seguridad y, como responsable del tratamiento, del tratamiento de los datos personales de los Usuarios según se describe en la Política de Privacidad. Respecto de los datos personales que los Usuarios incluyan en sus Proyectos, consulta las Condiciones de Tratamiento de Datos (Parte E). El NIPH no tiene acceso a las cuentas de los Usuarios ni al Contenido del Usuario. La Plataforma permite a los Usuarios aplicar el enfoque GRADE-CERQual a los hallazgos de síntesis de evidencia cualitativa y presentar las evaluaciones resultantes en tablas de Resumen de Hallazgos Cualitativos y productos relacionados."
+        },
+        {
+          "type": "p",
+          "text": "**1.3 El Acuerdo.** Estos Términos y Condiciones (los \"**Términos**\") y las Condiciones de Propiedad Intelectual (Parte D) constituyen el acuerdo entre tú y Epistemonikos (el \"**Acuerdo**\"). Cuando tú o tu institución actúen como responsables del tratamiento de datos personales incluidos en tus proyectos, las Condiciones de Tratamiento de Datos (Parte E) también forman parte del Acuerdo. La Política de Privacidad (Parte B) y la Política de Cookies (Parte C) explican cómo tratamos los datos personales; no son condiciones contractuales y no requieren tu aceptación. Las Preguntas Frecuentes son meramente informativas. En caso de conflicto, las Condiciones de Tratamiento de Datos prevalecen en lo relativo a los datos personales tratados por cuenta tuya; en lo demás, prevalecen estos Términos."
+        },
+        {
+          "type": "p",
+          "text": "**1.4 Definiciones.** \"**Usuario**\" o \"**tú**\": toda persona que tenga una cuenta en iSoQ. \"**Contenido del Usuario**\": toda información que tú o tus Colaboradores introduzcan, suban o generen en la Plataforma, incluidos proyectos, hallazgos, evaluaciones, tablas y comentarios. \"**Proyecto**\": un espacio de trabajo en la Plataforma. \"**Colaborador**\": un Usuario al que invitas a un Proyecto. \"**Proyecto Compartido**\": un Proyecto con al menos un Colaborador. \"**Proyecto Publicado**\": un Proyecto, o parte de él, que decides hacer público en la base de datos de iSoQ. \"**Institución**\": una organización en cuyo nombre un Usuario utiliza la Plataforma."
+        },
+        {
+          "type": "h2",
+          "text": "2. Requisitos, cuenta y aceptación"
+        },
+        {
+          "type": "p",
+          "text": "**2.1 Quién puede usar iSoQ.** La Plataforma está dirigida a investigadores, académicos y profesionales. Debes tener al menos 18 años y capacidad legal para celebrar este Acuerdo. La Plataforma no está destinada a pacientes ni a la atención médica directa."
+        },
+        {
+          "type": "p",
+          "text": "**2.2 Aceptación.** Aceptas estos Términos marcando la casilla de aceptación y haciendo clic en \"Crear cuenta\" o, en el caso de los Usuarios existentes, en \"Aceptar\" cuando se te solicite. Conservamos un registro de tu aceptación (identificador de la cuenta, fecha y hora, y versión aceptada). Tras el registro, te enviamos un correo electrónico para verificar tu dirección, que contiene una copia completa de estos Términos y enlaces a las Condiciones de Propiedad Intelectual, la Política de Privacidad y la Política de Cookies."
+        },
+        {
+          "type": "p",
+          "text": "**2.3 Información de la cuenta.** Debes proporcionar información exacta y mantenerla actualizada. Podemos rechazar o suspender una cuenta creada con información falsa o engañosa, siguiendo el procedimiento de la cláusula 8.2."
+        },
+        {
+          "type": "p",
+          "text": "**2.4 Credenciales.** Tu cuenta es personal. No compartas tu contraseña y mantenla segura. Avísanos de inmediato en isoq@epistemonikos.org si sospechas un uso no autorizado de tu cuenta. No somos responsables de las pérdidas causadas por no haber mantenido seguras tus credenciales, salvo en la medida en que se deban a nuestro propio incumplimiento de estos Términos."
+        },
+        {
+          "type": "p",
+          "text": "**2.5 Uso en nombre de una Institución.** Si utilizas la Plataforma en nombre de una Institución, confirmas que estás autorizado para hacerlo. Las Instituciones pueden solicitar una versión firmada de las Condiciones de Tratamiento de Datos en privacy@epistemonikos.org."
+        },
+        {
+          "type": "h2",
+          "text": "3. El servicio"
+        },
+        {
+          "type": "p",
+          "text": "**3.1 Servicio gratuito.** La Plataforma se ofrece de forma gratuita. Haremos esfuerzos razonables para mantenerla disponible, segura y funcionando correctamente, pero no garantizamos un funcionamiento ininterrumpido ni libre de errores. Podemos realizar tareas de mantenimiento; cuando sea posible, anunciaremos con antelación las interrupciones programadas."
+        },
+        {
+          "type": "p",
+          "text": "**3.2 Sin revisión del contenido; sin asesoramiento médico.** Eres responsable de tu Contenido del Usuario, incluidas tus evaluaciones GRADE-CERQual. Epistemonikos no revisa, valida ni respalda el Contenido del Usuario. La Plataforma es una herramienta metodológica para la investigación y no proporciona asesoramiento médico."
+        },
+        {
+          "type": "p",
+          "text": "**3.3 Cambios en las funcionalidades.** Podemos mejorar, modificar o eliminar funcionalidades. Si un cambio reduce de forma sustancial la funcionalidad que utilizas, te avisaremos con al menos 30 días de antelación, y podrás poner término al Acuerdo y exportar tus datos."
+        },
+        {
+          "type": "h2",
+          "text": "4. Tu contenido"
+        },
+        {
+          "type": "p",
+          "text": "**4.1 Titularidad.** Tú (o tu Institución o tus coautores, según corresponda) conservas todos los derechos sobre tu Contenido del Usuario."
+        },
+        {
+          "type": "p",
+          "text": "**4.2 Licencia para operar el servicio.** Otorgas a Epistemonikos una licencia no exclusiva, mundial y gratuita para alojar, almacenar, respaldar, reproducir, mostrar y transmitir tu Contenido del Usuario con el único fin de proporcionarte la Plataforma a ti y a tus Colaboradores, incluidas las funciones de exportación. Esta licencia termina cuando se elimina el Contenido del Usuario, sin perjuicio del período de rotación de las copias de seguridad descrito en la Política de Privacidad. Las licencias de los Proyectos Publicados se rigen por las Condiciones de Propiedad Intelectual."
+        },
+        {
+          "type": "p",
+          "text": "**4.3 Contenido admisible.** No debes subir: (a) información que identifique, directa o indirectamente, a participantes de estudios primarios (por ejemplo, citas identificables o datos de participantes), salvo que cuentes con una base jurídica para hacerlo y tú (o tu Institución) lo hayan acordado expresamente por escrito con Epistemonikos conforme a las Condiciones de Tratamiento de Datos; (b) categorías especiales de datos personales (como datos de salud), salvo en lo permitido en la letra (a); (c) contenido que infrinja derechos de terceros o que sea ilícito. Eres responsable de contar con una base jurídica para cualquier dato personal que introduzcas sobre otras personas, incluidos Colaboradores y autores. Antes de que publiques un Proyecto, la Plataforma te pedirá que confirmes que cumple con esta cláusula."
+        },
+        {
+          "type": "p",
+          "text": "**4.4 Colaboradores.** Cuando invitas a un Colaborador, enviamos un correo electrónico de invitación a la dirección que nos indiques. La invitación te identifica como el Usuario que invita e incluye un enlace a nuestra Política de Privacidad. Invita solo a personas que esperen ser contactadas en relación con tu trabajo."
+        },
+        {
+          "type": "p",
+          "text": "**4.5 Exportación y copias de seguridad.** Puedes exportar tus datos en cualquier momento: una exportación completa de todos tus datos, incluidos los datos de tu cuenta y tus Proyectos, en JSON (un formato estructurado y legible por máquina), y los productos de Proyectos individuales en Word, PDF y RIS. Realizamos copias de seguridad periódicas por motivos de seguridad y continuidad, pero te recomendamos que también conserves tus propias copias."
+        },
+        {
+          "type": "p",
+          "text": "**4.6 Ningún otro uso de tu contenido.** No utilizaremos tu Contenido del Usuario para entrenar, desarrollar o enriquecer la Plataforma, otras herramientas o resultados de investigación sin tu consentimiento previo, específico, revocable y otorgado de forma expresa, según se establece en las Condiciones de Propiedad Intelectual. Las estadísticas agregadas sobre el uso de la Plataforma, que no incluyen Contenido del Usuario y no identifican a nadie, no constituyen un uso de tu Contenido del Usuario."
+        },
+        {
+          "type": "h2",
+          "text": "5. Uso aceptable"
+        },
+        {
+          "type": "p",
+          "text": "No debes, directamente ni a través de terceros: (a) copiar, modificar, distribuir, vender o crear obras derivadas de la Plataforma o de su software, salvo en lo expresamente permitido en las Condiciones de Propiedad Intelectual; (b) aplicar ingeniería inversa, descompilar o intentar extraer el código fuente de la Plataforma, salvo en la medida en que lo permita la legislación imperativa; (c) revender la Plataforma o dar acceso a ella a terceros como servicio; (d) interferir en la Plataforma o perturbar su funcionamiento, o imponer una carga que degrade sustancialmente el servicio para otros Usuarios; (e) intentar acceder sin autorización a datos, cuentas o sistemas, o vulnerar o poner a prueba la seguridad de la Plataforma sin nuestro permiso por escrito; (f) utilizar medios automatizados (bots, scrapers) para acceder a la Plataforma o copiarla, salvo las funciones de exportación que se proporcionan; (g) utilizar la Plataforma con cualquier fin ilícito. Nada de lo dispuesto en esta cláusula restringe el uso que hagas de tu propio Contenido del Usuario."
+        },
+        {
+          "type": "h2",
+          "text": "6. Confidencialidad y seguridad"
+        },
+        {
+          "type": "p",
+          "text": "**6.1 Confidencialidad.** Tratamos como confidencial el Contenido del Usuario de los Proyectos privados. Solo pueden acceder a él el personal de Epistemonikos y los proveedores de servicios que necesiten hacerlo para operar, dar soporte o proteger la Plataforma, y están sujetos a obligaciones de confidencialidad. No divulgamos el Contenido del Usuario a terceros, salvo: (a) a los Colaboradores que invites; (b) cuando tú lo publiques; (c) a nuestros proveedores de servicios indicados en la Política de Privacidad, en virtud de un contrato; (d) cuando lo exija la ley o una orden vinculante de una autoridad competente, en cuyo caso te informaremos salvo que la ley lo prohíba."
+        },
+        {
+          "type": "p",
+          "text": "**6.2 Usos permitidos.** Utilizamos el Contenido del Usuario y la información de la cuenta únicamente para: (a) proporcionar la Plataforma, darle soporte y mantenerla; (b) garantizar su seguridad e integridad, incluidas las copias de seguridad y los registros; (c) elaborar estadísticas agregadas y anónimas sobre el uso de la Plataforma, que no incluyen Contenido del Usuario; (d) enviar encuestas relacionadas con el servicio, de las que puedes darte de baja en cualquier momento; (e) formular, ejercer o defender reclamaciones; (f) cumplir obligaciones legales; y (g) cualquier otro fin para el que des tu consentimiento específico."
+        },
+        {
+          "type": "p",
+          "text": "**6.3 Medidas de seguridad.** Aplicamos medidas técnicas y organizativas apropiadas para proteger la Plataforma y tus datos, de conformidad con el artículo 32 del RGPD y los deberes de seguridad de la Ley 21.719 de Chile. La Plataforma está alojada en la Unión Europea (Amazon Web Services, Fráncfort, Alemania). Hay un resumen de nuestras medidas de seguridad disponible a petición."
+        },
+        {
+          "type": "p",
+          "text": "**6.4 Incidentes de seguridad.** Si se produce una violación de la seguridad de los datos personales, la notificaremos a las autoridades de control competentes y a los Usuarios afectados según lo exigen el RGPD y la Ley 21.719 de Chile y según se describe en la Política de Privacidad, y colaboraremos contigo (y con tu Institución, cuando corresponda) en su gestión."
+        },
+        {
+          "type": "h2",
+          "text": "7. Responsabilidad"
+        },
+        {
+          "type": "p",
+          "text": "**7.1 Nivel de servicio.** Dado que la Plataforma es gratuita, se proporciona \"tal cual\" y \"según disponibilidad\". Actuaremos con el cuidado y la pericia razonables, pero no ofrecemos ninguna otra garantía, expresa o implícita, incluida la de idoneidad para un fin determinado."
+        },
+        {
+          "type": "p",
+          "text": "**7.2 Limitaciones.** En la medida en que lo permita la ley, ninguna de las partes responde por daños indirectos o consecuentes, lucro cesante o pérdida de oportunidades derivados del Acuerdo."
+        },
+        {
+          "type": "p",
+          "text": "**7.3 Hechos fuera de nuestro control.** No respondemos por la falta de disponibilidad ni por fallos causados por hechos que escapen a nuestro control razonable, ni por el contenido o el funcionamiento de sitios web de terceros enlazados desde la Plataforma."
+        },
+        {
+          "type": "p",
+          "text": "**7.4 Pérdida de contenido.** No respondemos por la pérdida o corrupción del Contenido del Usuario, salvo que se deba a nuestro incumplimiento de estos Términos o a que no hayamos aplicado las medidas de seguridad descritas en la cláusula 6."
+        },
+        {
+          "type": "p",
+          "text": "**7.5 Lo que no excluimos.** Nada de lo dispuesto en el Acuerdo limita o excluye la responsabilidad por dolo o culpa grave, ni ninguna responsabilidad que no pueda limitarse o excluirse conforme a la legislación aplicable, incluido el derecho a indemnización del artículo 82 del RGPD, tus derechos como interesado conforme a la Ley 21.719 de Chile y la legislación imperativa de protección de los consumidores."
+        },
+        {
+          "type": "h2",
+          "text": "8. Suspensión y terminación"
+        },
+        {
+          "type": "p",
+          "text": "**8.1 Por tu parte.** Puedes poner término al Acuerdo en cualquier momento, sin causa y sin aviso previo, eliminando tu cuenta en la configuración de tu perfil o escribiendo a isoq@epistemonikos.org o privacy@epistemonikos.org. Los Proyectos Compartidos se tratan conforme a la cláusula 8.5; el tiempo durante el cual conservamos los datos restantes se describe en la sección 8 de la Política de Privacidad."
+        },
+        {
+          "type": "p",
+          "text": "**8.2 Por nuestra parte, por incumplimiento.** Si incumples el Acuerdo de forma grave o reiterada, podemos ponerle término mediante un correo electrónico en el que expliquemos el motivo. Dispondrás de 15 días para exportar tu Contenido del Usuario antes de que se cierre la cuenta. Cuando el incumplimiento amenace la seguridad de la Plataforma o de otros Usuarios, o implique una actividad ilícita, podemos suspender la cuenta de inmediato, y aun así te permitiremos obtener una copia de tu propio Contenido del Usuario, salvo que la ley lo impida. Puedes impugnar la decisión escribiendo a isoq@epistemonikos.org."
+        },
+        {
+          "type": "p",
+          "text": "**8.3 Por nuestra parte, sin causa.** Podemos poner término al Acuerdo sin causa avisándote por correo electrónico con al menos 30 días de antelación."
+        },
+        {
+          "type": "p",
+          "text": "**8.4 Cese de la Plataforma.** Si decidimos dejar de ofrecer la Plataforma, avisaremos con al menos 60 días de antelación, plazo durante el cual podrás exportar tu Contenido del Usuario. Eliminaremos los datos restantes dentro de los 90 días siguientes al cierre, sin perjuicio de los plazos de conservación de la Política de Privacidad."
+        },
+        {
+          "type": "p",
+          "text": "**8.5 Proyectos al cerrarse una cuenta.** Estas reglas se aplican siempre que se cierra una cuenta, ya sea por tu parte, por la nuestra o por inactividad:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "(a) Se eliminan los Proyectos a los que solo puede acceder la cuenta cerrada.",
+            "(b) Cuando eliminas tú mismo tu cuenta en la configuración de tu perfil, debes elegir, como parte del proceso de eliminación, un nuevo propietario entre los Colaboradores de cada Proyecto Compartido del que seas propietario.",
+            "(c) En todos los demás casos —cierre por inactividad, cierre por nuestra parte o eliminación solicitada por escrito sin que indiques un nuevo propietario dentro de los 7 días siguientes a nuestra solicitud—, la propiedad pasa al Colaborador que lleve más tiempo como miembro del Proyecto, a quien se le notifica por correo electrónico.",
+            "(d) Los comentarios y cambios realizados por la cuenta cerrada en Proyectos Compartidos siguen formando parte del Proyecto, pero se muestran como realizados por \"Exmiembro\".",
+            "(e) Los Proyectos Publicados siguen disponibles bajo la licencia Creative Commons seleccionada, pero dejan de estar vinculados a la cuenta cerrada (véase la cláusula 4.2 de las Condiciones de Propiedad Intelectual)."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Estas reglas nunca impiden el cierre de tu cuenta."
+        },
+        {
+          "type": "p",
+          "text": "**8.6 Subsistencia.** Tras la terminación subsisten: las cláusulas 4.1, 7, 11 y 12; la cláusula 6 (confidencialidad y seguridad), mientras conservemos cualquiera de tus datos, incluidas las copias en las copias de seguridad hasta que se sobrescriban y los registros conservados conforme a la sección 8 de la Política de Privacidad; y cualquier derecho adquirido antes de la terminación."
+        },
+        {
+          "type": "h2",
+          "text": "9. Cesión y proveedores de servicios"
+        },
+        {
+          "type": "p",
+          "text": "**9.1 Cesión por nuestra parte.** Solo podemos ceder el Acuerdo a (a) un sucesor legal de Epistemonikos, (b) el NIPH, o (c) otra organización sin fines de lucro o pública designada conjuntamente por Epistemonikos y el NIPH para seguir operando la Plataforma con los mismos fines, siempre que asuma obligaciones equivalentes a las del Acuerdo y de la Política de Privacidad. Te lo notificaremos con al menos 30 días de antelación; podrás exportar tus datos y eliminar tu cuenta antes de que la cesión surta efecto."
+        },
+        {
+          "type": "p",
+          "text": "**9.2 Cesión por tu parte.** No puedes ceder tu cuenta ni el Acuerdo."
+        },
+        {
+          "type": "p",
+          "text": "**9.3 Proveedores de servicios.** Utilizamos proveedores de servicios para operar la Plataforma. Se indican en la Política de Privacidad, actúan en virtud de contratos escritos y seguimos siendo responsables de su desempeño."
+        },
+        {
+          "type": "h2",
+          "text": "10. Cambios en estos Términos"
+        },
+        {
+          "type": "p",
+          "text": "Podemos actualizar estos Términos. Te notificaremos los cambios sustanciales por correo electrónico y en la Plataforma al menos 30 días antes de que entren en vigor, y te pediremos tu aceptación. Si no los aceptas, no podrás usar la Plataforma conforme a la nueva versión, pero siempre podrás descargar una copia completa de tus datos en JSON desde la pantalla de aceptación o escribiendo a privacy@epistemonikos.org, y eliminaremos tu cuenta si lo solicitas, sin costo alguno. Hasta que se elimine tu cuenta, la versión anterior sigue rigiendo los datos que conservamos sobre ti. Los cambios no sustanciales (como correcciones o cambios exigidos por la ley) surten efecto desde su notificación."
+        },
+        {
+          "type": "h2",
+          "text": "11. Disposiciones generales"
+        },
+        {
+          "type": "p",
+          "text": "**11.1 Divisibilidad.** Si alguna disposición se declara inválida, el resto del Acuerdo sigue vigente. **11.2 No renuncia.** No exigir el cumplimiento de una disposición no supone renunciar a ella. **11.3 Acuerdo íntegro.** El Acuerdo constituye la totalidad del acuerdo entre tú y Epistemonikos sobre su objeto y reemplaza cualquier versión anterior que hayas aceptado. **11.4 Idioma.** Estos Términos están redactados en inglés; si proporcionamos traducciones, prevalece la versión en inglés, salvo que la legislación imperativa disponga otra cosa. **11.5 Notificaciones.** Enviaremos las notificaciones a la dirección de correo electrónico asociada a tu cuenta."
+        },
+        {
+          "type": "h2",
+          "text": "12. Ley aplicable y controversias"
+        },
+        {
+          "type": "p",
+          "text": "El Acuerdo se rige por las leyes de la República de Chile, y son competentes los tribunales de Santiago de Chile, con sujeción a lo siguiente:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "(a) Si eres consumidor (es decir, actúas con fines ajenos a tu actividad comercial o profesión) y estás domiciliado en la Unión Europea o en un Estado vinculado por el Convenio de Lugano de 2007 (como Noruega, Islandia o Suiza), solo podemos ejercitar acciones contra ti ante los tribunales del Estado en que estés domiciliado, y conservas cualquier derecho que esas normas te confieran para ejercitar acciones contra nosotros allí.",
+            "(b) Conservas la protección de la legislación imperativa de protección de los consumidores y de protección de datos de tu país de residencia.",
+            "(c) Puedes presentar una reclamación ante una autoridad de control y ejercitar acciones en el Estado del EEE en que residas habitualmente (artículos 77 y 79 del RGPD) y, cuando se aplique la Ley 21.719 de Chile, ejercer tus derechos ante la Agencia de Protección de Datos Personales."
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "13. Contacto"
+        },
+        {
+          "type": "p",
+          "text": "Consultas generales y soporte: isoq@epistemonikos.org. Datos personales y privacidad: privacy@epistemonikos.org. Nuestros representantes en el Espacio Económico Europeo y en el Reino Unido: [● nombre, dirección, correo electrónico] (véase la Política de Privacidad). Dirección postal: Fundación Epistemonikos, Mariano Sánchez Fontecilla 368, Las Condes, Santiago, Chile."
+        }
+      ]
+    },
+    "privacy": {
+      "heading": "Parte B — Política de Privacidad",
+      "meta": "Versión 1.0 · Fecha de entrada en vigor: 1 de diciembre de 2026 · Última actualización: 27 de octubre de 2026",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "**En resumen.** Fundación Epistemonikos (Chile) es la responsable de tus datos personales en iSoQ. Solo recopilamos lo necesario para gestionar tu cuenta, mantener la seguridad de la Plataforma y conocer su uso de forma agregada. Tus datos se alojan en la UE. No vendemos datos, no elaboramos perfiles sobre ti y no compartimos datos personales con el NIPH. Puedes acceder a tus datos, rectificarlos, exportarlos o eliminarlos en cualquier momento escribiendo a privacy@epistemonikos.org."
+        },
+        {
+          "type": "h2",
+          "text": "1. Quién es responsable de tus datos"
+        },
+        {
+          "type": "p",
+          "text": "**Responsable del tratamiento:** Fundación Epistemonikos, RUT 65.071.808-9, Mariano Sánchez Fontecilla 368, Las Condes, Santiago, Chile. **Contacto de privacidad:** privacy@epistemonikos.org."
+        },
+        {
+          "type": "p",
+          "text": "**Representantes (artículo 27 del RGPD y artículo 27 del RGPD del Reino Unido):** en el Espacio Económico Europeo, [● nombre, dirección, correo electrónico]; en el Reino Unido, [● nombre, dirección, correo electrónico]. Puedes dirigirte a nuestros representantes en lugar de a nosotros para cualquier asunto relacionado con el tratamiento de tus datos personales."
+        },
+        {
+          "type": "p",
+          "text": "**Delegado de protección de datos:** no hemos designado un delegado de protección de datos porque no estamos obligados a hacerlo conforme al artículo 37 del RGPD; todos los asuntos de privacidad se gestionan a través de privacy@epistemonikos.org."
+        },
+        {
+          "type": "p",
+          "text": "**NIPH:** iSoQ se desarrolló conjuntamente con el Instituto Noruego de Salud Pública. El NIPH no es responsable del tratamiento de tus datos personales y no tiene acceso a ellos, salvo que la operación de la Plataforma se transfiera al NIPH conforme al procedimiento con notificación previa de la cláusula 9.1 de los Términos. Solo podemos compartir con el NIPH estadísticas agregadas que no identifiquen a ninguna persona (véase la sección 4, finalidad I)."
+        },
+        {
+          "type": "h2",
+          "text": "2. Ámbito de aplicación"
+        },
+        {
+          "type": "p",
+          "text": "Esta Política se aplica a los datos personales tratados a través del sitio web y la Plataforma iSoQ relativos a: (a) visitantes; (b) Usuarios registrados; (c) personas invitadas como Colaboradores; y (d) personas que se ponen en contacto con nosotros. Si otro Usuario te invitó a iSoQ, recibimos tu nombre y tu dirección de correo electrónico de ese Usuario, con el único fin de enviarte la invitación; el correo de invitación incluye un enlace a esta Política. Cuando un Usuario o una Institución introduce en sus Proyectos datos personales de otras personas, véase la sección 5."
+        },
+        {
+          "type": "h2",
+          "text": "3. Qué datos personales tratamos"
+        },
+        {
+          "type": "table",
+          "head": [
+            "Categoría",
+            "Ejemplos",
+            "Origen"
+          ],
+          "rows": [
+            [
+              "Datos de la cuenta",
+              "Nombre, apellido, dirección de correo electrónico, contraseña (almacenada solo como hash seguro) y cualquier dato opcional del perfil que decidas añadir",
+              "Tú"
+            ],
+            [
+              "Registros de aceptación",
+              "Versión de los Términos aceptada, fecha y hora",
+              "Se generan cuando aceptas"
+            ],
+            [
+              "Datos de proyectos y de colaboración",
+              "Proyectos de los que eres propietario o miembro, tu rol, los comentarios que escribes, la autoría de los cambios; nombre y correo electrónico de los Colaboradores que invitas",
+              "Tú y tus Colaboradores"
+            ],
+            [
+              "Datos técnicos y de seguridad",
+              "Dirección IP (almacenada solo de forma truncada en el registro de auditoría de seguridad), eventos de inicio de sesión, registros del servidor, tipo de navegador y de dispositivo, marcas de tiempo e informes técnicos de errores de tu navegador",
+              "Automáticamente, cuando usas la Plataforma"
+            ],
+            [
+              "Soporte y comunicaciones",
+              "Mensajes que nos envías, preferencias de comunicación",
+              "Tú"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Actualmente iSoQ no utiliza ninguna herramienta de analítica web ni cookies analíticas. Proporcionar los datos de la cuenta es necesario para crear una cuenta; sin ellos no podemos proporcionarte la Plataforma. Los demás datos son opcionales o se generan con tu uso de la Plataforma. No tomamos decisiones sobre ti basadas únicamente en un tratamiento automatizado, ni elaboramos perfiles sobre ti ni personalizamos el servicio en función de tu comportamiento."
+        },
+        {
+          "type": "h2",
+          "text": "4. Por qué tratamos tus datos, con qué base jurídica y durante cuánto tiempo"
+        },
+        {
+          "type": "table",
+          "head": [
+            "Finalidad",
+            "Base jurídica (art. 6 del RGPD)",
+            "Conservación"
+          ],
+          "rows": [
+            [
+              "A. Crear y gestionar tu cuenta y proporcionar la Plataforma (incluida la exportación)",
+              "Ejecución del contrato — art. 6.1.b)",
+              "Mientras tu cuenta esté activa; véase la regla de inactividad en la sección 8"
+            ],
+            [
+              "B. Permitir la colaboración: enviar invitaciones y mostrar a los Colaboradores quién trabaja en un Proyecto",
+              "Contrato con el Usuario que invita — art. 6.1.b); respecto de la persona invitada, nuestro interés legítimo en hacer posible la invitación — art. 6.1.f)",
+              "Las invitaciones no aceptadas se eliminan a los 7 días"
+            ],
+            [
+              "C. Publicar los Proyectos que decidas publicar",
+              "Ejecución del contrato — art. 6.1.b)",
+              "Mientras el Proyecto siga publicado"
+            ],
+            [
+              "D. Mantener la Plataforma segura y en funcionamiento: registro de auditoría de seguridad, control de acceso, prevención del fraude y del abuso, monitorización de errores, copias de seguridad",
+              "Interés legítimo en proteger la Plataforma, mantenerla en funcionamiento y proteger los datos de nuestros Usuarios — art. 6.1.f)",
+              "Registro de auditoría de seguridad y registros operativos: 365 días (seudonimizados cuando se elimina tu cuenta; las direcciones IP se almacenan solo de forma truncada); registros del servidor web: 10 días; intentos fallidos de inicio de sesión: 1 día; informes de errores: 90 días; copias de seguridad cifradas: se eliminan a los 35 días"
+            ],
+            [
+              "E. Enviar mensajes del servicio (cuenta, seguridad, cambios en los términos, funcionalidades que afectan a tus proyectos)",
+              "Contrato — art. 6.1.b), e interés legítimo — art. 6.1.f)",
+              "Mientras tu cuenta esté activa"
+            ],
+            [
+              "F. Enviar boletines o novedades sobre otros productos de Epistemonikos",
+              "Consentimiento — art. 6.1.a), solicitado por separado y nunca premarcado",
+              "Hasta que retires tu consentimiento"
+            ],
+            [
+              "G. Enviar encuestas ocasionales sobre iSoQ",
+              "Interés legítimo en mejorar iSoQ — art. 6.1.f), con la opción de darte de baja en cada encuesta",
+              "Las respuestas se anonimizan o eliminan en un plazo de 12 meses"
+            ],
+            [
+              "H. Analítica de uso del sitio web",
+              "No se utiliza. Si incorporamos una herramienta de analítica, actualizaremos esta Política con al menos 30 días de antelación y te pediremos tu consentimiento cuando la ley lo exija",
+              "—"
+            ],
+            [
+              "I. Elaborar estadísticas agregadas sobre el uso de la Plataforma (por ejemplo, número de Usuarios por país o número de Proyectos) para mejorar iSoQ e informar al NIPH y a los financiadores",
+              "Interés legítimo en informar sobre una herramienta financiada con fondos públicos y en mejorarla — art. 6.1.f). Las estadísticas no incluyen Contenido del Usuario, y las cifras inferiores a 10 personas se agrupan o suprimen para que nadie pueda ser identificado",
+              "Las estadísticas son anónimas; los datos de base siguen el plazo de conservación de la finalidad A"
+            ],
+            [
+              "J. Impedir un nuevo registro tras el cierre de una cuenta por incumplimiento grave",
+              "Interés legítimo en proteger la Plataforma y a sus Usuarios — art. 6.1.f)",
+              "Un hash unidireccional con clave (HMAC) de la dirección de correo electrónico durante 90 días; el correo electrónico en sí no se conserva"
+            ],
+            [
+              "K. Conservar un registro de tu aceptación de los Términos y de cada decisión sobre consentimiento (qué, cuándo, cómo y qué versión del texto), y atender reclamaciones",
+              "Interés legítimo en demostrar el consentimiento y en defenderse frente a reclamaciones — art. 6.1.f); art. 7.1 del RGPD",
+              "Mientras exista tu cuenta; tras su eliminación, solo una entrada seudonimizada en el registro de auditoría de seguridad durante 365 días"
+            ],
+            [
+              "L. Responder a las solicitudes de soporte y al ejercicio de derechos",
+              "Contrato — art. 6.1.b); obligación legal — art. 6.1.c) para las solicitudes de ejercicio de derechos",
+              "Las solicitudes enviadas a través del formulario de privacidad se registran, sin su contenido, en el registro de auditoría de seguridad durante 365 días; la correspondencia, 12 meses después de cerrada la solicitud"
+            ],
+            [
+              "M. Cumplir obligaciones legales y requerimientos legítimos de las autoridades",
+              "Obligación legal conforme al Derecho de la UE/del EEE o de un Estado miembro — art. 6.1.c); respecto de las obligaciones conforme al Derecho chileno, interés legítimo en cumplir la legislación del país en que estamos establecidos — art. 6.1.f)",
+              "Según lo exija la ley"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "**Tu derecho de oposición.** Cuando nos basamos en nuestros intereses legítimos (finalidades B, D, E, G, I, J y K), tienes derecho a oponerte en cualquier momento, por motivos relacionados con tu situación particular, escribiendo a privacy@epistemonikos.org. Dejaremos de tratar los datos salvo que acreditemos motivos legítimos imperiosos que prevalezcan sobre tus intereses, o que los necesitemos para formular, ejercer o defender reclamaciones. Siempre puedes oponerte a las encuestas y a las comunicaciones comerciales sin dar explicaciones."
+        },
+        {
+          "type": "p",
+          "text": "Para los Usuarios amparados por la Ley 21.719 de Chile, las mismas finalidades se basan en las bases jurídicas equivalentes de esa ley (ejecución de un contrato, interés legítimo, consentimiento y obligación legal)."
+        },
+        {
+          "type": "h2",
+          "text": "5. Datos personales dentro de tus Proyectos"
+        },
+        {
+          "type": "p",
+          "text": "Los Proyectos pueden contener datos personales de otras personas, como autores de estudios o coinvestigadores. Respecto de esos datos, el Usuario o la Institución que los introduce decide por qué se tratan y es el responsable del tratamiento; Epistemonikos los trata por su cuenta, como encargado del tratamiento, conforme a las Condiciones de Tratamiento de Datos (Parte E). Los Usuarios no deben subir información que identifique a participantes de estudios primarios (véase la cláusula 4.3 de los Términos). Si crees que un Proyecto contiene tus datos personales, puedes ponerte en contacto con nosotros y trasladaremos tu solicitud al Usuario o a la Institución responsable y le prestaremos asistencia."
+        },
+        {
+          "type": "h2",
+          "text": "6. Quién recibe tus datos"
+        },
+        {
+          "type": "p",
+          "text": "No vendemos tus datos personales ni los compartimos con terceros para sus propios fines. Tus datos solo se comunican a:"
+        },
+        {
+          "type": "table",
+          "head": [
+            "Destinatario",
+            "Función y finalidad",
+            "Ubicación y garantía"
+          ],
+          "rows": [
+            [
+              "Amazon Web Services EMEA SARL",
+              "Encargado del tratamiento — alojamiento, almacenamiento y copias de seguridad",
+              "Fráncfort, Alemania (UE)"
+            ],
+            [
+              "Amazon Web Services EMEA SARL (Amazon SES)",
+              "Encargado del tratamiento — envío de correos electrónicos de la cuenta y del servicio",
+              "Fráncfort, Alemania (UE)"
+            ],
+            [
+              "Have I Been Pwned (Pwned Passwords)",
+              "Comprueba si una contraseña nueva figura en filtraciones de datos conocidas. Solo se envían los cinco primeros caracteres de un hash de la contraseña; no se envía ni la contraseña ni ningún dato que te identifique",
+              "Red global — no se transfieren datos personales"
+            ],
+            [
+              "Functional Software, Inc. (Sentry)",
+              "Encargado del tratamiento — monitorización de errores: recibe informes técnicos de errores de tu navegador, que pueden incluir tu ID de usuario, pero no tu dirección de correo electrónico ni tu dirección IP",
+              "Estados Unidos — Marco de Privacidad de Datos UE-EE. UU. o cláusulas contractuales tipo"
+            ],
+            [
+              "**[● proveedor de correo electrónico para boletines]**",
+              "Encargado del tratamiento — envío de boletines a los Usuarios que lo hayan aceptado, y de avisos a todos los Usuarios sobre cambios en estos documentos",
+              "**[● ubicación; si está fuera del EEE, Marco de Privacidad de Datos UE-EE. UU. o cláusulas contractuales tipo]**"
+            ],
+            [
+              "Personal de Epistemonikos",
+              "Operación, soporte y seguridad de la Plataforma",
+              "Chile — véase la sección 7"
+            ],
+            [
+              "Colaboradores que invitas",
+              "Acceso al Proyecto Compartido",
+              "Dondequiera que se encuentren"
+            ],
+            [
+              "El público",
+              "Solo el contenido que decidas publicar",
+              "Todo el mundo"
+            ],
+            [
+              "Autoridades y tribunales",
+              "Solo cuando lo exija la ley",
+              "—"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Actualizaremos esta lista al menos 30 días antes de incorporar o sustituir a un proveedor de servicios. El NIPH y otros socios o financiadores solo reciben estadísticas agregadas anónimas (finalidad I), nunca datos personales. Si la operación de la Plataforma se transfiere a otra organización conforme a la cláusula 9.1 de los Términos (incluido el NIPH), tus datos se transferirán al nuevo operador, que deberá asumir obligaciones equivalentes a las de esta Política; te lo notificaremos con al menos 30 días de antelación y podrás eliminar tu cuenta antes de la transferencia."
+        },
+        {
+          "type": "h2",
+          "text": "7. Transferencias internacionales"
+        },
+        {
+          "type": "p",
+          "text": "Tus datos se alojan en la Unión Europea. Epistemonikos está establecida en Chile, y el personal autorizado de Epistemonikos accede a los datos desde Chile para operar la Plataforma, darle soporte y protegerla. Dado que proporcionas tus datos directamente a Epistemonikos, que está ella misma sujeta al RGPD en virtud de su artículo 3.2, este acceso no constituye una transferencia en el sentido del capítulo V del RGPD según las Directrices 05/2021 del Comité Europeo de Protección de Datos (CEPD); la Comisión Europea no ha adoptado una decisión de adecuación respecto de Chile, por lo que aplicamos íntegramente el RGPD a los datos personales de los Usuarios del EEE, y protegemos el acceso remoto con cifrado en tránsito, acceso únicamente a través de túneles autenticados y cifrados desde cuentas protegidas con autenticación multifactor, y registro de los accesos. Cuando un proveedor de servicios trata datos fuera del EEE, nos basamos en una decisión de adecuación (incluido el Marco de Privacidad de Datos UE-EE. UU. para los proveedores certificados) o en las cláusulas contractuales tipo de la Comisión Europea. Puedes obtener una copia de las garantías pertinentes escribiendo a privacy@epistemonikos.org. Conforme a la Ley 21.719 de Chile, alojar los datos en la UE constituye una transferencia internacional desde Chile, que realizamos al amparo de las garantías contractuales acordadas con Amazon Web Services y basándonos en el nivel de protección que ofrece el RGPD, tal como permite esa ley."
+        },
+        {
+          "type": "h2",
+          "text": "8. Eliminación de tu cuenta y conservación"
+        },
+        {
+          "type": "p",
+          "text": "**8.1 Eliminación de tu cuenta.** Puedes eliminar tu cuenta en cualquier momento en la configuración de tu perfil o escribiendo a privacy@epistemonikos.org. La eliminación surte efecto de inmediato y no está condicionada a ninguna otra acción por tu parte; las copias en las copias de seguridad se eliminan en un plazo de 35 días (cláusula 8.5)."
+        },
+        {
+          "type": "p",
+          "text": "**8.2 Proyectos.** Lo que ocurre con tus Proyectos cuando se cierra tu cuenta se establece en la cláusula 8.5 de los Términos: se eliminan los Proyectos a los que solo tú puedes acceder; cuando eliminas tú mismo tu cuenta, eliges al nuevo propietario de cada Proyecto Compartido del que seas propietario; en los demás casos, la propiedad pasa al Colaborador con mayor antigüedad; y tus contribuciones siguen mostrándose como realizadas por \"Exmiembro\"."
+        },
+        {
+          "type": "p",
+          "text": "**8.3 Proyectos Publicados.** Puedes volver a hacer privado un Proyecto publicado en cualquier momento. El contenido que siga publicado cuando elimines tu cuenta seguirá disponible bajo la licencia Creative Commons que seleccionaste, porque es posible que terceros ya se hayan acogido a esa licencia, pero dejará de estar vinculado a tu cuenta. Si un Proyecto publicado contiene tu nombre u otros datos personales tuyos, el Usuario que lo publicó decide sobre su contenido: puedes pedirle directamente a ese Usuario que los modifique o los elimine, o pedírnoslo a nosotros y trasladaremos tu solicitud. Si ese Usuario ya no tiene cuenta o no responde en un plazo de 30 días, evaluaremos nosotros mismos la solicitud y eliminaremos los datos, salvo que, tras una evaluación caso por caso, conservarlos sea necesario para ejercer el derecho a la libertad de expresión e información (artículo 17.3.a) del RGPD)."
+        },
+        {
+          "type": "p",
+          "text": "**8.4 Cuentas inactivas.** Si no inicias sesión durante 36 meses, te enviaremos dos correos electrónicos, 60 y 30 días antes de eliminar la cuenta. En el caso de las cuentas que ya existían el 1 de diciembre de 2026, los 36 meses se cuentan desde esa fecha. La eliminación se rige entonces por las cláusulas 8.2 y 8.3."
+        },
+        {
+          "type": "p",
+          "text": "**8.5 Qué conservamos tras la eliminación.** Se eliminan tu cuenta, los Proyectos a los que solo tú podías acceder, tu historial de consentimientos y todos los demás datos vinculados a ti. Solo conservamos: las entradas seudonimizadas del registro de auditoría de seguridad (tu dirección de correo electrónico se elimina y se sustituye por un identificador aleatorio; las direcciones IP se almacenan siempre únicamente de forma truncada) durante un máximo de 365 días; la correspondencia de soporte durante 12 meses después de cerrada la solicitud; y, si tu cuenta se cerró por incumplimiento grave, un hash con clave de tu correo electrónico durante 90 días. Las copias en las copias de seguridad cifradas se eliminan en un plazo de 35 días."
+        },
+        {
+          "type": "h2",
+          "text": "9. Tus derechos"
+        },
+        {
+          "type": "p",
+          "text": "Tienes derecho a: **acceder** a tus datos personales y recibir una copia; **rectificar** los datos inexactos; **suprimir** tus datos; **limitar** el tratamiento en determinados casos; la **portabilidad de los datos** (recibir los datos que proporcionaste en un formato estructurado y legible por máquina y que se transmitan a otro responsable del tratamiento); **oponerte** al tratamiento basado en intereses legítimos (véase el recuadro de la sección 4); **retirar tu consentimiento** en cualquier momento, sin que ello afecte al tratamiento anterior; y no ser objeto de decisiones basadas únicamente en un tratamiento automatizado. Conforme a la Ley 21.719 de Chile, también tienes derecho a solicitar el **bloqueo** temporal de tus datos."
+        },
+        {
+          "type": "p",
+          "text": "Para ejercer tus derechos, utiliza la configuración de tu cuenta (incluido el formulario de contacto de privacidad de tu perfil) o escribe a privacy@epistemonikos.org (o a nuestros representantes). Responderemos en el plazo de un mes; este plazo puede prorrogarse otros dos meses en el caso de solicitudes complejas, en cuyo caso te explicaremos el motivo. En el caso de solicitudes conforme al Derecho chileno, responderemos dentro del plazo que establece la Ley 21.719 cuando este sea más breve. El ejercicio de tus derechos es gratuito. Es posible que te pidamos que confirmes tu identidad."
+        },
+        {
+          "type": "p",
+          "text": "Tienes derecho a presentar una reclamación ante una autoridad de protección de datos, en particular en el país en que vivas o trabajes. En Noruega es Datatilsynet (www.datatilsynet.no); para otros países del EEE, consulta edpb.europa.eu. En Chile puedes dirigirte a la Agencia de Protección de Datos Personales. Te agradeceríamos que nos dieras primero la oportunidad de atender tu inquietud."
+        },
+        {
+          "type": "h2",
+          "text": "10. Seguridad y violaciones de datos"
+        },
+        {
+          "type": "p",
+          "text": "Protegemos los datos personales con medidas técnicas y organizativas apropiadas, de conformidad con el artículo 32 del RGPD y los deberes de seguridad de la Ley 21.719 de Chile, entre ellas cifrado en tránsito, hash seguro de contraseñas, acceso administrativo restringido y registrado, y copias de seguridad periódicas. Si se produce una violación de la seguridad de los datos personales, la notificaremos a las autoridades de control competentes sin dilación indebida y, de ser posible, en un plazo de 72 horas desde que tengamos constancia de ella, salvo que sea improbable que constituya un riesgo para los derechos y libertades de las personas. También la notificaremos a la Agencia de Protección de Datos Personales de Chile cuando el Derecho chileno lo exija. Si es probable que la violación entrañe un alto riesgo para ti, o cuando el Derecho chileno lo exija (por ejemplo, en el caso de datos sensibles, datos de niños, niñas y adolescentes o datos financieros), te informaremos directamente y sin dilación indebida, explicándote lo ocurrido y lo que puedes hacer."
+        },
+        {
+          "type": "h2",
+          "text": "11. Menores de edad"
+        },
+        {
+          "type": "p",
+          "text": "iSoQ no está dirigido a personas menores de 18 años. No recopilamos sus datos a sabiendas; si llegamos a saber que una cuenta pertenece a una persona menor de 18 años, la eliminaremos."
+        },
+        {
+          "type": "h2",
+          "text": "12. Cookies"
+        },
+        {
+          "type": "p",
+          "text": "Consulta nuestra Política de Cookies (Parte C)."
+        },
+        {
+          "type": "h2",
+          "text": "13. Cambios en esta Política"
+        },
+        {
+          "type": "p",
+          "text": "Publicaremos cualquier cambio con un nuevo número de versión y fecha. Si un cambio afecta de forma sustancial al modo en que utilizamos tus datos personales, te informaremos por correo electrónico con al menos 30 días de antelación y, cuando sea necesario, te pediremos tu consentimiento."
+        }
+      ]
+    },
+    "cookies": {
+      "heading": "Parte C — Política de Cookies",
+      "meta": "Versión 1.0 · Fecha de entrada en vigor: 1 de diciembre de 2026 · Última actualización: 27 de octubre de 2026 · Responsable del tratamiento: Fundación Epistemonikos (véase la Política de Privacidad, sección 1)",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Las cookies son pequeños archivos que se almacenan en tu dispositivo. Conforme a la Ley de Comunicaciones Electrónicas de Noruega (§ 3-15) y a las normas equivalentes de la UE, solo podemos almacenar información en tu dispositivo o leerla sin tu consentimiento cuando sea estrictamente necesario para prestar el servicio que solicitas."
+        },
+        {
+          "type": "h2",
+          "text": "1. Cookies estrictamente necesarias (no requieren consentimiento)"
+        },
+        {
+          "type": "table",
+          "head": [
+            "Nombre",
+            "Finalidad",
+            "Duración"
+          ],
+          "rows": [
+            [
+              "Cookie de sesión de iSoQ",
+              "Mantiene tu sesión iniciada. Configurada como HttpOnly, Secure y SameSite=Lax",
+              "Caduca tras 8 horas de inactividad y, en todo caso, a los 7 días; se elimina al cerrar sesión"
+            ]
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "2. Analítica"
+        },
+        {
+          "type": "p",
+          "text": "Actualmente iSoQ no utiliza ninguna herramienta de analítica ni cookies analíticas, y no se necesita un banner de cookies porque solo utilizamos las cookies estrictamente necesarias indicadas más arriba. Si decidimos incorporar una herramienta de analítica, actualizaremos esta Política y la Política de Privacidad con al menos 30 días de antelación, y te pediremos tu consentimiento antes de utilizar cualquier cookie que no sea estrictamente necesaria."
+        },
+        {
+          "type": "h2",
+          "text": "3. Cambios y contacto"
+        },
+        {
+          "type": "p",
+          "text": "Actualizaremos esta Política si cambiamos las cookies que utilizamos. Consultas: privacy@epistemonikos.org."
+        }
+      ]
+    },
+    "property": {
+      "heading": "Parte D — Condiciones de Propiedad Intelectual",
+      "meta": "Versión 1.0 · Fecha de entrada en vigor: 1 de diciembre de 2026 · Forma parte del Acuerdo",
+      "blocks": [
+        {
+          "type": "h2",
+          "text": "1. La Plataforma"
+        },
+        {
+          "type": "p",
+          "text": "El software de iSoQ, incluidos su código fuente, bases de datos, algoritmos, API e interfaz de usuario, fue desarrollado y financiado conjuntamente por Fundación Epistemonikos y el Instituto Noruego de Salud Pública, que son sus cotitulares. Epistemonikos opera y mantiene la Plataforma. El uso de la Plataforma es gratuito, pero el código fuente no es de código abierto y no se otorga en licencia a los Usuarios. No se otorga ningún derecho distinto de los expresamente establecidos en estas Condiciones."
+        },
+        {
+          "type": "h2",
+          "text": "2. Métodos y materiales didácticos"
+        },
+        {
+          "type": "p",
+          "text": "Los métodos y materiales didácticos desarrollados específicamente para iSoQ, y el contenido textual de la Plataforma (como los textos de las ventanas emergentes y modales, la información sobre herramientas, las indicaciones, los ejemplos y los videos de ayuda —a diferencia del código de software de la interfaz de usuario, al que se refiere la sección 1—), son propiedad de Megan Wainwright, Claire Glenton, Simon Lewin y Heather Munthe-Kaas, miembros del Equipo de Coordinación de GRADE-CERQual, y se distribuyen bajo una licencia Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)."
+        },
+        {
+          "type": "p",
+          "text": "Los métodos y materiales didácticos desarrollados específicamente para la integración de CAMELOT en iSoQ son propiedad de Heather Munthe-Kaas, Megan Wainwright, Simon Lewin, Claire Glenton y los autores de la herramienta CAMELOT, y se distribuyen bajo la licencia CC BY-NC-ND 4.0."
+        },
+        {
+          "type": "p",
+          "text": "Los métodos y contenidos tomados de artículos publicados están sujetos a las licencias de dichos artículos (véanse las referencias al final de esta Parte)."
+        },
+        {
+          "type": "h2",
+          "text": "3. Lo que puedes hacer"
+        },
+        {
+          "type": "p",
+          "text": "Te otorgamos una licencia gratuita, no exclusiva e intransferible, que puede terminarse conforme a la cláusula 8 de los Términos, para acceder a la Plataforma y utilizarla con fines de investigación, académicos, profesionales e institucionales, de conformidad con los Términos. Puedes ver, descargar e imprimir los materiales de la Plataforma para esos fines, dentro de los términos de las licencias indicadas en la sección 2. Puedes descargar, utilizar y publicar libremente los productos que crees con la Plataforma —como las tablas de Características de los Estudios, Perfiles de Evidencia, Limitaciones Metodológicas y Resumen de Hallazgos Cualitativos—, incluso en revistas, informes y guías. Cita iSoQ según se indica en la sección 7."
+        },
+        {
+          "type": "p",
+          "text": "No puedes registrar como propia ninguna marca, invención o creación que pertenezca a los titulares identificados en las secciones 1 y 2."
+        },
+        {
+          "type": "h2",
+          "text": "4. Tu contenido"
+        },
+        {
+          "type": "p",
+          "text": "**4.1 Titularidad.** Conservas todos los derechos sobre tu Contenido del Usuario. Epistemonikos solo tiene la licencia de operación descrita en la cláusula 4.2 de los Términos."
+        },
+        {
+          "type": "p",
+          "text": "**4.2 Proyectos Publicados.** Cuando publicas la totalidad o parte de un Proyecto en la base de datos de iSoQ, eliges una licencia Creative Commons para él; la licencia predeterminada es CC BY-NC-ND 4.0. Asimismo, otorgas a Epistemonikos una licencia no exclusiva, mundial y gratuita para mostrar, reproducir y distribuir el contenido publicado a través de la Plataforma mientras siga publicado. Puedes despublicar el contenido en cualquier momento, con lo que vuelve a ser privado; las licencias Creative Commons ya obtenidas por terceros no pueden revocarse. Las solicitudes de modificación o eliminación de datos personales en contenido publicado se rigen por la cláusula 8.3 de la Política de Privacidad."
+        },
+        {
+          "type": "p",
+          "text": "**4.3 Tu responsabilidad.** Antes de publicar, confirmas, marcando la casilla de confirmación que muestra la Plataforma, que tienes derecho a publicar el contenido, que este no infringe derechos de terceros y que no contiene información que identifique a participantes de estudios primarios ni otros datos personales que no estés autorizado a hacer públicos."
+        },
+        {
+          "type": "p",
+          "text": "**4.4 Uso para investigación y desarrollo.** No utilizaremos tu Contenido del Usuario, publicado o no, para entrenar, enriquecer o desarrollar la Plataforma, otras herramientas o resultados de investigación, salvo que des tu consentimiento previo, específico y expreso por escrito. Puedes retirar ese consentimiento en cualquier momento respecto de usos futuros; la retirada no afecta a los resultados obtenidos lícitamente antes de ella. Esta cláusula no abarca las estadísticas agregadas anónimas sobre el uso de la Plataforma que no contienen Contenido del Usuario."
+        },
+        {
+          "type": "h2",
+          "text": "5. Marcas"
+        },
+        {
+          "type": "p",
+          "text": "Los nombres y logotipos de iSoQ, Epistemonikos, NIPH y GRADE-CERQual pertenecen a sus respectivos titulares y no pueden utilizarse sin autorización previa por escrito, salvo para citar iSoQ correctamente."
+        },
+        {
+          "type": "h2",
+          "text": "6. Sugerencias"
+        },
+        {
+          "type": "p",
+          "text": "Si nos envías sugerencias sobre iSoQ, podemos utilizarlas para mejorar la Plataforma sin contraer ninguna obligación contigo. No te las atribuiremos públicamente sin tu permiso."
+        },
+        {
+          "type": "h2",
+          "text": "7. Cómo citar iSoQ"
+        },
+        {
+          "type": "p",
+          "text": "iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Epistemonikos, Norwegian Institute of Public Health and the iSoQ Development Team*. Available from https://isoq.epistemonikos.org (https://isoq.epistemonikos.org/about#/cite)"
+        },
+        {
+          "type": "p",
+          "text": "*iSoQ Development Team: Megan Wainwright (consultora), Simon Lewin (Norwegian University of Science and Technology, NTNU), Claire Glenton (Western Norway University of Applied Sciences, HVL), Heather Munthe-Kaas (Norwegian Institute of Public Health)."
+        },
+        {
+          "type": "h3",
+          "text": "Referencias"
+        },
+        {
+          "type": "p",
+          "text": "Lewin S, Booth A, Glenton C, Munthe-Kaas H, Rashidian A, Wainwright M, Bohren MA, Tunçalp Ö, Colvin CJ, Garside R, Carlsen B, Langlois EV, Noyes J. Applying GRADE-CERQual to qualitative evidence synthesis findings: introduction to the series. Implement Sci. 2018;13(Suppl 1):2."
+        },
+        {
+          "type": "p",
+          "text": "Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 2: how to make an overall CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018;13(Suppl 1):10."
+        },
+        {
+          "type": "p",
+          "text": "Munthe-Kaas H, Bohren MA, Glenton C, Lewin S, Noyes J, Tunçalp Ö, Booth A, Garside R, Colvin CJ, Wainwright M, Rashidian A, Flottorp S, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 3: how to assess methodological limitations. Implement Sci. 2018;13(Suppl 1):9."
+        },
+        {
+          "type": "p",
+          "text": "Colvin CJ, Garside R, Wainwright M, Munthe-Kaas H, Glenton C, Bohren MA, Carlsen B, Tunçalp Ö, Noyes J, Booth A, Rashidian A, Flottorp S, Lewin S. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 4: how to assess coherence. Implement Sci. 2018;13(Suppl 1):13."
+        },
+        {
+          "type": "p",
+          "text": "Glenton C, Carlsen B, Lewin S, Munthe-Kaas H, Colvin CJ, Tunçalp Ö, Bohren MA, Noyes J, Booth A, Garside R, Rashidian A, Flottorp S, Wainwright M. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 5: how to assess adequacy of data. Implement Sci. 2018;13(Suppl 1):14."
+        },
+        {
+          "type": "p",
+          "text": "Noyes J, Booth A, Lewin S, Carlsen B, Glenton C, Colvin CJ, Garside R, Bohren MA, Rashidian A, Wainwright M, Tunçalp Ö, Chandler J, Flottorp S, Pantoja T, Tucker JD, Munthe-Kaas H. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 6: how to assess relevance of the data. Implement Sci. 2018;13(Suppl 1):4."
+        },
+        {
+          "type": "p",
+          "text": "Booth A, Lewin S, Glenton C, Munthe-Kaas H, Toews I, Noyes J, Rashidian A, Berg RC, Nyakang'o B, Meerpohl JJ; GRADE-CERQual Coordinating Team. Applying GRADE-CERQual to qualitative evidence synthesis findings — paper 7: understanding the potential impacts of dissemination bias. Implement Sci. 2018;13(Suppl 1):12."
+        },
+        {
+          "type": "p",
+          "text": "Lewin S, Glenton C, Munthe-Kaas H, Carlsen B, Colvin CJ, Gülmezoglu M, Noyes J, Booth A, Garside R, Rashidian A. Using qualitative evidence in decision making for health and social interventions: an approach to assess confidence in findings from qualitative evidence syntheses (GRADE-CERQual). PLoS Med. 2015;12(10):e1001895."
+        },
+        {
+          "type": "p",
+          "text": "Wainwright M, Zahroh RI, Tunçalp Ö, Booth A, Bohren MA, Noyes J, Cheng W, Munthe-Kaas H, Lewin S. The use of GRADE-CERQual in qualitative evidence synthesis: an evaluation of fidelity and reporting. Health Res Policy Syst. 2023;21:77. doi:10.1186/s12961-023-00999-3"
+        },
+        {
+          "type": "p",
+          "text": "Bohren MA, Glenton C, Noyes J, Wainwright M, Lewin S. Chapter 13: Assessing confidence in the evidence using the GRADE-CERQual approach. Draft version (February 2025) for inclusion in: Noyes J, Harden A (eds). Cochrane-Campbell Handbook for Qualitative Evidence Synthesis, Version 1. London: Cochrane."
+        },
+        {
+          "type": "p",
+          "text": "Munthe-Kaas HM, Booth A, Sommer I, et al. Developing CAMELOT for assessing methodological limitations of qualitative research for inclusion in qualitative evidence syntheses. Cochrane Ev Synth. 2024;2:e12058. doi:10.1002/cesm.12058"
+        }
+      ]
+    },
+    "processing": {
+      "heading": "Parte E — Condiciones de Tratamiento de Datos (artículo 28 del RGPD)",
+      "meta": "Versión 1.0 · Se aplican automáticamente cuando un Usuario o una Institución es responsable del tratamiento de datos personales incluidos en el Contenido del Usuario. Las Instituciones pueden solicitar una copia firmada de idéntico contenido en privacy@epistemonikos.org.",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "**1. Funciones.** El Usuario o la Institución (el \"**Responsable**\") es el responsable del tratamiento, y Epistemonikos es el encargado del tratamiento, de los datos personales incluidos en el Contenido del Usuario (los \"**Datos del Responsable**\")."
+        },
+        {
+          "type": "p",
+          "text": "**2. Detalles del tratamiento.** Objeto: alojamiento y tratamiento del Contenido del Usuario para proporcionar la Plataforma. Duración: la vigencia del Acuerdo más los plazos de eliminación de la sección 9 de estas Condiciones de Tratamiento de Datos y de la sección 8 de la Política de Privacidad. Naturaleza y finalidad: almacenamiento, visualización por los Colaboradores, exportación, copia de seguridad y soporte técnico. Tipos de datos: nombres, datos profesionales y otros datos personales que el Responsable decida incluir, que no deben incluir datos identificables de participantes de investigaciones salvo que se acuerde expresamente por escrito. Interesados: autores, coinvestigadores y otras personas mencionadas por el Responsable."
+        },
+        {
+          "type": "p",
+          "text": "**3. Instrucciones.** Epistemonikos trata los Datos del Responsable únicamente siguiendo instrucciones documentadas del Responsable, que consisten en el Acuerdo y en el uso que el Responsable haga de las funciones de la Plataforma, salvo que el Derecho de la UE/del EEE o de un Estado miembro exija otra cosa, en cuyo caso informará previamente al Responsable, salvo que dicho Derecho lo prohíba. Epistemonikos informará al Responsable si, en su opinión, una instrucción infringe la normativa de protección de datos."
+        },
+        {
+          "type": "p",
+          "text": "**4. Confidencialidad.** Las personas autorizadas para tratar los Datos del Responsable están sujetas a obligaciones de confidencialidad."
+        },
+        {
+          "type": "p",
+          "text": "**5. Seguridad.** Epistemonikos aplica las medidas descritas en la cláusula 6 de los Términos y en la sección 10 de la Política de Privacidad, de conformidad con el artículo 32 del RGPD."
+        },
+        {
+          "type": "p",
+          "text": "**6. Subencargados.** El Responsable otorga una autorización general para recurrir a los subencargados indicados en la sección 6 de la Política de Privacidad. Epistemonikos avisará con al menos 30 días de antelación de cualquier incorporación o sustitución. El Responsable puede oponerse por motivos razonables de protección de datos; si no se encuentra una solución, el Responsable puede poner término al Acuerdo. Epistemonikos impone a cada subencargado las mismas obligaciones de protección de datos que las establecidas en estas Condiciones de Tratamiento de Datos y sigue siendo responsable de su desempeño."
+        },
+        {
+          "type": "p",
+          "text": "**7. Asistencia.** Teniendo en cuenta la naturaleza del tratamiento, Epistemonikos asiste al Responsable en la respuesta a las solicitudes de los interesados, en la garantía de la seguridad, en la notificación de las violaciones de la seguridad de los datos personales y en la realización de evaluaciones de impacto relativas a la protección de datos y consultas previas."
+        },
+        {
+          "type": "p",
+          "text": "**8. Violaciones de la seguridad de los datos personales.** Epistemonikos notifica al Responsable sin dilación indebida, y en todo caso en un plazo de 48 horas, después de tener constancia de una violación de la seguridad de los datos personales que afecte a los Datos del Responsable, con la información exigida por el artículo 33.3 del RGPD de que disponga en ese momento."
+        },
+        {
+          "type": "p",
+          "text": "**9. Supresión o devolución.** Al término del Acuerdo, el Responsable puede exportar los Datos del Responsable; a continuación, Epistemonikos los suprime, incluidas las copias en las copias de seguridad dentro del período de rotación de estas, salvo que la ley exija conservarlos."
+        },
+        {
+          "type": "p",
+          "text": "**10. Auditorías.** Epistemonikos pone a disposición la información necesaria para demostrar el cumplimiento del artículo 28 del RGPD, y permite auditorías por parte del Responsable o de un auditor designado por este, con un preaviso de al menos 30 días, no más de una vez al año (salvo tras una violación de seguridad), a costa del Responsable y con sujeción a confidencialidad."
+        },
+        {
+          "type": "p",
+          "text": "**11. Transferencias.** Los Datos del Responsable se alojan en la UE. El acceso desde Chile y cualquier transferencia fuera del EEE se rigen por la sección 7 de la Política de Privacidad. Cuando el Responsable esté sujeto al RGPD y así lo solicite, las partes celebrarán las cláusulas contractuales tipo de la Comisión Europea (módulo 2, de responsable a encargado) para el acceso a los Datos del Responsable desde Chile."
+        },
+        {
+          "type": "p",
+          "text": "**12. Responsabilidad y ley aplicable.** La responsabilidad se rige por la cláusula 7 de los Términos y el artículo 82 del RGPD. Estas Condiciones de Tratamiento de Datos se rigen por la ley indicada en la cláusula 12 de los Términos, sin perjuicio del RGPD."
+        }
+      ]
+    },
+    "faq": {
+      "heading": "Parte F — Preguntas frecuentes",
+      "intro": "Estas Preguntas Frecuentes resumen las Partes A–E. Son meramente informativas; si algo de lo que aquí se dice difiere, prevalecen los Términos y la Política de Privacidad.",
+      "items": [
+        {
+          "q": "¿Qué es iSoQ?",
+          "a": "Una plataforma gratuita, desarrollada conjuntamente por Fundación Epistemonikos y el Instituto Noruego de Salud Pública (NIPH) y operada por Epistemonikos, para aplicar el enfoque GRADE-CERQual y crear tablas de Resumen de Hallazgos Cualitativos."
+        },
+        {
+          "q": "¿Quién puede usar iSoQ?",
+          "a": "Investigadores, académicos y profesionales mayores de 18 años. No está destinada a pacientes ni a la atención médica directa."
+        },
+        {
+          "q": "¿Tengo que pagar?",
+          "a": "No. El uso de iSoQ es gratuito. El código fuente no es de código abierto."
+        },
+        {
+          "q": "¿Quién es responsable de mis datos personales?",
+          "a": "Fundación Epistemonikos (Chile). Contacto: privacy@epistemonikos.org. Nuestros representantes en el EEE y en el Reino Unido se indican en la sección 1 de la Política de Privacidad. El NIPH no tiene acceso a tus datos personales (salvo que la operación de iSoQ se transfiriera al NIPH, lo que notificaríamos con 30 días de antelación)."
+        },
+        {
+          "q": "¿Qué datos personales recopilan?",
+          "a": "Datos de la cuenta (nombre, correo electrónico, contraseña en forma de hash), registros de tu aceptación de los Términos, datos de proyectos y de colaboración, datos técnicos y de seguridad (como la dirección IP y los registros) y mensajes de soporte. No utilizamos ninguna herramienta de analítica. La lista completa figura en la sección 3 de la Política de Privacidad."
+        },
+        {
+          "q": "¿Por qué usan mis datos y con qué base jurídica?",
+          "a": "Para gestionar tu cuenta y la Plataforma (contrato), para mantener la seguridad de iSoQ y elaborar estadísticas anónimas (interés legítimo; puedes oponerte), para enviar boletines (solo con tu consentimiento) y para cumplir la ley. Las mismas finalidades se basan en las bases equivalentes de la Ley 21.719 de Chile. Consulta la sección 4 de la Política de Privacidad."
+        },
+        {
+          "q": "¿Comparten mis datos?",
+          "a": "Nunca vendemos tus datos. Solo los compartimos con proveedores de servicios bajo contrato (alojamiento y correo electrónico), con los Colaboradores que invitas, con el público si publicas y con las autoridades cuando la ley lo exige. El NIPH y los financiadores solo reciben estadísticas agregadas anónimas."
+        },
+        {
+          "q": "¿Dónde se almacenan mis datos?",
+          "a": "En la Unión Europea (Amazon Web Services, Fráncfort, Alemania). El personal autorizado de Epistemonikos accede a ellos desde Chile para operar la Plataforma, con las garantías descritas en la sección 7 de la Política de Privacidad."
+        },
+        {
+          "q": "¿Qué no debo subir?",
+          "a": "Información que identifique a participantes de los estudios primarios (por ejemplo, citas identificables) u otros datos personales sensibles. Consulta la cláusula 4.3 de los Términos."
+        },
+        {
+          "q": "¿De quién es mi trabajo?",
+          "a": "Tuyo. Solo tenemos una licencia para alojarlo y mostrarlo a tus Colaboradores. Si publicas, eliges una licencia Creative Commons (por defecto, CC BY-NC-ND 4.0)."
+        },
+        {
+          "q": "¿Usarán mis proyectos para investigación o para entrenar herramientas?",
+          "a": "No sin tu consentimiento previo y expreso, que puedes retirar en cualquier momento."
+        },
+        {
+          "q": "¿Puedo exportar mis datos?",
+          "a": "Sí, en cualquier momento: una exportación completa de todos tus datos en JSON, y los productos de proyectos individuales en Word, PDF y RIS."
+        },
+        {
+          "q": "¿Puedo eliminar mi cuenta?",
+          "a": "Sí, en cualquier momento, en la configuración de tu perfil o escribiendo a privacy@epistemonikos.org. La eliminación es inmediata; las copias de seguridad cifradas se eliminan en un plazo de 35 días, y nuestras obligaciones de confidencialidad siguen aplicándose a ellas hasta entonces."
+        },
+        {
+          "q": "¿Qué pasa con mis proyectos si dejo iSoQ?",
+          "a": "Las reglas figuran en la cláusula 8.5 de los Términos. Los proyectos privados se eliminan. Cuando eliminas tú mismo tu cuenta, eliges un nuevo propietario para cada proyecto compartido del que seas propietario, de modo que nadie pierda su trabajo; si la cuenta se cierra de otra forma, la propiedad pasa al Colaborador con mayor antigüedad. Tus comentarios se conservan y se muestran como realizados por \"Exmiembro\". El contenido publicado sigue disponible bajo su licencia, pero deja de estar vinculado a ti, y puedes hacerlo privado antes de irte."
+        },
+        {
+          "q": "¿Durante cuánto tiempo conservan mis datos?",
+          "a": "Mientras tu cuenta esté activa. Las cuentas inactivas durante 36 meses se eliminan tras dos recordatorios por correo electrónico (en el caso de las cuentas existentes, contados desde el 1 de diciembre de 2026). Tras la eliminación, solo conservamos registros limitados durante plazos determinados (Política de Privacidad, cláusula 8.5)."
+        },
+        {
+          "q": "¿Cuáles son mis derechos?",
+          "a": "Acceso, rectificación, supresión, limitación, portabilidad, oposición, retirada del consentimiento y, conforme a la Ley 21.719 de Chile, bloqueo. También puedes presentar una reclamación ante tu autoridad de protección de datos (en Noruega, Datatilsynet; en Chile, la Agencia de Protección de Datos Personales)."
+        },
+        {
+          "q": "¿Cómo ejerzo mis derechos?",
+          "a": "Usa el formulario de contacto de privacidad de tu perfil, escribe a privacy@epistemonikos.org o ponte en contacto con nuestros representantes. Respondemos en el plazo de un mes."
+        },
+        {
+          "q": "¿Usan cookies?",
+          "a": "Solo las cookies estrictamente necesarias para mantener tu sesión iniciada y segura. No usamos cookies analíticas ni publicitarias, por lo que no hay banner de cookies."
+        },
+        {
+          "q": "¿Qué pasa si hay una violación de datos?",
+          "a": "Lo notificamos a las autoridades competentes sin dilación indebida (de ser posible, en un plazo de 72 horas), incluida la Agencia chilena cuando el Derecho chileno lo exija, y te informamos directamente si es probable que la violación te exponga a un alto riesgo."
+        },
+        {
+          "q": "¿Pueden cambiar los Términos?",
+          "a": "Sí. Te notificaremos los cambios sustanciales por correo electrónico con al menos 30 días de antelación y te pediremos tu aceptación. Si no los aceptas, no podrás usar iSoQ conforme a la nueva versión, pero siempre podrás obtener una copia completa de tus datos y pedirnos que eliminemos tu cuenta."
+        },
+        {
+          "q": "Uso iSoQ para mi institución. ¿Existe un acuerdo de tratamiento de datos?",
+          "a": "Sí. Las Condiciones de Tratamiento de Datos (Parte E) se aplican automáticamente, y tu institución puede solicitar una copia firmada en privacy@epistemonikos.org."
+        },
+        {
+          "q": "¿Qué tribunales resuelven las controversias?",
+          "a": "Se aplica la ley chilena y son competentes los tribunales de Santiago. Si eres consumidor y vives en la UE o en un Estado parte del Convenio de Lugano, como Noruega, solo podemos ejercitar acciones contra ti ante los tribunales del lugar donde vives, y tus derechos locales de protección de datos siguen estando siempre a tu disposición (cláusula 12 de los Términos)."
+        },
+        {
+          "q": "Me invitaron a un proyecto. ¿Por qué tienen mi correo electrónico?",
+          "a": "El Usuario que te invitó nos dio tu nombre y tu correo electrónico para que pudiéramos enviarte la invitación. Si no la aceptas, eliminamos esos datos a los 7 días."
+        },
+        {
+          "q": "¿iSoQ ofrece asesoramiento médico o verifica mi contenido?",
+          "a": "No. iSoQ es una herramienta de investigación y no revisa ni valida el Contenido del Usuario."
+        },
+        {
+          "q": "¿Cómo cito iSoQ y con quién puedo contactar?",
+          "a": "Consulta la sección 7 de las Condiciones de Propiedad Intelectual para la cita. Soporte: isoq@epistemonikos.org. Privacidad: privacy@epistemonikos.org."
+        }
+      ]
+    }
+  }
+}

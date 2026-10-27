@@ -55,7 +55,9 @@ describe('redirects legados de PrivacyAndTerms — integración con vue-router',
     it.each([
       ['/terms-and-conditions', 'terms'],
       ['/privacy-policy', 'privacy'],
-      ['/intellectual-property', 'property']
+      ['/intellectual-property', 'property'],
+      ['/cookie-policy', 'cookies'],
+      ['/data-processing-terms', 'processing']
     ])('%s llega a PrivacyAndTerms con la pestaña %s', async (path, tab) => {
       const ruta = await irA(nuevoRouter(), path)
       expect(ruta.name).toBe('PrivacyAndTerms')
@@ -71,7 +73,8 @@ describe('redirects legados de PrivacyAndTerms — integración con vue-router',
       expect(ruta.name).toBe('MainPage')
     })
 
-    it.each(['/terms-and-conditions', '/privacy-policy', '/intellectual-property'])(
+    it.each(['/terms-and-conditions', '/privacy-policy', '/intellectual-property',
+      '/cookie-policy', '/data-processing-terms'])(
       '%s termina en la home, no en la página de términos', async (path) => {
         // Éste es el caso que justifica todo el archivo: el redirect por nombre
         // tiene que heredar el gate.

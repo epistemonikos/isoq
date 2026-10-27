@@ -93,12 +93,16 @@
               </b-card-text>
 
               <template v-if="gdprEnabled">
-                <p class="small">
-                  {{ $t('gdpr.signup.privacyNote') }}
-                  <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }" target="_blank">
-                    {{ $t('gdpr.export.privacyPolicy') }}
-                  </router-link>
+                <!-- Clause 2.2 of the Terms: people accept by ticking this box and clicking
+                     "Create account". It names the Agreement (clause 1.3); the Privacy Policy and
+                     the Cookie Policy are notices, linked apart. -->
+                <p class="small mb-1">
+                  {{ $t('gdpr.legal.agreementLinks') }}
+                  <legal-links :parts="agreementParts" />
                 </p>
+                <b-form-checkbox v-model="termsAccepted" class="mb-3" data-test="terms-accepted">
+                  {{ $t('gdpr.legal.acceptLabel') }}
+                </b-form-checkbox>
 
                 <b-form-checkbox v-model="newsletter" class="mb-2">
                   {{ $t('gdpr.preferences.newsletter') }}
@@ -108,10 +112,8 @@
                 </b-form-checkbox>
 
                 <p class="small mb-0">
-                  {{ $t('gdpr.signup.termsNote') }}
-                  <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }" target="_blank">
-                    {{ $t('gdpr.deleteAccount.termsAndConditions') }}
-                  </router-link>
+                  {{ $t('gdpr.legal.noticeLabel') }}
+                  <legal-links :parts="noticeParts" />
                 </p>
               </template>
               <div
@@ -119,7 +121,7 @@
                 class="text-right">
                 <b-button
                   variant="outline-primary"
-                  :disabled="!(ui.username_validation && ui.password_validation) || ui.isProcessing"
+                  :disabled="!(ui.username_validation && ui.password_validation) || ui.isProcessing || !termsReady"
                   @click="createAccount">
                   <b-spinner small v-if="ui.isProcessing" class="mr-1"></b-spinner>
                   {{ $t('account.create_account_btn') }}
@@ -140,8 +142,11 @@ import _debounce from 'lodash.debounce'
 import { TERMS_VERSION } from '@/constants/terms'
 import { CONSENT_TEXT_VERSION } from '@/constants/consents'
 import { isGdprEnabled } from '@/constants/gdpr'
+import { AGREEMENT_PARTS, NOTICE_PARTS } from '@/constants/legal'
+import LegalLinks from '@/components/legal/LegalLinks'
 
 export default {
+  components: { LegalLinks },
   data () {
     return {
       ui: {
@@ -159,11 +164,18 @@ export default {
         password: '',
         password_2: ''
       },
+      termsAccepted: false,
+      agreementParts: AGREEMENT_PARTS,
+      noticeParts: NOTICE_PARTS,
       newsletter: false,
       improvement: false
     }
   },
   computed: {
+    // Without GDPR the box is not shown, so it cannot hold the account back.
+    termsReady () {
+      return !this.gdprEnabled || this.termsAccepted
+    },
     registrationEnabled () {
       return process.env.ENABLE_REGISTRATION === 'true'
     },
@@ -210,6 +222,7 @@ export default {
       this.ui.username_validation = re.test(email)
     },
     createAccount () {
+      if (!this.termsReady) return
       this.ui.isProcessing = true
       this.errorMessage = ''
       // Con GDPR encendido, crear la cuenta implica aceptar los términos, y el
@@ -237,7 +250,7 @@ export default {
       }
       if (this.gdprEnabled) {
         Object.assign(params.user, {
-          terms_accepted: true,
+          terms_accepted: this.termsAccepted,
           terms_version: TERMS_VERSION,
           newsletter: this.newsletter,
           improvement: this.improvement,
