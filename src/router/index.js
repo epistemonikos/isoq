@@ -1,4 +1,3 @@
-import { isGdprEnabled } from '@/constants/gdpr'
 import { store } from '@/store'
 
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
@@ -52,17 +51,10 @@ var routes = [
     path: '/privacy-and-terms',
     name: 'PrivacyAndTerms',
     component: PrivacyAndTerms,
+    // Public whatever ENABLE_GDPR says: the flag decides whether people must accept the legal
+    // documents, not whether they can read them.
     meta: {
       title: 'Privacy and Terms - Interactive Summary of Qualitative Findings'
-    },
-    // Con ENABLE_GDPR apagado la ruta se redirige, no se elimina.
-    //
-    // Eliminarla dejaría las tres URLs legadas de abajo apuntando a un nombre
-    // inexistente, y vue-router responde a eso con una pantalla en blanco y un
-    // error de consola. Como las tres redirigen por NOMBRE hacia acá, este
-    // único beforeEnter cubre las cuatro URLs con una salida limpia.
-    beforeEnter: (to, from, next) => {
-      next(isGdprEnabled() ? undefined : { name: 'MainPage' })
     }
   },
   // Las tres URLs de abajo las publica master vía new-gdpr. Si alguien las

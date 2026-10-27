@@ -1,4 +1,4 @@
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, createLocalVue, RouterLinkStub } from '@vue/test-utils'
 import VueI18n from 'vue-i18n'
 import MainPage from '@/components/MainPage'
 import en from '@/lang/en.json'
@@ -11,38 +11,28 @@ function build () {
   return shallowMount(MainPage, {
     localVue,
     i18n,
-    stubs: ['b-container', 'b-row', 'b-col', 'b-card', 'b-button', 'b-img',
-      'b-embed', 'b-alert', 'router-link']
+    // RouterLinkStub and not the string stub: an auto stub has no `to` prop to read.
+    stubs: {
+      ...Object.fromEntries(['b-container', 'b-row', 'b-col', 'b-card', 'b-button', 'b-img',
+        'b-embed', 'b-alert'].map(name => [name, true])),
+      'router-link': RouterLinkStub
+    }
   })
 }
 
-// El link del footer es la ÚNICA vía de navegación al aviso legal para quien no
-// tiene sesión (ver el comentario en MainPage.vue). Con el flag apagado la ruta
-// redirige a la home, así que dejar el link visible mandaría al usuario a dar
-// una vuelta sin explicación.
-describe('MainPage.vue — link legal del footer', () => {
+// The footer link is the only way to the legal documents for someone without a session (see
+// MainPage.vue). The documents are public whatever ENABLE_GDPR says, so the link is always there.
+describe('MainPage.vue — legal link in the footer', () => {
   afterEach(() => {
     process.env.ENABLE_GDPR = 'on'
   })
 
-  it('muestra el link con ENABLE_GDPR encendido', () => {
-    process.env.ENABLE_GDPR = 'on'
-    expect(build().text()).toContain(en.gdpr.privacyAndTerms.title)
-  })
+  it.each(['on', 'off'])('links to the legal documents with ENABLE_GDPR %s', (flag) => {
+    process.env.ENABLE_GDPR = flag
+    const wrapper = build()
+    const targets = wrapper.findAllComponents(RouterLinkStub).wrappers.map(w => w.props('to'))
 
-  it('no muestra el link con ENABLE_GDPR apagado', () => {
-    process.env.ENABLE_GDPR = 'off'
-    expect(build().text()).not.toContain(en.gdpr.privacyAndTerms.title)
-  })
-
-  it('no deja ningún router-link a PrivacyAndTerms con el flag apagado', () => {
-    // Más fuerte que el caso del texto: verifica que no quede el destino
-    // cableado, aunque la etiqueta cambie de traducción.
-    process.env.ENABLE_GDPR = 'off'
-    const destinos = build().findAll('router-link-stub').wrappers
-      .map(w => w.props('to'))
-      .filter(Boolean)
-
-    expect(destinos.some(d => d && d.name === 'PrivacyAndTerms')).toBe(false)
+    expect(wrapper.text()).toContain(en.gdpr.privacyAndTerms.title)
+    expect(targets.some(to => to && to.name === 'PrivacyAndTerms')).toBe(true)
   })
 })
