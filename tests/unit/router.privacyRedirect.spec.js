@@ -5,13 +5,9 @@ import routes from '@/router'
 const localVue = createLocalVue()
 localVue.use(VueRouter)
 
-// Integración con vue-router de verdad, no llamando al beforeEnter a mano.
-//
-// Lo que se prueba acá y en ningún otro lado: que un `redirect` por NOMBRE
-// dispare el beforeEnter de la ruta destino. De eso depende el diseño elegido
-// (redirigir en vez de eliminar la ruta): si vue-router saltara el beforeEnter
-// al resolver un redirect, las tres URLs legadas mostrarían la página de
-// términos con el flag apagado y el gate tendría un agujero.
+// Integration with a real vue-router: the short URLs of the legal parts reach
+// PrivacyAndTerms on their tab, with ENABLE_GDPR on or off (the documents are
+// public; the flag only decides whether people must accept them).
 function nuevoRouter () {
   // mode 'abstract': no hay history ni hash en jsdom.
   return new VueRouter({ mode: 'abstract', routes })
@@ -65,28 +61,25 @@ describe('redirects legados de PrivacyAndTerms — integración con vue-router',
     })
   })
 
-  describe('con ENABLE_GDPR apagado', () => {
+  // The legal documents are public: with the flag off they are still there to read.
+  describe('with ENABLE_GDPR off', () => {
     beforeEach(() => { process.env.ENABLE_GDPR = 'off' })
 
-    it('/privacy-and-terms termina en la home', async () => {
-      const ruta = await irA(nuevoRouter(), '/privacy-and-terms')
-      expect(ruta.name).toBe('MainPage')
+    it('/privacy-and-terms resolves to PrivacyAndTerms', async () => {
+      const route = await irA(nuevoRouter(), '/privacy-and-terms')
+      expect(route.name).toBe('PrivacyAndTerms')
     })
 
-    it.each(['/terms-and-conditions', '/privacy-policy', '/intellectual-property',
-      '/cookie-policy', '/data-processing-terms'])(
-      '%s termina en la home, no en la página de términos', async (path) => {
-        // Éste es el caso que justifica todo el archivo: el redirect por nombre
-        // tiene que heredar el gate.
-        const ruta = await irA(nuevoRouter(), path)
-        expect(ruta.name).toBe('MainPage')
-      })
-
-    it('no deja la navegación colgada ni en blanco', async () => {
-      // Un next({name}) hacia un nombre inexistente dejaría currentRoute en la
-      // ruta inicial '/' sin nombre. Verificar que hay un destino resuelto.
-      const ruta = await irA(nuevoRouter(), '/privacy-and-terms')
-      expect(ruta.matched.length).toBeGreaterThan(0)
+    it.each([
+      ['/terms-and-conditions', 'terms'],
+      ['/privacy-policy', 'privacy'],
+      ['/intellectual-property', 'property'],
+      ['/cookie-policy', 'cookies'],
+      ['/data-processing-terms', 'processing']
+    ])('%s reaches PrivacyAndTerms on tab %s', async (path, tab) => {
+      const route = await irA(nuevoRouter(), path)
+      expect(route.name).toBe('PrivacyAndTerms')
+      expect(route.query.tab).toBe(tab)
     })
   })
 })
@@ -102,7 +95,7 @@ describe('redirects legados de PrivacyAndTerms — integración con vue-router',
 // razón que router.guard.spec.js replica el guard: main.js no es importable en
 // jest sin arrastrar toda la app.
 
-describe('título del documento al redirigir', () => {
+describe('document title', () => {
   const conTitulo = (router) => {
     router.afterEach((to) => {
       const nearest = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
@@ -114,25 +107,17 @@ describe('título del documento al redirigir', () => {
   beforeEach(() => { document.title = 'inicial' })
   afterEach(() => { process.env.ENABLE_GDPR = 'on' })
 
-  it('con el flag apagado el título es el de la home, no el de términos', async () => {
-    process.env.ENABLE_GDPR = 'off'
-    await irA(conTitulo(nuevoRouter()), '/privacy-and-terms')
-
-    expect(document.title).not.toContain('Privacy and Terms')
-    expect(document.title).toContain('Interactive Summary of Qualitative Findings')
-  })
-
-  it('con el flag encendido el título sí es el de términos', async () => {
-    process.env.ENABLE_GDPR = 'on'
+  it.each(['on', 'off'])('is the legal page title with ENABLE_GDPR %s', async (flag) => {
+    process.env.ENABLE_GDPR = flag
     await irA(conTitulo(nuevoRouter()), '/privacy-and-terms')
 
     expect(document.title).toContain('Privacy and Terms')
   })
 
-  it('las URLs legadas tampoco heredan el título equivocado', async () => {
+  it('a short URL gets the legal page title too', async () => {
     process.env.ENABLE_GDPR = 'off'
     await irA(conTitulo(nuevoRouter()), '/terms-and-conditions')
 
-    expect(document.title).not.toContain('Privacy and Terms')
+    expect(document.title).toContain('Privacy and Terms')
   })
 })
