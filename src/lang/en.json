@@ -45,5 +45,27 @@
   "Enter a finding": "Enter a finding",
   "Browser": "Browser",
   "Login": "Login",
-  "Lang": "Lang"
+  "Lang": "Lang",
+  "gdpr": {
+    "privacyAndTerms": {
+      "title": "Privacy and Terms",
+      "tabs": {
+        "terms": "Terms and Conditions",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy",
+        "property": "Intellectual Property",
+        "processing": "Data Processing Terms",
+        "faq": "FAQ"
+      },
+      "translationNotice": "This translation was made with artificial intelligence and may contain errors. If it differs from the English version, the English version prevails (clause 11.4 of the Terms and Conditions).",
+      "originalNotice": "You are reading the original English version, which prevails over any translation.",
+      "showOriginal": "Read the English original",
+      "showTranslation": "Back to the translation",
+      "loadError": "We could not load the legal documents."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry"
+  }
 }
