@@ -41,6 +41,12 @@
           <p class="text-center credit">Image by Sarah Rosenbaum, Norway</p>
         </b-col>
       </div>
+      <!-- The only way to the legal documents for someone without a session. -->
+      <div class="text-center pb-4">
+        <router-link :to="{ name: 'PrivacyAndTerms' }" class="text-reset legal-link">
+          {{ $t('gdpr.privacyAndTerms.title') }}
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -83,5 +89,9 @@ export default {
     }
   .credit {
     font-size: 0.75rem;
+  }
+  .legal-link {
+    font-size: 0.85rem;
+    text-decoration: underline;
   }
 </style>
