@@ -5,8 +5,9 @@
 // encabezados. El documento pasa de varias pantallas a una línea, y el navegador clampea
 // la posición del usuario a lo que queda.
 //
-// Por eso el hold va en getAssessments(): es el punto único por donde pasan el guardado de
-// una celda (AssessmentForm emite `getAssessments`), el cierre del modal y la recarga.
+// Por eso el hold va en getAssessments(), en el camino que enciende isLoading.
+// Since 2026-10-29 that is the first load only: a reload keeps the table mounted, so there is
+// nothing to clamp (StepFour.refreshFlicker.spec.js).
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import StepFour from '@/components/camelot/StepFour.vue'
 import BootstrapVue from 'bootstrap-vue'

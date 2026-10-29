@@ -594,8 +594,9 @@ export default {
       projectEditorOpen: false,
       // Y un tercero para los modales de los pasos 3 y 4 de CAMELOT, que viven en sus
       // propios componentes. Su `hasOpenEditor()` sólo frena el sondeo de ellos; éste
-      // recarga las referencias, y el watcher de `references` de allá encadena la recarga
-      // de lo que el modal abierto está mostrando.
+      // recarga las referencias.
+      // Step 4's `references` watcher only chains a reload when the studies themselves
+      // changed: its own freshness poll already reloads the assessments.
       camelotEditorOpen: false,
       stepStage: 0,
       camelotLogo: require('@/assets/camelot-logo.svg'),

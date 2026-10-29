@@ -379,6 +379,17 @@ import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 import { lockLostMessageKey, lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 
+/**
+ * What the assessments grid takes from the studies: which ones exist and the label it sorts
+ * them by. Order-free on purpose — getAssessments() sorts the rows itself.
+ */
+function studiesSignature (references) {
+  return (references || [])
+    .map(ref => `${ref.id}\u0000${Commons.parseReference(ref, true, false)}`)
+    .sort()
+    .join('\u0001')
+}
+
 export default {
   name: 'StepFour',
   mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin, referenceDeletedMixin],
@@ -412,6 +423,8 @@ export default {
 
     return {
       isLoading: false,
+      // Only the first load may hide the table: see getAssessments().
+      assessmentsLoaded: false,
       ui: {
         fields: [
           { key: 'authors', label: this.$t('camelot.step_four.fit_assessments'), thClass: headerClass, tdClass: 'border-right' },
@@ -824,7 +837,14 @@ export default {
       this.syncLeafLock(newKey, oldKey)
     },
     references: {
+      // viewProject's refresh hands down a new array with the same studies, and reloading on
+      // identity alone stacked a second repaint on top of our own refresh when the modal
+      // closed. Kept on the instance rather than compared with oldVal: an array mutated in
+      // place arrives with newVal === oldVal.
       handler (newVal) {
+        const signature = studiesSignature(newVal)
+        if (signature === this.$_studiesSignature) return
+        this.$_studiesSignature = signature
         this.getAssessments()
       },
       immediate: true
@@ -1242,12 +1262,16 @@ export default {
     },
     getAssessments: function () {
       if (!this.references.length) return
-      // `isLoading` esconde la tabla ENTERA detrás de una alerta de una línea: el
-      // documento se acorta y el navegador clampea al usuario al nuevo máximo. Hay que
-      // sostener la posición antes de encenderlo, no después. Punto único: por acá pasan
-      // el guardado de una celda, el cierre del modal y la recarga.
-      this.holdScrollPosition()
-      this.isLoading = true
+      // `isLoading` hides the WHOLE table behind a one-line alert, so it is for the first
+      // load only. A reload (a cell's save, the modal closing, somebody else's change)
+      // swaps the data under the table that is already there: tearing it down made every
+      // reload flash, and closing the modal ran up to three of them.
+      if (!this.assessmentsLoaded) {
+        // The document shrinks to one line and the browser clamps the scroll to it: hold
+        // the position before turning the alert on, not after.
+        this.holdScrollPosition()
+        this.isLoading = true
+      }
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -1330,6 +1354,7 @@ export default {
               )
             }
           }
+          this.assessmentsLoaded = true
         })
         .catch(error => {
           console.error('Error fetching Assessments data:', error)
