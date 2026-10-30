@@ -11,6 +11,8 @@ jest.mock('@/services/lockService', () => ({
 }))
 
 jest.mock('@/utils/Api', () => ({
+  // Entering the box reads the saved text (#407; Criteria.issue407.spec.js covers it).
+  get: jest.fn(() => Promise.resolve({ data: { inclusion: 'texto inicial', exclusion: 'texto inicial' } })),
   patch: jest.fn(() => Promise.resolve({ data: {} }))
 }))
 
@@ -54,6 +56,14 @@ const fire = (wrapper, type) => {
 beforeEach(() => {
   jest.clearAllMocks()
   LockService.acquireRef.mockResolvedValue({ success: true })
+  // A dispatched `focus` does not focus the jsdom document, so it would report the page as
+  // unfocused and every blur would read as "went to another window" (#407). These tests are
+  // about clicks inside the page.
+  jest.spyOn(document, 'hasFocus').mockReturnValue(true)
+})
+
+afterEach(() => {
+  document.hasFocus.mockRestore()
 })
 
 describe('Criteria.vue — adquisición del lock', () => {

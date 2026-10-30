@@ -13,10 +13,10 @@
  *  - Ningún `ref_id` de estudio empieza con 'criteria::', así que no puede colisionar
  *    con los locks de los Pasos 3 y 4 dentro del mismo proyecto.
  *
- * OJO: este lock es *advisory*. `PATCH /api/isoqf_projects/<id>` pasa por
- * `@verify_project_lock()`, que sólo mira `project_locks`; el servidor no rechaza una
- * escritura de criterios por un `ref_lock`. Sirve para coordinar a los editores en la
- * UI, no como garantía de integridad.
+ * Since #407 the server enforces it: a `PATCH /api/isoqf_projects/<id>` carrying
+ * `inclusion`/`exclusion` gets 409 `locked_by_other_user` (+ `locked_by`) when ANOTHER
+ * person holds that box. It does not require holding it; `Criteria.vue` does, and only
+ * the tab that holds the box saves.
  */
 
 export const CRITERIA_FIELDS = ['inclusion', 'exclusion']

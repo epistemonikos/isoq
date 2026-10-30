@@ -137,6 +137,9 @@ Propiedades.
   (`extractedDataLockKeys.js`), columnas `<doc>::fields`, evidence profile e identidad `finding_id`, y
   fijas: `project_properties` (Propiedades, modal de la lista, Publicar), `list_categories` («Review
   finding groups») y `findings_order` («Re-order your review findings»). El servidor exige las fijas.
+  Los criterios del Paso 2 (`criteria::inclusion`/`::exclusion`, `criteriaLockKeys.js`) también
+  (#407): `Criteria.vue` no suelta la caja por cambiar de ventana (`document.hasFocus()`), sí tras
+  30 min sin actividad; relee el texto al entrar y sólo guarda la pestaña que la tiene.
 - **TTL del servidor (180 s) y latido (30 s) son un solo contrato**: el TTL tolera tres latidos
   perdidos (Chrome lleva `setInterval` a 1/min en pestañas ocultas). Si cambia `HEARBEAT_INTERVAL`,
   avisar a backend. Además la cadencia sostiene el texto de `evicted_granularity_conflict` («podrás

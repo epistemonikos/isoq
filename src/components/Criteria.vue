@@ -1,5 +1,11 @@
 <template>
   <div>
+    <InactivityWarning
+      v-if="lockHeld"
+      :visible="inactivityWarning"
+      :seconds-left="inactivitySecondsLeft"
+      message-key="lock.inactivity_message"
+      @keep-working="keepWorkingOnInactivity" />
     <b-form-group
       :label="ui.label"
       :label-for="`${local_criteria}-criteria`"
@@ -43,6 +49,8 @@ import _debounce from 'lodash.debounce'
 import LockService from '@/services/lockService'
 import { criteriaLockKey } from '@/utils/criteriaLockKeys'
 import { userDisplayName } from '@/utils/userDisplayName'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import InactivityWarning from '@/components/common/InactivityWarning.vue'
 
 // Gracia entre salir de la caja y soltar el lock. Sin ella, cualquier clic fuera del
 // textarea —seleccionar texto, mirar el otro criterio, ir al botón Guardar— cede la
@@ -52,6 +60,8 @@ const RELEASE_GRACE = 5000
 
 export default {
   name: 'Criteria',
+  mixins: [editorInactivityMixin],
+  components: { InactivityWarning },
   props: {
     canEdit: Boolean,
     label: String,
@@ -130,13 +140,23 @@ export default {
     dataTxt: {
       immediate: true,
       handler: function (newVal) {
+        this.savedText = newVal || ''
         this.local_data = newVal || ''
       }
     },
+    // Compared with what the server has, not with the prop: the prop is the copy this view
+    // loaded, and a text read fresh from the server must not be saved back as an edit.
     local_data: function (newVal) {
-      if (newVal !== this.dataTxt) {
+      if (newVal !== this.savedText) {
         this.saveCriteria()
       }
+    },
+    // Holding the box is what keeps it from everybody else, so that is what the 30 min
+    // without activity measure (the same rule as the modals): looking at another window no
+    // longer releases it, and without this it would stay taken for good.
+    lockHeld: function (held) {
+      if (held) this.startInactivityWatch()
+      else this.stopInactivityWatch()
     }
   },
   data: function () {
@@ -177,6 +197,8 @@ export default {
         }
       },
       local_data: '',
+      // What the server has for this box, as far as this tab knows: the last text read or saved.
+      savedText: '',
       local_criteria: '',
       releaseTimer: null,
       // Rechazo conocido de primera mano por este cliente.
@@ -210,23 +232,54 @@ export default {
       this.cancelPendingRelease()
       this.focused = true
       if (!this.ui.canEdit || !this.lockKey) return
-      if (this.lockHeld) return
-      const result = await LockService.acquireRef(this.$route.params.id, this.lockKey)
-      if (result && result.success) {
+      if (!this.lockHeld) {
+        const result = await LockService.acquireRef(this.$route.params.id, this.lockKey)
+        if (!result || !result.success) {
+          this.denyLock(result)
+          return
+        }
         this.lockHeld = true
         this.lockDeniedBy = null
         this.lockDenied = false
         // El lock llegó tarde: la persona ya se fue a la otra caja. Sin esto nadie lo
         // soltaría nunca, porque el blur pasó cuando todavía no teníamos nada que soltar.
-        if (!this.focused) this.scheduleRelease()
-        return
+        if (!this.focused) {
+          this.scheduleRelease()
+          return
+        }
       }
+      // Also when this tab already held it: the person may be coming back from another tab
+      // of theirs where they kept writing.
+      this.refreshFromServer()
+    },
+    denyLock: function (result) {
       this.lockDenied = true
       // Un 403 no tiene a quién culpar: nadie más lo tiene, este usuario perdió el
       // permiso de escritura. Anunciar un dueño ahí sería inventarlo.
       this.lockDeniedBy = (result && result.lockedBy) || null
       // El padre sondea cada 15 s; este rechazo es motivo para no esperarlos.
       this.$emit('lock-denied')
+    },
+    /**
+     * Start from what the server has. This view loads the criteria once, so its copy goes
+     * stale as soon as somebody else — or this same person in another tab — writes, and the
+     * next keystroke saved that stale copy whole over theirs (#407). Read once we hold the
+     * box: from then on nobody else can write it.
+     *
+     * Network only: a cached answer is exactly the stale copy this is here to replace.
+     */
+    refreshFromServer: async function () {
+      // Edits of this tab not saved yet win: they are on their way to the server.
+      if (this.local_data !== this.savedText) return
+      const asked = this.local_data
+      const response = await Api.get(`/isoqf_projects/${this.$route.params.id}`, null, { networkOnly: true })
+        .catch(() => null)
+      const project = response && (Array.isArray(response.data) ? response.data[0] : response.data)
+      // The person started typing while the read was on its way: what they typed wins.
+      if (!project || this.local_data !== asked) return
+      const fresh = project[this.local_criteria] || ''
+      this.savedText = fresh
+      this.local_data = fresh
     },
     /**
      * El lock puede evaporarse en pleno tipeo: un latido fallido, o una concesión
@@ -236,13 +289,45 @@ export default {
     onRefLockLost: function (event) {
       const detail = event.detail || {}
       if (detail.refId !== this.lockKey) return
+      const wasHeld = this.lockHeld
       // Ya no es nuestro: soltarlo sería pedirle al servidor que suelte el de otro.
       this.lockHeld = false
       this.cancelPendingRelease()
+      // Gone with nobody else holding it. The usual cause is another tab of this same
+      // person: the server keeps ONE lock per person, so when that tab left the box it
+      // deleted this tab's too. Nobody else is waiting for it: take it back in silence.
+      if (wasHeld && detail.reason === 'lock_expired' && !detail.lockedBy) {
+        this.retakeLock()
+        return
+      }
       this.lockDenied = true
       this.lockDeniedBy = detail.lockedBy || null
     },
+    retakeLock: async function () {
+      const result = await LockService.acquireRef(this.$route.params.id, this.lockKey)
+      if (result && result.success) {
+        this.lockHeld = true
+        return
+      }
+      this.denyLock(result)
+    },
+    /**
+     * 30 min without activity. Persist first, release second — the same order as leaving
+     * the step — and take the cursor out of the box, so coming back is entering again: a
+     * new lock and a fresh read, not typing into a box nobody holds.
+     */
+    onInactivityExpired: function () {
+      this.focused = false
+      this.flushAndRelease()
+      const box = this.$el && this.$el.querySelector('textarea')
+      if (box && document.activeElement === box) box.blur()
+      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+    },
     onBlur: function () {
+      // The page itself lost focus: the person went to another window, tab or app — a PDF,
+      // NVivo — and is still working in this box. Releasing here handed it to somebody else,
+      // whose text this tab then overwrote on coming back (#407). Coming back fires `focus`.
+      if (typeof document !== 'undefined' && document.hasFocus && !document.hasFocus()) return
       this.focused = false
       // Se programa siempre, aunque todavía no tengamos el lock: si llega mientras corre
       // la gracia, este mismo temporizador lo suelta. `flushAndRelease` es inocuo cuando
@@ -276,6 +361,18 @@ export default {
       this.ui.label = this.label
       this.ui.description = this.description
     },
+    /** The server refused the write because somebody else holds the box (#407). */
+    isCriteriaLockRejection: function (error) {
+      const response = error && error.response
+      return Boolean(response && response.status === 409 && response.data &&
+        response.data.reason === 'locked_by_other_user')
+    },
+    onSaveRefused: function (error) {
+      this.lockHeld = false
+      this.cancelPendingRelease()
+      this.lockDenied = true
+      this.lockDeniedBy = error.response.data.locked_by || null
+    },
     printErrors: function (error) {
       console.error(error)
     },
@@ -296,9 +393,14 @@ export default {
           params.exclusion = ''
         }
       }
-      if (this.ui.canEdit && !this.isReadOnly) {
+      // Only the tab that holds the box writes it. One that lost it, or never got it, would
+      // be writing over whoever has it now.
+      const holdsBox = this.lockHeld || !this.lockKey
+      if (this.ui.canEdit && !this.isReadOnly && holdsBox) {
+        const sent = params[type]
         Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
           .then((response) => {
+            this.savedText = sent
             if (type === 'inclusion') {
               this.ui.project.inclusion.loading = false
               this.ui.project.inclusion.loading_txt = this.$t('common.save')
@@ -316,6 +418,10 @@ export default {
             this.$emit('criteria-saved', { field: type, value: this.local_data })
           })
           .catch((error) => {
+            if (this.isCriteriaLockRejection(error)) {
+              this.onSaveRefused(error)
+              return
+            }
             this.printErrors(error)
             if (type === 'inclusion') {
               this.ui.project.inclusion.error.show = true
