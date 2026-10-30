@@ -2,75 +2,157 @@
   <div>
     <b-container fluid class="workspace-header">
       <div class="py-5">
-        <h2>{{ $t("About") }}</h2>
+        <h2>{{ $t("menu.about") }}</h2>
       </div>
     </b-container>
-    <b-container fluid class="pt-5 pb-5">
-      <h3>What is iSoQ?</h3>
-      <p>The GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) is an online tool designed to:</p>
-      <ul>
-        <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
-        <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
-        <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
-      </ul>
-      <p>In March 2022 we launched the software with a webinar <a href="https://vimeo.com/737300971" target="_blank">presentation</a> and <a href="https://vimeo.com/738892529" target="_blank">live demo</a> of the software.</p>
+    <b-container fluid class="pt-3 pb-5">
+      <div class="row">
+        <div class="col-md-3 mb-4">
+          <nav data-test="about-toc" class="about-toc bg-light p-3 rounded border" :aria-label="$t('about.contents')">
+            <h5 class="mb-3 border-bottom pb-2">{{ $t('about.contents') }}</h5>
+            <ul class="nav flex-column">
+              <li v-for="section in sections" :key="section.id" class="nav-item">
+                <a class="nav-link px-0" :href="sectionHref(section.id)" @click.prevent="scrollToSection(section.id)">{{ $t(section.title) }}</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
 
-      <h3>What is GRADE-CERQual?</h3>
-      <p><a href="https://www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
+        <div class="col-md-9 about-sections">
+          <h3 id="what-is-isoq">{{ $t('about.what_is_isoq') }}</h3>
+          <p>{{ $t('about.what_is_isoq_p1') }}</p>
+          <ul>
+            <li>{{ $t('about.what_is_isoq_li1') }}</li>
+            <li>{{ $t('about.what_is_isoq_li2') }}</li>
+            <li>{{ $t('about.what_is_isoq_li3') }}</li>
+          </ul>
+          <i18n path="about.launch_text" tag="p">
+            <a href="https://vimeo.com/737300971" target="_blank" place="0">{{ $t('about.presentation') }}</a>
+            <a href="https://vimeo.com/738892529" target="_blank" place="1">{{ $t('about.live_demo') }}</a>
+          </i18n>
 
-      <h3>When in the review process can I use the iSoQ tool?</h3>
-      <p>You can begin using this tool once you have finished the study screening process and have a list of included studies that meet the inclusion criteria for your synthesis (systematic review). In the early stages of a systematic review, the iSoQ tool can be used to help organise some of the data that are needed to apply GRADE-CERQual, for example, tables of the characteristics of included studies and of the methodological limitations of the included studies (critical appraisal tables).</p>
-      <p>The primary function of the tool is to assist review authors with managing the process of applying the GRADE-CERQual approach to their review findings. GRADE-CERQual is applied near the end of a review process, at the point when reviewers have completed analysis and synthesis and have draft summaries of each review finding.</p>
-      <p class="text-primary">For more information on where GRADE-CERQual fits into the review process please see the <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank"><u>EPOC QES protocol and review template.</u></a></p>
+          <h3 id="what-is-grade-cerqual">{{ $t('about.what_is_gc') }}</h3>
+          <i18n path="about.gc_desc" tag="p">
+            <a href="https://www.cerqual.org" target="_blank" place="0">GRADE-CERQual</a>
+          </i18n>
 
-      <h3>Does the iSoQ tool replace other kinds of software used in reviews?</h3>
-      <p>No, this tool is specific to applying the GRADE-CERQual approach. It is not a replacement for other commonly used software in systematic reviews like reference management software (e.g. Endnote), software for screening and selecting studies (e.g. Covidence and Distiller SR), or software and programs for extracting and analysing data (e.g. DistillerSR, NVivo, Microsoft Excel).</p>
+          <h3 id="when-to-use">{{ $t('about.when_use') }}</h3>
+          <p>{{ $t('about.when_use_p1') }}</p>
+          <p>{{ $t('about.when_use_p2') }}</p>
+          <i18n path="about.when_use_p3" tag="p" class="text-primary">
+            <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank" place="0"><u>{{ $t('about.epoc_template') }}</u></a>
+          </i18n>
 
-      <h3>Can you invite collaborators to an iSoQ project?</h3>
-      <p>Yes. You can invite collaborators (for example other review authors) to a shared project and assign them either "view only" or "view and edit" rights. These collaborators need to set-up an iSoQ account in order to access the shared project. You can also generate a temporary link to send to collaborators who only need to view the project for a limited amount of time (for example a guideline panel or a peer reviewer).</p>
+          <h3 id="replace-software">{{ $t('about.replace_software') }}</h3>
+          <p>{{ $t('about.replace_desc') }}</p>
 
-      <h3>Can I export from the iSoQ tool into other programs?</h3>
-      <p>Currently you cannot directly export the content within the iSoQ tool into other platforms, but you can export and download a Microsoft Word or PDF copy of the Summary of Qualitative Findings Table and Evidence Profile Tables. These can be copy and pasted or imported into other programs such as RevMan, GRADEpro GDT, or MAGICapp. Characteristics of Studies, Methodological Assessments and Extracted Data tables created in the iSoQ tool can be downloaded into a Microsoft Excel compatible format.</p>
+          <h3 id="invite-collaborators">{{ $t('about.invite_collaborators') }}</h3>
+          <p>{{ $t('about.invite_desc') }}</p>
 
-      <h3>Can iSoQ tables be made public for anyone to see?</h3>
-      <p>iSoQ includes a "publish" function, meaning you can publish some or all of your completed Interactive Summary of Qualitative Findings Table to the iSoQ database. It is up to you to decide if and when to publish to the iSoQ database and to ensure you are not infringing any copyright issues (for example you may have to abide by an embargo period or wait for a manuscript to be published). The database will become a repository for iSoQ tables.</p>
+          <h3 id="export">{{ $t('about.export') }}</h3>
+          <p>{{ $t('about.export_desc') }}</p>
 
-      <h3>Is iSoQ compatible with Mac?</h3>
-      <p>
-        iSoQ can be used on a Mac but has not been extensively tested with Mac. We are aware of one common issue for Mac users and that is with the “import table” function in the My Data section. When our Excel template is downloaded and opened in Excel for Mac, columns A and B are merged instead of separate. This causes import failure and serious malfunctioning in the software. We therefore recommend Mac users work on the template in either Google docs, Open Office or LibreOffice. Be sure to save the file as a “comma-separated values” (CSV). We welcome feedback from Mac users so we can continue to improve your experience with iSoQ.
-      </p>
+          <h3 id="public">{{ $t('about.public') }}</h3>
+          <p>{{ $t('about.public_desc') }}</p>
 
-      <h3>How is the iSoQ tool funded?</h3>
-      <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR). Additional funding for members of the development team is provided by the Western Norway University of Applied Sciences (HVL), the Norwegian University of Science and Technology (NTNU) and the Epistemonikos Foundation.</p>
+          <h3 id="mac-compatibility">{{ $t('about.mac') }}</h3>
+          <p>
+            {{ $t('about.mac_desc') }}
+          </p>
 
-      <h3>How is the iSoQ tool and its contents licenced?</h3>
-      <ul>
-        <li>
-          The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)</a>
-        </li>
-        <li>
-          The methods content developed specifically for iSoQ (e.g. pop-up and modal texts, tooltips, prompts, examples, help videos) is licenced under a <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">Creative Commons Attribution-Non-Commercial No-Derivatives 4.0 International Licence (CC-BY-NC-ND)</a>
-        </li>
-        <li>
-          Methods content drawn directly from already published <a href="https://implementationscience.biomedcentral.com/articles/supplements/volume-13-supplement-1" target="_blank">GRADE-CERQual papers in the journal Implementation Science</a> are licenced under a <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International Licence (CC-BY)</a>
-        </li>
-        <li>
-          Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a <a href="https://creativecommons.org" target="_blank">Creative Commons</a> licence for their work. The default will be <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC-BY-NC-ND</a>.
-        </li>
-      </ul>
+          <h3 id="funding">{{ $t('about.funding') }}</h3>
+          <p>{{ $t('about.funding_desc') }}</p>
 
-      <h3>How do I cite iSoQ?</h3>
-      <p>Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org</p>
+          <h3 id="licence">{{ $t('about.licence') }}</h3>
+          <ul>
+            <i18n path="about.licence_li1" tag="li">
+              <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" place="0">Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)</a>
+            </i18n>
+            <i18n path="about.licence_li2" tag="li">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" place="0">Creative Commons Attribution-Non-Commercial No-Derivatives 4.0 International Licence (CC-BY-NC-ND)</a>
+            </i18n>
+            <i18n path="about.licence_li3" tag="li">
+              <a href="https://implementationscience.biomedcentral.com/articles/supplements/volume-13-supplement-1" target="_blank" place="0">{{ $t('about.licence_li3_link') }}</a>
+              <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" place="1">Creative Commons Attribution 4.0 International Licence (CC-BY)</a>
+            </i18n>
+            <i18n path="about.licence_li4" tag="li">
+              <a href="https://creativecommons.org" target="_blank" place="0">Creative Commons</a>
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" place="1">CC-BY-NC-ND</a>
+            </i18n>
+          </ul>
+
+          <h3 id="cite">{{ $t('about.cite') }}</h3>
+          <i18n path="about.cite_desc" tag="p">
+            <router-link :to="{ name: 'About' }" place="0">{{ $t('about.cite_team_link') }}</router-link>
+          </i18n>
+          <p><small>{{ $t('about.cite_team') }}</small></p>
+
+          <h3 id="terms-and-conditions">{{ $t('about.terms') }}</h3>
+          <i18n path="about.terms_desc" tag="p">
+            <router-link :to="{ name: 'PrivacyAndTerms' }" place="0">{{ $t('about.terms_link') }}</router-link>
+          </i18n>
+        </div>
+      </div>
     </b-container>
   </div>
 </template>
 
 <script>
-export default {
+// Same order as the headings below; the ids match the old table of contents on master.
+const SECTIONS = [
+  { id: 'what-is-isoq', title: 'about.what_is_isoq' },
+  { id: 'what-is-grade-cerqual', title: 'about.what_is_gc' },
+  { id: 'when-to-use', title: 'about.when_use' },
+  { id: 'replace-software', title: 'about.replace_software' },
+  { id: 'invite-collaborators', title: 'about.invite_collaborators' },
+  { id: 'export', title: 'about.export' },
+  { id: 'public', title: 'about.public' },
+  { id: 'mac-compatibility', title: 'about.mac' },
+  { id: 'funding', title: 'about.funding' },
+  { id: 'licence', title: 'about.licence' },
+  { id: 'cite', title: 'about.cite' },
+  { id: 'terms-and-conditions', title: 'about.terms' }
+]
 
+export default {
+  name: 'About',
+  data () {
+    return { sections: SECTIONS }
+  },
+  mounted () {
+    const id = (this.$route.hash || '').slice(1)
+    if (id) this.$nextTick(() => this.scrollToSection(id))
+  },
+  methods: {
+    // The router is in hash mode: a bare href="#cite" is a route change, and the catch-all route
+    // sends it to the home page. The href carries the About route plus the section, so a copied or
+    // new-tab link still opens here; a click only scrolls, since any navigation jumps to the top.
+    sectionHref (id) {
+      return this.$router.resolve({ name: 'About', hash: `#${id}` }).href
+    },
+    scrollToSection (id) {
+      const heading = this.$el.querySelector(`.about-sections [id="${id}"]`)
+      if (!heading) return
+      heading.scrollIntoView({ block: 'start' })
+      // Keyboard and screen reader users carry on reading from the section, not from the link.
+      heading.setAttribute('tabindex', '-1')
+      heading.focus({ preventScroll: true })
+    }
+  }
 }
 </script>
 
-<style>
-
+<style scoped>
+@media (min-width: 768px) {
+  .about-toc {
+    position: sticky;
+    top: 1rem;
+  }
+}
+.about-sections h3 {
+  scroll-margin-top: 1rem;
+}
+.about-sections h3:focus {
+  outline: none;
+}
 </style>
