@@ -10,8 +10,8 @@
         :active-ref-locks="activeRefLocks" :can-edit="canEdit" @open-modal="onOpenModal" />
     </div>
 
-    <b-modal id="modal-1" size="xl" dialog-class="modal-dialog-wide" header-class="camelot-modal-header"
-      footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc
+    <b-modal id="modal-1" size="xl" dialog-class="modal-dialog-fullscreen" header-class="camelot-modal-header"
+      footer-class="camelot-modal-footer" body-class="camelot-modal-body modal-body-panes" no-close-on-backdrop no-close-on-esc
       @hide="onAssessmentModalHide" @hidden="onAssessmentModalClosed">
       <template #modal-title>
         <div class="modal-title-container">
@@ -28,8 +28,11 @@
         </div>
       </template>
 
-      <b-row>
-        <b-col cols="12" class="camelot-modal-body">
+      <!-- The modal body does not scroll (`modal-body-panes`): the notices stay on top and each
+           column of `.step-four-panes` scrolls on its own, so reading the domain values on the
+           left never drags the assessment on the right along. -->
+      <b-row class="step-four-frame">
+        <b-col cols="12" class="camelot-modal-body step-four-frame-column">
           <InactivityWarning
             :visible="inactivityWarning"
             :seconds-left="inactivitySecondsLeft"
@@ -57,9 +60,9 @@
             </b-button>
           </b-alert>
           <template v-if="modal.stage < 2">
-            <b-row>
+            <b-row class="step-four-panes">
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
-              <b-col cols="4" class="modal-column-scroll">
+              <b-col cols="4" class="modal-pane">
                 <div class="column-header mb-3">
                   <h3>{{ modal.stage === 0 ? $t('camelot.step_four.sections.research_design') :
                     $t('camelot.step_four.sections.research_conduct') }}</h3>
@@ -78,8 +81,7 @@
               </b-col>
 
               <!-- Columna 2: Navigation and Dynamic content -->
-              <!-- Stays in view while the domain values on the left scroll (#405). -->
-              <b-col cols="8" class="modal-sticky-column">
+              <b-col cols="8" class="modal-pane">
                 <div id="navegacion">
                   <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
@@ -105,7 +107,7 @@
                       </template>
                       <b-row class="mt-1">
                         <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
-                        <b-col cols="6" class="modal-column-scroll 00000">
+                        <b-col cols="6">
                           <camelot-assessment-card :meta-index="0" :item-index="dIndex" :label="domain.label"
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
                             :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
@@ -135,135 +137,129 @@
           </template>
 
           <template v-else-if="modal.stage === 2">
-            <div>
-              <b-row>
-                <!-- Columna 1: Research Design -->
-                <b-col cols="4" class="modal-column-scroll">
-                  <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
-                  </div>
-                  <div>
-                    <camelot-assessment-card v-for="(item, iIndex) in meta[1].items" :key="iIndex" :meta-index="1"
-                      :item-index="iIndex" :label="getMetaItemLabel(1, iIndex)"
-                      :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
-                      :concerns="meta[1].values[iIndex][item + 'comments']"
-                      :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
-                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
-                  </div>
-                </b-col>
+            <b-row class="step-four-panes">
+              <!-- Columna 1: Research Design -->
+              <b-col cols="4" class="modal-pane">
+                <div class="column-header mb-3">
+                  <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
+                </div>
+                <div>
+                  <camelot-assessment-card v-for="(item, iIndex) in meta[1].items" :key="iIndex" :meta-index="1"
+                    :item-index="iIndex" :label="getMetaItemLabel(1, iIndex)"
+                    :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
+                    :concerns="meta[1].values[iIndex][item + 'comments']"
+                    :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
+                    :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                    @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
+                </div>
+              </b-col>
 
-                <!-- Columna 2: Research Conduct -->
-                <b-col cols="4" class="modal-column-scroll">
-                  <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
-                  </div>
-                  <div>
-                    <camelot-assessment-card v-for="(item, iIndex) in meta[2].items" :key="iIndex" :meta-index="2"
-                      :item-index="iIndex" :label="getMetaItemLabel(2, iIndex)"
-                      :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
-                      :concerns="meta[2].values[iIndex][item + 'comments']"
-                      :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
-                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
-                  </div>
-                </b-col>
+              <!-- Columna 2: Research Conduct -->
+              <b-col cols="4" class="modal-pane">
+                <div class="column-header mb-3">
+                  <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
+                </div>
+                <div>
+                  <camelot-assessment-card v-for="(item, iIndex) in meta[2].items" :key="iIndex" :meta-index="2"
+                    :item-index="iIndex" :label="getMetaItemLabel(2, iIndex)"
+                    :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
+                    :concerns="meta[2].values[iIndex][item + 'comments']"
+                    :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
+                    :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                    @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
+                </div>
+              </b-col>
 
-                <!-- Columna 3: Assessment Evaluation -->
-                <!-- Stays in view while the domain values on the left scroll (#405). -->
-                <b-col cols="4" class="modal-sticky-column">
-                  <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(2, 0)" :refId="refId"
-                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
-                    :locked-by-user="cellLockedBy(2, 0)"
-                    :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(2, 0)"
-                    @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
-                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-              </b-row>
-            </div>
+              <!-- Columna 3: Assessment Evaluation -->
+              <b-col cols="4" class="modal-pane">
+                <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(2, 0)" :refId="refId"
+                  :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
+                  :locked-by-user="cellLockedBy(2, 0)"
+                  :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(2, 0)"
+                  @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
+                  @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
+              </b-col>
+            </b-row>
           </template>
 
           <template v-else-if="modal.stage === 3">
-            <div class="mt-4">
-              <b-row class="mt-4">
-                <!-- Columna 1: Fit Design vs Meta Resumen -->
-                <b-col cols="3" class="modal-column-scroll">
-                  <!-- <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
-                  </div> -->
-                  <div>
-                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
-                      header-tag="header">
-                      <template #header>
-                        <div class="d-flex justify-content-between align-items-end">
-                          <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
-                          <b-tooltip :target="'fa' + dIndex + 1">{{
-                            $t('camelot.step_four.sections.fa' + (dIndex + 1)) }}</b-tooltip>
-                        </div>
-                      </template>
-                      <div class="field-section" v-if="assessments.items.length">
-                        <responses :stage="0" :index="dIndex"
-                          :option="assessments.items[modal.index].stages[0].options[dIndex].option"
-                          :text="assessments.items[modal.index].stages[0].options[dIndex].text"></responses>
-                      </div>
-                    </b-card>
-                  </div>
-                </b-col>
-
-                <!-- Columna 2: Fit Conduct vs Meta Resumen -->
-                <b-col cols="3" class="modal-column-scroll">
-                  <!-- <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
-                  </div> -->
-                  <div>
-                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
-                      header-tag="header">
-                      <template #header>
-                        <div class="d-flex justify-content-between align-items-end">
-                          <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
-                          <b-tooltip :target="'fa' + dIndex + 5">{{
-                            $t('camelot.step_four.sections.fa' + (dIndex + 5)) }}</b-tooltip>
-                        </div>
-                      </template>
-                      <div class="field-section" v-if="assessments.items.length">
-                        <responses :stage="1" :index="dIndex"
-                          :option="assessments.items[modal.index].stages[1].options[dIndex].option"
-                          :text="assessments.items[modal.index].stages[1].options[dIndex].text"></responses>
-                      </div>
-                    </b-card>
-                  </div>
-                </b-col>
-
-                <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
-                <b-col cols="3" class="modal-column-scroll">
-                  <b-card class="mb-3 item-card" header-tag="header">
+            <b-row class="step-four-panes mt-4">
+              <!-- Columna 1: Fit Design vs Meta Resumen -->
+              <b-col cols="3" class="modal-pane">
+                <!-- <div class="column-header mb-3">
+                  <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
+                </div> -->
+                <div>
+                  <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
+                    header-tag="header">
                     <template #header>
                       <div class="d-flex justify-content-between align-items-end">
-                        <h4 id="fa9" class="mb-0">FA9</h4>
-                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
-                          }}</b-tooltip>
+                        <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
+                        <b-tooltip :target="'fa' + dIndex + 1">{{
+                          $t('camelot.step_four.sections.fa' + (dIndex + 1)) }}</b-tooltip>
                       </div>
                     </template>
-                    <div class="p-1">
-                      <responses v-if="assessments.items.length" :stage="2" :index="0"
-                        :option="assessments.items[modal.index].stages[2].options[0].option"
-                        :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                    <div class="field-section" v-if="assessments.items.length">
+                      <responses :stage="0" :index="dIndex"
+                        :option="assessments.items[modal.index].stages[0].options[dIndex].option"
+                        :text="assessments.items[modal.index].stages[0].options[dIndex].text"></responses>
                     </div>
                   </b-card>
-                </b-col>
+                </div>
+              </b-col>
 
-                <!-- Columna 4: Evaluación de ajuste final -->
-                <!-- Stays in view while the fit summaries on the left scroll (#405). -->
-                <b-col cols="3" class="modal-sticky-column">
-                  <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(3, 0)" :refId="refId"
-                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
-                    :locked-by-user="cellLockedBy(3, 0)"
-                    :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(3, 0)"
-                    @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
-                    @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-              </b-row>
-            </div>
+              <!-- Columna 2: Fit Conduct vs Meta Resumen -->
+              <b-col cols="3" class="modal-pane">
+                <!-- <div class="column-header mb-3">
+                  <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
+                </div> -->
+                <div>
+                  <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card"
+                    header-tag="header">
+                    <template #header>
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
+                        <b-tooltip :target="'fa' + dIndex + 5">{{
+                          $t('camelot.step_four.sections.fa' + (dIndex + 5)) }}</b-tooltip>
+                      </div>
+                    </template>
+                    <div class="field-section" v-if="assessments.items.length">
+                      <responses :stage="1" :index="dIndex"
+                        :option="assessments.items[modal.index].stages[1].options[dIndex].option"
+                        :text="assessments.items[modal.index].stages[1].options[dIndex].text"></responses>
+                    </div>
+                  </b-card>
+                </div>
+              </b-col>
+
+              <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
+              <b-col cols="3" class="modal-pane">
+                <b-card class="mb-3 item-card" header-tag="header">
+                  <template #header>
+                    <div class="d-flex justify-content-between align-items-end">
+                      <h4 id="fa9" class="mb-0">FA9</h4>
+                      <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
+                        }}</b-tooltip>
+                    </div>
+                  </template>
+                  <div class="p-1">
+                    <responses v-if="assessments.items.length" :stage="2" :index="0"
+                      :option="assessments.items[modal.index].stages[2].options[0].option"
+                      :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                  </div>
+                </b-card>
+              </b-col>
+
+              <!-- Columna 4: Evaluación de ajuste final -->
+              <b-col cols="3" class="modal-pane">
+                <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :explanation-deferred="isExplanationDeferred(3, 0)" :refId="refId"
+                  :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
+                  :locked-by-user="cellLockedBy(3, 0)"
+                  :show-lock-notice="!isRefReadOnly" :lock-notice-key="cellLockNoticeKey(3, 0)"
+                  @incomplete-change="onCellIncompleteChange" @explanation-deferred="onCellExplanationDeferred" @request-close="requestModalClose"
+                  @option-saved="onAssessmentOptionSaved" @getAssessments="getAssessments"></assessmentForm>
+              </b-col>
+            </b-row>
           </template>
         </b-col>
       </b-row>
@@ -2183,32 +2179,36 @@ export default {
   gap: 0.25rem;
 }
 
-.modal-column-scroll {
-  max-height: max-content;
-  overflow-y: auto;
-  padding-right: 10px;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #D8DAE5;
-    border-radius: 3px;
-  }
+// The Step 4 modal body is split into panes that scroll on their own (`modal-body-panes` in
+// main.scss makes the body a flex column that does not scroll). The frame row and its single
+// column pass the body's height down; `min-height: 0` lets each flex level shrink below its
+// content, or nothing would ever overflow. The panes row takes what the notices leave, and its
+// columns, stretched to the row's height, each scroll by themselves. This replaced the sticky
+// assessment column of #405: with its own scroll the right side never leaves the screen.
+//
+// Both rows need `nowrap`. Bootstrap's `.row` wraps, and in a flex container that wraps the
+// height of a line is its content's, not the container's: the columns stretched to their own
+// content and never scrolled. Measured in the browser; jsdom does not lay anything out.
+.step-four-frame {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-height: 0;
 }
 
-// The assessment column of the Step 4 modal (#405): sticky, and scrolling inside itself when
-// it is taller than the window. The modal is not `scrollable`, so what scrolls is `.modal`,
-// the size of the window: `top` and `max-height` are measured against it. `align-self` is
-// needed because `.row` is flex and stretches the column to the row's height, which would
-// leave it no room to stick.
-.modal-sticky-column {
-  position: sticky;
-  top: 0.5rem;
-  align-self: flex-start;
-  max-height: calc(100vh - 1rem);
+.step-four-frame-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-four-panes {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-height: 0;
+}
+
+.modal-pane {
   overflow-y: auto;
+  padding-right: 10px;
 
   &::-webkit-scrollbar {
     width: 6px;
