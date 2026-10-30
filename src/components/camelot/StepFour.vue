@@ -2028,7 +2028,10 @@ export default {
 
 .camelot-modal-footer {
   background-color: #F8F9FA;
-  padding: 1.5rem;
+  // The footer only holds the two stage links. With the modal fullscreen, every pixel it takes
+  // comes out of the scrolling columns; 1.5rem all round cost a tenth of the height of a laptop
+  // screen.
+  padding: 0.5rem 1rem;
   border-top: 1px solid #DEE2E6;
 
   .nav-footer-link {
