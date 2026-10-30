@@ -136,6 +136,14 @@ describe('viewProfile.vue — eliminar cuenta', () => {
     expect(nota).toMatch(/edit|escritura|editar/i)
   })
 
+  it('uses the English wording Megan approved for the asterisk note (#351)', () => {
+    const { readOnlyNote } = require('@/lang/en.json').gdpr.deleteAccount
+
+    expect(readOnlyNote).toBe('* Users with an asterisk (*) were granted "view" access to the project. ' +
+      'If you select a user with view-only access as the new owner, their access will be updated to ' +
+      '"can view and edit the project".')
+  })
+
   it('marca con asterisco a los candidatos de sólo lectura', async () => {
     mockProjectsAndUsers([
       { id: 'p1', name: 'Compartido', organization: 'org1', can_write: [], can_read: ['u3'] }

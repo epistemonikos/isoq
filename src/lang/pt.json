@@ -774,7 +774,11 @@
     "cite": "Como eu cito o iSoQ?",
     "cite_desc": "iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Versão 1. Epistemonikos, Instituto Norueguês de Saúde Pública e a {0}. Disponível em isoq.epistemonikos.org",
     "cite_team_link": "Equipe de Desenvolvimento do iSoQ*",
-    "cite_team": "*Equipe de Desenvolvimento do iSoQ: Megan Wainwright (Consultora), Simon Lewin (Universidade Norueguesa de Ciência e Tecnologia (NTNU)), Claire Glenton (Universidade de Ciências Aplicadas da Noruega Ocidental (HVL)), Heather Munthe-Kaas (Instituto Norueguês de Saúde Pública)."
+    "cite_team": "*Equipe de Desenvolvimento do iSoQ: Megan Wainwright (Consultora), Simon Lewin (Universidade Norueguesa de Ciência e Tecnologia (NTNU)), Claire Glenton (Universidade de Ciências Aplicadas da Noruega Ocidental (HVL)), Heather Munthe-Kaas (Instituto Norueguês de Saúde Pública).",
+    "contents": "Índice",
+    "terms": "Quais são os Termos e Condições?",
+    "terms_desc": "Os termos e condições, a política de privacidade e as informações sobre propriedade intelectual do iSoQ podem ser consultados {0}.",
+    "terms_link": "aqui"
   },
   "browse": {
     "title": "Navegar pelas tabelas públicas do iSoQ",
@@ -1913,7 +1917,7 @@
       "button": "Eliminar conta",
       "modalTitle": "Eliminar a minha conta",
       "transferIntro": "É proprietário de projetos partilhados. Escolha um novo proprietário para cada um antes de eliminar a sua conta. Cada novo proprietário receberá um e-mail a avisá-lo, com o seu nome.",
-      "readOnlyNote": "Os colaboradores marcados com * têm atualmente acesso apenas de leitura. Se escolher um deles como novo proprietário, o seu acesso passará a ver e editar o projeto.",
+      "readOnlyNote": "* Os usuários marcados com asterisco (*) receberam acesso de \"ver\" ao projeto. Se escolher como novo proprietário um usuário com acesso apenas de leitura, o seu acesso passará a \"pode ver e editar o projeto\".",
       "selectPlaceholder": "Escolha um novo proprietário",
       "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
       "passwordPlaceholder": "Palavra-passe",
