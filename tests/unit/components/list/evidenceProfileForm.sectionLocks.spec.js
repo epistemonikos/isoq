@@ -56,7 +56,6 @@ function createWrapper (propsData = {}) {
       show: {},
       modePrintFieldObject: [],
       mode: 'edit',
-      showEditExtractedDataInPlace: { display: false, item: {} },
       charsOfStudies: { items: [], fieldsObj: [] },
       project: { use_camelot: false, review_question: 'q', inclusion: 'i', exclusion: 'e' },
       ...propsData

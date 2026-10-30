@@ -94,7 +94,7 @@ const Parent = {
       :references="[]" mode="edit" :list="list" :refsWithTitle="[]" :project="project"
       :permission="true" :selectOptions="[]" :levelConfidence="[]" :findings="findings"
       :methAssessments="{ items: [] }" :extractedData="{ id: 'ed1', fields: [], items: [] }"
-      :showEditExtractedDataInPlace="{ display: false, item: {} }" :modalData="buffer"
+      :modalData="buffer"
       :charsOfStudies="{ items: [] }" :show="{ selected: ['ep'] }" :modePrintFieldObject="[]"
       :activeRefLocks="[]"
       @modalDataChanged="buffer = JSON.parse(JSON.stringify($event))" />`,

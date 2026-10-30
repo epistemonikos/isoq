@@ -71,11 +71,11 @@
             :permission="checkPermissions(list.organization)" :selectOptions="select_options"
             :levelConfidence="level_confidence" :findings="findings" :methAssessments="meth_assessments"
             :extractedData="extracted_data" :modePrintFieldObject="mode_print_fieldsObj"
-            :showEditExtractedDataInPlace="showEditExtractedDataInPlace" :modalData="buffer_modal_stage_two"
+            :modalData="buffer_modal_stage_two"
             :charsOfStudies="characteristics_studies" :activeRefLocks="activeRefLocks"
             @lock-denied="fetchAndUpdateRefLocks" @update-list-data="getList" @printErrors="printErrors"
             @modalDataChanged="modalDataChanged" @busyEvidenceProfileTable="busyEvidenceProfileTable"
-            @callGetFinding="callGetFinding" @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+            @callGetFinding="callGetFinding"
             @getExtractedData="getExtractedData"></evidence-profile-table>
 
           <table-chars-of-studies :useCamelot="project.use_camelot" :ui="ui" :show="show" :mode="mode" :list="list"
@@ -325,10 +325,6 @@ export default {
       mode_print_fieldsObj: [],
       findings: null,
       list_categories: [],
-      showEditExtractedDataInPlace: {
-        display: false,
-        item: { authors: '', column_0: '', ref_id: null }
-      },
       // Locks vigentes del proyecto, sondeados con GET /api/lock/<pid>/refs. Los
       // consume `editListEvidenceProfile` para grisar los botones ANTES del clic:
       // sin esto la persona se enteraba recién al abrir el modal, por un banner.
@@ -1117,9 +1113,9 @@ export default {
           if (referencesSet.has(item.ref_id)) {
             // `copyItemMetadata` y no un spread del ítem entero: la fila que va a la tabla
             // se arma con las cuatro claves que la vista usa, a propósito. Lo que se suma es
-            // sólo la metadata del servidor, porque **de acá bajan por prop los tres sitios
-            // que escriben esta tabla** (`editListExtractedData` y el editor en sitio del
-            // perfil de evidencia). Sin el `_v`, sus PATCH pasan por el camino tolerado: el
+            // sólo la metadata del servidor, porque **de acá baja por prop a lo único que
+            // escribe esta tabla**: `editListExtractedData`, en la página y en los paneles del
+            // perfil de evidencia. Sin el `_v`, sus PATCH pasan por el camino tolerado: el
             // servidor los acepta y deja de comprobar la frescura, sin 409 y sin cartel.
             // Las filas derivadas —las de un estudio que el documento no tiene— siguen sin
             // contador, que es lo correcto: nunca se escribieron.
@@ -1175,9 +1171,6 @@ export default {
     },
     callGetFinding: function (status) {
       this.getFinding(status)
-    },
-    setShowEditExtractedDataInPlace: function (data) {
-      this.showEditExtractedDataInPlace = data
     }
   },
   watch: {

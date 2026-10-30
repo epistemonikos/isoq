@@ -74,7 +74,6 @@ function createWrapper ({ activeRefLocks = [], permission = true, findings = { i
       findings,
       methAssessments: { items: [] },
       extractedData: { id: 'ed1', fields: [], items: [] },
-      showEditExtractedDataInPlace: { display: false, item: {} },
       modalData: {},
       charsOfStudies: { items: [] },
       show: { selected: ['ep'] },

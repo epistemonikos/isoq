@@ -653,7 +653,6 @@
       :mode="mode"
       :extractedData="localExtractedData"
       :refsWithTitle="refsWithTitle"
-      :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
       :charsOfStudies="charsOfStudies"
       :project="project"
       :evidenceProfile="evidenceProfile"
@@ -665,7 +664,6 @@
       @lock-denied="$emit('lock-denied')"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
-      @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
       @getExtractedData="getExtractedData"></evidence-profile-form>
     <!-- end modal -->
   </div>
@@ -723,7 +721,6 @@ export default {
     findings: Object,
     methAssessments: Object,
     extractedData: Object,
-    showEditExtractedDataInPlace: Object,
     modalData: Object,
     charsOfStudies: Object,
     show: Object,
@@ -1233,9 +1230,6 @@ export default {
     },
     callGetStageOneData: function (status) {
       this.$emit('callGetFinding', status)
-    },
-    setShowEditExtractedDataInPlace: function (data) {
-      this.$emit('setShowEditExtractedDataInPlace', data)
     },
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)

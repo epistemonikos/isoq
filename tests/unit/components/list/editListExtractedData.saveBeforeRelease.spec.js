@@ -55,142 +55,27 @@ function createWrapper () {
   })
   // BootstrapVue's own $bvModal cannot be mocked away; spy on the instance's.
   jest.spyOn(wrapper.vm.$bvModal, 'hide').mockImplementation(() => {})
+  wrapper.vm.$refs['modal-extracted-data-remove-data-item'] = { show: jest.fn(), hide: jest.fn() }
   return { wrapper, $notify }
 }
 
-// Opening goes through $refs (stubbed here); closing goes through $bvModal.hide(id),
-// which survives the re-renders that rebuild $refs.
-function stubModals (wrapper) {
-  wrapper.vm.$refs['modal-extracted-data-data'] = { show: jest.fn(), hide: jest.fn() }
-  wrapper.vm.$refs['modal-extracted-data-remove-data-item'] = { show: jest.fn(), hide: jest.fn() }
-  const closed = id => wrapper.vm.$bvModal.hide.mock.calls.some(c => c[0] === id)
-  return {
-    editorClosed: () => closed('modal-extracted-data-data'),
-    removerClosed: () => closed('modal-extracted-data-remove-data-item')
-  }
-}
-
-async function openEditRow (wrapper, index = 0) {
-  const modals = stubModals(wrapper)
-  wrapper.vm.openModalExtractedDataEditDataItem({ index, item: ROWS[index] })
-  await flushPromises()
-  return modals
-}
-
 const okEvent = () => ({ preventDefault: jest.fn() })
-const lockRejection = () => Object.assign(new Error('409'), {
-  config: { url: '/isoqf_extracted_data/ed1/item/ref1' },
-  response: { status: 409, data: { status: false, reason: 'lock_not_held', locked_by: null } }
-})
+const removerClosed = wrapper => wrapper.vm.$bvModal.hide.mock.calls
+  .some(c => c[0] === 'modal-extracted-data-remove-data-item')
 
-// #404: Save closed the editor at once and its `hidden` released the row lock while
-// the PATCH was still on its way, so the server answered 409 lock_not_held and the
-// text was lost — the "kept locally" promise of the toast had nobody showing it.
-describe('editListExtractedData — the row lock outlives the save (#404)', () => {
+// #404: closing at once let the modal's `hidden` release the row lock while the PATCH was
+// still on its way, so the server answered 409 lock_not_held. The in-place editor's side of
+// this is in `editListExtractedData.inline.spec.js`; the clear-row confirmation is a modal.
+describe('editListExtractedData — the row lock outlives the clear-row write (#404)', () => {
   beforeEach(() => {
     Api.patch.mockReset().mockResolvedValue({ data: {} })
     LockService.acquireRef.mockReset().mockResolvedValue({ success: true })
     LockService.releaseRef.mockReset()
   })
 
-  it('keeps the editor open, and the lock held, until the PATCH answers', async () => {
+  it('waits for the PATCH before closing the clear-row confirmation', async () => {
     const { wrapper } = createWrapper()
-    const { editorClosed } = await openEditRow(wrapper)
-    const patch = deferred()
-    Api.patch.mockReturnValueOnce(patch.promise)
-
-    const evt = okEvent()
-    wrapper.vm.onRowEditorOk(evt)
-    await flushPromises()
-
-    expect(evt.preventDefault).toHaveBeenCalled()
-    expect(editorClosed()).toBe(false)
-    expect(LockService.releaseRef).not.toHaveBeenCalled()
-
-    patch.resolve({ data: {} })
-    await flushPromises()
-    expect(editorClosed()).toBe(true)
-  })
-
-  it('releases the lock only when the closed editor reports hidden, after the save', async () => {
-    const { wrapper } = createWrapper()
-    await openEditRow(wrapper)
-    wrapper.vm.onRowEditorOk(okEvent())
-    await flushPromises()
-    wrapper.vm.onRowEditorHidden()
-    expect(Api.patch).toHaveBeenCalledTimes(1)
-    expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
-  })
-
-  it('leaves the editor open with the text when the save fails', async () => {
-    const { wrapper } = createWrapper()
-    const { editorClosed } = await openEditRow(wrapper)
-    wrapper.vm.buffer_extracted_data_items.column_0 = 'what I typed'
-    Api.patch.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500 } }))
-
-    wrapper.vm.onRowEditorOk(okEvent())
-    await flushPromises()
-
-    expect(editorClosed()).toBe(false)
-    expect(wrapper.vm.buffer_extracted_data_items.column_0).toBe('what I typed')
-  })
-
-  it('turns the editor read-only, keeping the text, when the server says the lock is not held', async () => {
-    const { wrapper } = createWrapper()
-    const { editorClosed } = await openEditRow(wrapper)
-    wrapper.vm.buffer_extracted_data_items.column_0 = 'what I typed'
-    Api.patch.mockRejectedValueOnce(lockRejection())
-
-    wrapper.vm.onRowEditorOk(okEvent())
-    await flushPromises()
-
-    expect(editorClosed()).toBe(false)
-    expect(wrapper.vm.isRowReadOnly).toBe(true)
-    expect(wrapper.vm.buffer_extracted_data_items.column_0).toBe('what I typed')
-  })
-
-  it('sends one PATCH when Save is pressed twice while saving', async () => {
-    const { wrapper } = createWrapper()
-    await openEditRow(wrapper)
-    const patch = deferred()
-    Api.patch.mockReturnValueOnce(patch.promise)
-
-    wrapper.vm.onRowEditorOk(okEvent())
-    wrapper.vm.onRowEditorOk(okEvent())
-    patch.resolve({ data: {} })
-    await flushPromises()
-
-    expect(Api.patch).toHaveBeenCalledTimes(1)
-  })
-
-  it('keeps Save disabled while the row lock is being acquired and while saving', async () => {
-    const { wrapper } = createWrapper()
-    stubModals(wrapper)
-    const acquire = deferred()
-    LockService.acquireRef.mockReturnValueOnce(acquire.promise)
-    const okDisabled = () => wrapper.find('#modal-extracted-data-data').attributes('okdisabled')
-
-    wrapper.vm.openModalExtractedDataEditDataItem({ index: 0, item: ROWS[0] })
-    await wrapper.vm.$nextTick()
-    expect(okDisabled()).toBe('true')
-
-    acquire.resolve({ success: true })
-    await flushPromises()
-    expect(okDisabled()).toBeUndefined()
-
-    const patch = deferred()
-    Api.patch.mockReturnValueOnce(patch.promise)
-    wrapper.vm.onRowEditorOk(okEvent())
-    await wrapper.vm.$nextTick()
-    expect(okDisabled()).toBe('true')
-    patch.resolve({ data: {} })
-    await flushPromises()
-  })
-
-  it('also waits for the PATCH before closing the clear-row confirmation', async () => {
-    const { wrapper } = createWrapper()
-    const { removerClosed } = stubModals(wrapper)
-    wrapper.vm.openModalExtractedDataRemoveDataItem({ index: 0, item: ROWS[0] })
+    wrapper.vm.openModalExtractedDataRemoveDataItem('ref1')
     await flushPromises()
     const patch = deferred()
     Api.patch.mockReturnValueOnce(patch.promise)
@@ -199,10 +84,23 @@ describe('editListExtractedData — the row lock outlives the save (#404)', () =
     wrapper.vm.onRemoveRowOk(evt)
     await flushPromises()
     expect(evt.preventDefault).toHaveBeenCalled()
-    expect(removerClosed()).toBe(false)
+    expect(removerClosed(wrapper)).toBe(false)
+    expect(LockService.releaseRef).not.toHaveBeenCalled()
 
     patch.resolve({ data: {} })
     await flushPromises()
-    expect(removerClosed()).toBe(true)
+    expect(removerClosed(wrapper)).toBe(true)
+  })
+
+  it('clears the row that was clicked, found by its study', async () => {
+    const { wrapper } = createWrapper()
+    wrapper.vm.openModalExtractedDataRemoveDataItem('ref2')
+    await flushPromises()
+
+    wrapper.vm.onRemoveRowOk(okEvent())
+    await flushPromises()
+
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_extracted_data/ed1/item/ref2',
+      expect.objectContaining({ ref_id: 'ref2', column_0: '' }))
   })
 })

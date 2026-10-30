@@ -142,8 +142,7 @@ describe('editListExtractedData.vue — fila tomada por otra persona', () => {
     // Sin esto el grisado esperaría el próximo tick del sondeo.
     LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
     const wrapper = createWrapper()
-    wrapper.vm.$refs['modal-extracted-data-data'] = { show: jest.fn() }
-    wrapper.vm.openModalExtractedDataEditDataItem({ index: 0, item: ROWS[0] })
+    wrapper.vm.startRowEdit('ref1')
     await flushPromises()
 
     expect(wrapper.emitted('lock-denied')).toBeTruthy()
@@ -152,8 +151,7 @@ describe('editListExtractedData.vue — fila tomada por otra persona', () => {
 
   it('un acquire exitoso no avisa rechazo', async () => {
     const wrapper = createWrapper()
-    wrapper.vm.$refs['modal-extracted-data-data'] = { show: jest.fn() }
-    wrapper.vm.openModalExtractedDataEditDataItem({ index: 0, item: ROWS[0] })
+    wrapper.vm.startRowEdit('ref1')
     await flushPromises()
 
     expect(wrapper.emitted('lock-denied')).toBeFalsy()
