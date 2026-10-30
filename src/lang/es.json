@@ -774,7 +774,11 @@
     "cite": "¿Cómo cito iSoQ?",
     "cite_desc": "iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Versión 1. Epistemonikos, Instituto Noruego de Salud Pública y el {0}. Disponible en isoq.epistemonikos.org",
     "cite_team_link": "Equipo de Desarrollo de iSoQ*",
-    "cite_team": "*Equipo de Desarrollo de iSoQ: Megan Wainwright (Consultora), Simon Lewin (Universidad Noruega de Ciencia y Tecnología (NTNU)), Claire Glenton (Universidad de Ciencias Aplicadas de Noruega Occidental (HVL)), Heather Munthe-Kaas (Instituto Noruego de Salud Pública)."
+    "cite_team": "*Equipo de Desarrollo de iSoQ: Megan Wainwright (Consultora), Simon Lewin (Universidad Noruega de Ciencia y Tecnología (NTNU)), Claire Glenton (Universidad de Ciencias Aplicadas de Noruega Occidental (HVL)), Heather Munthe-Kaas (Instituto Noruego de Salud Pública).",
+    "contents": "Índice",
+    "terms": "¿Cuáles son los Términos y Condiciones?",
+    "terms_desc": "Los términos y condiciones, la política de privacidad y la información sobre propiedad intelectual de iSoQ se pueden consultar {0}.",
+    "terms_link": "aquí"
   },
   "browse": {
     "title": "Explorar tablas públicas de iSoQ",
@@ -1913,7 +1917,7 @@
       "button": "Eliminar cuenta",
       "modalTitle": "Eliminar mi cuenta",
       "transferIntro": "Eres dueño de proyectos compartidos. Elige un nuevo dueño para cada uno antes de eliminar tu cuenta. Cada persona que reciba un proyecto recibirá un correo con tu nombre avisándole.",
-      "readOnlyNote": "Los colaboradores marcados con * hoy tienen acceso de sólo lectura. Si eliges a uno de ellos como nuevo dueño, su acceso pasará a ver y editar el proyecto.",
+      "readOnlyNote": "* A los usuarios marcados con asterisco (*) se les dio acceso de \"ver\" al proyecto. Si eliges como nuevo dueño a un usuario con acceso de solo lectura, su acceso pasará a \"puede ver y editar el proyecto\".",
       "selectPlaceholder": "Elige un nuevo dueño",
       "passwordPrompt": "Ingresa tu contraseña para confirmar:",
       "passwordPlaceholder": "Contraseña",
