@@ -248,12 +248,36 @@ body {
   }
 }
 
-// Modales de trabajo que necesitan todo el ancho (evidence profile, CAMELOT Pasos 3 y 4).
-// Se aplica con `dialog-class="modal-dialog-wide"`. Dos clases le ganan a `.modal-xl` y al
-// `.modal-dialog` de Bootstrap sin `!important`.
-.modal-dialog.modal-dialog-wide {
-  max-width: 98%;
-  margin: 1.75rem auto;
+// Modales de trabajo a pantalla completa (evidence profile, CAMELOT Pasos 3 y 4), con
+// `dialog-class="modal-dialog-fullscreen"`. Ocupan la ventana sin borde; el encabezado y el pie
+// quedan fijos y scrollea sólo el cuerpo. Dos clases le ganan a `.modal-xl`, al `.modal-dialog`
+// de Bootstrap y a `.modal-dialog-scrollable` sin `!important`.
+.modal-dialog.modal-dialog-fullscreen {
+  width: auto;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+
+  .modal-content {
+    height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .modal-body {
+    overflow-y: auto;
+  }
+
+  // Un cuerpo partido en columnas que scrollean cada una por su cuenta (Paso 4): el cuerpo no
+  // scrollea, reparte su alto. Los avisos de arriba quedan fijos; la fila de columnas toma el
+  // resto con `flex: 1` y `min-height: 0`, y cada columna lleva su propio `overflow-y`.
+  .modal-body.modal-body-panes {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 }
 
 .modal-header {
