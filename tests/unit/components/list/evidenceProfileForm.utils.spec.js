@@ -44,7 +44,6 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
     show: {},
     modePrintFieldObject: [],
     mode: 'edit',
-    showEditExtractedDataInPlace: { display: false, item: {} },
     charsOfStudies: { items: [], fieldsObj: [] },
     project: { use_camelot: false, review_question: 'q', inclusion: 'i', exclusion: 'e' },
     ...propsData
@@ -215,50 +214,6 @@ describe('evidenceProfileForm.vue — getExtractedData()', () => {
     const wrapper = makeWrapper()
     wrapper.vm.getExtractedData(false)
     expect(wrapper.emitted('getExtractedData')[0]).toEqual([false])
-    wrapper.destroy()
-  })
-})
-
-// ─── editExtractedDataInPlace ─────────────────────────────────────────────────
-
-describe('evidenceProfileForm.vue — editExtractedDataInPlace()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('emits setShowEditExtractedDataInPlace with display=true and the item at given index', () => {
-    const items = [
-      { ref_id: 'ref1', column_0: 'text A', index: 0 },
-      { ref_id: 'ref2', column_0: 'text B', index: 1 }
-    ]
-    const wrapper = makeWrapper({ extractedData: { id: 'ed1', items, fieldsObj: [] } })
-    wrapper.vm.editExtractedDataInPlace(1)
-    const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
-    expect(emitted).toBeTruthy()
-    expect(emitted[0][0]).toEqual({ display: true, item: items[1] })
-    wrapper.destroy()
-  })
-
-  it('emits a deep clone of the item (not the same reference)', () => {
-    const items = [{ ref_id: 'ref1', column_0: 'original', index: 0 }]
-    const wrapper = makeWrapper({ extractedData: { id: 'ed1', items, fieldsObj: [] } })
-    wrapper.vm.editExtractedDataInPlace(0)
-    const emittedItem = wrapper.emitted('setShowEditExtractedDataInPlace')[0][0].item
-    emittedItem.column_0 = 'mutated'
-    expect(items[0].column_0).toBe('original')
-    wrapper.destroy()
-  })
-})
-
-// ─── cancelExtractedDataInPlace ───────────────────────────────────────────────
-
-describe('evidenceProfileForm.vue — cancelExtractedDataInPlace()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('emits setShowEditExtractedDataInPlace with display=false and empty item', () => {
-    const wrapper = makeWrapper()
-    wrapper.vm.cancelExtractedDataInPlace()
-    const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
-    expect(emitted).toBeTruthy()
-    expect(emitted[0][0]).toEqual({ display: false, item: {} })
     wrapper.destroy()
   })
 })

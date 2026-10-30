@@ -477,8 +477,8 @@
                     {{ $t('worksheet.warnings.extracted_data_missing') }}
                     {{ $t('common.add') }} {{ $t('common.here') }}
                   </p>
-                  <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
-                    :list="list" :permission="permission" :extractedData="extractedData"
+                  <table-extracted-data ref="extractedDataTable" :hideable="false" :showTitle="false" :showFilters="false" :ui="ui"
+                    :show="show" :mode="mode" :list="list" :permission="permission" :extractedData="extractedData"
                     :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
                     @printErrors="printErrors" @getExtractedData="getExtractedData"
                 :activeRefLocks="activeRefLocks" @lock-denied="$emit('lock-denied')"></table-extracted-data>
@@ -495,8 +495,8 @@
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 {{ $t('worksheet.warnings.extracted_data_missing_detail') }}
               </p>
-              <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
-                :list="list" :permission="permission" :extractedData="extractedData"
+              <table-extracted-data ref="extractedDataTable" :hideable="false" :showTitle="false" :showFilters="false" :ui="ui"
+                :show="show" :mode="mode" :list="list" :permission="permission" :extractedData="extractedData"
                 :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
                 @printErrors="printErrors" @getExtractedData="getExtractedData"
                 :activeRefLocks="activeRefLocks" @lock-denied="$emit('lock-denied')"></table-extracted-data>
@@ -515,69 +515,11 @@
                     <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                     {{ $t('worksheet.warnings.extracted_data_missing_detail') }}
                   </p>
-                  <b-table class="table-small-font extracted-data" responsive head-variant="light" outlined :fields="mode === 'view'
-                    ? mode_print_fieldsObj
-                    : extractedData.fieldsObj
-                    " :items="extractedData.items">
-                    <template v-slot:cell(authors)="data">
-                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-                    </template>
-                    <template v-slot:cell(column_0)="data">
-                      <template v-if="
-                        showEditExtractedDataInPlace.display &&
-                        showEditExtractedDataInPlace.item.index ===
-                        data.item.index
-                      ">
-                        <b-alert v-if="rowVersionConflict" show variant="warning" class="mb-2"
-                          data-testid="row-version-conflict">
-                          <p class="mb-2">{{ $t('version_conflict.reload_needed') }}</p>
-                          <b-button size="sm" variant="outline-primary" @click="reloadAfterRowVersionConflict">
-                            {{ $t('version_conflict.reload') }}
-                          </b-button>
-                        </b-alert>
-                        <b-alert v-else-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
-                          data-testid="row-readonly-notice">
-                          {{ rowReadOnlyNotice }}
-                        </b-alert>
-                        <b-form-group>
-                          <b-form-textarea rows="6" max-rows="100" :disabled="isRowReadOnly"
-                            v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                        </b-form-group>
-                      </template>
-                      <template v-else>
-                        {{ data.item.column_0 }}
-                      </template>
-                    </template>
-                    <template v-slot:cell(actions)="data">
-                      <template v-if="
-                        showEditExtractedDataInPlace.display &&
-                        showEditExtractedDataInPlace.item.index ===
-                        data.item.index
-                      ">
-                        <b-button block variant="success" :disabled="isRowReadOnly"
-                          @click="updateContentExtractedDataItem(data.item.ref_id)">
-                          {{ $t('common.save') }}
-                        </b-button>
-                        <b-button block variant="outline-secondary" @click="cancelExtractedDataInPlace">
-                          {{ $t('common.cancel') }}
-                        </b-button>
-                      </template>
-                      <template v-else-if="permission">
-                        <!-- Tooltip en el span: un botón deshabilitado no emite eventos de mouse. -->
-                        <span v-if="inPlaceRowTakenBy(data.item.ref_id)" class="d-inline-block"
-                          :data-testid="`ed-inplace-locked-${data.item.ref_id}`" v-b-tooltip.hover
-                          :title="$t('lock.ref_locked_by', { user: inPlaceRowTakenBy(data.item.ref_id).user_name || '' })">
-                          <b-button variant="outline-success" disabled :style="{ pointerEvents: 'none' }">
-                            <font-awesome-icon icon="user" />
-                          </b-button>
-                        </span>
-                        <b-button v-else variant="outline-success"
-                          @click="editExtractedDataInPlace(data.index)">
-                          <font-awesome-icon icon="edit" :title="$t('common.edit')" />
-                        </b-button>
-                      </template>
-                    </template>
-                  </b-table>
+                  <table-extracted-data ref="extractedDataTable" :hideable="false" :showTitle="false" :showFilters="false" :ui="ui"
+                    :show="show" :mode="mode" :list="list" :permission="permission" :extractedData="extractedData"
+                    :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
+                    @printErrors="printErrors" @getExtractedData="getExtractedData"
+                    :activeRefLocks="activeRefLocks" @lock-denied="$emit('lock-denied')"></table-extracted-data>
                 </b-tab>
                 <b-tab>
                   <template slot="title">
@@ -851,16 +793,10 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 // pinta los botones y con `refLockUrls`, y el string de la clave tiene que escribirse
 // una sola vez por repo (el servidor compone el mismo en libs/evidence_profile.py).
 import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
-import { extractedDataRowLockKey, foreignRowLock } from '@/utils/extractedDataLockKeys'
-import refLockStateMixin from '@/mixins/refLockStateMixin'
 import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
-import { isVersionRejection } from '@/utils/lockErrors'
-import { REFERENCE_DELETED } from '@/utils/referenceDeleted'
 
 export default {
   name: 'evidenceProfileForm',
-  // `foreignRefLocks`: el sondeo de la worksheet sin los locks de esta pestaña.
-  mixins: [refLockStateMixin],
   components: {
     videoHelp: () => import('@/components/videoHelp.vue'),
     'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
@@ -877,7 +813,6 @@ export default {
     mode: String,
     extractedData: Object,
     refsWithTitle: Array,
-    showEditExtractedDataInPlace: Object,
     charsOfStudies: Object,
     project: Object,
     evidenceProfile: Array,
@@ -894,9 +829,9 @@ export default {
   },
   data () {
     return {
-      // Endpoint A locks the DOCUMENT, so the lock's ref_id is the finding_id.
-      // A row edited inline writes through endpoint C and needs its own lock, held
-      // at the same time as this one (multi-slot LockService).
+      // Endpoint A locks the DOCUMENT, so the lock's ref_id is the finding_id. A row of
+      // the extracted data table writes through endpoint C with its own lock, held by the
+      // table (`editListExtractedData`) at the same time as this one.
       isFindingReadOnly: false,
       findingLockedBy: null,
       // True only when the lock was taken away mid-edit. Opening onto an already-locked
@@ -917,15 +852,6 @@ export default {
       modalOpen: false,
       // True when a `hidden` from a previous modal session is still on its way.
       staleHiddenPending: false,
-      lockedRowRef: null,
-      isRowReadOnly: false,
-      // La fila inline tiene su propio cartel: quién la tiene, si se perdió con el editor
-      // abierto, o qué dijo el acquire al negarla.
-      rowLockedBy: null,
-      rowLockLost: false,
-      rowDeniedKey: null,
-      // El servidor rechazó la fila inline por versión: cartel en la fila hasta recargar.
-      rowVersionConflict: false,
       selectedOptions: {
         methodological_limitations: {
           option: null,
@@ -1031,7 +957,7 @@ export default {
     // Verified live: the lock was acquired, the modal never finished opening, and the
     // later hide() emitted no `hidden` — the lock stayed orphaned until the TTL.
     this.releaseFindingLock()
-    this.releaseRowLock()
+    // The extracted data table releases its row lock in its own beforeDestroy.
   },
   computed: {
     // Single flag for every input in the form: writing needs both the permission
@@ -1060,19 +986,6 @@ export default {
         return this.$t(key, { user })
       }
       return null
-    },
-    // Same idea as readOnlyNotice, for the inline row editor inside the table. The row
-    // has no "lost while editing" flag of its own: the only way it turns read-only is
-    // by losing or failing to get its lock, and both deserve the banner.
-    rowReadOnlyNotice: function () {
-      if (!this.isRowReadOnly) return null
-      const user = this.rowLockedBy
-      if (this.rowLockLost) {
-        return user
-          ? this.$t('lock.lost_while_editing', { user })
-          : this.$t('lock.lost_while_editing_no_user')
-      }
-      return this.$t(this.rowDeniedKey || 'lock.ref_locked_by_no_user', { user })
     },
     clearCerqualWarningMessage: function () {
       if (this.checkIfIsTheOnlyPublished()) {
@@ -1181,12 +1094,6 @@ export default {
         this.isFindingReadOnly = true
         this.findingLockedBy = detail.lockedBy || null
         this.lockLostWhileEditing = true
-        return
-      }
-      if (detail.refId && detail.refId === this.lockedRowRef) {
-        this.isRowReadOnly = true
-        this.rowLockedBy = detail.lockedBy || null
-        this.rowLockLost = true
       }
     },
     onModalHidden: function () {
@@ -1201,8 +1108,11 @@ export default {
       // correcto si esta variable no sobrevive a la sesión que la puso.
       this.openedSection = null
       this.releaseFindingLock()
-      // An inline row editor left open when the modal closes must not leak its lock.
-      this.releaseRowLock()
+      // A row of the extracted data table left open must not keep its lock: the table
+      // stays mounted while the modal is hidden. Only the open panel's table exists, and it
+      // is loaded lazily, so it may not be there yet.
+      const table = this.$refs.extractedDataTable
+      if (table && typeof table.cancelRowEdit === 'function') table.cancelRowEdit()
       this.isFindingReadOnly = false
       this.findingLockedBy = null
       this.findingDeniedKey = null
@@ -1250,45 +1160,6 @@ export default {
       }
       this.$emit('lock-denied')
       return false
-    },
-    /** El lock de otra persona sobre esa fila de datos extraídos, o null. */
-    inPlaceRowTakenBy: function (refId) {
-      return foreignRowLock(this.foreignRefLocks, this.extractedData && this.extractedData.id, refId)
-    },
-    async acquireRowLock (lockKey) {
-      if (!lockKey || !this.permission) return
-      const result = await LockService.acquireRef(this.list.project_id, lockKey)
-      this.rowLockedBy = null
-      this.rowLockLost = false
-      this.rowDeniedKey = null
-      if (result.success) {
-        this.lockedRowRef = lockKey
-        this.isRowReadOnly = false
-        return
-      }
-      this.lockedRowRef = null
-      // El estudio lo borró otra persona: no hay a quién esperar. El aviso es de
-      // OfflineIndicator (`reference-deleted`) y acá sólo se cierra el editor inline.
-      if (result.reason === REFERENCE_DELETED) {
-        this.cancelExtractedDataInPlace()
-        return
-      }
-      // Mismo motivo que en `acquireSectionLock`: sin esto el botón de esta fila sigue
-      // invitando al clic hasta el próximo tick del sondeo.
-      this.$emit('lock-denied')
-      // Sin toast: lo dice el cartel de la fila (`rowReadOnlyNotice`).
-      this.isRowReadOnly = true
-      this.rowLockedBy = result.lockedBy || null
-      this.rowDeniedKey = lockDeniedNoticeKey(result)
-    },
-    releaseRowLock: function () {
-      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
-      this.lockedRowRef = null
-      this.isRowReadOnly = false
-      this.rowLockedBy = null
-      this.rowLockLost = false
-      this.rowDeniedKey = null
-      this.rowVersionConflict = false
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -1570,57 +1441,6 @@ export default {
       } else {
         return ''
       }
-    },
-    editExtractedDataInPlace: function (index) {
-      const item = JSON.parse(JSON.stringify(this.extractedData.items[index]))
-      // La fila de ESTE documento, no el estudio: ver `extractedDataLockKeys.js`.
-      this.acquireRowLock(extractedDataRowLockKey(this.extractedData.id, item.ref_id))
-      const data = {
-        display: true,
-        item: item
-      }
-      this.$emit('setShowEditExtractedDataInPlace', data)
-    },
-    cancelExtractedDataInPlace: function () {
-      this.releaseRowLock()
-      const data = {
-        display: false,
-        item: {}
-      }
-      this.$emit('setShowEditExtractedDataInPlace', data)
-    },
-    updateContentExtractedDataItem: function (refId) {
-      // Granular save: PATCH only this row via the /item/<ref_id> sub-resource so
-      // concurrent edits to other rows are not overwritten (no whole-array rewrite).
-      const row = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
-      // Without this row's lock the PATCH is a guaranteed 409.
-      if (this.isRowReadOnly) return Promise.resolve()
-      return Api.patch(`/isoqf_extracted_data/${this.extractedData.id}/item/${refId}`, row)
-        .then(() => {
-          this.releaseRowLock()
-          this.$emit('getExtractedData', true)
-          const data = {
-            display: false,
-            item: {}
-          }
-          this.$emit('setShowEditExtractedDataInPlace', data)
-        })
-        .catch((error) => {
-          // La edición queda abierta con lo escrito; el lock de la fila sigue tomado.
-          this.printErrors(error)
-          // La fila cambió desde que se leyó: estado de ESTA fila, va como cartel en ella.
-          if (isVersionRejection(error)) {
-            this.rowVersionConflict = true
-            return
-          }
-          const key = writeErrorMessageKey(error, 'notifications.save_error')
-          if (key && this.$notify) this.$notify.error(this.$t(key))
-        })
-    },
-    reloadAfterRowVersionConflict: function () {
-      this.rowVersionConflict = false
-      this.cancelExtractedDataInPlace()
-      this.$emit('getExtractedData', true)
     },
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)

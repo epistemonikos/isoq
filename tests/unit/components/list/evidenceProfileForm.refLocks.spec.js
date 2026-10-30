@@ -55,7 +55,6 @@ function createWrapper (propsData = {}) {
       show: {},
       modePrintFieldObject: [],
       mode: 'edit',
-      showEditExtractedDataInPlace: { display: false, item: {} },
       charsOfStudies: { items: [], fieldsObj: [] },
       project: { use_camelot: false, review_question: 'q', inclusion: 'i', exclusion: 'e' },
       ...propsData
@@ -231,18 +230,16 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       wrapper.destroy()
     })
 
-    it('pasa a read-only sólo la fila inline cuando el lock perdido es de la fila', async () => {
+    // La fila de datos extraídos la sostiene la tabla, no este formulario.
+    it('perder el lock de una fila de datos extraídos no deja el formulario en solo lectura', async () => {
       const { wrapper } = createWrapper()
       await openModal(wrapper)
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
         detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
       }))
       await flushPromises()
 
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.vm.isFindingReadOnly).toBe(false)
       wrapper.destroy()
     })
@@ -296,79 +293,6 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       await flushPromises()
 
       expect(wrapper.find('[data-testid="finding-readonly-notice"]').exists()).toBe(true)
-      wrapper.destroy()
-    })
-  })
-
-  // The inline row editor was the quietest of all: read-only did not disable its
-  // textarea or its Save button, and updateContentExtractedDataItem returns early, so
-  // the user typed, pressed Save, and nothing happened — no error, no explanation.
-  describe('aviso visible cuando la fila inline queda en solo lectura', () => {
-    it('no muestra aviso de fila mientras la fila se puede editar', async () => {
-      const { wrapper } = createWrapper()
-      await openModal(wrapper)
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
-
-      expect(wrapper.vm.rowReadOnlyNotice).toBeFalsy()
-      wrapper.destroy()
-    })
-
-    it('muestra aviso de fila cuando se pierde el lock de la fila abierta', async () => {
-      const { wrapper } = createWrapper()
-      await openModal(wrapper)
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
-
-      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
-      }))
-      await flushPromises()
-
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
-      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.lost_while_editing')
-      wrapper.destroy()
-    })
-
-    // Antes el cartel de fila leía un `rowLockedBy` que nunca se declaró: decía siempre
-    // «sin usuario», y el toast de al lado nombraba a la persona.
-    it('al negarse el lock de la fila, sólo el cartel lo dice y nombra a quien la tiene', async () => {
-      const { wrapper, $notify } = createWrapper()
-      await openModal(wrapper)
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
-
-      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.ref_locked_by')
-      expect($notify.warning).not.toHaveBeenCalled()
-      wrapper.destroy()
-    })
-
-    it('al negarse la fila por permisos, el cartel dice eso', async () => {
-      const { wrapper, $notify } = createWrapper()
-      await openModal(wrapper)
-      LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
-
-      expect(wrapper.vm.rowReadOnlyNotice).toBe('lock.permissions_revoked')
-      expect($notify.warning).not.toHaveBeenCalled()
-      wrapper.destroy()
-    })
-
-    // El estudio lo borró otra persona: avisa OfflineIndicator (`reference-deleted`) y el
-    // editor inline se cierra. Antes se sumaban un toast «lo tiene » y el cartel.
-    it('si el estudio de la fila se borró, cierra el editor inline sin cartel ni toast', async () => {
-      const { wrapper, $notify } = createWrapper()
-      await openModal(wrapper)
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: null, reason: 'reference_deleted' })
-      wrapper.vm.editExtractedDataInPlace(0)
-      await flushPromises()
-
-      expect(wrapper.vm.rowReadOnlyNotice).toBeFalsy()
-      expect($notify.warning).not.toHaveBeenCalled()
-      const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
-      expect(emitted[emitted.length - 1][0].display).toBe(false)
       wrapper.destroy()
     })
   })
@@ -442,124 +366,6 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
   })
 })
 
-// The second lock: a row edited inline inside the open modal.
-describe('evidenceProfileForm.vue — segundo lock de la fila inline (endpoint C)', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    LockService.acquireRef.mockResolvedValue({ success: true })
-  })
-
-  it('adquiere el lock del ref_id de la fila sin soltar el del finding', async () => {
-    const { wrapper } = createWrapper()
-    await openModal(wrapper)
-    LockService.releaseRef.mockClear()
-
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-
-    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref1')
-    expect(LockService.releaseRef).not.toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('cancelar la edición inline libera sólo el lock de la fila', async () => {
-    const { wrapper } = createWrapper()
-    await openModal(wrapper)
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-
-    wrapper.vm.cancelExtractedDataInPlace()
-
-    expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
-    expect(LockService.releaseRef).not.toHaveBeenCalledWith('finding1')
-    wrapper.destroy()
-  })
-
-  it('guardar la fila inline libera su lock tras el PATCH', async () => {
-    const { wrapper } = createWrapper({
-      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
-    })
-    await openModal(wrapper)
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-
-    expect(Api.patch).toHaveBeenCalledWith('/isoqf_extracted_data/ed1/item/ref1', expect.any(Object))
-    expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
-    wrapper.destroy()
-  })
-
-  it('no PATCHea la fila cuando su lock fue rechazado', async () => {
-    const { wrapper } = createWrapper({
-      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
-    })
-    await openModal(wrapper)
-    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-    Api.patch.mockClear()
-
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-
-    expect(Api.patch).not.toHaveBeenCalled()
-    wrapper.destroy()
-  })
-})
-
-// La fila inline sigue abierta tras el fallo: el conflicto de versión es estado de ESA
-// fila, y va como cartel en ella (antes: «no se pudo guardar, intente nuevamente»).
-describe('evidenceProfileForm.vue — conflicto de versión en la fila inline', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    LockService.acquireRef.mockResolvedValue({ success: true })
-  })
-
-  const versionRejection = () => Object.assign(new Error('409'), {
-    config: { url: '/isoqf_extracted_data/ed1/item/ref1' },
-    response: { status: 409, data: { reason: 'version_conflict' } }
-  })
-
-  it('muestra el cartel en la fila, sin toast', async () => {
-    const { wrapper, $notify } = createWrapper({
-      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
-    })
-    await openModal(wrapper)
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-    Api.patch.mockRejectedValueOnce(versionRejection())
-
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-
-    expect(wrapper.vm.rowVersionConflict).toBe(true)
-    expect($notify.error).not.toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('«Traer la versión al día» cierra la edición inline y recarga', async () => {
-    const { wrapper } = createWrapper({
-      showEditExtractedDataInPlace: { display: true, item: { ...ROWS[0], column_0: 'editado' } }
-    })
-    await openModal(wrapper)
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
-    Api.patch.mockRejectedValueOnce(versionRejection())
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-
-    wrapper.vm.reloadAfterRowVersionConflict()
-
-    expect(wrapper.vm.rowVersionConflict).toBe(false)
-    expect(wrapper.emitted('getExtractedData')).toBeTruthy()
-    const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
-    expect(emitted[emitted.length - 1][0].display).toBe(false)
-    wrapper.destroy()
-  })
-})
-
 // Grisar ANTES del clic: el sondeo de la worksheet baja hasta el modal.
 describe('evidenceProfileForm.vue — filas de datos extraídos tomadas por otra persona', () => {
   beforeEach(() => {
@@ -568,9 +374,9 @@ describe('evidenceProfileForm.vue — filas de datos extraídos tomadas por otra
     LockService.acquireRef.mockResolvedValue({ success: true })
   })
 
-  it('le pasa el sondeo a la tabla embebida de methodological limitations y coherence', async () => {
+  it('le pasa el sondeo a la tabla embebida de los tres paneles', async () => {
     const locks = [{ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' }]
-    for (const type of ['methodological-limitations', 'coherence']) {
+    for (const type of ['methodological-limitations', 'coherence', 'adequacy']) {
       const { wrapper } = createWrapper({ activeRefLocks: locks })
       await wrapper.setData({ selectedOptions: { ...makeModalData(), type } })
       const table = wrapper.find('table-extracted-data-stub')
@@ -584,34 +390,6 @@ describe('evidenceProfileForm.vue — filas de datos extraídos tomadas por otra
     const { wrapper } = createWrapper()
     await wrapper.setData({ selectedOptions: { ...makeModalData(), type: 'coherence' } })
     wrapper.find('table-extracted-data-stub').vm.$emit('lock-denied')
-    expect(wrapper.emitted('lock-denied')).toBeTruthy()
-    wrapper.destroy()
-  })
-
-  it('en adequacy, sabe qué fila tiene otra persona', () => {
-    const { wrapper } = createWrapper({
-      activeRefLocks: [{ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' }]
-    })
-    expect(wrapper.vm.inPlaceRowTakenBy('ref1')).toEqual({ ref_id: 'ed1::ed::ref1', user_name: 'Ana Pérez' })
-    expect(wrapper.vm.inPlaceRowTakenBy('ref2')).toBeNull()
-    wrapper.destroy()
-  })
-
-  it('en adequacy, mi propio lock de la fila no cuenta como ajeno', () => {
-    LockService.refLocks.set('ed1::ed::ref1', 'proj1')
-    const { wrapper } = createWrapper({
-      activeRefLocks: [{ ref_id: 'ed1::ed::ref1', user_name: 'Yo' }]
-    })
-    expect(wrapper.vm.inPlaceRowTakenBy('ref1')).toBeNull()
-    wrapper.destroy()
-  })
-
-  it('en adequacy, un rechazo del lock de la fila avisa al padre', async () => {
-    const { wrapper } = createWrapper()
-    await openModal(wrapper)
-    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-    wrapper.vm.editExtractedDataInPlace(0)
-    await flushPromises()
     expect(wrapper.emitted('lock-denied')).toBeTruthy()
     wrapper.destroy()
   })

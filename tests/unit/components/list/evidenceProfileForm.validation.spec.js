@@ -43,7 +43,6 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
     show: {},
     modePrintFieldObject: [],
     mode: 'edit',
-    showEditExtractedDataInPlace: { display: false, item: {} },
     charsOfStudies: { items: [], fieldsObj: [] },
     project: { use_camelot: false, review_question: 'q', inclusion: 'i', exclusion: 'e' },
     ...propsData

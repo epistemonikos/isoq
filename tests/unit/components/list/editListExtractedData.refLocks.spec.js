@@ -60,101 +60,42 @@ function createWrapper ({ permission = true, renderModals = false } = {}) {
         : { 'b-modal': true, 'b-form-group': true, 'b-alert': true })
     }
   })
-  wrapper.vm.$refs['modal-extracted-data-data'] = { show: jest.fn(), hide: jest.fn() }
-  wrapper.vm.$refs['modal-extracted-data-remove-data-item'] = { show: jest.fn(), hide: jest.fn() }
   return { wrapper, $notify }
 }
 
-async function openEditRow (wrapper, index = 0) {
-  // Vue rebuilds $refs on every re-render, so the modal stubs have to be reinstated
+async function openRemoveRow (wrapper, refId = 'ref1') {
+  // Vue rebuilds $refs on every re-render, so the modal stub has to be reinstated
   // before each open or the component throws on $refs[...].show().
-  wrapper.vm.$refs['modal-extracted-data-data'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-extracted-data-remove-data-item'] = { show: jest.fn(), hide: jest.fn() }
-  wrapper.vm.openModalExtractedDataEditDataItem({ index, item: ROWS[index] })
+  wrapper.vm.openModalExtractedDataRemoveDataItem(refId)
   await flushPromises()
 }
 
 // Endpoint C (`PATCH /isoqf_extracted_data/<id>/item/<ref_id>`) is guarded by
-// @verify_ref_lock: the unit of the lock is THIS document's row, `<doc>::ed::<ref_id>`, and a write without
-// it is a 409 `lock_not_held` even with nobody else editing.
-describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
+// @verify_ref_lock: the unit of the lock is THIS document's row, `<doc>::ed::<ref_id>`, and a
+// write without it is a 409 `lock_not_held` even with nobody else editing.
+//
+// Editing a row happens in the row itself: its lock is covered in
+// `editListExtractedData.inline.spec.js`. Clearing a row still asks first, in a modal, and
+// that modal's lock is what this file pins.
+describe('editListExtractedData.vue — ref-lock de la fila al vaciarla (endpoint C)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     LockService.acquireRef.mockResolvedValue({ success: true })
   })
 
-  describe('al abrir el editor de una fila', () => {
-    it('adquiere el lock del ref_id de la fila usando el project_id de la lista', async () => {
+  describe('al abrir el modal de vaciar una fila', () => {
+    it('adquiere el lock de esa fila usando el project_id de la lista', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper, 1)
+      await openRemoveRow(wrapper, 'ref2')
       expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref2')
       wrapper.destroy()
     })
 
-    it('deja la fila editable cuando el lock se concede', async () => {
-      const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-      expect(wrapper.vm.isRowReadOnly).toBe(false)
-      expect(wrapper.vm.rowLockedBy).toBeNull()
-      wrapper.destroy()
-    })
-
-    // Un evento, un canal: el cartel del modal ya lo dice y se queda mientras dure.
-    it('marca read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper, $notify } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
-      expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
-      expect(wrapper.text()).toContain('lock.ref_locked_by')
-      expect($notify.warning).not.toHaveBeenCalled()
-      wrapper.destroy()
-    })
-
-    it('con permisos revocados el cartel dice eso, sin toast', async () => {
-      LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
-      const { wrapper, $notify } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
-      expect(wrapper.vm.rowLockedBy).toBeNull()
-      expect(wrapper.text()).toContain('lock.permissions_revoked')
-      expect($notify.warning).not.toHaveBeenCalled()
-      wrapper.destroy()
-    })
-
-    it('el cartel explica el motivo de granularidad del acquire', async () => {
-      LockService.acquireRef.mockResolvedValue({
-        success: false, lockedBy: 'Ana Pérez', reason: 'locked_at_another_granularity'
-      })
-      const { wrapper } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
-      expect(wrapper.text()).toContain('lock.locked_at_another_granularity')
-      wrapper.destroy()
-    })
-
-    it('no pide lock cuando el usuario no tiene permiso de escritura', async () => {
-      const { wrapper } = createWrapper({ permission: false })
-      await openEditRow(wrapper)
-      expect(LockService.acquireRef).not.toHaveBeenCalled()
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
-      wrapper.destroy()
-    })
-  })
-
-  describe('al abrir el modal de borrado de una fila', () => {
-    it('adquiere el lock de esa fila (el borrado también escribe por el endpoint C)', async () => {
-      const { wrapper } = createWrapper()
-      wrapper.vm.openModalExtractedDataRemoveDataItem({ index: 0, item: ROWS[0] })
-      await flushPromises()
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ed1::ed::ref1')
-      wrapper.destroy()
-    })
-
-    it('no borra cuando la fila quedó read-only', async () => {
+    it('no vacía cuando la fila quedó read-only', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
       const { wrapper } = createWrapper()
-      wrapper.vm.openModalExtractedDataRemoveDataItem({ index: 0, item: ROWS[0] })
-      await flushPromises()
+      await openRemoveRow(wrapper)
       Api.patch.mockClear()
 
       await wrapper.vm.extractedDataRemoveDataItem()
@@ -162,12 +103,31 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       expect(Api.patch).not.toHaveBeenCalled()
       wrapper.destroy()
     })
+
+    // Un evento, un canal: el cartel del modal ya lo dice y se queda mientras dure.
+    it('marca read-only y lo dice SÓLO en el cartel cuando el lock está tomado', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
+      const { wrapper, $notify } = createWrapper({ renderModals: true })
+      await openRemoveRow(wrapper)
+      expect(wrapper.vm.isRowReadOnly).toBe(true)
+      expect(wrapper.text()).toContain('lock.ref_locked_by')
+      expect($notify.warning).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('no pide lock cuando el usuario no tiene permiso de escritura', async () => {
+      const { wrapper } = createWrapper({ permission: false })
+      await openRemoveRow(wrapper)
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      expect(wrapper.vm.isRowReadOnly).toBe(true)
+      wrapper.destroy()
+    })
   })
 
-  describe('al cerrar el editor', () => {
+  describe('al cerrar el modal', () => {
     it('libera sólo el lock de esa fila', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       wrapper.vm.onRowEditorHidden()
       expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
       wrapper.destroy()
@@ -176,7 +136,7 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
     it('resetea el estado de lock para la próxima fila', async () => {
       LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       wrapper.vm.onRowEditorHidden()
       expect(wrapper.vm.isRowReadOnly).toBe(false)
       expect(wrapper.vm.rowLockedBy).toBeNull()
@@ -184,81 +144,71 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
     })
   })
 
-  describe('cuando se pierde el lock con el editor abierto', () => {
-    it('pasa la fila a read-only e informa quién la tiene', async () => {
-      const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-
-      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez' }
-      }))
-      await flushPromises()
-
-      expect(wrapper.vm.isRowReadOnly).toBe(true)
-      expect(wrapper.vm.rowLockedBy).toBe('Ana Pérez')
-      wrapper.destroy()
-    })
-
+  describe('cuando se pierde el lock con el modal abierto', () => {
     it('el cartel explica el motivo del latido (desalojo por granularidad)', async () => {
       const { wrapper } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
 
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
         detail: { refId: 'ed1::ed::ref1', lockedBy: 'Ana Pérez', reason: 'evicted_granularity_conflict' }
       }))
       await flushPromises()
 
+      expect(wrapper.vm.isRowReadOnly).toBe(true)
       expect(wrapper.text()).toContain('lock.evicted_granularity')
-      wrapper.destroy()
-    })
-
-    it('ignora el aviso de otra fila', async () => {
-      const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-
-      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId: 'ed1::ed::ref2', lockedBy: 'Ana Pérez' }
-      }))
-      await flushPromises()
-
-      expect(wrapper.vm.isRowReadOnly).toBe(false)
       wrapper.destroy()
     })
   })
 
   // Same three bugs as crudTables: the lock's lifetime cannot hang off BootstrapVue's
-  // modal events. This component has two modals (edit and delete) sharing one handler.
+  // modal events.
   describe('ciclo de vida del lock frente a los eventos del modal', () => {
     it('libera el lock al destruirse el componente', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
 
       wrapper.destroy()
 
       expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
     })
 
-    it('un hidden que llega después de reabrir el editor no suelta el lock vigente', async () => {
+    it('un hidden que llega después de reabrir el modal no suelta el lock vigente', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       LockService.releaseRef.mockClear()
 
       // Cerrar (el `hide` es síncrono) y reabrir antes de que llegue el `hidden`.
       wrapper.vm.onRowEditorHide({ defaultPrevented: false })
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       wrapper.vm.onRowEditorHidden()
 
       expect(LockService.releaseRef).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 
-    it('abrir dos veces sin cerrar y después cerrar una vez sí libera el lock', async () => {
-      // Un doble clic en «editar»: el segundo `show()` sobre un modal que ya se está
-      // abriendo es un no-op de BootstrapVue, así que no hay un `hidden` viejo en
-      // camino. Tomar el único `hidden` por viejo dejaba el lock colgado hasta salir.
+    it('un hidden del modal que llega con la fila ya abierta en sitio no suelta su lock', async () => {
+      // Vaciar una fila, y antes de que el modal termine de cerrarse, editar otra.
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper, 'ref1')
+      wrapper.vm.onRowEditorHide({ defaultPrevented: false })
+      wrapper.vm.startRowEdit('ref2')
+      await flushPromises()
+      LockService.releaseRef.mockClear()
+
+      wrapper.vm.onRowEditorHidden()
+
+      expect(LockService.releaseRef).not.toHaveBeenCalled()
+      expect(wrapper.vm.editingRef).toBe('ref2')
+      wrapper.destroy()
+    })
+
+    it('abrir dos veces sin cerrar y después cerrar una vez sí libera el lock', async () => {
+      // Un doble clic: el segundo `show()` sobre un modal que ya se está abriendo es un
+      // no-op de BootstrapVue, así que no hay un `hidden` viejo en camino. Tomar el único
+      // `hidden` por viejo dejaba el lock colgado hasta salir.
+      const { wrapper } = createWrapper()
+      await openRemoveRow(wrapper)
+      await openRemoveRow(wrapper)
       LockService.releaseRef.mockClear()
 
       wrapper.vm.onRowEditorHide({ defaultPrevented: false })
@@ -270,9 +220,9 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
 
     it('un cierre cancelado no deja armada la guarda', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       wrapper.vm.onRowEditorHide({ defaultPrevented: true })
-      await openEditRow(wrapper)
+      await openRemoveRow(wrapper)
       LockService.releaseRef.mockClear()
 
       wrapper.vm.onRowEditorHide({ defaultPrevented: false })
@@ -282,65 +232,15 @@ describe('editListExtractedData.vue — ref-lock por fila (endpoint C)', () => {
       wrapper.destroy()
     })
 
-    it('un cierre real sí libera el lock', async () => {
-      const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-      LockService.releaseRef.mockClear()
-
-      wrapper.vm.onRowEditorHidden()
-
-      expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
-      wrapper.destroy()
-    })
-
     it('abrir otra fila libera el lock de la anterior aunque su modal nunca se cerrara', async () => {
       const { wrapper } = createWrapper()
-      await openEditRow(wrapper, 0)
+      await openRemoveRow(wrapper, 'ref1')
       LockService.releaseRef.mockClear()
 
-      await openEditRow(wrapper, 1)
+      await openRemoveRow(wrapper, 'ref2')
 
       expect(LockService.releaseRef).toHaveBeenCalledWith('ed1::ed::ref1')
       expect(LockService.acquireRef).toHaveBeenLastCalledWith('proj1', 'ed1::ed::ref2')
-      wrapper.destroy()
-    })
-  })
-
-  describe('escrituras con la fila read-only', () => {
-    it('el guardado no PATCHea', async () => {
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper } = createWrapper()
-      await openEditRow(wrapper)
-      Api.patch.mockClear()
-
-      await wrapper.vm.saveDataExtractedData()
-
-      expect(Api.patch).not.toHaveBeenCalled()
-      wrapper.destroy()
-    })
-  })
-
-  describe('el estado read-only se ve en el modal', () => {
-    it('deshabilita el textarea y muestra quién tiene la fila', async () => {
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana Pérez' })
-      const { wrapper } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
-
-      const textareas = wrapper.findAll('b-form-textarea-stub')
-      expect(textareas.length).toBeGreaterThan(0)
-      expect(textareas.at(0).attributes('disabled')).toBeTruthy()
-      expect(wrapper.text()).toContain('lock.ref_locked_by')
-      wrapper.destroy()
-    })
-
-    it('no deshabilita nada cuando el lock se concede', async () => {
-      const { wrapper } = createWrapper({ renderModals: true })
-      await openEditRow(wrapper)
-
-      const textareas = wrapper.findAll('b-form-textarea-stub')
-      expect(textareas.length).toBeGreaterThan(0)
-      expect(textareas.at(0).attributes('disabled')).toBeFalsy()
-      expect(wrapper.text()).not.toContain('lock.ref_locked_by')
       wrapper.destroy()
     })
   })

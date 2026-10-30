@@ -42,7 +42,6 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
     show: {},
     modePrintFieldObject: [],
     mode: 'edit',
-    showEditExtractedDataInPlace: { display: false, item: {} },
     charsOfStudies: { items: [], fieldsObj: [] },
     project: { use_camelot: false, review_question: 'q', inclusion: 'i', exclusion: 'e' },
     ...propsData
@@ -226,88 +225,6 @@ describe('evidenceProfileForm.vue — continueSavingDataModal()', () => {
       '/isoqf_findings/finding1/section/cerqual',
       expect.objectContaining({ option: 1, explanation: 'e', notes: '' })
     )
-    wrapper.destroy()
-  })
-})
-
-// ─── updateContentExtractedDataItem ──────────────────────────────────────────
-
-describe('evidenceProfileForm.vue — updateContentExtractedDataItem()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('calls Api.patch with updated items replacing the matching ref_id', async () => {
-    const items = [
-      { ref_id: 'ref1', column_0: 'old text', index: 0 },
-      { ref_id: 'ref2', column_0: 'other', index: 1 }
-    ]
-    const updatedItem = { ref_id: 'ref1', column_0: 'new text', index: 0 }
-    const wrapper = makeWrapper({
-      extractedData: { id: 'ed1', items, fieldsObj: [] },
-      showEditExtractedDataInPlace: { display: true, item: updatedItem },
-      findings: { id: 'finding1' }
-    })
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-    // Granular save: only the edited row goes to the /item/<ref_id> sub-resource
-    expect(Api.patch).toHaveBeenCalledWith(
-      '/isoqf_extracted_data/ed1/item/ref1',
-      expect.objectContaining({ ref_id: 'ref1', column_0: 'new text' })
-    )
-    wrapper.destroy()
-  })
-
-  it('emits getExtractedData=true on success', async () => {
-    const wrapper = makeWrapper({
-      extractedData: { id: 'ed1', items: [{ ref_id: 'ref1', index: 0 }], fieldsObj: [] },
-      showEditExtractedDataInPlace: { display: true, item: { ref_id: 'ref1', index: 0 } }
-    })
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-    expect(wrapper.emitted('getExtractedData')).toBeTruthy()
-    expect(wrapper.emitted('getExtractedData')[0]).toEqual([true])
-    wrapper.destroy()
-  })
-
-  it('emits setShowEditExtractedDataInPlace with display=false on success', async () => {
-    const wrapper = makeWrapper({
-      extractedData: { id: 'ed1', items: [{ ref_id: 'ref1', index: 0 }], fieldsObj: [] },
-      showEditExtractedDataInPlace: { display: true, item: { ref_id: 'ref1', index: 0 } }
-    })
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-    const emitted = wrapper.emitted('setShowEditExtractedDataInPlace')
-    expect(emitted).toBeTruthy()
-    expect(emitted[emitted.length - 1][0]).toEqual({ display: false, item: {} })
-    wrapper.destroy()
-  })
-
-  // Este componente clona la fila entera y no la reconstruye, así que conserva el `_v` solo.
-  // El test no cubre este archivo: cubre que quien le pasa las filas siga mandándolas
-  // completas. El eslabón que las despoja está tres componentes más arriba
-  // (`editList.processExtractedData`), y desde acá no se ve.
-  it('reenvía el `_v` que la fila trae, sin tocarlo', async () => {
-    const item = { ref_id: 'ref1', column_0: 'nuevo', index: 0, _v: 11 }
-    const wrapper = makeWrapper({
-      extractedData: { id: 'ed1', items: [item], fieldsObj: [] },
-      showEditExtractedDataInPlace: { display: true, item },
-      findings: { id: 'finding1' }
-    })
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-    expect(Api.patch.mock.calls[0][1]._v).toBe(11)
-    wrapper.destroy()
-  })
-
-  it('calls printErrors on Api.patch failure', async () => {
-    Api.patch.mockRejectedValueOnce({ message: 'error' })
-    const wrapper = makeWrapper({
-      extractedData: { id: 'ed1', items: [{ ref_id: 'ref1', index: 0 }], fieldsObj: [] },
-      showEditExtractedDataInPlace: { display: true, item: { ref_id: 'ref1', index: 0 } }
-    })
-    const printErrorsSpy = jest.spyOn(wrapper.vm, 'printErrors').mockImplementation(() => {})
-    await wrapper.vm.updateContentExtractedDataItem('ref1')
-    await flushPromises()
-    expect(printErrorsSpy).toHaveBeenCalled()
     wrapper.destroy()
   })
 })

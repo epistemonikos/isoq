@@ -72,9 +72,7 @@ describe('editListExtractedData.vue — granular per-row save (endpoint C)', () 
       fieldsObj: [],
       items: [{ ref_id: 'ref1', authors: 'Smith 2020', column_0: 'to be cleared' }]
     })
-    await wrapper.setData({
-      buffer_extracted_data: { ...wrapper.vm.buffer_extracted_data, remove_index_item: 0 }
-    })
+    await wrapper.setData({ removeRef: 'ref1' })
 
     await wrapper.vm.extractedDataRemoveDataItem()
     await flushPromises()
@@ -120,9 +118,7 @@ describe('editListExtractedData.vue — el contador de versión por ítem', () =
       fieldsObj: [],
       items: [{ ref_id: 'ref1', authors: 'Smith 2020', column_0: 'to be cleared', _v: 3 }]
     })
-    await wrapper.setData({
-      buffer_extracted_data: { ...wrapper.vm.buffer_extracted_data, remove_index_item: 0 }
-    })
+    await wrapper.setData({ removeRef: 'ref1' })
 
     await wrapper.vm.extractedDataRemoveDataItem()
     await flushPromises()
@@ -154,9 +150,9 @@ describe('editListExtractedData.vue — el contador de versión por ítem', () =
 })
 
 /**
- * El modal se cierra al guardar (`@ok`), así que un fallo llega con el editor ya cerrado:
- * es un evento, y el aviso es un toast. Antes iba a `printErrors` del padre, que no
- * muestra nada: cualquier fallo de este guardado era mudo.
+ * Un fallo del guardado se avisa con un toast. Antes iba a `printErrors` del padre, que no
+ * muestra nada: cualquier fallo de este guardado era mudo. El editor queda abierto en la
+ * fila con el texto (ver `editListExtractedData.inline.spec.js`).
  */
 describe('editListExtractedData.vue — fallos del guardado de una fila', () => {
   beforeEach(() => jest.clearAllMocks())
@@ -210,14 +206,31 @@ describe('editListExtractedData.vue — fallos del guardado de una fila', () => 
     wrapper.destroy()
   })
 
-  // Antes no tenía ningún canal. La tabla se trae al día para que, al reabrir, la persona
-  // parta de lo que la otra persona guardó.
-  it('un conflicto de versión recarga la tabla y lo dice', async () => {
+  // Con el editor abierto en la fila, el conflicto es un estado de esa fila: cartel ahí y
+  // el texto se queda. Recargar es decisión de la persona.
+  it('un conflicto de versión al guardar deja el cartel de la fila, sin recargar ni toast', async () => {
     const { wrapper, $notify } = conNotify()
     await wrapper.setData({ buffer_extracted_data_items: { ...ROW, column_0: 'nuevo' } })
     Api.patch.mockRejectedValueOnce(rechazo(409, { reason: 'version_conflict' }))
 
     await wrapper.vm.saveDataExtractedData()
+    await flushPromises()
+
+    expect(wrapper.vm.rowVersionConflict).toBe(true)
+    expect(wrapper.emitted('getExtractedData')).toBeFalsy()
+    expect($notify.warning).not.toHaveBeenCalled()
+    expect($notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // Al vaciar una fila no hay editor abierto que muestre un cartel: se trae la tabla al día
+  // para que la persona parta de lo que guardó la otra, y se dice.
+  it('un conflicto de versión al vaciar una fila recarga la tabla y lo dice', async () => {
+    const { wrapper, $notify } = conNotify()
+    await wrapper.setData({ removeRef: 'ref1' })
+    Api.patch.mockRejectedValueOnce(rechazo(409, { reason: 'version_conflict' }))
+
+    await wrapper.vm.extractedDataRemoveDataItem()
     await flushPromises()
 
     expect($notify.warning).toHaveBeenCalledWith('version_conflict.reloaded')

@@ -35,7 +35,7 @@
             :evidenceProfileTableSettings="evidence_profile_table_settings" :references="references" mode="view"
             :list="list" :refsWithTitle="[]" :project="{}" :permission="true" :selectOptions="select_options"
             :levelConfidence="level_confidence" :findings="{}" :methAssessments="meth_assessments"
-            :extractedData="extracted_data" :showEditExtractedDataInPlace="{}" :modalData="modalData()"
+            :extractedData="extracted_data" :modalData="modalData()"
             :charsOfStudies="characteristics_studies"></evidence-profile>
           <template v-if="canViewDetails">
             <div v-if="project.use_camelot">
