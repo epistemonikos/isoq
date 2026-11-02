@@ -42,9 +42,11 @@ export default {
     // Same lost payload, opposite stories. Announcing "while you were offline" to
     // somebody who never lost connection sends them debugging the wrong thing.
     conflictMessageKey () {
-      return this.source === 'replay'
+      const key = this.source === 'replay'
         ? 'lock.ref_conflict_message'
         : 'lock.ref_conflict_message_live'
+      // `lock_not_held` carries no holder: there is nobody to name (#413).
+      return this.lockedBy ? key : `${key}_no_user`
     },
     conflictFields () {
       return Object.fromEntries(

@@ -153,6 +153,41 @@ describe('StepFour.vue — el aviso de explicación cubre el cambio de pestaña'
     expect(evt.defaultPrevented).toBe(false)
   })
 
+  /**
+   * #413: leaving a COMPLETE cell asks nothing, and it was the only exit that did not ask the
+   * forms to write either. The tab switch moved the leaf lock right away, and the autosave
+   * the radio click had scheduled 1.5 s earlier reached the server without it: 409
+   * `lock_not_held`, the text lost. Measured in the browser: DELETE of `::s1::o0`, then the
+   * PATCH of that same cell answered 409.
+   */
+  it('switching away from a complete cell keeps its lock until the pending write lands (#413)', async () => {
+    wrapper = await opened(createWrapper())
+    markIncomplete(wrapper, 0, 0, false)
+    await flushPromises()
+    LockService.releaseRef.mockClear()
+
+    let landWrite
+    const pendingWrite = new Promise(resolve => { landWrite = resolve })
+    const form = event => event.detail.pending.push(pendingWrite)
+    window.addEventListener(FLUSH_PENDING_EDITS, form)
+    const evt = tabEvent()
+    wrapper.vm.onActivateTab(1, 0, evt)
+    window.removeEventListener(FLUSH_PENDING_EDITS, form)
+    // What bootstrap-vue does once `activate-tab` was not cancelled.
+    wrapper.vm.modal.tab = 1
+    wrapper.vm.selectedMeta = 1
+    await flushPromises()
+
+    expect(evt.defaultPrevented).toBe(false)
+    expect(LockService.releaseRef).not.toHaveBeenCalledWith('R1::s0::o0')
+
+    landWrite()
+    await flushPromises()
+    await flushPromises()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('R1::s0::o0')
+  })
+
   it('"más tarde" cambia la pestaña y persiste lo que el debounce tenía agendado', async () => {
     wrapper = await opened(createWrapper())
     markIncomplete(wrapper, 0, 0)

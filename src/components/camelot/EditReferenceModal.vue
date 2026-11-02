@@ -414,6 +414,8 @@ export default {
       const open = this.localReference && this.localReference.id
       const expected = refId === open || (refId && refId === this.pendingConflictRefId)
       if (!expected) return
+      // The rescue modal below says it: OfflineIndicator's toast would repeat it (#413).
+      event.detail.claimed = true
       // Consumido: un segundo conflicto sobre el mismo estudio ya no nos incumbe.
       this.pendingConflictRefId = ''
       this.conflictData = failedData

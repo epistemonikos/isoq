@@ -96,8 +96,19 @@ export default {
     }
   },
   methods: {
+    /**
+     * The toast is the fallback for a conflict no open editor shows. An editor that opens
+     * its rescue modal sets `detail.claimed` (#413: both appeared at once). This chunk is
+     * lazy, so its listener may run before the editor's: the decision waits for the end
+     * of the dispatch, which is synchronous — every listener has run by the next microtask.
+     */
     handleRefLockConflict (event) {
       const detail = event.detail || {}
+      Promise.resolve().then(() => {
+        if (!detail.claimed) this.toastRefLockConflict(detail)
+      })
+    },
+    toastRefLockConflict (detail) {
       const lockedBy = detail.lockedBy
       // Two failures that look identical in the payload and read as opposites to the
       // user: a replay of something written offline, versus a request that just lost

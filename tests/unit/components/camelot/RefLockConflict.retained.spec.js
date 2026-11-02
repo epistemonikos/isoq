@@ -138,6 +138,50 @@ describe('canal de conflicto — el 409 que llega después del cierre', () => {
     wrapper.destroy()
   })
 
+  /**
+   * One event, one channel (#413): the editor that opens the rescue modal says so on the
+   * event, so the global toast in OfflineIndicator stays quiet. Megan got both at once.
+   */
+  const claimedBy = (refId) => {
+    const event = new CustomEvent('ref-lock-conflict', {
+      detail: { refId, failedData: { texto: 'x' }, lockedBy: '', source: 'live' }
+    })
+    window.dispatchEvent(event)
+    return event.detail.claimed === true
+  }
+
+  it('Paso 4: claims the conflict of the open study, and only that one (#413)', async () => {
+    const wrapper = shallowMount(StepFour, {
+      localVue,
+      propsData: { type: 'isoqf_assessments', references: [], canEdit: true },
+      mocks: commonMocks
+    })
+    await wrapper.setData({ refId: 'R1', isModalOpen: true })
+    wrapper.vm.$refs.conflictModal = { show: jest.fn() }
+    await flushPromises()
+
+    expect(claimedBy('R9::s0::o0')).toBe(false)
+    expect(claimedBy('R1::s0::o0')).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('Paso 3: claims the conflict of the open study, and only that one (#413)', async () => {
+    const wrapper = shallowMount(EditReferenceModal, {
+      localVue,
+      propsData: {
+        reference: { id: 'R1', authors: 'Autor 2020' },
+        charsData: { id: 'chars1', items: [], fields: [] },
+        camelot: {}
+      },
+      mocks: commonMocks
+    })
+    await flushPromises()
+
+    expect(claimedBy('R9')).toBe(false)
+    expect(claimedBy('R1')).toBe(true)
+    wrapper.destroy()
+  })
+
   it('Paso 4: un conflicto de celda (clave compuesta) abre el rescate', async () => {
     const wrapper = shallowMount(StepFour, {
       localVue,

@@ -55,6 +55,32 @@ describe('RefLockConflictModal.vue', () => {
     wrapper.destroy()
   })
 
+  // #413: a write without its lock (409 `lock_not_held`) has nobody to name, and the modal
+  // read " took over this study while you had it open" — blank name, and a story that did
+  // not happen: nobody took anything.
+  it('does not blame anybody on a live conflict without a holder (#413)', () => {
+    const wrapper = shallowMount(RefLockConflictModal, {
+      localVue,
+      propsData: { ...mockConflictData, lockedBy: '', source: 'live' },
+      mocks: { $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key }
+    })
+    const text = wrapper.text()
+    expect(text).toContain('lock.ref_conflict_message_live_no_user')
+    expect(text).not.toContain('lock.ref_conflict_message_live ')
+    wrapper.destroy()
+  })
+
+  // Same blank name on the replay path: the queue passes `result.lockedBy || ''`.
+  it('does not blame anybody on a replay conflict without a holder', () => {
+    const wrapper = shallowMount(RefLockConflictModal, {
+      localVue,
+      propsData: { ...mockConflictData, lockedBy: '', source: 'replay' },
+      mocks: { $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key }
+    })
+    expect(wrapper.text()).toContain('lock.ref_conflict_message_no_user')
+    wrapper.destroy()
+  })
+
   it('emite "closed" al cerrar', () => {
     const wrapper = shallowMount(RefLockConflictModal, {
       localVue,
