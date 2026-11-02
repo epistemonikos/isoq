@@ -1049,7 +1049,12 @@ export default {
         this.bypassTabGuard = false
         return
       }
-      if (!this.incompleteMetasInStage.includes(prevIndex)) return
+      if (!this.incompleteMetasInStage.includes(prevIndex)) {
+        // Nothing to ask, but the cell may still have its autosave scheduled: it has to be
+        // on its way, and tracked, before `syncLeafLock` releases the cell's lock (#413).
+        this.flushBeforeLeaving()
+        return
+      }
       bvEvt.preventDefault()
       this.guardExplanation(() => {
         this.bypassTabGuard = true
@@ -1647,6 +1652,8 @@ export default {
       const expected = base === this.refId ||
         (this.pendingConflictRefId && base === this.pendingConflictRefId)
       if (!expected) return
+      // The rescue modal below says it: OfflineIndicator's toast would repeat it (#413).
+      event.detail.claimed = true
       this.pendingConflictRefId = ''
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy

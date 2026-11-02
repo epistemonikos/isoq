@@ -283,6 +283,8 @@
     "ref_conflict_title": "Alterações não salvas",
     "ref_conflict_message": "Enquanto você estava desconectado, {user} editou este estudo. Suas alterações não foram salvas. Você pode copiá-las e aplicá-las manualmente.",
     "ref_conflict_message_live": "{user} assumiu este estudo enquanto você o mantinha aberto. Suas alterações não foram salvas. Você pode copiá-las e aplicá-las manualmente.",
+    "ref_conflict_message_no_user": "Uma alteração feita sem conexão não pôde ser salva porque este estudo foi editado em outro lugar. Você pode copiá-la e aplicá-la manualmente.",
+    "ref_conflict_message_live_no_user": "Seu bloqueio de edição deste estudo foi liberado antes que sua alteração chegasse ao servidor, por isso ela não foi salva. Você pode copiá-la e aplicá-la manualmente.",
     "ref_conflict_copy_field": "Copiar",
     "ref_conflict_close": "Fechar",
     "permissions_revoked": "Seu acesso a este projeto mudou para somente leitura.",

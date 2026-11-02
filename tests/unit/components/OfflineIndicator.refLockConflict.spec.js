@@ -28,12 +28,13 @@ function createWrapper () {
 describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', () => {
   afterEach(() => jest.restoreAllMocks())
 
-  it('avisa quién tomó la entidad cuando el conflicto trae usuario', () => {
+  it('avisa quién tomó la entidad cuando el conflicto trae usuario', async () => {
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
       detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: 'Ana Pérez', source: 'replay' }
     }))
+    await Promise.resolve()
 
     expect(toast).toHaveBeenCalledWith(
       'offline.syncConflict',
@@ -42,12 +43,13 @@ describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', ()
     wrapper.destroy()
   })
 
-  it('usa el mensaje sin usuario cuando el rechazo fue lock_not_held (locked_by nulo)', () => {
+  it('usa el mensaje sin usuario cuando el rechazo fue lock_not_held (locked_by nulo)', async () => {
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
       detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: '', source: 'replay' }
     }))
+    await Promise.resolve()
 
     expect(toast).toHaveBeenCalledWith(
       'offline.syncConflictNoUser',
@@ -59,12 +61,13 @@ describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', ()
   // The offline wording ("a change you made offline") is a lie for a request that
   // failed live: the user was online, somebody simply took the entity first. Reported
   // from the field as "I don't think I was working offline".
-  it('usa el texto de conflicto en vivo cuando el 409 no vino de la cola offline', () => {
+  it('usa el texto de conflicto en vivo cuando el 409 no vino de la cola offline', async () => {
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
       detail: { refId: 'ref1', failedData: {}, lockedBy: 'Ana Pérez', source: 'live' }
     }))
+    await Promise.resolve()
 
     expect(toast).toHaveBeenCalledWith(
       'lock.live_conflict',
@@ -73,18 +76,54 @@ describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', ()
     wrapper.destroy()
   })
 
-  it('usa el texto en vivo sin usuario cuando el 409 no trae quién lo tomó', () => {
+  it('usa el texto en vivo sin usuario cuando el 409 no trae quién lo tomó', async () => {
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
       detail: { refId: 'ref1', failedData: {}, lockedBy: '', source: 'live' }
     }))
+    await Promise.resolve()
 
     expect(toast).toHaveBeenCalledWith(
       'lock.live_conflict_no_user',
       expect.objectContaining({ title: 'lock.live_conflict_title' })
     )
     wrapper.destroy()
+  })
+
+  /**
+   * One event, one channel (#413): an open editor that shows the rescue modal claims the
+   * event, and then the toast would only repeat it. OfflineIndicator is a lazy chunk, so it
+   * may be listening before OR after the editor: the claim has to win in either order.
+   */
+  describe('a conflict an open editor already shows (#413)', () => {
+    const claim = event => { event.detail.claimed = true }
+
+    it('does not toast when the editor listens after the indicator', async () => {
+      const { wrapper, toast } = createWrapper()
+      window.addEventListener('ref-lock-conflict', claim)
+
+      window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+        detail: { refId: 'R1::s0::o0', failedData: {}, lockedBy: '', source: 'live' }
+      }))
+      await Promise.resolve()
+
+      window.removeEventListener('ref-lock-conflict', claim)
+      expect(toast).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    it('still toasts a conflict nobody claimed', async () => {
+      const { wrapper, toast } = createWrapper()
+
+      window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+        detail: { refId: 'R1::s0::o0', failedData: {}, lockedBy: '', source: 'live' }
+      }))
+      await Promise.resolve()
+
+      expect(toast).toHaveBeenCalledWith('lock.live_conflict_no_user', expect.any(Object))
+      wrapper.destroy()
+    })
   })
 
   it('deja de escuchar al destruirse', () => {
