@@ -45,11 +45,15 @@ function mountTable (charsOfStudies = makeChars()) {
 const headerTexts = (wrapper) => wrapper.findAll('thead th').wrappers.map(w => w.text())
 const cellTexts = (wrapper) => wrapper.findAll('tbody td').wrappers.map(w => w.text())
 
-function filterCheckbox (wrapper, label) {
-  const filter = wrapper.find('.table-column-filter')
+// Like a person does it: open the filter, (un)check the column, press Apply (#412).
+async function setColumnVisible (wrapper, label, visible) {
+  const filter = wrapper.findComponent(TableColumnFilter)
+  filter.findComponent({ name: 'BDropdown' }).vm.visible = true
+  await wrapper.vm.$nextTick()
   const box = filter.findAll('.custom-checkbox').wrappers.find(w => w.text() === label)
-  if (!box) throw new Error(`No hay casilla «${label}» en el filtro`)
-  return box.find('input')
+  if (!box) throw new Error(`No "${label}" checkbox in the filter`)
+  await box.find('input').setChecked(visible)
+  await filter.find('[data-testid="column-filter-apply"]').trigger('click')
 }
 
 describe('CharacteristicsTable.vue — filtro de columnas', () => {
@@ -77,9 +81,25 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
     expect(cellTexts(wrapper)).toEqual(['Chen 2021', 'Chile', 'research-data', 'stake-data'])
   })
 
+  it('leaves the table as it is until Apply is pressed (#412)', async () => {
+    const wrapper = mountTable()
+    const filter = wrapper.findComponent(TableColumnFilter)
+    filter.findComponent({ name: 'BDropdown' }).vm.visible = true
+    await wrapper.vm.$nextTick()
+    const country = filter.findAll('.custom-checkbox').wrappers.find(w => w.text() === 'Country')
+
+    await country.find('input').setChecked(false)
+    expect(headerTexts(wrapper)).toContain('Country')
+    expect(cellTexts(wrapper)).toContain('Chile')
+
+    await filter.find('[data-testid="column-filter-apply"]').trigger('click')
+    expect(headerTexts(wrapper)).not.toContain('Country')
+    expect(cellTexts(wrapper)).not.toContain('Chile')
+  })
+
   it('ocultar una columna propia saca su encabezado y su celda', async () => {
     const wrapper = mountTable()
-    await filterCheckbox(wrapper, 'Country').setChecked(false)
+    await setColumnVisible(wrapper, 'Country', false)
 
     expect(headerTexts(wrapper)).not.toContain('Country')
     expect(cellTexts(wrapper)).not.toContain('Chile')
@@ -90,7 +110,7 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
     await wrapper.find('[data-testid="toggle-comments"]').trigger('click')
     expect(cellTexts(wrapper)).toContain('research-comment')
 
-    await filterCheckbox(wrapper, RESEARCH).setChecked(false)
+    await setColumnVisible(wrapper, RESEARCH, false)
 
     expect(headerTexts(wrapper)).not.toContain(RESEARCH)
     expect(cellTexts(wrapper)).not.toContain('research-data')
@@ -104,8 +124,8 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
   it('volver a mostrar el dominio repone sus comments si siguen activos', async () => {
     const wrapper = mountTable()
     await wrapper.find('[data-testid="toggle-comments"]').trigger('click')
-    await filterCheckbox(wrapper, RESEARCH).setChecked(false)
-    await filterCheckbox(wrapper, RESEARCH).setChecked(true)
+    await setColumnVisible(wrapper, RESEARCH, false)
+    await setColumnVisible(wrapper, RESEARCH, true)
 
     expect(cellTexts(wrapper)).toEqual(expect.arrayContaining(['research-data', 'research-comment']))
   })
@@ -115,8 +135,8 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
     const toggle = () => wrapper.find('[data-testid="toggle-comments"]')
     expect(toggle().attributes('disabled')).toBeUndefined()
 
-    await filterCheckbox(wrapper, RESEARCH).setChecked(false)
-    await filterCheckbox(wrapper, STAKEHOLDERS).setChecked(false)
+    await setColumnVisible(wrapper, RESEARCH, false)
+    await setColumnVisible(wrapper, STAKEHOLDERS, false)
 
     expect(toggle().attributes('disabled')).toBe('disabled')
     // Only the custom column is left, still with "Extracted data" under its name.
@@ -128,7 +148,7 @@ describe('CharacteristicsTable.vue — filtro de columnas', () => {
   it('una columna que aparece con la tabla abierta entra visible', async () => {
     const chars = makeChars()
     const wrapper = mountTable(chars)
-    await filterCheckbox(wrapper, 'Country').setChecked(false)
+    await setColumnVisible(wrapper, 'Country', false)
 
     await wrapper.setProps({
       charsOfStudies: {

@@ -6,6 +6,9 @@
     v-bind="modalSafeDropdown"
     class="table-column-filter"
     ref="dropdown"
+    @show="startDraft"
+    @hide="finishDraft"
+    @keydown.native.capture.esc="discardOnClose = true"
   >
     <template #button-content>
       {{ $t('common.filter_columns') }}
@@ -33,6 +36,18 @@
           {{ column.label }}
         </b-form-checkbox>
       </div>
+
+      <!-- #412: its own Apply, so nobody reaches for the modal's Save to confirm the filter. -->
+      <div class="table-column-filter__footer d-flex justify-content-end pt-2">
+        <b-button
+          variant="primary"
+          size="sm"
+          data-testid="column-filter-apply"
+          @click="apply"
+        >
+          {{ $t('common.apply') }}
+        </b-button>
+      </div>
     </b-dropdown-form>
   </b-dropdown>
 </template>
@@ -40,13 +55,19 @@
 <script>
 import { MODAL_SAFE_DROPDOWN, MODAL_SAFE_MENU_STYLE } from '@/utils/modalSafeDropdown'
 
+const sameKeys = (a, b) => a.length === b.length && a.every(k => b.includes(k))
+
 export default {
   name: 'TableColumnFilter',
   data () {
     return {
       // Also used inside scrollable modals (Adequacy, Relevance): see #397.
       modalSafeDropdown: MODAL_SAFE_DROPDOWN,
-      menuStyle: { minWidth: '250px', ...MODAL_SAFE_MENU_STYLE }
+      menuStyle: { minWidth: '250px', ...MODAL_SAFE_MENU_STYLE },
+      // #412: while the menu is open the choice is a draft; it reaches the table
+      // when the menu closes (Apply or a click outside), and Esc throws it away.
+      draft: null,
+      discardOnClose: false
     }
   },
   props: {
@@ -68,10 +89,10 @@ export default {
   computed: {
     localVisible: {
       get () {
-        return this.value
+        return this.draft || this.value
       },
       set (newVal) {
-        this.$emit('input', newVal)
+        this.draft = newVal
       }
     },
     validVisibleKeys () {
@@ -89,6 +110,22 @@ export default {
     }
   },
   methods: {
+    startDraft () {
+      this.draft = [...this.value]
+      this.discardOnClose = false
+    },
+    finishDraft () {
+      const draft = this.draft
+      const discard = this.discardOnClose
+      this.draft = null
+      this.discardOnClose = false
+      if (discard || !draft || sameKeys(draft, this.value)) return
+      this.$emit('input', draft)
+    },
+    apply () {
+      // Closing is what applies: Apply and a click outside take the same path.
+      this.$refs.dropdown.hide(true)
+    },
     isColumnVisible (key) {
       return this.localVisible.includes(key)
     },
@@ -142,5 +179,18 @@ export default {
 /* Prevent dropdown from closing when clicking inside form */
 .dropdown-menu {
   padding: 0;
+}
+
+/* The menu scrolls inside itself (MODAL_SAFE_MENU_STYLE): keep Apply in view on a long list. */
+.table-column-filter__footer {
+  position: sticky;
+  bottom: -0.5rem; /* cover the form's own bottom padding (p-2) */
+  margin-bottom: -0.5rem;
+  padding-bottom: 0.5rem;
+  background-color: #fff;
+}
+
+html[data-theme="dark"] .table-column-filter__footer {
+  background-color: #2a2a2a; /* .dropdown-menu in dark mode, main.scss */
 }
 </style>
