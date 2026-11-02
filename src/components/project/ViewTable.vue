@@ -255,7 +255,11 @@
         {{ $t('soqf_table.delete_warning') }}
       </p>
       <p>
-        <span v-html="$t('soqf_table.confirm_remove', { name: this.editFindingName.name })"></span>
+        <!-- Not v-html: the name is written by any collaborator, and vue-i18n 8 does not escape
+             parameters. Component interpolation keeps it as text. -->
+        <i18n path="soqf_table.confirm_remove" tag="span">
+          <b place="name">{{ editFindingName.name }}</b>
+        </i18n>
       </p>
     </b-modal>
 

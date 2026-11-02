@@ -902,7 +902,7 @@
     "remove_finding": "Remove summarised review finding",
     "delete_warning_revert": "Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to \"Private\" because it will no longer meet the requirements for being published to the iSoQ database.",
     "delete_warning": "Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.",
-    "confirm_remove": "Confirm you want to remove <b>{name}</b> from the iSoQ table?",
+    "confirm_remove": "Confirm you want to remove {name} from the iSoQ table?",
     "references": "References",
     "remove_ref_warning": "Warning! By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.",
     "author_year_title": "Author(s), Year, Title",
