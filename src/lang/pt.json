@@ -902,7 +902,7 @@
     "remove_finding": "Remover descoberta de revisão resumida",
     "delete_warning_revert": "Aviso! Excluir esta descoberta também excluirá sua Planilha de Avaliação GRADE-CERQual associada e reverterá seu projeto para \"Privado\" porque não atenderá mais aos requisitos para ser publicado no banco de dados iSoQ.",
     "delete_warning": "Aviso! Excluir esta descoberta também excluirá sua Planilha de Avaliação GRADE-CERQual associada.",
-    "confirm_remove": "Confirma que deseja remover <b>{name}</b> da tabela iSoQ?",
+    "confirm_remove": "Confirma que deseja remover {name} da tabela iSoQ?",
     "references": "Referências",
     "remove_ref_warning": "Aviso! Ao remover uma referência, você está modificando a base de evidências subjacente para esta descoberta e precisará revisar suas avaliações GRADE-CERQual. Se você remover a referência, os dados extraídos que você inseriu deste estudo para apoiar esta descoberta serão excluídos da Planilha de Avaliação GRADE-CERQual.",
     "author_year_title": "Autor(es), Ano, Título",

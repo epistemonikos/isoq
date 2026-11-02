@@ -902,7 +902,7 @@
     "remove_finding": "Eliminar hallazgo de revisión resumido",
     "delete_warning_revert": "¡Advertencia! Eliminar este hallazgo también eliminará su Hoja de Trabajo de Evaluación GRADE-CERQual asociada y revertirá su proyecto a \"Privado\" porque ya no cumplirá con los requisitos para ser publicado en la base de datos de iSoQ.",
     "delete_warning": "¡Advertencia! Eliminar este hallazgo también eliminará su Hoja de Trabajo de Evaluación GRADE-CERQual asociada.",
-    "confirm_remove": "¿Confirma que desea eliminar <b>{name}</b> de la tabla iSoQ?",
+    "confirm_remove": "¿Confirma que desea eliminar {name} de la tabla iSoQ?",
     "references": "Referencias",
     "remove_ref_warning": "¡Advertencia! Al eliminar una referencia está modificando la base de evidencia subyacente para este hallazgo y necesitará revisar sus evaluaciones GRADE-CERQual. Si elimina la referencia, los datos extraídos que ingresó de este estudio para apoyar este hallazgo serán eliminados de la Hoja de Trabajo de Evaluación GRADE-CERQual.",
     "author_year_title": "Autor(es), Año, Título",
