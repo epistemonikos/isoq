@@ -217,6 +217,46 @@ body {
   box-shadow: 0 0 0 0.2rem var(--red-btn-shadow);
 }
 
+// Disabled state. Bootstrap's `.btn-*:disabled` (two selectors) outranks the overrides above
+// and brings back its own palette: a disabled success button turned green, outline-info turned
+// teal. Keep our colours and let Bootstrap's opacity (.65) do the fading. These rules come
+// after the :hover ones on purpose: a disabled button matches :hover too, and must not fill in.
+.btn-info:disabled,
+.btn-info.disabled,
+.btn-primary:disabled,
+.btn-primary.disabled,
+.btn-success:disabled,
+.btn-success.disabled {
+  color: #fff;
+  background-color: var(--blue-primary);
+  border-color: var(--blue-primary);
+}
+
+.btn-outline-info:disabled,
+.btn-outline-info.disabled,
+.btn-outline-primary:disabled,
+.btn-outline-primary.disabled,
+.btn-outline-success:disabled,
+.btn-outline-success.disabled {
+  color: var(--blue-primary);
+  border-color: var(--blue-primary);
+  background-color: transparent;
+}
+
+.btn-danger:disabled,
+.btn-danger.disabled {
+  color: #fff;
+  background-color: var(--red-btn-bg);
+  border-color: var(--red-btn-bg);
+}
+
+.btn-outline-danger:disabled,
+.btn-outline-danger.disabled {
+  color: var(--red-primary);
+  border-color: var(--red-primary);
+  background-color: transparent;
+}
+
 .tabs.link-steps.nowrap {
   flex-wrap: nowrap;
 }
