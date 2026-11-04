@@ -75,6 +75,7 @@ export function isFindingComplete (list) {
     nonBlank(list.name) &&
     cerqual.option !== undefined && cerqual.option !== null &&
     nonBlank(cerqual.explanation) &&
+    // JS needs an array where Python only checks truthiness; Mongo stores an array or nothing.
     Array.isArray(list.references) && list.references.length > 0
   )
 }
@@ -94,13 +95,22 @@ export function projectMissingFields (project) {
   return R1_FIELDS.filter(f => missing.includes(f))
 }
 
+// Mirror of the server's _as_bool(value, default=True) for `private`: a boolean as is,
+// any string is private only if it equals 'true' (edges stripped, lower-cased), anything
+// else is private.
+function privateAsBool (value) {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') return stripEdges(value).toLowerCase() === 'true'
+  return true
+}
+
 // Mirror of the server's is_project_public: public_type wins; otherwise `private` as boolean.
 export function isProjectPublic (project) {
   if (!isObject(project)) return false
   if (project.public_type !== undefined && project.public_type !== null) {
     return project.public_type !== 'private'
   }
-  return asAnswer(project.private) === false
+  return !privateAsBool(project.private)
 }
 
 // R4: visible = complete and in the published snapshot; no snapshot (absent or empty)

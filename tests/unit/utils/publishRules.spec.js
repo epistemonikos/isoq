@@ -2,6 +2,7 @@ import cases from '../fixtures/publish_rules_cases.json'
 import {
   SPACE_CLASS,
   hasMinLetters,
+  countLetters,
   asAnswer,
   validEmail,
   validUrlOrDoi,
@@ -57,6 +58,26 @@ describe('publishRules JS-side', () => {
     expect(isProjectPublic({ private: 'false' })).toBe(true)
     expect(isProjectPublic({})).toBe(false)
     expect(isProjectPublic(null)).toBe(false)
+  })
+
+  test('letters are counted by code point', () => {
+    const emoji = '\u{1F600}\u{1F600}\u{1F600}'
+    expect(countLetters(emoji)).toBe(3)
+    expect(hasMinLetters(emoji)).toBe(true)
+  })
+
+  test('isProjectPublic mirrors the server _as_bool for private (public_type absent)', () => {
+    const pub = v => isProjectPublic({ private: v })
+    expect(pub('False')).toBe(true)
+    expect(pub(' false ')).toBe(true)
+    expect(pub('')).toBe(true)
+    expect(pub('no')).toBe(true)
+    expect(pub('TRUE')).toBe(false)
+    expect(pub(' true ')).toBe(false)
+    expect(pub(1)).toBe(false)
+    expect(pub(null)).toBe(false)
+    expect(pub(true)).toBe(false)
+    expect(pub(false)).toBe(true)
   })
 
   describe('isFindingVisible', () => {
