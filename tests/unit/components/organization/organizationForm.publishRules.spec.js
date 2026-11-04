@@ -1,0 +1,210 @@
+import { mount, createLocalVue } from '@vue/test-utils'
+import BootstrapVue from 'bootstrap-vue'
+import organizationForm from '@/components/organization/organizationForm.vue'
+import Project from '@/utils/project'
+import Api from '@/utils/Api'
+
+jest.mock('@/utils/Api', () => ({
+  get: jest.fn().mockResolvedValue({ data: [] }),
+  post: jest.fn().mockResolvedValue({ data: { status: true } }),
+  patch: jest.fn().mockResolvedValue({ data: {} })
+}))
+
+// The real publishRules module is used on purpose: this spec checks the form follows it.
+jest.mock('@/utils/project', () => ({
+  update: jest.fn(),
+  create: jest.fn()
+}))
+
+const localVue = createLocalVue()
+localVue.use(BootstrapVue)
+
+const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+
+const COMPLETE = {
+  id: 'p1',
+  name: 'A title',
+  authors: 'Smith J',
+  author: 'Smith John',
+  author_email: 'smith@example.org',
+  review_question: 'What is it?',
+  published_status: false,
+  url_doi: '',
+  complete_by_author: true,
+  lists_authors: '',
+  license_type: 'CC-BY-NC-ND',
+  public_type: 'fully',
+  no_personal_data_confirmed: true,
+  use_camelot: false
+}
+
+function build (formData = {}) {
+  const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const wrapper = mount(organizationForm, {
+    localVue,
+    attachTo: document.body,
+    propsData: { formData: { ...COMPLETE, ...formData }, canEdit: true },
+    mocks: {
+      $t: (key) => key,
+      $route: { name: 'viewProject', params: { id: 'p1', org_id: 'org1' }, query: {} },
+      $router: { push: jest.fn() },
+      $notify
+    },
+    stubs: { videoHelp: true }
+  })
+  return { wrapper, $notify }
+}
+
+const saveButton = (wrapper) => wrapper.findAll('button').wrappers.find(b => b.text() === 'common.save')
+
+describe('organizationForm.vue — shared publishing rules', () => {
+  let wrapper
+  afterEach(() => {
+    if (wrapper) wrapper.destroy()
+    wrapper = null
+    jest.clearAllMocks()
+  })
+
+  test('url_doi blur marks an invalid value only when published_status is yes and public', async () => {
+    ;({ wrapper } = build({ published_status: true, url_doi: 'not a url' }))
+    const input = wrapper.find('#select-project-list-url-doi')
+    await input.trigger('blur')
+    expect(wrapper.vm.state.url_doi).toBe(false)
+    expect(input.classes()).toContain('is-invalid')
+
+    await input.setValue('https://example.org/review')
+    await input.trigger('blur')
+    expect(wrapper.vm.state.url_doi).toBeNull()
+    expect(input.classes()).not.toContain('is-invalid')
+  })
+
+  test('url_doi blur never marks a private project', async () => {
+    ;({ wrapper } = build({ published_status: true, url_doi: 'not a url', public_type: 'private' }))
+    await wrapper.find('#select-project-list-url-doi').trigger('blur')
+    expect(wrapper.vm.state.url_doi).toBeNull()
+  })
+
+  test('a title of two letters disables Save only when public', async () => {
+    ;({ wrapper } = build({ name: 'ab' }))
+    expect(saveButton(wrapper).attributes('disabled')).toBeTruthy()
+    await wrapper.setProps({ formData: { ...COMPLETE, name: 'ab', public_type: 'private' } })
+    expect(saveButton(wrapper).attributes('disabled')).toBeFalsy()
+    await wrapper.setProps({ formData: { ...COMPLETE, name: '  ', public_type: 'private' } })
+    expect(saveButton(wrapper).attributes('disabled')).toBeTruthy()
+  })
+
+  test('complete_by_author unanswered is marked when public', async () => {
+    ;({ wrapper } = build({ complete_by_author: null }))
+    await wrapper.find('#select-project-list-completed-by-author-status').trigger('blur')
+    expect(wrapper.vm.state.complete_by_author).toBe(false)
+    expect(wrapper.text()).toContain('project.validation.complete_by_author_required')
+    const feedback = wrapper.findAll('.invalid-feedback').wrappers
+      .find(f => f.text() === 'project.validation.complete_by_author_required')
+    expect(feedback.isVisible()).toBe(true)
+    expect(feedback.classes()).toContain('d-block')
+  })
+
+  test('the revert-to-private modal opens for any rule that stops holding, e.g. an email that becomes invalid', async () => {
+    ;({ wrapper } = build())
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    wrapper.vm.formData.author_email = 'broken'
+    wrapper.vm.save()
+    expect(show).toHaveBeenCalledWith('publish-warning-modal')
+  })
+
+  test('the revert-to-private modal stays closed when the project was private', () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    const executeSave = jest.spyOn(wrapper.vm, 'executeSave').mockResolvedValue()
+    wrapper.vm.formData.author_email = 'broken'
+    wrapper.vm.save()
+    expect(executeSave).toHaveBeenCalled()
+  })
+
+  test('cancel restores every changed field, licence included', async () => {
+    ;({ wrapper } = build())
+    const form = wrapper.vm.formData
+    form.author_email = 'broken'
+    form.name = 'Other'
+    form.license_type = 'CC-BY'
+    form.description = 'changed'
+    form.public_type = 'private'
+    wrapper.vm.pendingData = { ...form }
+    wrapper.vm.handlePublishWarningCancel()
+    expect(form.author_email).toBe(COMPLETE.author_email)
+    expect(form.name).toBe(COMPLETE.name)
+    expect(form.license_type).toBe('CC-BY-NC-ND')
+    expect(form.public_type).toBe('fully')
+    expect(form.description).toBeUndefined()
+    expect(wrapper.vm.pendingData).toBeNull()
+  })
+
+  test('a server publish_requirements_not_met marks missing_fields', async () => {
+    ;({ wrapper } = build())
+    const { $notify } = { $notify: wrapper.vm.$notify }
+    Project.update.mockRejectedValue({
+      response: { status: 400, data: { status: false, reason: 'publish_requirements_not_met', missing_fields: ['authors', 'license_type'], message: 'x' } }
+    })
+    await wrapper.vm.executeSave({ ...COMPLETE })
+    expect(wrapper.vm.state.authors).toBe(false)
+    expect(wrapper.vm.state.license).toBe(false)
+    expect($notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+    await flush()
+    expect(wrapper.find('#input-project-authors').classes()).toContain('is-invalid')
+  })
+
+  test('a personal-data 400 is shown with its i18n key', async () => {
+    ;({ wrapper } = build())
+    Project.update.mockRejectedValue({
+      response: { status: 400, data: { status: false, reason: 'personal_data_confirmation_required', message: 'raw server text' } }
+    })
+    await wrapper.vm.executeSave({ ...COMPLETE })
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('publish.confirm_no_personal_data_required')
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledTimes(1)
+    expect(wrapper.vm.state.no_personal_data_confirmed).toBe(false)
+  })
+
+  test('a failed Project.update after a methodology change does not reload', async () => {
+    ;({ wrapper } = build({ use_camelot: true }))
+    const reload = jest.fn()
+    const original = window.location
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...original, reload } })
+    try {
+      Api.get.mockResolvedValueOnce({ data: {} })
+      Api.post.mockResolvedValueOnce({ data: { status: true } })
+      Project.update.mockResolvedValue({
+        data: { status: false, message: 'project.notifications.publish_missing_fields', state: { authors: false } }
+      })
+      wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+      const hide = jest.spyOn(wrapper.vm.$bvModal, 'hide')
+      await wrapper.vm.confirmCamelotToggle()
+      expect(wrapper.vm.state.authors).toBe(false)
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+      expect(hide).toHaveBeenCalledWith('camelot-toggle-modal')
+      expect(wrapper.vm.$router.push).not.toHaveBeenCalled()
+      expect(reload).not.toHaveBeenCalled()
+      expect(wrapper.vm.isMigrating).toBe(false)
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: original })
+    }
+  })
+
+  test('a rejected can_publish shows an error and ends the save', async () => {
+    ;({ wrapper } = build())
+    Project.update.mockRejectedValue({
+      response: { status: 500, data: { message: 'can_publish unavailable' } }
+    })
+    await expect(wrapper.vm.executeSave({ ...COMPLETE })).resolves.toBeUndefined()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('can_publish unavailable')
+    expect(wrapper.vm.$notify.success).not.toHaveBeenCalled()
+  })
+
+  test('a project with complete_by_author stored as the string false requires lists_authors', async () => {
+    ;({ wrapper } = build({ complete_by_author: 'false', lists_authors: '' }))
+    const input = wrapper.find('#input-project-list-authors')
+    expect(input.exists()).toBe(true)
+    await input.trigger('blur')
+    expect(wrapper.vm.state.lists_authors).toBe(false)
+    expect(input.classes()).toContain('is-invalid')
+  })
+})

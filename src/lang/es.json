@@ -348,14 +348,15 @@
       "publish_missing_fields": "Su solicitud de publicación en la base de datos de iSoQ ha sido denegada porque falta información. Por favor, complete los campos en rojo a continuación, o seleccione “Privado” en “Visibilidad en la base de datos de iSoQ” para continuar."
     },
     "validation": {
-      "title_min_length": "El proyecto debe tener un título con al menos 3 caracteres",
-      "at_least_one_author": "El proyecto debe tener al menos un autor",
-      "corresponding_author_min_length": "El proyecto debe tener un autor correspondiente con al menos 3 caracteres",
+      "title_min_length": "El proyecto debe tener un título con al menos 3 letras",
+      "at_least_one_author": "El proyecto debe tener autores con al menos 3 letras",
+      "corresponding_author_min_length": "El proyecto debe tener un autor correspondiente con al menos 3 letras",
       "valid_email": "El proyecto debe tener un correo electrónico de autor válido",
-      "question_min_length": "El proyecto debe tener una pregunta de revisión con al menos 3 caracteres",
-      "valid_url_doi": "El proyecto debe tener una URL o DOI válido",
-      "list_authors_required": "El proyecto debe tener una lista de autores",
+      "question_min_length": "El proyecto debe tener una pregunta de revisión con al menos 3 letras",
+      "valid_url_doi": "El proyecto debe tener una dirección web (http/https) o un DOI válido",
+      "list_authors_required": "El proyecto debe tener una lista de autores con al menos 3 letras",
       "publish_requirement": "El proyecto debe tener al menos un hallazgo de revisión con una evaluación GRADE-CERQual completa para ser publicado en la base de datos iSoQ. Seleccione 'Privado' hasta que termine.",
+      "complete_by_author_required": "Indique si la revisión fue completada por sus autores",
       "license_required": "El proyecto debe tener una licencia"
     },
     "title_of_review": "Título de la revisión",
