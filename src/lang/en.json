@@ -344,7 +344,8 @@
       "project_created": "The project has been created",
       "project_updated": "The project has been updated",
       "error_updating_methodology": "Error updating methodology",
-      "required_fields_error": "Please complete the required fields."
+      "required_fields_error": "Please complete the required fields.",
+      "publish_missing_fields": "Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue."
     },
     "validation": {
       "title_min_length": "The project must have a title that contain at least 3 characters",

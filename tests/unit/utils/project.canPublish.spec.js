@@ -3,7 +3,7 @@ import Api from '@/utils/Api'
 
 jest.mock('@/utils/Api', () => ({
   __esModule: true,
-  default: { get: jest.fn(() => Promise.resolve({ data: { status: true } })), patch: jest.fn(() => Promise.resolve({ data: {} })) }
+  default: { get: jest.fn(), post: jest.fn(() => Promise.resolve({ data: { status: true } })), patch: jest.fn(() => Promise.resolve({ data: {} })) }
 }))
 
 const form = {
@@ -11,7 +11,7 @@ const form = {
   name: 'Proyecto',
   public_type: 'fully',
   license_type: 'CC-BY',
-  authors: 'A',
+  authors: 'Ana Pérez',
   author: 'Autor',
   author_email: 'a@example.com',
   review_question: '¿Pregunta?',
@@ -19,26 +19,32 @@ const form = {
   no_personal_data_confirmed: true
 }
 
-// GET /api/project/can_publish used to receive the whole Properties form as query parameters,
-// the authors' contact email included: every check left it in the access logs and in Sentry's
-// breadcrumbs. The server reads the properties from the database; it only needs the project,
-// the personal-data confirmation and, from the Publish modal, isModal.
-describe('Project.canPublish — only what the server reads goes in the URL', () => {
+describe('Project.canPublish asks the server with a body, never queued', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('sends the id and the confirmation, nothing from the form', async () => {
+  test('posts the form values in the body, never queued', async () => {
     await Project.canPublish({ ...form })
-    expect(Api.get).toHaveBeenCalledWith('/api/project/can_publish', { id: 'p1', no_personal_data_confirmed: true })
+    expect(Api.post).toHaveBeenCalledWith(
+      '/api/project/can_publish',
+      expect.objectContaining({ id: 'p1', author_email: 'a@example.com', no_personal_data_confirmed: true }),
+      { noQueue: true }
+    )
+    expect(Api.get).not.toHaveBeenCalled()
   })
 
-  it('forwards isModal when the caller sets it', async () => {
-    await Project.canPublish({ ...form, isModal: true })
-    expect(Api.get).toHaveBeenCalledWith('/api/project/can_publish', { id: 'p1', no_personal_data_confirmed: true, isModal: true })
+  test('only known keys travel, and none with dots, hashes or dollars', async () => {
+    await Project.canPublish({ ...form, 'x.y': 1, $z: 2, isModal: true, last_update: 5 })
+    const body = Api.post.mock.calls[0][1]
+    expect(body).not.toHaveProperty('x.y')
+    expect(body).not.toHaveProperty('$z')
+    expect(body).not.toHaveProperty('last_update')
+    expect(body).not.toHaveProperty('isModal')
+    expect(body.public_type).toBe('fully')
+    expect(body.license_type).toBe('CC-BY')
   })
 
-  it('the Properties save goes through it with no personal data in the query', async () => {
-    await Project.validations({ ...form })
-    const params = Api.get.mock.calls[0][1]
-    expect(Object.keys(params).sort()).toEqual(['id', 'no_personal_data_confirmed'])
+  test('absent keys are not sent', async () => {
+    await Project.canPublish({ id: 'p1' })
+    expect(Object.keys(Api.post.mock.calls[0][1]).sort()).toEqual(['id'])
   })
 })

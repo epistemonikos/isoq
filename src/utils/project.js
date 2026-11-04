@@ -1,115 +1,90 @@
 import Api from './Api'
-import { needsPersonalDataConfirmation, PERSONAL_DATA_CONFIRMED } from './personalDataConfirmation'
+import { R1_FIELDS, effectiveLicense, hasMinLetters, isProjectPublic, projectMissingFields, validEmail, validUrlOrDoi } from './publishRules'
+import { needsPersonalDataConfirmation, PERSONAL_DATA_CONFIRMED, PERSONAL_DATA_CONFIRMATION_REASON } from './personalDataConfirmation'
 
-function validEmail (email) {
-  var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-  return re.test(email)
-}
-function validUrl (url) {
-  var re = /^(http|https):\/\/[^ "]+$/
-  return re.test(url)
-}
-// Only what the server reads: it takes the properties from the database. Sending the whole form
-// put the authors' contact email in the URL, so in access logs and Sentry breadcrumbs.
+const CAN_PUBLISH_FIELDS = [...R1_FIELDS, 'published_status', 'license_type', 'public_type']
+
+// The server reads the form values from the body (they may not be saved yet) and ignores
+// anything client-owned. A body, not a query: the authors' contact email must stay out of
+// access logs and Sentry breadcrumbs. Never queued: a stale check must not replay later.
 async function canPublish (project) {
-  const params = { id: project.id, [PERSONAL_DATA_CONFIRMED]: project[PERSONAL_DATA_CONFIRMED] }
-  if (project.isModal !== undefined) params.isModal = project.isModal
-  return Api.get('/api/project/can_publish', params)
+  const body = { id: project.id }
+  for (const key of CAN_PUBLISH_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(project, key)) body[key] = project[key]
+  }
+  if (project[PERSONAL_DATA_CONFIRMED] !== undefined) body[PERSONAL_DATA_CONFIRMED] = project[PERSONAL_DATA_CONFIRMED]
+  return Api.post('/api/project/can_publish', body, { noQueue: true })
+}
+
+// The server refuses top-level keys with these characters.
+function withoutForbiddenKeys (params) {
+  for (const key of Object.keys(params)) {
+    if (/[.#$]/.test(key)) delete params[key]
+  }
+  return params
 }
 
 export default class Project {
   static validEmail = validEmail
-  static validUrl = validUrl
+  static validUrl = validUrlOrDoi
   static canPublish = canPublish
 
   static async validations (data) {
-    let cnt = 0
-    let responses = {
-      state: {
-        id: null,
-        name: null,
-        authors: null,
-        author: null,
-        author_email: null,
-        review_question: null,
-        url_doi: null,
-        complete_by_author: null,
-        lists_authors: null,
-        license: null,
-        no_personal_data_confirmed: null
-      }
+    const state = {
+      id: null,
+      name: null,
+      authors: null,
+      author: null,
+      author_email: null,
+      review_question: null,
+      url_doi: null,
+      complete_by_author: null,
+      lists_authors: null,
+      license: null,
+      no_personal_data_confirmed: null
+    }
+    const fail = (message) => ({ data: { status: false, message, state } })
+    const markMissing = (fields) => {
+      for (const field of fields) state[field === 'license_type' ? 'license' : field] = false
     }
 
-    // Basic validation for all projects
-    if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
-      responses.state.name = false
-      cnt++
+    if (!isProjectPublic(data)) {
+      if (!hasMinLetters(data.name, 1)) {
+        state.name = false
+        return fail('project.notifications.required_fields_error')
+      }
+      return { data: { status: true } }
     }
 
-    if (data.public_type !== 'private') {
-      // check if project has an id
-      if (data.id === '' || data.id === null || data.id === undefined || Object.prototype.hasOwnProperty.call(data, 'id') === false) {
-        responses.state.id = false
-        cnt++
-      }
-      // check if project has authors
-      if (data.authors === '' || data.authors === null || data.authors === undefined || data.authors.trim() === '') {
-        responses.state.authors = false
-        cnt++
-      }
-      // check if project has author with at least 3 characters
-      if (data.author === '' || data.author === null || data.author === undefined || data.author.trim().length < 3) {
-        responses.state.author = false
-        cnt++
-      }
-      // check if project has a valid author email address
-      if (data.author_email === '' || data.author_email === null || data.author_email === undefined || !Project.validEmail(data.author_email)) {
-        responses.state.author_email = false
-        cnt++
-      }
-      // check if project has a review question with at least 3 characters
-      if (data.review_question === '' || data.review_question === null || data.review_question === undefined || data.review_question.trim().length < 3) {
-        responses.state.review_question = false
-        cnt++
-      }
-      // check project url or doi
-      if (data.published_status && (data.url_doi === '' || data.url_doi === null || !Project.validUrl(data.url_doi))) {
-        responses.state.url_doi = false
-        cnt++
-      }
-      // check if project has a list of authors
-      if (!data.complete_by_author && (data.lists_authors === '' || data.lists_authors === null)) {
-        responses.state.lists_authors = false
-        cnt++
-      }
-      // check if project has a license
-      if (data.license_type === '' || data.license_type === null || data.license_type === undefined) {
-        responses.state.license = false
-        cnt++
-      }
-      // Obligatoria para publicar: PATCH /api/publish la exige igual (400).
-      if (needsPersonalDataConfirmation(data)) {
-        responses.state.no_personal_data_confirmed = false
-        cnt++
-      }
-
-      if (cnt > 0) {
-        return { data: { status: false, message: 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.', ...responses } }
-      } else {
-        const canPublish = await Project.canPublish(data)
-        if (canPublish.data.status === false) {
-          responses.message = canPublish.data.message
-          responses.state.can_publish = false
-          return { data: { status: false, ...responses } }
-        }
-        return { data: { status: true } }
-      }
+    const missing = projectMissingFields(data)
+    markMissing(missing)
+    let failed = missing.length > 0
+    // PATCH /api/publish demands it too (400).
+    if (needsPersonalDataConfirmation(data)) {
+      state.no_personal_data_confirmed = false
+      failed = true
     }
-
-    if (cnt > 0) {
-      return { data: { status: false, message: 'project.notifications.required_fields_error', ...responses } }
+    if (data.id === '' || data.id === null || data.id === undefined) {
+      state.id = false
+      failed = true
     }
+    if (failed) return fail('project.notifications.publish_missing_fields')
 
+    // A failing request rejects: the caller shows it.
+    const response = await Project.canPublish(data)
+    const answer = response.data
+    if (answer.status === false) {
+      if (answer.reason === PERSONAL_DATA_CONFIRMATION_REASON) {
+        state.no_personal_data_confirmed = false
+        return fail('publish.confirm_no_personal_data_required')
+      }
+      if (Array.isArray(answer.missing_fields) && answer.missing_fields.length > 0) {
+        markMissing(answer.missing_fields)
+        return fail('project.notifications.publish_missing_fields')
+      }
+      state.can_publish = false
+      return fail('project.validation.publish_requirement')
+    }
     return { data: { status: true } }
   }
 
@@ -139,7 +114,7 @@ export default class Project {
   }
 
   static async update (formData) {
-    const params = JSON.parse(JSON.stringify(formData))
+    const params = withoutForbiddenKeys(JSON.parse(JSON.stringify(formData)))
     const validation = await Project.validations(params)
 
     if (validation.data.status) {
@@ -148,6 +123,7 @@ export default class Project {
       if (params.public_type !== 'private') {
         params.private = false
         params.is_public = true
+        params.license_type = effectiveLicense(params.license_type)
       }
       const data = await Api.patch('/api/publish', { params })
       return {data: {status: true, ...data}}

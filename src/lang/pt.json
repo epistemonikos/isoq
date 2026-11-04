@@ -344,7 +344,8 @@
       "project_created": "O projeto foi criado",
       "project_updated": "O projeto foi atualizado",
       "error_updating_methodology": "Erro ao atualizar metodologia",
-      "required_fields_error": "Por favor, preencha os campos obrigatórios."
+      "required_fields_error": "Por favor, preencha os campos obrigatórios.",
+      "publish_missing_fields": "Seu pedido de publicação na base de dados do iSoQ foi negado porque faltam informações. Por favor, preencha os campos em vermelho abaixo, ou selecione “Privado” em “Visibilidade na base de dados do iSoQ” para continuar."
     },
     "validation": {
       "title_min_length": "O projeto deve ter um título com pelo menos 3 caracteres",
