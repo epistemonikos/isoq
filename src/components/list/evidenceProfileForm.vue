@@ -780,7 +780,7 @@
 
     <b-modal id="modal-warning-cleaning-cerqual" ref="modal-warning-cleaning-cerqual" :title="$t('common.warning')"
       :hide-footer="true">
-      <p>
+      <p v-if="clearCerqualWarningMessage">
         {{ clearCerqualWarningMessage }}
       </p>
       <p>
@@ -803,7 +803,7 @@
 <script>
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
-import { impactOfListChange } from '@/utils/publicationState'
+import { impactOfListChange, publicationCheckErrorKey } from '@/utils/publicationState'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
@@ -912,6 +912,8 @@ export default {
       // read when the warning opens ('none' | 'finding_hidden' | 'project_private').
       // Reads of the publication state in flight; only the latest one may act (see readImpact).
       warnSeq: 0,
+      // Bumped on every open and close: a read belongs to the session that started it.
+      warnSession: 0,
       warnReadsPending: 0,
       changedOptionImpact: 'none',
       clearCerqualImpact: 'none',
@@ -1014,15 +1016,17 @@ export default {
     warnReadPending: function () {
       return this.warnReadsPending > 0
     },
+    // Empty when clearing changes nothing in the publication (e.g. a private project).
     clearCerqualWarningMessage: function () {
+      if (this.clearCerqualImpact === 'none') return ''
       return this.$t(this.clearCerqualImpact === 'project_private'
         ? 'worksheet.warnings.clear_cerqual_revert'
         : 'worksheet.warnings.clear_cerqual_simple')
     },
     incompleteSaveWarningMessage: function () {
       return this.$t(this.incompleteSaveImpact === 'project_private'
-        ? 'worksheet.warnings.clear_cerqual_revert'
-        : 'worksheet.warnings.clear_cerqual_simple')
+        ? 'worksheet.warnings.save_incomplete_revert'
+        : 'worksheet.warnings.save_incomplete_hidden')
     }
   },
   methods: {
@@ -1051,6 +1055,10 @@ export default {
       // still in flight and must not be taken for the closing of this one.
       this.staleHiddenPending = this.modalOpen
       this.modalOpen = true
+      // Reads of the previous session must not act here, nor keep Save disabled.
+      this.warnSeq++
+      this.warnSession++
+      this.warnReadsPending = 0
       this.acquireSectionLock()
       this.$nextTick(() => {
         if (this.$refs.camelotTable && typeof this.$refs.camelotTable.resetTableState === 'function') {
@@ -1136,6 +1144,9 @@ export default {
         return
       }
       this.modalOpen = false
+      this.warnSeq++
+      this.warnSession++
+      this.warnReadsPending = 0
       // Se limpia acá y no en el `show`: el fallback de `currentSectionKey` sólo es
       // correcto si esta variable no sobrevive a la sesión que la puso.
       this.openedSection = null
@@ -1253,7 +1264,7 @@ export default {
       })
       if (!read.current) return
       if (read.error) {
-        this.onSaveError(read.error, 'notifications.save_error')
+        this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
         return
       }
       if (read.impact === 'none') {
@@ -1277,6 +1288,7 @@ export default {
     // would open a modal over nothing and, on "Yes", take a lock nobody releases.
     readImpact: async function (cerqual) {
       const token = ++this.warnSeq
+      const session = this.warnSession
       this.warnReadsPending++
       let impact = null
       let error = null
@@ -1288,7 +1300,8 @@ export default {
       } catch (e) {
         error = e
       } finally {
-        this.warnReadsPending--
+        // Only its own session counts it: a close or reopen already reset the count.
+        if (session === this.warnSession) this.warnReadsPending--
       }
       const current = token === this.warnSeq && this.modalOpen && !this.isFindingReadOnly
       return { current, impact, error }
@@ -1299,7 +1312,7 @@ export default {
       if (read.error) {
         // Not warning is not an option: undo the change and stop.
         this.selectedOptions[domain].option = this.modalData[domain].option
-        this.onSaveError(read.error, 'notifications.save_error')
+        this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
         return
       }
       this.changedOptionImpact = read.impact
@@ -1445,10 +1458,10 @@ export default {
      * `busyEvidenceProfileTable` se prendió al empezar. El modal sigue abierto con lo
      * escrito, para reintentar.
      */
-    onSaveError: function (error, actionKey) {
+    onSaveError: function (error, actionKey, keyFn = writeErrorMessageKey) {
       this.printErrors(error)
       this.$emit('busyEvidenceProfileTable', false)
-      const key = writeErrorMessageKey(error, actionKey)
+      const key = keyFn(error, actionKey)
       if (key && this.$notify) this.$notify.error(this.$t(key))
     },
     openModalEvidenceProfie: function (section = null) {
@@ -1543,7 +1556,7 @@ export default {
             if (read.error) {
               this.selectedOptions.cerqual.option = this.modalData.cerqual.option
               this.selectedOptions.cerqual.explanation = this.modalData.cerqual.explanation
-              this.onSaveError(read.error, 'notifications.save_error')
+              this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
               break
             }
             this.clearCerqualImpact = read.impact

@@ -202,7 +202,8 @@ describe('evidenceProfileForm publication warnings', () => {
     await wrapper.vm.closeWarningModalDoItLater()
     await wrapper.vm.$nextTick()
     expect(save).not.toHaveBeenCalled()
-    expect(modalText(wrapper, 'modal-warning-save-incomplete')).toContain('worksheet.warnings.clear_cerqual_revert')
+    expect(modalText(wrapper, 'modal-warning-save-incomplete')).toContain('worksheet.warnings.save_incomplete_revert')
+    expect(modalText(wrapper, 'modal-warning-save-incomplete')).not.toContain('clear_cerqual')
     wrapper.vm.confirmIncompleteSave()
     expect(save).toHaveBeenCalled()
     wrapper.destroy()
@@ -217,6 +218,65 @@ describe('evidenceProfileForm publication warnings', () => {
     expect(save).not.toHaveBeenCalled()
     expect(wrapper.vm.$notify.error).toHaveBeenCalled()
     wrapper.destroy()
+  })
+
+  test('do it later says the finding will be hidden when other findings stay visible', async () => {
+    serve({ project: publicProject, lists: [completeList('list1'), completeList('list2')] })
+    const wrapper = makeWrapper()
+    jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
+    wrapper.vm.selectedOptions.cerqual.explanation = ''
+    await wrapper.vm.closeWarningModalDoItLater()
+    await wrapper.vm.$nextTick()
+    const text = modalText(wrapper, 'modal-warning-save-incomplete')
+    expect(text).toContain('worksheet.warnings.save_incomplete_hidden')
+    expect(text).not.toContain('clear_cerqual')
+    wrapper.destroy()
+  })
+
+  test('clearing CERQual in a private project adds no publication sentence', async () => {
+    serve({ project: { public_type: 'private' }, lists: [completeList('list1')] })
+    const wrapper = makeWrapper()
+    await wrapper.vm.clearMySelection('cerqual')
+    await wrapper.vm.$nextTick()
+    const text = modalText(wrapper, 'modal-warning-cleaning-cerqual')
+    expect(text).not.toContain('clear_cerqual_simple')
+    expect(text).not.toContain('clear_cerqual_revert')
+    expect(text).toContain('common.continue_question')
+    wrapper.destroy()
+  })
+
+  describe('offline', () => {
+    const offline = () => Object.assign(new Error('offline'), { isOfflineError: true })
+
+    test('changing an option offline says the check needs a connection and reverts', async () => {
+      Api.get.mockRejectedValue(offline())
+      const wrapper = makeWrapper({ modalData: makeModalData({ coherence: { option: '1', explanation: 'x', notes: '' } }) })
+      await wrapper.setData({ selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '1', explanation: 'x', notes: '' } } })
+      await changeCoherence(wrapper)
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+      expect(wrapper.vm.selectedOptions.coherence.option).toBe('1')
+      wrapper.destroy()
+    })
+
+    test('clearing CERQual offline says the check needs a connection and restores it', async () => {
+      Api.get.mockRejectedValue(offline())
+      const wrapper = makeWrapper()
+      await wrapper.vm.clearMySelection('cerqual')
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+      expect(wrapper.vm.selectedOptions.cerqual.option).toBe('1')
+      wrapper.destroy()
+    })
+
+    test('do it later offline says the check needs a connection and does not save', async () => {
+      Api.get.mockRejectedValue(offline())
+      const wrapper = makeWrapper()
+      const save = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
+      wrapper.vm.selectedOptions.cerqual.explanation = ''
+      await wrapper.vm.closeWarningModalDoItLater()
+      expect(save).not.toHaveBeenCalled()
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+      wrapper.destroy()
+    })
   })
 
   describe('late results', () => {
@@ -300,6 +360,52 @@ describe('evidenceProfileForm publication warnings', () => {
       server.answer(0, { project: { public_type: 'private' }, lists: [completeList('list1')] })
       await pending
       expect(save).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('a read started in a closed session does not act in the reopened one', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      const show = jest.spyOn(wrapper.vm.$refs['modal-warning-changed-option'], 'show')
+      await changeDomain(wrapper, 'coherence')
+      wrapper.vm.onModalHidden()
+      wrapper.vm.onModalShow()
+      LockService.acquireRef.mockClear()
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] })
+      await flushPromises()
+      expect(show).not.toHaveBeenCalled()
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      expect(wrapper.vm.changedOptionImpact).toBe('none')
+      wrapper.destroy()
+    })
+
+    test('a hung read of the previous session does not disable Save in the new one', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      deferredServer() // never answered
+      const wrapper = await twoDomainsOpen()
+      const okDisabled = () => wrapper.find('#modal-evidence-profile-form').attributes('ok-disabled')
+      await changeDomain(wrapper, 'coherence')
+      expect(okDisabled()).toBe('true')
+      wrapper.vm.onModalHidden()
+      wrapper.vm.onModalShow()
+      await wrapper.vm.$nextTick()
+      expect(okDisabled()).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    test('a read of the previous session that settles late does not touch the new session pending count', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      await changeDomain(wrapper, 'coherence')
+      wrapper.vm.onModalHidden()
+      wrapper.vm.onModalShow()
+      await changeDomain(wrapper, 'adequacy') // a read of the new session, still pending
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] }) // the old one settles
+      await flushPromises()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('#modal-evidence-profile-form').attributes('ok-disabled')).toBe('true')
       wrapper.destroy()
     })
 

@@ -321,7 +321,7 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
-import { impactOfListChange } from '@/utils/publicationState'
+import { impactOfListChange, publicationCheckErrorKey } from '@/utils/publicationState'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -970,7 +970,7 @@ export default {
             impact = await impactOfListChange(this.project.id, data.item.id, () => null)
           } catch (error) {
             this.releaseFindingLock()
-            this.notifyWriteFailure(error, 'notifications.save_error')
+            this.notifyWriteFailure(error, 'notifications.save_error', publicationCheckErrorKey)
             return
           }
           this.ui.project.showExtendedExplanationTextForDeleting = impact === 'project_private'
@@ -1144,7 +1144,7 @@ export default {
       this.referencesWarnPending = false
       if (failure) {
         this.pendingSaveReferences = false
-        this.notifyWriteFailure(failure, 'notifications.save_error')
+        this.notifyWriteFailure(failure, 'notifications.save_error', publicationCheckErrorKey)
         return
       }
       if (impact === 'project_private') {
@@ -1162,8 +1162,8 @@ export default {
       this.referencesWarnPending = false
     },
 
-    notifyWriteFailure: function (error, actionKey) {
-      const key = writeErrorMessageKey(error, actionKey)
+    notifyWriteFailure: function (error, actionKey, keyFn = writeErrorMessageKey) {
+      const key = keyFn(error, actionKey)
       if (key) this.$notify.error(this.$t(key))
     },
 

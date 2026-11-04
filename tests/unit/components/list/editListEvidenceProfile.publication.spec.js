@@ -120,6 +120,16 @@ describe('editListEvidenceProfile publication warnings when removing every refer
     wrapper.destroy()
   })
 
+  test('offline, says the check needs a connection and saves nothing', async () => {
+    Api.get.mockRejectedValue(Object.assign(new Error('offline'), { isOfflineError: true }))
+    const wrapper = createWrapper()
+    const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+    await removeAll(wrapper)
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+    expect(save).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
   test('the finding-hidden warning shows when another finding stays visible, even if props say otherwise', async () => {
     serve({ project: publicProject, lists: [complete('list1'), complete('list2')] })
     const wrapper = createWrapper()

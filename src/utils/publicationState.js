@@ -1,5 +1,6 @@
 import Api from '@/utils/Api'
 import { publicationImpact } from '@/utils/publishRules'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
 
 // Fresh project and lists, read at the moment of an action that may change what is
 // published. `networkOnly`: a cached answer would be exactly the stale picture this
@@ -21,4 +22,12 @@ export async function impactOfListChange (projectId, listId, changeFn) {
   const current = (Array.isArray(lists) ? lists : []).find(l => l && l.id === listId)
   const changed = current ? changeFn(JSON.parse(JSON.stringify(current))) : null
   return publicationImpact(project, lists, listId, changed)
+}
+
+// The notice for a failed publication-state read. `writeErrorMessageKey` returns null for an
+// offline error (the offline bar speaks for writes), but these reads are `networkOnly` and
+// stop the action, so the person must be told why nothing happened.
+export function publicationCheckErrorKey (error, fallbackKey = 'notifications.save_error') {
+  if (error && error.isOfflineError) return 'publish.check_needs_connection'
+  return writeErrorMessageKey(error, fallbackKey)
 }

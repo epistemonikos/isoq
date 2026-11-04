@@ -234,7 +234,7 @@ import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { studyHolders } from '@/utils/referenceDeleted'
 import { publicationImpactOfDeletingReferences } from '@/utils/publishRules'
-import { fetchPublicationState } from '@/utils/publicationState'
+import { fetchPublicationState, publicationCheckErrorKey } from '@/utils/publicationState'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -729,7 +729,7 @@ export default {
     },
     // Without the answer there is no honest warning, so the confirmation does not open.
     notifyPublicationReadError: function (error) {
-      const key = writeErrorMessageKey(error, 'notifications.save_error')
+      const key = publicationCheckErrorKey(error, 'notifications.save_error')
       if (key) this.$notify.error(this.$t(key))
     },
     toggleRemoveConfirmation: async function (data) {

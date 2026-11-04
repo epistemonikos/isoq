@@ -680,7 +680,7 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
-import { impactOfListChange } from '@/utils/publicationState'
+import { impactOfListChange, publicationCheckErrorKey } from '@/utils/publicationState'
 import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
@@ -899,7 +899,7 @@ export default {
         // Without being able to check, nothing is changed: confirming blind could revert
         // the project without the person knowing.
         this.cancelNoReferencesWarning()
-        const key = writeErrorMessageKey(error, 'notifications.references_check_error')
+        const key = publicationCheckErrorKey(error, 'notifications.references_check_error')
         if (key) this.$notify.error(this.$t(key))
         return
       }

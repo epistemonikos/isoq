@@ -90,6 +90,20 @@ describe('ViewTable publication warnings', () => {
       wrapper.destroy()
     })
 
+    test('offline, says the check needs a connection and does not open the modal', async () => {
+      const offline = Object.assign(new Error('offline'), { isOfflineError: true })
+      Api.get.mockImplementation(path => path.startsWith('/isoqf_findings')
+        ? Promise.resolve({ data: [{ id: 'finding1' }] })
+        : Promise.reject(offline))
+      const { wrapper, $notify } = createWrapper()
+      const show = jest.fn()
+      wrapper.vm.$refs['remove-finding'].show = show
+      await open(wrapper)
+      expect($notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+      expect(show).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
     test('notifies and does not open the modal when the re-read fails', async () => {
       failReads()
       const { wrapper, $notify } = createWrapper()
@@ -143,6 +157,19 @@ describe('ViewTable publication warnings', () => {
       await removeAll(wrapper)
       expect(save).toHaveBeenCalled()
       expect(priv).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('offline, says the check needs a connection and saves nothing', async () => {
+      const offline = Object.assign(new Error('offline'), { isOfflineError: true })
+      Api.get.mockImplementation(path => path.startsWith('/isoqf_findings')
+        ? Promise.resolve({ data: [{ id: 'finding1' }] })
+        : Promise.reject(offline))
+      const { wrapper, $notify } = createWrapper()
+      const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+      await removeAll(wrapper)
+      expect($notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+      expect(save).not.toHaveBeenCalled()
       wrapper.destroy()
     })
 

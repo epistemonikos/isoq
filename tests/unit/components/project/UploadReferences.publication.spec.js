@@ -101,6 +101,16 @@ describe('UploadReferences — deleting studies that would make the project priv
     wrapper.destroy()
   })
 
+  test('offline, says the check needs a connection and does not open the confirmation', async () => {
+    Api.get.mockRejectedValue(Object.assign(new Error('offline'), { isOfflineError: true }))
+    const { wrapper, $notify } = createWrapper()
+    await trashButtons(wrapper).at(0).trigger('click')
+    await flush()
+    expect($notify.error).toHaveBeenCalledWith('publish.check_needs_connection')
+    expect(wrapper.text()).not.toContain('references.confirm_delete')
+    wrapper.destroy()
+  })
+
   test('a failed re-read notifies and does not open the confirmation', async () => {
     Api.get.mockRejectedValue(new Error('down'))
     const { wrapper, $notify } = createWrapper()
