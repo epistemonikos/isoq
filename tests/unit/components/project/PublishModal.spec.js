@@ -294,6 +294,40 @@ describe('PublishModal.vue — asking before publishing (#169)', () => {
     w.destroy()
   })
 
+  test('a project unpublished with an empty licence republishes with the default one and no licence error', async () => {
+    const { w } = build()
+    await w.setProps({ project: { id: '123', name: 'P', public_type: 'private', license_type: '' } })
+    w.vm.loadModalProject(w.vm.project)
+    expect(w.vm.modalProject.license_type).toBe('CC-BY-NC-ND')
+    await w.setData({ modalProject: { ...PUBLIC, license_type: '' } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    await w.vm.$nextTick()
+    expect(w.vm.state.license_type).not.toBe(false)
+    expect(Api.patch).toHaveBeenCalledTimes(1)
+    expect(Api.patch.mock.calls[0][1].params.license_type).toBe('CC-BY-NC-ND')
+    w.destroy()
+  })
+
+  test('a 400 publish_requirements_not_met from the PATCH shows the missing fields and the Go-to-Properties button', async () => {
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('400'), {
+      response: { status: 400, data: { reason: 'publish_requirements_not_met', missing_fields: ['author_email'] } },
+      config: { url: '/api/publish' }
+    }))
+    const { w, push } = build()
+    await w.setData({ modalProject: { ...PUBLIC } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    await w.vm.$nextTick()
+    expect(w.text()).toContain('project.notifications.publish_missing_fields')
+    const button = w.findAll('button').wrappers.find(b => b.text().includes('publish.go_to_properties'))
+    expect(button).toBeTruthy()
+    await button.trigger('click')
+    expect(push.mock.calls[0][0].query.highlight).toBe('author_email')
+    expect(w.vm.$notify.error).toHaveBeenCalledWith('publish.requirements_not_met')
+    w.destroy()
+  })
+
   test('with no missing fields the refusal is the finding requirement text, with no button', async () => {
     Api.post.mockResolvedValue({ data: { status: false, missing_fields: [], has_complete_finding: false } })
     const { w } = build()

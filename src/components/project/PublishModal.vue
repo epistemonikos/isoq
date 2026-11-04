@@ -178,9 +178,9 @@ export default {
     loadModalProject (project) {
       this.modalProject = JSON.parse(JSON.stringify(project))
       this.modalProject.isModal = true
-      if (!Object.prototype.hasOwnProperty.call(project, 'license_type')) {
-        this.modalProject.license_type = 'CC-BY-NC-ND'
-      }
+      // Unpublishing stores an empty licence and the server never requires one: an empty
+      // or absent value takes the default, as Properties does.
+      this.modalProject.license_type = effectiveLicense(project.license_type)
     },
 
     onHidden () {
@@ -218,14 +218,8 @@ export default {
       if (this.modalProject.public_type !== 'private') {
         params.private = false
         params.is_public = true
-        params.license_type = this.modalProject.license_type
+        params.license_type = effectiveLicense(this.modalProject.license_type)
         params[PERSONAL_DATA_CONFIRMED] = true
-
-        if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
-          this.state.license_type = false
-          this.$emit('uiPublishShowLoader', false)
-          return
-        }
       } else {
         params.license_type = ''
       }
@@ -285,6 +279,16 @@ export default {
       this.$emit('uiPublishShowLoader', false)
       const key = writeErrorMessageKey(error, 'notifications.publish_error')
       if (key) this.$notify.error(this.$t(key))
+      // The server refused for missing fields (the project changed under this modal): show
+      // them as the pre-check does, with the way to Properties.
+      const data = error && error.response && error.response.data
+      if (data && data.reason === 'publish_requirements_not_met') {
+        const missing = Array.isArray(data.missing_fields) ? data.missing_fields : []
+        this.errorsResponse = {
+          message: missing.length ? 'project.notifications.publish_missing_fields' : 'project.validation.publish_requirement',
+          missingFields: missing
+        }
+      }
     },
 
     // Back to the Properties tab with the fields that stop the publication highlighted.
