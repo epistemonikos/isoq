@@ -132,11 +132,14 @@ export default class Project {
     }
   }
 
-  static async update (formData) {
+  // `beforeSave`: optional, runs after the validations pass and before the PATCH; returning
+  // false aborts the save (resolves `{ data: { status: false, cancelled: true } }`).
+  static async update (formData, beforeSave) {
     const params = withoutForbiddenKeys(JSON.parse(JSON.stringify(formData)))
     const validation = await Project.validations(params)
 
     if (validation.data.status) {
+      if (beforeSave && await beforeSave() === false) return { data: { status: false, cancelled: true } }
       params.private = true
       params.is_public = false
       if (params.public_type !== 'private') {

@@ -232,8 +232,17 @@ describe('organizationForm.vue — shared publishing rules', () => {
   })
 })
 
+// The real Project.update runs the hook after validating and before the PATCH: this stands in.
+const updateWithHook = async (data, beforeSave) => {
+  if (beforeSave && await beforeSave() === false) return { data: { status: false, cancelled: true } }
+  return { data: { status: true } }
+}
+
 describe('organizationForm.vue — Megan notice when going public from Properties', () => {
   let wrapper
+  beforeEach(() => {
+    Project.update.mockImplementation(updateWithHook)
+  })
   afterEach(() => {
     if (wrapper) wrapper.destroy()
     wrapper = null
@@ -241,13 +250,23 @@ describe('organizationForm.vue — Megan notice when going public from Propertie
     Project.confirmIncompleteFindings.mockResolvedValue(true)
   })
 
-  test('going public from Properties asks the same confirmation', async () => {
+  test('going public from Properties asks the same confirmation, through the beforeSave hook', async () => {
     ;({ wrapper } = build({ public_type: 'private' }))
-    Project.update.mockResolvedValue({ data: { status: true } })
     const data = { ...COMPLETE, public_type: 'fully' }
     await wrapper.vm.executeSave(data)
-    expect(Project.confirmIncompleteFindings).toHaveBeenCalledWith(wrapper.vm, 'p1')
     expect(Project.update).toHaveBeenCalledTimes(1)
+    expect(typeof Project.update.mock.calls[0][1]).toBe('function')
+    expect(Project.confirmIncompleteFindings).toHaveBeenCalledWith(wrapper.vm, 'p1')
+    expect(wrapper.vm.$notify.success).toHaveBeenCalled()
+  })
+
+  test('a refused publish never shows the notice', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    // Validation refuses: the real Project.update never reaches the hook.
+    Project.update.mockResolvedValue({ data: { status: false, message: 'project.notifications.publish_missing_fields', state: {} } })
+    await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
+    expect(Project.confirmIncompleteFindings).not.toHaveBeenCalled()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
   })
 
   test('cancelling the confirmation stops the save without an error', async () => {
@@ -255,29 +274,117 @@ describe('organizationForm.vue — Megan notice when going public from Propertie
     const { $notify } = wrapper.vm
     Project.confirmIncompleteFindings.mockResolvedValue(false)
     await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
-    expect(Project.update).not.toHaveBeenCalled()
     expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.success).not.toHaveBeenCalled()
   })
 
   test('a failing count notifies and does not save', async () => {
     ;({ wrapper } = build({ public_type: 'private' }))
     Project.confirmIncompleteFindings.mockRejectedValue(new Error('boom'))
     await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
-    expect(Project.update).not.toHaveBeenCalled()
     expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.publish_error')
+    expect(wrapper.vm.$notify.success).not.toHaveBeenCalled()
   })
 
   test('saving a project that was already public does not ask', async () => {
     ;({ wrapper } = build())
-    Project.update.mockResolvedValue({ data: { status: true } })
     await wrapper.vm.executeSave({ ...COMPLETE, name: 'Other title' })
     expect(Project.confirmIncompleteFindings).not.toHaveBeenCalled()
   })
 
   test('saving a private project does not ask', async () => {
     ;({ wrapper } = build({ public_type: 'private' }))
-    Project.update.mockResolvedValue({ data: { status: true } })
     await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'private' })
     expect(Project.confirmIncompleteFindings).not.toHaveBeenCalled()
+  })
+})
+
+describe('organizationForm.vue — methodology change followed by a failing update', () => {
+  let wrapper
+  afterEach(() => {
+    if (wrapper) wrapper.destroy()
+    wrapper = null
+    jest.clearAllMocks()
+  })
+
+  const toggles = () => Api.post.mock.calls.filter(c => String(c[0]).includes('toggle_camelot')).length
+
+  test.each([
+    ['rejects', () => Project.update.mockRejectedValue({ response: { status: 500, data: {} } })],
+    ['returns status false', () => Project.update.mockResolvedValue({ data: { status: false, message: 'project.notifications.publish_missing_fields', state: {} } })]
+  ])('when Project.update %s, the methodology stays synced and the next save does not convert again', async (_, arrange) => {
+    ;({ wrapper } = build({ use_camelot: false }))
+    Api.get.mockResolvedValue({ data: {} })
+    Api.post.mockResolvedValue({ data: { status: true } })
+    arrange()
+    wrapper.vm.formData.use_camelot = true
+    wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+    await wrapper.vm.confirmCamelotToggle()
+    expect(toggles()).toBe(1)
+    expect(wrapper.vm.originalFormData.use_camelot).toBe(true)
+    expect(wrapper.vm.formData.use_camelot).toBe(true)
+
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    jest.spyOn(wrapper.vm, 'executeSave').mockResolvedValue()
+    wrapper.vm.save()
+    expect(show).not.toHaveBeenCalledWith('camelot-toggle-modal')
+    expect(toggles()).toBe(1)
+  })
+
+  test('a thrown update says the properties were not saved, not that the methodology failed', async () => {
+    ;({ wrapper } = build({ use_camelot: false }))
+    Api.get.mockResolvedValue({ data: {} })
+    Api.post.mockResolvedValue({ data: { status: true } })
+    Project.update.mockRejectedValue({ response: { status: 500, data: {} } })
+    wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+    await wrapper.vm.confirmCamelotToggle()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.methodology_changed_properties_not_saved')
+    expect(wrapper.vm.$notify.error).not.toHaveBeenCalledWith('project.notifications.error_updating_methodology')
+    expect(wrapper.vm.isMigrating).toBe(false)
+  })
+
+  test('a failed toggle still says the methodology could not be updated and keeps it unsynced', async () => {
+    ;({ wrapper } = build({ use_camelot: false }))
+    Api.get.mockResolvedValue({ data: {} })
+    Api.post.mockRejectedValue(new Error('boom'))
+    wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+    await wrapper.vm.confirmCamelotToggle()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.error_updating_methodology')
+    expect(wrapper.vm.originalFormData.use_camelot).toBe(false)
+  })
+})
+
+describe('organizationForm.vue — revert-to-private modal', () => {
+  let wrapper
+  afterEach(() => {
+    if (wrapper) wrapper.destroy()
+    wrapper = null
+    jest.clearAllMocks()
+  })
+
+  test('opening it marks the missing fields so the person sees what is missing', () => {
+    ;({ wrapper } = build())
+    wrapper.vm.$bvModal.show = jest.fn()
+    wrapper.vm.formData.authors = ''
+    wrapper.vm.formData.license_type = ''
+    wrapper.vm.formData.author_email = 'broken'
+    wrapper.vm.save()
+    expect(wrapper.vm.$bvModal.show).toHaveBeenCalledWith('publish-warning-modal')
+    expect(wrapper.vm.state.authors).toBe(false)
+    expect(wrapper.vm.state.author_email).toBe(false)
+    expect(wrapper.vm.state.name).toBeNull()
+  })
+
+  test('a person who already chose Private saves normally, without the modal', () => {
+    ;({ wrapper } = build())
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    const executeSave = jest.spyOn(wrapper.vm, 'executeSave').mockResolvedValue()
+    wrapper.vm.formData.public_type = 'private'
+    wrapper.vm.formData.author_email = 'broken'
+    wrapper.vm.save()
+    expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
+    expect(executeSave).toHaveBeenCalled()
   })
 })

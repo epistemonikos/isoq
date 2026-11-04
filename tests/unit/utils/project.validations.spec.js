@@ -66,6 +66,30 @@ describe('Project.validations with the shared publishing rules', () => {
     expect(Object.keys(sent).filter(k => /[.#$]/.test(k))).toEqual([])
   })
 
+  test('beforeSave runs after the validations and before the PATCH', async () => {
+    const order = []
+    Api.post.mockImplementationOnce(() => { order.push('can_publish'); return Promise.resolve({ data: { status: true } }) })
+    Api.patch.mockImplementationOnce(() => { order.push('patch'); return Promise.resolve({ data: {} }) })
+    const result = await Project.update({ ...base }, async () => { order.push('beforeSave') })
+    expect(order).toEqual(['can_publish', 'beforeSave', 'patch'])
+    expect(result.data.status).toBe(true)
+  })
+
+  test('beforeSave returning false aborts without a PATCH and says it was cancelled', async () => {
+    const result = await Project.update({ ...base }, async () => false)
+    expect(Api.patch).not.toHaveBeenCalled()
+    expect(result.data).toEqual({ status: false, cancelled: true })
+  })
+
+  test('beforeSave never runs when the validations refuse', async () => {
+    const beforeSave = jest.fn()
+    Api.post.mockResolvedValueOnce({ data: { status: false, missing_fields: ['author_email'] } })
+    const result = await Project.update({ ...base }, beforeSave)
+    expect(beforeSave).not.toHaveBeenCalled()
+    expect(result.data.status).toBe(false)
+    expect(Api.patch).not.toHaveBeenCalled()
+  })
+
   test('server missing_fields mark the fields', async () => {
     Api.post.mockResolvedValueOnce({ data: { status: false, missing_fields: ['author_email'], has_complete_finding: true } })
     const { data } = await Project.validations({ ...base })
