@@ -277,18 +277,22 @@ export default {
     // elegido, para reintentar.
     onPublishError (error) {
       this.$emit('uiPublishShowLoader', false)
-      const key = writeErrorMessageKey(error, 'notifications.publish_error')
-      if (key) this.$notify.error(this.$t(key))
-      // The server refused for missing fields (the project changed under this modal): show
-      // them as the pre-check does, with the way to Properties.
+      // The server refused for missing fields (the project changed under this modal): the
+      // in-modal alert says it, with the way to Properties, as the pre-check does. One event,
+      // one channel: no toast for it.
       const data = error && error.response && error.response.data
       if (data && data.reason === 'publish_requirements_not_met') {
         const missing = Array.isArray(data.missing_fields) ? data.missing_fields : []
+        const body = document.getElementById('modal-change-status___BV_modal_body_')
+        if (body) body.scrollTo({ top: 0, behavior: 'smooth' })
         this.errorsResponse = {
           message: missing.length ? 'project.notifications.publish_missing_fields' : 'project.validation.publish_requirement',
           missingFields: missing
         }
+        return
       }
+      const key = writeErrorMessageKey(error, 'notifications.publish_error')
+      if (key) this.$notify.error(this.$t(key))
     },
 
     // Back to the Properties tab with the fields that stop the publication highlighted.

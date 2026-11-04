@@ -324,7 +324,7 @@ describe('PublishModal.vue — asking before publishing (#169)', () => {
     expect(button).toBeTruthy()
     await button.trigger('click')
     expect(push.mock.calls[0][0].query.highlight).toBe('author_email')
-    expect(w.vm.$notify.error).toHaveBeenCalledWith('publish.requirements_not_met')
+    expect(w.vm.$notify.error).not.toHaveBeenCalled()
     w.destroy()
   })
 

@@ -114,7 +114,7 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
     expect($notify.error).not.toHaveBeenCalled()
   })
 
-  test('a 400 publish_requirements_not_met shows its own message', async () => {
+  test('a 400 publish_requirements_not_met shows only the in-modal alert, no toast', async () => {
     const { wrapper, $notify } = createWrapper()
     await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by', no_personal_data_confirmed: true } })
     Api.patch.mockRejectedValueOnce(Object.assign(new Error('400'), {
@@ -123,7 +123,7 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
     }))
     await wrapper.vm.savePublicStatus({ preventDefault () {} })
     await flushPromises()
-    expect($notify.error).toHaveBeenCalledWith('publish.requirements_not_met')
-    expect($notify.error).not.toHaveBeenCalledWith('notifications.publish_error')
+    expect($notify.error).not.toHaveBeenCalled()
+    expect(wrapper.vm.errorsResponse.missingFields).toEqual(['author_email'])
   })
 })
