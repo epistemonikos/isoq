@@ -140,6 +140,31 @@ describe('organizationForm.vue — shared publishing rules', () => {
     expect(wrapper.vm.pendingData).toBeNull()
   })
 
+  test('cancel leaves no red marks on the restored fields', async () => {
+    ;({ wrapper } = build())
+    wrapper.vm.$bvModal.show = jest.fn()
+    wrapper.vm.formData.author_email = 'broken'
+    wrapper.vm.formData.authors = ''
+    wrapper.vm.save()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('#input-project-authors').classes()).toContain('is-invalid')
+    wrapper.vm.handlePublishWarningCancel()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findAll('.is-invalid').length).toBe(0)
+  })
+
+  test('opening it again clears marks that are no longer missing', async () => {
+    ;({ wrapper } = build())
+    wrapper.vm.$bvModal.show = jest.fn()
+    wrapper.vm.markMissingFields({ ...COMPLETE, authors: '' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.state.authors).toBe(false)
+    wrapper.vm.markMissingFields({ ...COMPLETE, author_email: 'broken' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.state.authors).toBeNull()
+    expect(wrapper.vm.state.author_email).toBe(false)
+  })
+
   test('a server publish_requirements_not_met marks missing_fields', async () => {
     ;({ wrapper } = build())
     const { $notify } = { $notify: wrapper.vm.$notify }

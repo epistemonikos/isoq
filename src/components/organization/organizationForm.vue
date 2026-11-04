@@ -365,6 +365,8 @@ export default {
   },
   data: function () {
     return {
+      // Keys markMissingFields set to false (not reactive state: bookkeeping only).
+      markedByModal: [],
       state: {
         id: null,
         name: null,
@@ -486,6 +488,9 @@ export default {
         this.$set(this.formData, key, original[key])
       }
       this.pendingData = null
+      // The marks were for the edit that was just undone.
+      this.resetState()
+      this.markedByModal = []
     },
     // The project was public and, with this save, a rule that publishing needs stops holding.
     // A person who already chose Private is not losing anything: no modal for them.
@@ -495,10 +500,17 @@ export default {
     },
     markMissingFields: function (data) {
       const newState = { ...this.state }
+      // Keys marked by a previous opening that are no longer missing go back to neutral.
+      for (const key of this.markedByModal) newState[key] = null
+      const marked = []
       for (const field of projectMissingFields(data)) {
         const key = field === 'license_type' ? 'license' : field
-        if (Object.prototype.hasOwnProperty.call(newState, key)) newState[key] = false
+        if (Object.prototype.hasOwnProperty.call(newState, key)) {
+          newState[key] = false
+          marked.push(key)
+        }
       }
+      this.markedByModal = marked
       this.state = newState
     },
     // Whether the field meets its rule now (the same functions the server mirrors).
