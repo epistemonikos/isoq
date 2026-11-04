@@ -565,7 +565,9 @@ export default {
           if (!isProjectPublic(this.originalFormData) && isProjectPublic(data)) {
             beforeSave = async () => {
               try {
-                return await Project.confirmIncompleteFindings(this, data.id)
+                // Only an explicit OK proceeds: Esc or a backdrop click resolve null, and
+                // Project.update lets anything but `false` through.
+                return (await Project.confirmIncompleteFindings(this, data.id)) === true
               } catch (error) {
                 const key = writeErrorMessageKey(error, 'notifications.publish_error')
                 if (key) this.$notify.error(this.$t(key))

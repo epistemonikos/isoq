@@ -278,6 +278,15 @@ describe('organizationForm.vue — Megan notice when going public from Propertie
     expect($notify.success).not.toHaveBeenCalled()
   })
 
+  test('Esc or a backdrop click (the notice resolves null) does not save', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    const { $notify } = wrapper.vm
+    Project.confirmIncompleteFindings.mockResolvedValue(null)
+    await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
+    expect($notify.error).not.toHaveBeenCalled()
+    expect($notify.success).not.toHaveBeenCalled()
+  })
+
   test('a failing count notifies and does not save', async () => {
     ;({ wrapper } = build({ public_type: 'private' }))
     Project.confirmIncompleteFindings.mockRejectedValue(new Error('boom'))

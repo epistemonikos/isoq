@@ -360,6 +360,19 @@ describe('PublishModal.vue — asking before publishing (#169)', () => {
     accepted.w.destroy()
   })
 
+  test('Esc or a backdrop click on the notice (resolves null) does not publish', async () => {
+    Api.get.mockResolvedValue({ data: [COMPLETE_LIST, INCOMPLETE_LIST] })
+    const dismissed = build({ confirm: null })
+    await dismissed.w.setData({ modalProject: { ...PUBLIC } })
+    await dismissed.w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    expect(dismissed.msgBoxConfirm).toHaveBeenCalled()
+    expect(Api.patch).not.toHaveBeenCalled()
+    expect(dismissed.w.vm.$notify.success).not.toHaveBeenCalled()
+    expect(dismissed.w.emitted('uiPublishShowLoader').pop()).toEqual([false])
+    dismissed.w.destroy()
+  })
+
   test('with every finding complete there is no confirmation', async () => {
     Api.get.mockResolvedValue({ data: [COMPLETE_LIST] })
     const { w, msgBoxConfirm } = build()
