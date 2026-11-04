@@ -294,7 +294,7 @@ export default {
       const query = { ...this.$route.query, tab: 'Project-Property', highlight: missing.join(',') }
       const navigation = this.$router.push({ path: this.$route.path, query })
       if (navigation && navigation.catch) {
-        navigation.catch(err => { if (err && err.name !== 'NavigationDuplicated') throw err })
+        return navigation.catch(err => { if (err && err.name !== 'NavigationDuplicated') throw err })
       }
     }
   }

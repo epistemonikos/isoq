@@ -363,15 +363,20 @@ describe('PublishModal.vue — asking before publishing (#169)', () => {
 
   test('a NavigationDuplicated from the router is swallowed', async () => {
     const { w, push } = build()
-    push.mockRejectedValue({ name: 'NavigationDuplicated' })
-    const unhandled = jest.fn()
-    process.on('unhandledRejection', unhandled)
+    const rejected = Promise.reject({ name: 'NavigationDuplicated' })
+    const catchSpy = jest.spyOn(rejected, 'catch')
+    push.mockReturnValue(rejected)
     await w.setData({ errorsResponse: { message: 'x', missingFields: ['name'] } })
-    w.vm.goToProperties()
-    await flush()
-    process.removeListener('unhandledRejection', unhandled)
-    expect(push).toHaveBeenCalled()
-    expect(unhandled).not.toHaveBeenCalled()
+    await expect(w.vm.goToProperties()).resolves.toBeUndefined()
+    expect(catchSpy).toHaveBeenCalled()
+    w.destroy()
+  })
+
+  test('any other router error still propagates', async () => {
+    const { w, push } = build()
+    push.mockReturnValue(Promise.reject({ name: 'Other' }))
+    await w.setData({ errorsResponse: { message: 'x', missingFields: ['name'] } })
+    await expect(w.vm.goToProperties()).rejects.toEqual({ name: 'Other' })
     w.destroy()
   })
 })
