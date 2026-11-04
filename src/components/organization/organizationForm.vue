@@ -418,11 +418,10 @@ export default {
           }
           if (result && result.data && result.data.status === false) {
             // Mark the fields and stay here (no redirect, no reload) so the user can fix
-            // them and save again.
+            // them and save again. One toast (the methodology note); the fields say the rest.
             this.state = { ...this.state, ...result.data.state }
             this.isMigrating = false
             this.$notify.error(this.$t('project.notifications.methodology_changed_properties_not_saved'))
-            this.$notify.error(this.$t(result.data.message))
             this.$bvModal.hide('camelot-toggle-modal')
             return
           }

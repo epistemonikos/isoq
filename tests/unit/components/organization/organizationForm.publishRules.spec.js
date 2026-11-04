@@ -180,7 +180,8 @@ describe('organizationForm.vue — shared publishing rules', () => {
       const hide = jest.spyOn(wrapper.vm.$bvModal, 'hide')
       await wrapper.vm.confirmCamelotToggle()
       expect(wrapper.vm.state.authors).toBe(false)
-      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledTimes(1)
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.methodology_changed_properties_not_saved')
       expect(hide).toHaveBeenCalledWith('camelot-toggle-modal')
       expect(wrapper.vm.$router.push).not.toHaveBeenCalled()
       expect(reload).not.toHaveBeenCalled()
@@ -351,6 +352,18 @@ describe('organizationForm.vue — methodology change followed by a failing upda
     expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.methodology_changed_properties_not_saved')
     expect(wrapper.vm.$notify.error).not.toHaveBeenCalledWith('project.notifications.error_updating_methodology')
     expect(wrapper.vm.isMigrating).toBe(false)
+  })
+
+  test('a refused update after the toggle raises one toast (the methodology note) and keeps the fields red', async () => {
+    ;({ wrapper } = build({ use_camelot: false }))
+    Api.get.mockResolvedValue({ data: {} })
+    Api.post.mockResolvedValue({ data: { status: true } })
+    Project.update.mockResolvedValue({ data: { status: false, message: 'project.notifications.publish_missing_fields', state: { author_email: false } } })
+    wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+    await wrapper.vm.confirmCamelotToggle()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledTimes(1)
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.methodology_changed_properties_not_saved')
+    expect(wrapper.vm.state.author_email).toBe(false)
   })
 
   test('a failed toggle still says the methodology could not be updated and keeps it unsynced', async () => {
