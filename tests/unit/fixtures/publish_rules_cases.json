@@ -1,0 +1,80 @@
+{
+  "_comment": "Copied verbatim into isoq_web tests/unit/fixtures/publish_rules_cases.json — change both together",
+  "has_min_letters": [
+    {"input": "WHO", "expected": true},
+    {"input": "糖尿病", "expected": true},
+    {"input": "　WHO　", "expected": true},
+    {"input": "Cochrane", "expected": true},
+    {"input": "a b", "expected": false},
+    {"input": "ab", "expected": false},
+    {"input": "   ", "expected": false},
+    {"input": "a b", "expected": false},
+    {"input": "﻿ab", "expected": false},
+    {"input": null, "expected": false},
+    {"input": 123, "expected": false},
+    {"input": [], "expected": false}
+  ],
+  "as_answer": [
+    {"input": true, "expected": true},
+    {"input": "true", "expected": true},
+    {"input": false, "expected": false},
+    {"input": "false", "expected": false},
+    {"input": "True", "expected": null},
+    {"input": "", "expected": null},
+    {"input": 1, "expected": null},
+    {"input": null, "expected": null}
+  ],
+  "valid_email": [
+    {"input": "ana@example.com", "expected": true},
+    {"input": " ana@example.com ", "expected": true},
+    {"input": "ana@example.com\n", "expected": true},
+    {"input": "a@b..com", "expected": true},
+    {"input": "o'brien@example.com", "expected": false},
+    {"input": "ana@example", "expected": false},
+    {"input": "ana@exa mple.com", "expected": false},
+    {"input": "", "expected": false},
+    {"input": null, "expected": false}
+  ],
+  "valid_url_or_doi": [
+    {"input": "https://doi.org/10.1000/xyz", "expected": true},
+    {"input": "http://example.org/a", "expected": true},
+    {"input": "10.1000/xyz123", "expected": true},
+    {"input": "doi:10.1000/xyz", "expected": true},
+    {"input": "www.example.com", "expected": false},
+    {"input": "ftp://x.org", "expected": false},
+    {"input": "10.12/x", "expected": false},
+    {"input": "https://a b", "expected": false},
+    {"input": "10.١٢٣٤/x", "expected": false},
+    {"input": "10.1234/a\u001cb", "expected": true},
+    {"input": "", "expected": false},
+    {"input": null, "expected": false}
+  ],
+  "project_missing_fields": [
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true, "published_status": false}, "expected": []},
+    {"input": {"name": "ab", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true, "published_status": false}, "expected": ["name"]},
+    {"input": {}, "expected": ["name", "authors", "author", "author_email", "review_question", "complete_by_author"]},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": false, "published_status": false}, "expected": ["lists_authors"]},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": "false", "lists_authors": "WHO", "published_status": false}, "expected": []},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": "True", "published_status": false}, "expected": ["complete_by_author"]},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true, "published_status": true}, "expected": ["url_doi"]},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true, "published_status": "true", "url_doi": "10.1000/x1"}, "expected": []},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true}, "expected": []},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": "ana@example.com", "review_question": "Why so?", "complete_by_author": true, "published_status": false, "license_type": ""}, "expected": []},
+    {"input": {"name": "Review", "authors": "Ana Pérez", "author": "Ana Pérez", "author_email": 123, "review_question": "Why so?", "complete_by_author": true, "published_status": false}, "expected": ["author_email"]}
+  ],
+  "is_finding_complete": [
+    {"input": {"name": "F1", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": true},
+    {"input": {"name": "F1", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, "expected": true},
+    {"input": {"name": "", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "  ", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
+    {"input": {"cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "F1", "cerqual": {"option": null, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "F1", "cerqual": {"option": 2, "explanation": "  "}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "F1", "cerqual": {"option": 2, "explanation": "Because"}, "references": []}, "expected": false},
+    {"input": {"name": "F1", "references": ["r1"]}, "expected": false},
+    {"input": {"name": "F1", "evidence_profile": {"cerqual": {"option": 2, "explanation": "Because"}}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "\ufeff", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
+    {"input": {"name": "\u001c", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": true},
+    {"input": null, "expected": false}
+  ]
+}
