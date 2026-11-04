@@ -407,6 +407,9 @@ export default {
             // The methodology already changed on the server: say so, mark the fields, and
             // stay here (no redirect, no reload) so the user can fix them and save again.
             this.state = { ...this.state, ...result.data.state }
+            // The server already runs the new methodology: the next save must not convert again.
+            this.originalFormData.use_camelot = data.use_camelot
+            this.formData.use_camelot = data.use_camelot
             this.isMigrating = false
             this.$notify.error(this.$t(result.data.message))
             this.$bvModal.hide('camelot-toggle-modal')

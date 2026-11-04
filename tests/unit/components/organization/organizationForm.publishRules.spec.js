@@ -189,6 +189,28 @@ describe('organizationForm.vue — shared publishing rules', () => {
     }
   })
 
+  test('after a failed update following a methodology change, the next save does not convert again', async () => {
+    ;({ wrapper } = build({ use_camelot: false }))
+    Api.get.mockResolvedValue({ data: {} })
+    Api.post.mockResolvedValue({ data: { status: true } })
+    Project.update.mockResolvedValue({
+      data: { status: false, message: 'project.notifications.publish_missing_fields', state: { authors: false } }
+    })
+    wrapper.vm.formData.use_camelot = true
+    wrapper.vm.pendingData = { ...COMPLETE, use_camelot: true }
+    await wrapper.vm.confirmCamelotToggle()
+    const toggles = () => Api.post.mock.calls.filter(c => String(c[0]).includes('toggle_camelot')).length
+    expect(toggles()).toBe(1)
+
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    jest.spyOn(wrapper.vm, 'executeSave').mockResolvedValue()
+    wrapper.vm.save()
+    expect(show).not.toHaveBeenCalledWith('camelot-toggle-modal')
+    expect(toggles()).toBe(1)
+    expect(wrapper.vm.originalFormData.use_camelot).toBe(true)
+  })
+
   test('a rejected can_publish shows an error and ends the save', async () => {
     ;({ wrapper } = build())
     Project.update.mockRejectedValue({
