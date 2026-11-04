@@ -25,7 +25,7 @@
           <template v-else>
             <b-td
               style="vertical-align: top;">
-              <template v-if="categories.options.length">
+              <template v-if="categories.options.length || item.displayNumber !== undefined">
                 <p>{{item.displayNumber}}</p>
               </template>
               <template v-else>
@@ -103,7 +103,7 @@
               </template>
               <template v-else>
                 <b-td style="width: 5%">
-                  <template v-if="categories.options.length">
+                  <template v-if="categories.options.length || item.displayNumber !== undefined">
                   <p>{{item.displayNumber}}</p>
                   </template>
                   <template v-else>

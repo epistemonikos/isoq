@@ -1065,6 +1065,9 @@
     "extracted_data": "Datos Extraídos",
     "return_isoq": "volver a la tabla iSoQ"
   },
+  "preview": {
+    "finding_not_available": "Este hallazgo de la revisión no está disponible en la base de datos de iSoQ."
+  },
   "profile": {
     "title": "Perfil",
     "username": "Nombre de usuario",

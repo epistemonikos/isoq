@@ -1065,6 +1065,9 @@
     "extracted_data": "Extracted Data",
     "return_isoq": "return to ISoQ table"
   },
+  "preview": {
+    "finding_not_available": "This review finding is not available on the iSoQ database."
+  },
   "profile": {
     "title": "Profile",
     "username": "Username",

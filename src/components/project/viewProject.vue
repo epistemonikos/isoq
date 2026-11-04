@@ -519,6 +519,7 @@ import { findingsOrderLockMessageKey, reconcileFindingsOrder } from '@/utils/fin
 import { isFixedLockRejection } from '@/utils/fixedRefLock'
 import { isDuplicateKeyRejection } from '@/utils/lockErrors'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
+import { isFindingComplete } from '@/utils/publishRules'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
@@ -1400,23 +1401,17 @@ export default {
         // los ids reales (strings hex) y dejaba las citas en el orden de subida.
         const sortedReferences = sortByStudyLabel(this.references, r => parsedAuthorsById.get(r.id))
         for (let list of data) {
-          if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-            list.status = 'unfinished'
-            list.explanation = 'without_explanation'
-          } else {
-            list.status = 'completed'
-            list.explanation = 'with_explanation'
+          // One definition of complete for every table (R2); `explanation` is what is shown.
+          list.status = isFindingComplete(list) ? 'completed' : 'unfinished'
+          list.explanation = 'without_explanation'
+          if (Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             // Granular updates may persist only the changed sections, so backfill any missing
             // evidence_profile section with a safe default before any reader touches it.
             Commons.normalizeEvidenceProfile(list)
             // Read the authoritative cerqual via resolveCerqual: the granular-update writer keeps
             // the top-level list.cerqual in sync but may leave evidence_profile without a cerqual key.
-            const cerqual = Commons.resolveCerqual(list)
-            if (cerqual.option === null) {
-              list.status = 'unfinished'
-            }
-            if (cerqual.explanation === '') {
-              list.explanation = 'without_explanation'
+            if (Commons.resolveCerqual(list).explanation !== '') {
+              list.explanation = 'with_explanation'
             }
           }
           if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
@@ -1442,16 +1437,14 @@ export default {
               }
             }
           }
+          const listCerqual = Commons.resolveCerqual(list)
           list.cerqual_option = ''
-          if (list.cerqual.option != null) {
-            list.cerqual_option = this.translatedCerqualConfidence[list.cerqual.option].text
-          }
           list.filter_cerqual = ''
-          if (list.cerqual.option != null) {
-            const optionValue = this.translatedCerqualConfidence[list.cerqual.option].value
-            list.filter_cerqual = optionValue || ''
+          if (listCerqual.option != null) {
+            list.cerqual_option = this.translatedCerqualConfidence[listCerqual.option].text
+            list.filter_cerqual = this.translatedCerqualConfidence[listCerqual.option].value || ''
           }
-          list.cerqual_explanation = list.cerqual.explanation
+          list.cerqual_explanation = listCerqual.explanation || ''
           list.ref_list = ''
           list.raw_ref = []
           // Iterate sortedReferences (alphabetical order preserved) and keep only the ones this list

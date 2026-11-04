@@ -218,6 +218,7 @@ import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import Commons from '@/utils/commons'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
+import { isFindingComplete } from '@/utils/publishRules'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -437,23 +438,12 @@ export default {
           this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
           data = Commons.sortFindings(data, this.list_categories)
+          // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
+          // above so the gaps stay, and dropped here: nothing below may list or fetch them.
+          data = data.filter(l => !l.hidden)
           if (data.length) {
             for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                Commons.normalizeEvidenceProfile(list)
-                const cerqual = Commons.resolveCerqual(list)
-                if (cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
+              this.setListStatus(list)
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
@@ -475,13 +465,13 @@ export default {
                 }
               }
               list.cerqual_option = ''
-              if (list.cerqual.option != null) {
+              if (list.cerqual && list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
               // Derive the filter code from the numeric option (0-3), not the
               // translated label, so filtering keeps working in any language.
-              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual.option] || ''
-              list.cerqual_explanation = list.cerqual.explanation
+              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual && list.cerqual.option] || ''
+              list.cerqual_explanation = list.cerqual ? list.cerqual.explanation : ''
               this.setCitedReferences(list)
               this.getFinding(this.$route.params.org_id, list.id)
             }
@@ -566,6 +556,17 @@ export default {
           this.loadErrors.lists = true
           console.log(error)
         })
+    },
+    // `status` is the shared definition of complete (R2); `explanation` is what is shown.
+    setListStatus: function (list) {
+      list.status = isFindingComplete(list) ? 'completed' : 'unfinished'
+      list.explanation = 'without_explanation'
+      if (Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+        Commons.normalizeEvidenceProfile(list)
+        if (Commons.resolveCerqual(list).explanation !== '') {
+          list.explanation = 'with_explanation'
+        }
+      }
     },
     getFinding: function (orgId, listId) {
       const params = {
@@ -765,23 +766,12 @@ export default {
           const rawLists = bundle.lists || []
           let data = JSON.parse(JSON.stringify(rawLists))
           data = Commons.sortFindings(data, this.list_categories)
+          // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
+          // above so the gaps stay, and dropped here: nothing below may list or fetch them.
+          data = data.filter(l => !l.hidden)
           if (data.length) {
             for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                Commons.normalizeEvidenceProfile(list)
-                const cerqual = Commons.resolveCerqual(list)
-                if (cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
+              this.setListStatus(list)
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }

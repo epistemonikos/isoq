@@ -389,7 +389,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation']
+        filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation', 'status']
       },
       editFindingName: {
         index: null,

@@ -1,4 +1,5 @@
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, mount, createLocalVue } from '@vue/test-utils'
+import PrintViewTable from '@/components/project/PrintViewTable.vue'
 import previewContentSoQf from '@/components/previewContent/previewContentSoQf.vue'
 import Api from '@/utils/Api'
 import BootstrapVue from 'bootstrap-vue'
@@ -286,6 +287,149 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
       await wrapper.setData({ references: refs })
 
       expect(wrapper.vm.charsOfStudiesRows.items).toHaveLength(2)
+      wrapper.destroy()
+    })
+  })
+})
+
+describe('previewContentSoQf — hidden stubs and incomplete lists (public views)', () => {
+  const complete = (id, sort, category = null) => ({
+    id, name: `Finding ${id}`, sort, category, notes: '', references: ['ref1'],
+    cerqual: { option: 0, explanation: 'Reason' }, evidence_profile: { cerqual: { option: 0, explanation: 'Reason' } }
+  })
+  const hiddenStub = (id, sort, category = null) => ({ id, project_id: 'p1', sort, category, hidden: true })
+
+  // Renders what the page passes to the printable table and returns its DOM text.
+  const renderedTable = (wrapper) => {
+    const table = mount(PrintViewTable, {
+      localVue,
+      mocks: { $t: (key) => key, $route: { params: { token: 'public' } } },
+      propsData: {
+        references: wrapper.vm.references,
+        dataPrintVersion: wrapper.vm.lists_print_version,
+        categories: wrapper.vm.list_categories,
+        printableItems: wrapper.vm.printableItems,
+        hasPermission: true,
+        isPublic: true,
+        project: { id: 'p1', public_type: 'fully' }
+      },
+      stubs: { 'router-link': true, 'b-link': true }
+    })
+    const text = table.find('#findings-print').text()
+    table.destroy()
+    return text
+  }
+  const numbersOf = (wrapper) => {
+    const table = mount(PrintViewTable, {
+      localVue,
+      mocks: { $t: (key) => key, $route: { params: { token: 'public' } } },
+      propsData: {
+        references: [], dataPrintVersion: wrapper.vm.lists_print_version, categories: wrapper.vm.list_categories,
+        printableItems: wrapper.vm.printableItems, hasPermission: true, isPublic: false, project: { id: 'p1' }
+      }
+    })
+    const cells = table.find('#findings-print').findAll('tbody tr').wrappers
+      .filter(tr => tr.findAll('td').length > 1)
+      .map(tr => tr.findAll('td').at(0).text())
+    table.destroy()
+    return cells
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  describe('bundle route', () => {
+    const mountBundle = async (bundle) => {
+      Api.get.mockResolvedValue({ data: { ...BUNDLE, ...bundle } })
+      const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
+      await flushPromises()
+      return wrapper
+    }
+
+    test('hidden stubs keep the public numbering with gaps', async () => {
+      const wrapper = await mountBundle({ lists: [complete('l1', 1), hiddenStub('l2', 2), complete('l3', 3)] })
+
+      expect(numbersOf(wrapper)).toEqual(['1', '3'])
+      expect(renderedTable(wrapper)).not.toContain('Finding l2')
+      expect(wrapper.vm.table_settings.totalRows).toBe(2)
+      expect(wrapper.vm.printableItems).not.toContain('l2')
+      wrapper.destroy()
+    })
+
+    test('hidden stubs keep the public numbering with gaps when there are categories', async () => {
+      const wrapper = await mountBundle({
+        lists: [complete('l1', 1, 'cat1'), hiddenStub('l2', 2, 'cat1'), complete('l3', 3, 'cat1')]
+      })
+
+      expect(numbersOf(wrapper)).toEqual(['1', '3'])
+      wrapper.destroy()
+    })
+
+    test('a category with only hidden findings has no header', async () => {
+      const wrapper = await mountBundle({
+        lists: [complete('l1', 1, 'cat1'), hiddenStub('l2', 1, 'cat2')],
+        list_categories: [
+          { id: 'cat1', text: 'Category A', extra_info: '' },
+          { id: 'cat2', text: 'Category B', extra_info: '' }
+        ]
+      })
+
+      const text = renderedTable(wrapper)
+      expect(text).toContain('Category A')
+      expect(text).not.toContain('Category B')
+      wrapper.destroy()
+    })
+
+    test('a list without cerqual does not break the public table', async () => {
+      const bare = { id: 'l9', name: 'Bare finding', sort: 1, category: null }
+      const wrapper = await mountBundle({ lists: [bare] })
+
+      expect(wrapper.vm.loadErrors.lists).toBe(false)
+      expect(renderedTable(wrapper)).toContain('Bare finding')
+      expect(wrapper.vm.lists[0].status).toBe('unfinished')
+      wrapper.destroy()
+    })
+
+    test('status follows the shared definition of complete', async () => {
+      const noRefs = { ...complete('l2', 2), references: [] }
+      const wrapper = await mountBundle({ lists: [complete('l1', 1), noRefs] })
+
+      expect(wrapper.vm.lists.map(l => [l.id, l.status])).toEqual([['l1', 'completed'], ['l2', 'unfinished']])
+      wrapper.destroy()
+    })
+  })
+
+  describe('public route', () => {
+    const mountPublic = async (lists, categories = []) => {
+      Api.get.mockImplementation((url) => {
+        if (String(url).includes('isoqf_projects')) return Promise.resolve({ data: { id: 'p1', public_type: 'fully' } })
+        if (String(url).includes('isoqf_list_categories')) return Promise.resolve({ data: categories })
+        if (String(url).includes('isoqf_lists')) return Promise.resolve({ data: lists })
+        if (String(url).includes('isoqf_references')) return Promise.resolve({ data: BUNDLE.references })
+        return Promise.resolve({ data: [] })
+      })
+      const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: publicMocks })
+      await flushPromises()
+      await flushPromises()
+      return wrapper
+    }
+
+    test('hidden stubs keep the public numbering with gaps', async () => {
+      const wrapper = await mountPublic([complete('l1', 1), hiddenStub('l2', 2), complete('l3', 3)])
+
+      expect(numbersOf(wrapper)).toEqual(['1', '3'])
+      expect(wrapper.vm.table_settings.totalRows).toBe(2)
+      const findingCalls = Api.get.mock.calls.filter(c => String(c[0]).includes('isoqf_findings'))
+      expect(findingCalls.map(c => c[1].list_id).sort()).toEqual(['l1', 'l3'])
+      wrapper.destroy()
+    })
+
+    test('a list without cerqual does not break the public table', async () => {
+      const wrapper = await mountPublic([{ id: 'l9', name: 'Bare finding', sort: 1, category: null }])
+
+      expect(wrapper.vm.loadErrors.lists).toBe(false)
+      expect(renderedTable(wrapper)).toContain('Bare finding')
       wrapper.destroy()
     })
   })
