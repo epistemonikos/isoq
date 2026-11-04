@@ -432,5 +432,20 @@ describe('previewContentSoQf — hidden stubs and incomplete lists (public views
       expect(renderedTable(wrapper)).toContain('Bare finding')
       wrapper.destroy()
     })
+
+    test('a reload where every list is hidden clears the table', async () => {
+      const wrapper = await mountPublic([complete('l1', 1)])
+      expect(wrapper.vm.lists_print_version.length).toBeGreaterThan(0)
+
+      Api.get.mockImplementation((url) => Promise.resolve({
+        data: String(url).includes('isoqf_lists') ? [hiddenStub('l1', 1)] : []
+      }))
+      wrapper.vm.getLists()
+      await flushPromises()
+
+      expect(wrapper.vm.lists_print_version).toEqual([])
+      expect(wrapper.vm.printableItems).toEqual([])
+      wrapper.destroy()
+    })
   })
 })

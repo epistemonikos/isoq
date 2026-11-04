@@ -441,6 +441,9 @@ export default {
           // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
           // above so the gaps stay, and dropped here: nothing below may list or fetch them.
           data = data.filter(l => !l.hidden)
+          // A reload where nothing is left must not keep the previous rows.
+          this.lists_print_version = []
+          this.printableItems = []
           if (data.length) {
             for (let list of data) {
               this.setListStatus(list)
@@ -769,6 +772,9 @@ export default {
           // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
           // above so the gaps stay, and dropped here: nothing below may list or fetch them.
           data = data.filter(l => !l.hidden)
+          // A reload where nothing is left must not keep the previous rows.
+          this.lists_print_version = []
+          this.printableItems = []
           if (data.length) {
             for (let list of data) {
               this.setListStatus(list)

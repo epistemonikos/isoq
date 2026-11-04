@@ -11,7 +11,7 @@
     <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="displayNumber"
       :fields="(list_categories.options.length) ? fields.with_categories : fields.without_categories" :items="lists"
       :show-empty="!loadError" :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
-      @filtered="onFiltered" :filter-included-fields="table_settings.filterOn">
+      @filtered="onFiltered" :filter-function="rowMatchesFilter">
       <template v-slot:head(displayNumber)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
       </template>
@@ -389,7 +389,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation', 'status']
+        filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation']
       },
       editFindingName: {
         index: null,
@@ -884,6 +884,17 @@ export default {
      */
     findingLockedByName: function (listId) {
       return this.findingLockNotices(listId).map(a => a.text).join(' · ')
+    },
+    // The status dropdown sends an exact code and matches `status` exactly; anything else is
+    // free text over `filterOn` (status excluded, or typing «com» would match every row).
+    rowMatchesFilter: function (item, filter) {
+      if (filter === 'completed' || filter === 'unfinished') return item.status === filter
+      if (filter === null || filter === undefined || filter === '') return true
+      const needle = String(filter).toLowerCase()
+      return this.table_settings.filterOn.some(key => {
+        const value = item[key]
+        return value !== null && value !== undefined && String(value).toLowerCase().includes(needle)
+      })
     },
     onFiltered: function (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
