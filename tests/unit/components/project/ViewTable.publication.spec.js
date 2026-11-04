@@ -1,10 +1,8 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import ViewTable from '@/components/project/ViewTable.vue'
 import Api from '@/utils/Api'
-import { fetchPublicationState } from '@/utils/publicationState'
 
 jest.mock('@/utils/Api')
-jest.mock('@/utils/publicationState')
 jest.mock('@/services/lockService', () => ({
   acquireRef: jest.fn().mockResolvedValue({ success: true }),
   releaseRef: jest.fn().mockResolvedValue({}),
@@ -49,12 +47,22 @@ function createWrapper () {
   return { wrapper, $notify }
 }
 
+// Api.get resolves with the whole response, never the body: this mocks the real contract.
+const body = (path, { project, lists }) => {
+  if (path.startsWith('/isoqf_projects')) return project
+  if (path.startsWith('/isoqf_lists')) return lists
+  return [{ id: 'finding1', name: 'F1' }]
+}
+const serve = state => Api.get.mockImplementation(path => Promise.resolve({ data: body(path, state) }))
+const failReads = () => Api.get.mockImplementation(path => path.startsWith('/isoqf_findings')
+  ? Promise.resolve({ data: [{ id: 'finding1' }] })
+  : Promise.reject(new Error('down')))
+
 const text = (wrapper, id) => wrapper.find(`#${id}`).text()
 
 describe('ViewTable publication warnings', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    Api.get.mockResolvedValue({ data: [{ id: 'finding1', name: 'F1' }] })
   })
 
   describe('deleting a finding', () => {
@@ -65,7 +73,7 @@ describe('ViewTable publication warnings', () => {
     }
 
     test('says the project reverts when no other finding would stay visible', async () => {
-      fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1')] })
+      serve({ project: publicProject, lists: [complete('list1')] })
       const { wrapper } = createWrapper()
       await open(wrapper)
       expect(text(wrapper, 'remove-finding')).toContain('soqf_table.delete_warning_revert')
@@ -73,7 +81,7 @@ describe('ViewTable publication warnings', () => {
     })
 
     test('gives the simple warning when another finding stays visible', async () => {
-      fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1'), complete('list2')] })
+      serve({ project: publicProject, lists: [complete('list1'), complete('list2')] })
       const { wrapper } = createWrapper()
       await open(wrapper)
       const t = text(wrapper, 'remove-finding')
@@ -83,7 +91,7 @@ describe('ViewTable publication warnings', () => {
     })
 
     test('notifies and does not open the modal when the re-read fails', async () => {
-      fetchPublicationState.mockRejectedValue(new Error('down'))
+      failReads()
       const { wrapper, $notify } = createWrapper()
       const show = jest.fn()
       wrapper.vm.$refs['remove-finding'].show = show
@@ -105,7 +113,7 @@ describe('ViewTable publication warnings', () => {
     }
 
     test('the revert warning shows when it is the last visible finding', async () => {
-      fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1')] })
+      serve({ project: publicProject, lists: [complete('list1')] })
       const { wrapper } = createWrapper()
       const show = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
       await removeAll(wrapper)
@@ -115,7 +123,7 @@ describe('ViewTable publication warnings', () => {
     })
 
     test('the finding-hidden warning shows when another finding stays visible', async () => {
-      fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1'), complete('list2')] })
+      serve({ project: publicProject, lists: [complete('list1'), complete('list2')] })
       const { wrapper } = createWrapper()
       const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
       const hidden = jest.spyOn(wrapper.vm.$refs['modal-no-references-warning'], 'show')
@@ -127,7 +135,7 @@ describe('ViewTable publication warnings', () => {
     })
 
     test('a private project saves without any warning', async () => {
-      fetchPublicationState.mockResolvedValue({ project: { id: 'proj1', public_type: 'private' }, lists: [complete('list1')] })
+      serve({ project: { id: 'proj1', public_type: 'private' }, lists: [complete('list1')] })
       const { wrapper } = createWrapper()
       const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
       wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn() }
@@ -139,13 +147,69 @@ describe('ViewTable publication warnings', () => {
     })
 
     test('a failed re-read notifies and saves nothing', async () => {
-      fetchPublicationState.mockRejectedValue(new Error('down'))
+      failReads()
       const { wrapper, $notify } = createWrapper()
       const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
       await removeAll(wrapper)
       expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
       expect(save).not.toHaveBeenCalled()
       expect(wrapper.vm.pendingSaveReferences).toBe(false)
+      wrapper.destroy()
+    })
+
+    test('confirming the revert warning only saves the references, it never PATCHes the project', async () => {
+      serve({ project: publicProject, lists: [complete('list1')] })
+      const { wrapper } = createWrapper()
+      wrapper.vm.$refs['modal-references-list'] = { hide: jest.fn() }
+      const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => Promise.resolve())
+      await wrapper.vm.confirmSavePrivateProject()
+      expect(save).toHaveBeenCalled()
+      expect(Api.patch).not.toHaveBeenCalled()
+      expect(wrapper.emitted('update-project-status')).toBeTruthy()
+      wrapper.destroy()
+    })
+
+    function pendingReads () {
+      const calls = []
+      Api.get.mockImplementation(path => new Promise(resolve => calls.push({ path, resolve })))
+      return {
+        calls,
+        answer: state => calls.splice(0).forEach(c => c.resolve({ data: body(c.path, state) }))
+      }
+    }
+
+    test('a modal dismissed during the read neither warns nor saves', async () => {
+      const reads = pendingReads()
+      const { wrapper } = createWrapper()
+      const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+      const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
+      const none = jest.spyOn(wrapper.vm, 'confirmSaveNoReferences')
+      await wrapper.setData({ selected_list_index: 0, selected_references: [], original_references: ['r1'] })
+      wrapper.vm.checkReferencesBeforeSaving({ preventDefault: jest.fn() })
+      wrapper.vm.cancelReferencesList()
+      wrapper.vm.handleReferencesModalHidden()
+      reads.answer({ project: publicProject, lists: [complete('list1')] })
+      await flush()
+      expect(priv).not.toHaveBeenCalled()
+      expect(none).not.toHaveBeenCalled()
+      expect(save).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('a second OK while the read is pending starts no second read', async () => {
+      const reads = pendingReads()
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ selected_list_index: 0, selected_references: [], original_references: ['r1'] })
+      const first = { preventDefault: jest.fn() }
+      const second = { preventDefault: jest.fn() }
+      wrapper.vm.checkReferencesBeforeSaving(first)
+      wrapper.vm.checkReferencesBeforeSaving(second)
+      expect(reads.calls).toHaveLength(2)
+      expect(second.preventDefault).toHaveBeenCalled()
+      expect(wrapper.vm.referencesWarnPending).toBe(true)
+      reads.answer({ project: publicProject, lists: [complete('list1')] })
+      await flush()
+      expect(wrapper.vm.referencesWarnPending).toBe(false)
       wrapper.destroy()
     })
   })

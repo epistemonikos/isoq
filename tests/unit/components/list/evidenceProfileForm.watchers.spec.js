@@ -1,11 +1,10 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
-import { fetchPublicationState } from '@/utils/publicationState'
+import Api from '@/utils/Api'
 import evidenceProfileForm from '@/components/list/evidenceProfileForm.vue'
 
 const localVue = createLocalVue()
 
 jest.mock('@/utils/Api')
-jest.mock('@/utils/publicationState')
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -59,10 +58,13 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
 })
 
 beforeEach(() => {
-  fetchPublicationState.mockResolvedValue({ project: { public_type: 'private' }, lists: [] })
+  // Api.get resolves with the whole response: a private project, so nothing to warn about.
+  Api.get.mockImplementation(path => Promise.resolve({ data: path.startsWith('/isoqf_projects') ? { public_type: 'private' } : [] }))
 })
 
 function setupRefs (wrapper) {
+  // The editor is open and holds its lock: that is what lets a late read act.
+  wrapper.vm.modalOpen = true
   wrapper.vm.$refs['modal-warning-changed-option'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-cleaning-cerqual'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-same-txt'] = { show: jest.fn(), hide: jest.fn() }

@@ -2,7 +2,7 @@
   <div>
     <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
       dialog-class="modal-dialog-fullscreen"
-      :ok-disabled="!canEditFinding"
+      :ok-disabled="!canEditFinding || warnReadPending"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
       cancel-variant="outline-secondary" @show="onModalShow" @hidden="onModalHidden">
       <template v-slot:modal-title>
@@ -803,8 +803,7 @@
 <script>
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
-import { publicationImpact } from '@/utils/publishRules'
-import { fetchPublicationState } from '@/utils/publicationState'
+import { impactOfListChange } from '@/utils/publicationState'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
@@ -911,6 +910,9 @@ export default {
       },
       // What the server will do to the published project for each pending warning,
       // read when the warning opens ('none' | 'finding_hidden' | 'project_private').
+      // Reads of the publication state in flight; only the latest one may act (see readImpact).
+      warnSeq: 0,
+      warnReadsPending: 0,
       changedOptionImpact: 'none',
       clearCerqualImpact: 'none',
       incompleteSaveImpact: 'none',
@@ -1008,6 +1010,9 @@ export default {
         return this.$t(key, { user })
       }
       return null
+    },
+    warnReadPending: function () {
+      return this.warnReadsPending > 0
     },
     clearCerqualWarningMessage: function () {
       return this.$t(this.clearCerqualImpact === 'project_private'
@@ -1242,21 +1247,20 @@ export default {
     // would hide it or revert the project, say so before saving.
     closeWarningModalDoItLater: async function () {
       this.$refs['modal-warning-same-txt']?.hide()
-      let impact
-      try {
-        impact = await this.publicationImpactOf({
-          option: this.selectedOptions.cerqual.option,
-          explanation: this.selectedOptions.cerqual.explanation
-        })
-      } catch (error) {
-        this.onSaveError(error, 'notifications.save_error')
+      const read = await this.readImpact({
+        option: this.selectedOptions.cerqual.option,
+        explanation: this.selectedOptions.cerqual.explanation
+      })
+      if (!read.current) return
+      if (read.error) {
+        this.onSaveError(read.error, 'notifications.save_error')
         return
       }
-      if (impact === 'none') {
+      if (read.impact === 'none') {
         this.continueSavingDataModal()
         return
       }
-      this.incompleteSaveImpact = impact
+      this.incompleteSaveImpact = read.impact
       this.$refs['modal-warning-save-incomplete']?.show()
     },
     confirmIncompleteSave: function () {
@@ -1268,21 +1272,37 @@ export default {
     },
     // Impact on the published project of this list ending with the given `cerqual`,
     // judged against a fresh read: other members may have completed findings meanwhile.
-    publicationImpactOf: async function (cerqual) {
-      const { project, lists } = await fetchPublicationState(this.list.project_id)
-      const current = (lists || []).find(l => l.id === this.list.id)
-      const changed = current ? { ...current, cerqual: { ...current.cerqual, ...cerqual } } : null
-      return publicationImpact(project, lists, this.list.id, changed)
+    // Never throws. `current` is false when the result is no longer the editor's business:
+    // a newer read started, the editor closed, or it lost its finding lock. Acting then
+    // would open a modal over nothing and, on "Yes", take a lock nobody releases.
+    readImpact: async function (cerqual) {
+      const token = ++this.warnSeq
+      this.warnReadsPending++
+      let impact = null
+      let error = null
+      try {
+        impact = await impactOfListChange(this.list.project_id, this.list.id, list => {
+          list.cerqual = { ...list.cerqual, ...cerqual }
+          return list
+        })
+      } catch (e) {
+        error = e
+      } finally {
+        this.warnReadsPending--
+      }
+      const current = token === this.warnSeq && this.modalOpen && !this.isFindingReadOnly
+      return { current, impact, error }
     },
     askChangedOption: async function (domain) {
-      try {
-        this.changedOptionImpact = await this.publicationImpactOf({ option: null, explanation: '' })
-      } catch (error) {
+      const read = await this.readImpact({ option: null, explanation: '' })
+      if (!read.current) return
+      if (read.error) {
         // Not warning is not an option: undo the change and stop.
         this.selectedOptions[domain].option = this.modalData[domain].option
-        this.onSaveError(error, 'notifications.save_error')
+        this.onSaveError(read.error, 'notifications.save_error')
         return
       }
+      this.changedOptionImpact = read.impact
       this.$refs['modal-warning-changed-option']?.show()
     },
     saveEvidenceProfile: function (type, e) {
@@ -1517,13 +1537,16 @@ export default {
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
-          try {
-            this.clearCerqualImpact = await this.publicationImpactOf({ option: null, explanation: '' })
-          } catch (error) {
-            this.selectedOptions.cerqual.option = this.modalData.cerqual.option
-            this.selectedOptions.cerqual.explanation = this.modalData.cerqual.explanation
-            this.onSaveError(error, 'notifications.save_error')
-            break
+          {
+            const read = await this.readImpact({ option: null, explanation: '' })
+            if (!read.current) break
+            if (read.error) {
+              this.selectedOptions.cerqual.option = this.modalData.cerqual.option
+              this.selectedOptions.cerqual.explanation = this.modalData.cerqual.explanation
+              this.onSaveError(read.error, 'notifications.save_error')
+              break
+            }
+            this.clearCerqualImpact = read.impact
           }
           this.$refs['modal-warning-cleaning-cerqual']?.show()
           break

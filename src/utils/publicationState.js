@@ -1,11 +1,24 @@
 import Api from '@/utils/Api'
+import { publicationImpact } from '@/utils/publishRules'
 
 // Fresh project and lists, read at the moment of an action that may change what is
-// published. A cached answer would be exactly the stale picture this exists to avoid. Rejects on failure: callers notify with writeErrorMessageKey and stop.
+// published. `networkOnly`: a cached answer would be exactly the stale picture this
+// exists to avoid. `Api.get` resolves with the whole response, so the bodies are unwrapped
+// here. Rejects on failure: callers notify with writeErrorMessageKey and stop.
 export async function fetchPublicationState (projectId) {
-  const [project, lists] = await Promise.all([
+  const [projectRes, listsRes] = await Promise.all([
     Api.get('/isoqf_projects/' + projectId, {}, { networkOnly: true }),
     Api.get('/isoqf_lists', { project_id: projectId }, { networkOnly: true })
   ])
-  return { project, lists }
+  return { project: projectRes.data, lists: listsRes.data }
+}
+
+// What changing one list does to the published project, judged against a fresh read.
+// `changeFn` gets a copy of the fresh list and returns it as it would end up, or null when
+// the list is deleted. Resolves 'none' | 'finding_hidden' | 'project_private'.
+export async function impactOfListChange (projectId, listId, changeFn) {
+  const { project, lists } = await fetchPublicationState(projectId)
+  const current = (Array.isArray(lists) ? lists : []).find(l => l && l.id === listId)
+  const changed = current ? changeFn(JSON.parse(JSON.stringify(current))) : null
+  return publicationImpact(project, lists, listId, changed)
 }

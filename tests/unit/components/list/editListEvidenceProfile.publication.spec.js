@@ -1,7 +1,7 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import BootstrapVue from 'bootstrap-vue'
 import editListEvidenceProfile from '@/components/list/editListEvidenceProfile.vue'
-import { fetchPublicationState } from '@/utils/publicationState'
+import Api from '@/utils/Api'
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -11,7 +11,6 @@ jest.mock('@/utils/Api', () => ({
   post: jest.fn().mockResolvedValue({ data: {} }),
   patch: jest.fn().mockResolvedValue({ data: {} })
 }))
-jest.mock('@/utils/publicationState')
 jest.mock('@/services/lockService', () => ({
   acquireRef: jest.fn().mockResolvedValue({ success: true }),
   releaseRef: jest.fn(),
@@ -92,6 +91,10 @@ function createWrapper () {
   })
 }
 
+// Api.get resolves with the whole response, never the body: this mocks the real contract.
+const serve = ({ project, lists }) => Api.get.mockImplementation(path =>
+  Promise.resolve({ data: path.startsWith('/isoqf_projects') ? project : lists }))
+
 const text = (wrapper, id) => wrapper.find(`#${id}`).text()
 
 async function removeAll (wrapper) {
@@ -107,18 +110,18 @@ describe('editListEvidenceProfile publication warnings when removing every refer
   beforeEach(() => jest.clearAllMocks())
 
   test('the revert warning shows when it is the last visible finding', async () => {
-    fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1')] })
+    serve({ project: publicProject, lists: [complete('list1')] })
     const wrapper = createWrapper()
     const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
     await removeAll(wrapper)
-    expect(fetchPublicationState).toHaveBeenCalledWith('proj1')
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_lists', { project_id: 'proj1' }, { networkOnly: true })
     expect(priv).toHaveBeenCalled()
     expect(text(wrapper, 'modal-private-project-warning')).toContain('soqf_table.remove_all_revert')
     wrapper.destroy()
   })
 
   test('the finding-hidden warning shows when another finding stays visible, even if props say otherwise', async () => {
-    fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [complete('list1'), complete('list2')] })
+    serve({ project: publicProject, lists: [complete('list1'), complete('list2')] })
     const wrapper = createWrapper()
     const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
     const hidden = jest.spyOn(wrapper.vm.$refs['modal-no-references-warning'], 'show')
@@ -130,7 +133,7 @@ describe('editListEvidenceProfile publication warnings when removing every refer
   })
 
   test('with nothing published it saves without warning', async () => {
-    fetchPublicationState.mockResolvedValue({ project: { id: 'proj1', public_type: 'private' }, lists: [complete('list1')] })
+    serve({ project: { id: 'proj1', public_type: 'private' }, lists: [complete('list1')] })
     const wrapper = createWrapper()
     const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
     const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
@@ -139,6 +142,39 @@ describe('editListEvidenceProfile publication warnings when removing every refer
     expect(save).toHaveBeenCalled()
     expect(priv).not.toHaveBeenCalled()
     expect(hidden).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  test('confirming the revert warning only saves the references, it never PATCHes the project', async () => {
+    serve({ project: publicProject, lists: [complete('list1')] })
+    const wrapper = createWrapper()
+    wrapper.vm.$refs.modalReferences = { hide: jest.fn(), show: jest.fn() }
+    const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => Promise.resolve())
+    await wrapper.vm.confirmSavePrivateProject()
+    expect(save).toHaveBeenCalled()
+    expect(Api.patch).not.toHaveBeenCalledWith('/isoqf_projects/proj1', expect.anything())
+    wrapper.destroy()
+  })
+
+  test('a modal hidden during the read neither warns nor saves, and OK is disabled meanwhile', async () => {
+    const calls = []
+    Api.get.mockImplementation(path => new Promise(resolve => calls.push({ path, resolve })))
+    const wrapper = createWrapper()
+    const save = jest.spyOn(wrapper.vm, 'saveReferencesList').mockImplementation(() => {})
+    const priv = jest.spyOn(wrapper.vm.$refs['modal-private-project-warning'], 'show')
+    await wrapper.setData({ localReferences: [] })
+    wrapper.vm.checkReferencesBeforeSaving({ preventDefault: jest.fn() })
+    const second = { preventDefault: jest.fn() }
+    wrapper.vm.checkReferencesBeforeSaving(second)
+    expect(calls).toHaveLength(2)
+    expect(second.preventDefault).toHaveBeenCalled()
+    expect(wrapper.vm.referencesWarnPending).toBe(true)
+    wrapper.vm.handleReferencesModalHidden()
+    calls.forEach(c => c.resolve({ data: c.path.startsWith('/isoqf_projects') ? publicProject : [complete('list1')] }))
+    await flush()
+    expect(priv).not.toHaveBeenCalled()
+    expect(save).not.toHaveBeenCalled()
+    expect(wrapper.vm.referencesWarnPending).toBe(false)
     wrapper.destroy()
   })
 })

@@ -266,7 +266,7 @@
     <b-modal v-if="selected_list_index >= 0" id="modal-references-list" ref="modal-references-list"
       :title="$t('soqf_table.references')" @ok="checkReferencesBeforeSaving"
       @show="noteModalShown('modal-references-list')" @hidden="handleReferencesModalHidden"
-      @cancel="cancelReferencesList" :ok-disabled="!canEdit || isFindingReadOnly || (selected_list_index === null)"
+      @cancel="cancelReferencesList" :ok-disabled="!canEdit || isFindingReadOnly || (selected_list_index === null) || referencesWarnPending"
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
@@ -321,8 +321,7 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
-import { publicationImpact } from '@/utils/publishRules'
-import { fetchPublicationState } from '@/utils/publicationState'
+import { impactOfListChange } from '@/utils/publicationState'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -438,6 +437,8 @@ export default {
       original_references: [],
       finding: {},
       pendingSaveReferences: false,
+      referencesWarnSeq: 0,
+      referencesWarnPending: false,
       findingNameDirty: false,
       // Clave del ref_lock que sostiene el modal abierto, o null. Es el id del documento
       // `isoqf_findings`: la MISMA que toma evidenceProfileForm al abrir la hoja de
@@ -955,8 +956,7 @@ export default {
           // props may be behind what the rest of the team has completed.
           let impact
           try {
-            const { project, lists } = await fetchPublicationState(this.project.id)
-            impact = publicationImpact(project, lists, data.item.id, null)
+            impact = await impactOfListChange(this.project.id, data.item.id, () => null)
           } catch (error) {
             this.releaseFindingLock()
             this.notifyWriteFailure(error, 'notifications.save_error')
@@ -1093,6 +1093,8 @@ export default {
         })
     },
     cancelReferencesList: function () {
+      this.abandonReferencesWarn()
+      this.pendingSaveReferences = false
       this.$refs['modal-references-list'].hide()
     },
     checkReferencesBeforeSaving: function (bvModalEvent) {
@@ -1100,6 +1102,8 @@ export default {
       // complete; what that does to the published project is read from the server.
       if (this.selected_references.length === 0 && this.original_references.length > 0) {
         bvModalEvent.preventDefault()
+        // A second OK while the read is pending must not start a second one.
+        if (this.referencesWarnPending) return
         this.pendingSaveReferences = true
         this.warnBeforeRemovingAllReferences()
         return
@@ -1110,15 +1114,26 @@ export default {
     },
 
     warnBeforeRemovingAllReferences: async function () {
+      const token = ++this.referencesWarnSeq
+      this.referencesWarnPending = true
       let impact
+      let failure = null
       try {
-        const { project, lists } = await fetchPublicationState(this.project.id)
         const listId = this.lists[this.selected_list_index].id
-        const current = lists.find(l => l.id === listId)
-        impact = publicationImpact(project, lists, listId, current ? { ...current, references: [] } : null)
+        impact = await impactOfListChange(this.project.id, listId, list => {
+          list.references = []
+          return list
+        })
       } catch (error) {
+        failure = error
+      }
+      // Dismissing the modal (cancel or hidden) bumps the counter: a late answer must not
+      // warn over nothing, nor save what the person walked away from.
+      if (token !== this.referencesWarnSeq) return
+      this.referencesWarnPending = false
+      if (failure) {
         this.pendingSaveReferences = false
-        this.notifyWriteFailure(error, 'notifications.save_error')
+        this.notifyWriteFailure(failure, 'notifications.save_error')
         return
       }
       if (impact === 'project_private') {
@@ -1130,12 +1145,23 @@ export default {
       }
     },
 
+    // The read in flight (if any) no longer has anything to act on.
+    abandonReferencesWarn: function () {
+      this.referencesWarnSeq++
+      this.referencesWarnPending = false
+    },
+
     notifyWriteFailure: function (error, actionKey) {
       const key = writeErrorMessageKey(error, actionKey)
       if (key) this.$notify.error(this.$t(key))
     },
 
     handleReferencesModalHidden: function () {
+      // Hidden while a read is in flight (backdrop, programmatic hide): same as cancelling.
+      if (this.referencesWarnPending) {
+        this.abandonReferencesWarn()
+        this.pendingSaveReferences = false
+      }
       this.clearFreshPresence()
       this.noteModalHidden('modal-references-list')
       // Only clean up if not pending save from warning dialog
@@ -1164,48 +1190,24 @@ export default {
     },
 
     /**
-     * Quitar todas las referencias deja el proyecto sin publicar, así que antes se pasa a
-     * privado. Van EN ORDEN y no en paralelo: si pasar a privado fallaba, las referencias
-     * se borraban igual y quedaba un proyecto público sin referencias. Ahora, si falla, no
-     * se toca nada y se avisa.
+     * Confirmed the «the project reverts to private» warning. The front does not make the
+     * project private: the server does it when the references are saved. It only asks the
+     * parent to read the project again afterwards.
      */
     confirmSavePrivateProject: async function () {
-      try {
-        await this.saveProjectAsPrivate()
-      } catch (error) {
-        this.cancelPrivateProjectWarning()
-        const key = writeErrorMessageKey(error, 'notifications.make_private_error')
-        if (key) this.$notify.error(this.$t(key))
-        return
-      }
-      this.saveReferencesList()
+      const saving = this.saveReferencesList()
       this.$nextTick(() => {
         this.pendingSaveReferences = false
         this.$refs['modal-references-list'].hide()
       })
+      await saving
+      this.$emit('update-project-status')
     },
 
     cancelPrivateProjectWarning: function () {
       // User cancelled - restore original references selection
       this.selected_references = [...this.original_references]
       this.pendingSaveReferences = false
-    },
-
-    saveProjectAsPrivate: function () {
-      // Update the project to be private
-      const params = {
-        is_public: false,
-        private: true,
-        license_type: '',
-        public_type: 'private'
-      }
-      // Devuelve la promesa: `confirmSavePrivateProject` espera el resultado antes de
-      // quitar referencias.
-      return Api.patch(`/isoqf_projects/${this.project.id}`, params)
-        .then(() => {
-          // Emit an event to notify the parent component that the project status changed
-          this.$emit('update-project-status')
-        })
     },
 
     saveReferencesList: function () {

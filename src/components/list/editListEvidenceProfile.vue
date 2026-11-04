@@ -574,7 +574,7 @@
       @hidden="handleReferencesModalHidden"
       :no-close-on-backdrop="pendingSaveReferences"
       :no-close-on-esc="pendingSaveReferences"
-      :ok-disabled="!permission || referencesReadOnly">
+      :ok-disabled="!permission || referencesReadOnly || referencesWarnPending">
       <b-alert
         v-if="referencesReadOnly"
         show
@@ -680,8 +680,7 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
-import { publicationImpact } from '@/utils/publishRules'
-import { fetchPublicationState } from '@/utils/publicationState'
+import { impactOfListChange } from '@/utils/publicationState'
 import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
@@ -755,6 +754,8 @@ export default {
     return {
       localReferences: [],
       pendingSaveReferences: false,
+      referencesWarnSeq: 0,
+      referencesWarnPending: false,
       // Lock `<findingId>` que sostiene el modal de referencias. Va aparte de
       // `findings.id` porque ése es lo que se MUESTRA, y un lock perdido deja de ser
       // nuestro aunque el finding en pantalla siga siendo el mismo.
@@ -870,6 +871,8 @@ export default {
       // y había referencias originalmente
       if (this.localReferences.length === 0 && this.list.references.length > 0) {
         bvModalEvent.preventDefault()
+        // A second OK while the read is pending must not start a second one.
+        if (this.referencesWarnPending) return
         this.pendingSaveReferences = true
 
         // What this does to the published project is read from the server, not from props.
@@ -882,12 +885,17 @@ export default {
     },
 
     warnBeforeRemovingAllReferences: async function () {
+      const token = ++this.referencesWarnSeq
+      this.referencesWarnPending = true
       let impact
       try {
-        const { project, lists } = await fetchPublicationState(this.project.id)
-        const current = (lists || []).find(l => l.id === this.list.id)
-        impact = publicationImpact(project, lists, this.list.id, current ? { ...current, references: [] } : null)
+        impact = await impactOfListChange(this.project.id, this.list.id, list => {
+          list.references = []
+          return list
+        })
       } catch (error) {
+        if (token !== this.referencesWarnSeq) return
+        this.referencesWarnPending = false
         // Without being able to check, nothing is changed: confirming blind could revert
         // the project without the person knowing.
         this.cancelNoReferencesWarning()
@@ -895,6 +903,10 @@ export default {
         if (key) this.$notify.error(this.$t(key))
         return
       }
+      // Hiding the modal bumps the counter: a late answer must not warn over nothing nor
+      // save what the person walked away from.
+      if (token !== this.referencesWarnSeq) return
+      this.referencesWarnPending = false
       if (impact === 'project_private') {
         this.$refs['modal-private-project-warning'].show()
       } else if (impact === 'finding_hidden') {
@@ -905,6 +917,11 @@ export default {
     },
 
     handleReferencesModalHidden: function () {
+      if (this.referencesWarnPending) {
+        this.referencesWarnSeq++
+        this.referencesWarnPending = false
+        this.pendingSaveReferences = false
+      }
       // Solo limpiar si no hay una operación pendiente
       if (!this.pendingSaveReferences) {
         this.cleanReferencesList()
@@ -931,48 +948,17 @@ export default {
     },
 
     /**
-     * Quitar todas las referencias deja el proyecto sin publicar, así que antes se pasa a
-     * privado. Van EN ORDEN y no en paralelo: si pasar a privado fallaba, las referencias
-     * se borraban igual y quedaba un proyecto público sin referencias. Ahora, si falla, no
-     * se toca nada y se avisa.
+     * Confirmed the «the project reverts to private» warning. The front does not make the
+     * project private: the server does it when the references are saved.
      */
-    confirmSavePrivateProject: async function () {
-      try {
-        await this.saveProjectAsPrivate()
-      } catch (error) {
-        this.cancelPrivateProjectWarning()
-        const key = writeErrorMessageKey(error, 'notifications.make_private_error')
-        if (key) this.$notify.error(this.$t(key))
-        return
-      }
-      this.saveReferencesList()
-      this.$nextTick(() => {
-        this.pendingSaveReferences = false
-        this.$refs['modalReferences'].hide()
-      })
+    confirmSavePrivateProject: function () {
+      this.confirmSaveNoReferences()
     },
 
     cancelPrivateProjectWarning: function () {
       // El usuario canceló - restaurar localReferences al estado original
       this.localReferences = this.selectableReferences()
       this.pendingSaveReferences = false
-    },
-
-    saveProjectAsPrivate: function () {
-      // Actualizar el proyecto para que sea privado
-      const params = {
-        is_public: false,
-        private: true,
-        license_type: '',
-        public_type: 'private'
-      }
-      // Devuelve la promesa: `confirmSavePrivateProject` espera el resultado antes de
-      // quitar referencias.
-      return Api.patch(`/isoqf_projects/${this.project.id}`, params)
-        .then(() => {
-          // Emitir un evento para notificar al componente padre que el estado del proyecto cambió
-          this.$emit('update-project-status')
-        })
     },
 
     cleanReferencesList: function () {

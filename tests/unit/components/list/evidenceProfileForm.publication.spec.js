@@ -1,12 +1,12 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import evidenceProfileForm from '@/components/list/evidenceProfileForm.vue'
 import Api from '@/utils/Api'
-import { fetchPublicationState } from '@/utils/publicationState'
+import LockService from '@/services/lockService'
 
 const localVue = createLocalVue()
 
 jest.mock('@/utils/Api')
-jest.mock('@/utils/publicationState')
+jest.mock('@/services/lockService')
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -22,6 +22,23 @@ const makeModalData = (overrides = {}) => ({
   ...overrides
 })
 
+// Api.get resolves with the whole response, never the body: this mocks the real contract.
+const serve = ({ project, lists }) => Api.get.mockImplementation(path =>
+  Promise.resolve({ data: path.startsWith('/isoqf_projects') ? project : lists }))
+
+// Reads that stay pending until the test answers them, to order late results.
+function deferredServer () {
+  const calls = []
+  Api.get.mockImplementation(path => new Promise(resolve => calls.push({ path, resolve })))
+  return {
+    calls,
+    answer (from, { project, lists }) {
+      calls.slice(from, from + 2).forEach(c =>
+        c.resolve({ data: c.path.startsWith('/isoqf_projects') ? project : lists }))
+    }
+  }
+}
+
 const completeList = id => ({
   id, name: id, project_id: 'proj1', references: ['r1'], cerqual: { option: 1, explanation: 'Because' }
 })
@@ -29,7 +46,14 @@ const publicProject = { public_type: 'fully', published_list_ids: [] }
 
 const Modal = { template: '<div class="modal-stub"><slot /></div>', methods: { show () {}, hide () {} } }
 
-const makeWrapper = (propsData = {}) => mount(evidenceProfileForm, {
+const mountOpen = (...args) => {
+  const w = mount(...args)
+  // The editor is open and holds its lock: that is what lets a late read act.
+  w.vm.modalOpen = true
+  return w
+}
+
+const makeWrapper = (propsData = {}) => mountOpen(evidenceProfileForm, {
   localVue,
   propsData: {
     modalData: makeModalData(),
@@ -76,7 +100,7 @@ const REVERT = 'worksheet.warnings.revert_private'
 describe('evidenceProfileForm publication warnings', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    fetchPublicationState.mockResolvedValue({ project: publicProject, lists: [completeList('list1')] })
+    serve({ project: publicProject, lists: [completeList('list1')] })
   })
 
   async function changeCoherence (wrapper) {
@@ -91,13 +115,13 @@ describe('evidenceProfileForm publication warnings', () => {
     const wrapper = makeWrapper({ modalData: makeModalData({ coherence: { option: '1', explanation: 'x', notes: '' } }) })
     await wrapper.setData({ selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '1', explanation: 'x', notes: '' } } })
     await changeCoherence(wrapper)
-    expect(fetchPublicationState).toHaveBeenCalledWith('proj1')
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_lists', { project_id: 'proj1' }, { networkOnly: true })
     expect(modalText(wrapper, 'modal-warning-changed-option')).toContain(REVERT)
     wrapper.destroy()
   })
 
   test('the revert warning is not shown when another member completed a finding meanwhile', async () => {
-    fetchPublicationState.mockResolvedValue({
+    serve({
       project: publicProject,
       lists: [completeList('list1'), completeList('list2')]
     })
@@ -111,7 +135,7 @@ describe('evidenceProfileForm publication warnings', () => {
   })
 
   test('a failed re-read notifies and reverts the option instead of staying silent', async () => {
-    fetchPublicationState.mockRejectedValue(new Error('network down'))
+    Api.get.mockRejectedValue(new Error('network down'))
     const wrapper = makeWrapper({ modalData: makeModalData({ coherence: { option: '1', explanation: 'x', notes: '' } }) })
     await wrapper.setData({ selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '1', explanation: 'x', notes: '' } } })
     await changeCoherence(wrapper)
@@ -131,7 +155,7 @@ describe('evidenceProfileForm publication warnings', () => {
   })
 
   test('clearing CERQual shows the simple text when another finding stays visible', async () => {
-    fetchPublicationState.mockResolvedValue({
+    serve({
       project: publicProject,
       lists: [completeList('list1'), completeList('list2')]
     })
@@ -143,18 +167,23 @@ describe('evidenceProfileForm publication warnings', () => {
   })
 
   test('clearing CERQual never posts /unpublish/project', async () => {
-    const wrapper = makeWrapper()
+    // The conditions that used to trigger the POST: this list is the only publishable one,
+    // the project is public, and the CERQual option has been cleared.
+    const wrapper = makeWrapper({
+      list: { ...completeList('list1'), project: { private: false }, publishable_lists: ['list1'] }
+    })
     wrapper.vm.lockedSectionRefs = ['finding1::ep::cerqual']
-    await wrapper.vm.clearMySelection('cerqual')
-    await wrapper.vm.updateOptions('cerqual', true)
-    await wrapper.vm.continueSavingDataModal()
+    wrapper.vm.selectedOptions.cerqual.option = null
+    wrapper.vm.selectedOptions.cerqual.explanation = ''
+    wrapper.vm.saveEvidenceProfile('cerqual', { preventDefault: jest.fn() })
     await flushPromises()
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/finding1/section/cerqual', expect.anything())
     expect(Api.post).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 
   test('do it later saves straight away when the finding stays as it was', async () => {
-    fetchPublicationState.mockResolvedValue({
+    serve({
       project: { public_type: 'private' },
       lists: [completeList('list1')]
     })
@@ -180,7 +209,7 @@ describe('evidenceProfileForm publication warnings', () => {
   })
 
   test('do it later stops when the re-read fails', async () => {
-    fetchPublicationState.mockRejectedValue(new Error('network down'))
+    Api.get.mockRejectedValue(new Error('network down'))
     const wrapper = makeWrapper()
     const save = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
     wrapper.vm.selectedOptions.cerqual.explanation = ''
@@ -188,6 +217,105 @@ describe('evidenceProfileForm publication warnings', () => {
     expect(save).not.toHaveBeenCalled()
     expect(wrapper.vm.$notify.error).toHaveBeenCalled()
     wrapper.destroy()
+  })
+
+  describe('late results', () => {
+    const changeDomain = (wrapper, domain) => wrapper.setData({
+      selectedOptions: { ...wrapper.vm.selectedOptions, [domain]: { option: '2', explanation: '', notes: '' } }
+    })
+    const modalDataWith = domain => makeModalData({ [domain]: { option: '1', explanation: 'x', notes: '' } })
+
+    async function twoDomainsOpen () {
+      const wrapper = makeWrapper({
+        modalData: makeModalData({
+          coherence: { option: '1', explanation: 'x', notes: '' },
+          adequacy: { option: '1', explanation: 'x', notes: '' }
+        })
+      })
+      await wrapper.setData({ selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '1', explanation: 'x', notes: '' }, adequacy: { option: '1', explanation: 'x', notes: '' } } })
+      return wrapper
+    }
+
+    test('two quick changes: only the latest result opens the modal', async () => {
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      const show = jest.spyOn(wrapper.vm.$refs['modal-warning-changed-option'], 'show')
+      await changeDomain(wrapper, 'coherence')
+      await changeDomain(wrapper, 'adequacy')
+      expect(server.calls).toHaveLength(4)
+      // The newer read answers first (private), the older one late (hidden).
+      server.answer(2, { project: publicProject, lists: [completeList('list1')] })
+      await flushPromises()
+      server.answer(0, { project: publicProject, lists: [completeList('list1'), completeList('list2')] })
+      await flushPromises()
+      expect(show).toHaveBeenCalledTimes(1)
+      expect(wrapper.vm.changedOptionImpact).toBe('project_private')
+      wrapper.destroy()
+    })
+
+    test('an editor closed during the read gets no modal and no lock', async () => {
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      const show = jest.spyOn(wrapper.vm.$refs['modal-warning-changed-option'], 'show')
+      await changeDomain(wrapper, 'coherence')
+      wrapper.vm.modalOpen = false
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] })
+      await flushPromises()
+      expect(show).not.toHaveBeenCalled()
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('an editor that lost its lock during the read gets no modal', async () => {
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      const show = jest.spyOn(wrapper.vm.$refs['modal-warning-changed-option'], 'show')
+      await changeDomain(wrapper, 'coherence')
+      wrapper.vm.isFindingReadOnly = true
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] })
+      await flushPromises()
+      expect(show).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('a clear that finishes after the editor closed opens nothing', async () => {
+      const server = deferredServer()
+      const wrapper = makeWrapper()
+      const show = jest.spyOn(wrapper.vm.$refs['modal-warning-cleaning-cerqual'], 'show')
+      const pending = wrapper.vm.clearMySelection('cerqual')
+      wrapper.vm.modalOpen = false
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] })
+      await pending
+      expect(show).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('"do it later" that finishes after the editor closed does not save', async () => {
+      const server = deferredServer()
+      const wrapper = makeWrapper()
+      const save = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
+      wrapper.vm.selectedOptions.cerqual.explanation = ''
+      const pending = wrapper.vm.closeWarningModalDoItLater()
+      wrapper.vm.modalOpen = false
+      server.answer(0, { project: { public_type: 'private' }, lists: [completeList('list1')] })
+      await pending
+      expect(save).not.toHaveBeenCalled()
+      wrapper.destroy()
+    })
+
+    test('Save is disabled while a read is pending', async () => {
+      const server = deferredServer()
+      const wrapper = await twoDomainsOpen()
+      const okDisabled = () => wrapper.find('#modal-evidence-profile-form').attributes('ok-disabled')
+      expect(okDisabled()).toBeUndefined()
+      await changeDomain(wrapper, 'coherence')
+      expect(okDisabled()).toBe('true')
+      server.answer(0, { project: publicProject, lists: [completeList('list1')] })
+      await flushPromises()
+      await wrapper.vm.$nextTick()
+      expect(okDisabled()).toBeUndefined()
+      wrapper.destroy()
+    })
   })
 
   test('high confidence without explanation is flagged in the overall CERQual', () => {
