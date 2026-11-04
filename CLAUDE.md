@@ -113,7 +113,9 @@ src/utils/leafVersion.js            `_v` de la celda del Paso 4
 src/utils/tableDataUtils.js         sortByStudyLabel / sortByAuthors
 src/utils/derivedRows.js            filas de estudios sin fila guardada
 src/utils/project.js                Project.validations / create / update (PATCH /api/publish)
-src/components/project/PublishModal.vue   publicación (can_publish + confirmación de datos personales)
+src/utils/publishRules.js           espejo puro de publish_rules.py del servidor (fixture compartida)
+src/utils/publicationState.js       impacto en la publicación de cambios a listas/referencias
+src/components/project/PublishModal.vue   publicación (POST can_publish + confirmación de datos personales)
 src/strategies/exportStrategies.js  exports Word/CSV
 src/mixins/preserveScrollMixin.js   conservar el scroll al recargar tablas
 src/mixins/fixedRefLockMixin.js     locks de clave fija de los modales del Paso 2
@@ -121,12 +123,24 @@ src/mixins/fixedRefLockMixin.js     locks de clave fija de los modales del Paso 
 
 ## Publicación
 
-`PublishModal.vue` → `Project.validations()` (propiedades) → `GET /api/project/can_publish` (≥1
-referencia y ≥1 finding **completo**: referencias + nivel de confianza + explicación en el mismo
-finding) → `PATCH /api/publish`. Para todo guardado público el servidor exige
-`no_personal_data_confirmed: true` (400 `personal_data_confirmation_required`); la casilla se precarga
-con el valor almacenado y despublicar la borra. `PATCH /api/publish` es también el guardado de
-Propiedades.
+Flujo: `PublishModal.vue` → `Project.validations()` (reglas compartidas) → `POST /api/project/can_publish`
+(body JSON plano, `{ noQueue: true }`, sólo miembros) → `PATCH /api/publish`. Los mensajes son claves
+i18n; un 400 `publish_requirements_not_met` con `missing_fields` marca los campos. Para todo guardado
+público el servidor exige `no_personal_data_confirmed: true` (400 `personal_data_confirmation_required`);
+la casilla se precarga con el valor almacenado y despublicar la borra. `PATCH /api/publish` es también
+el guardado de Propiedades.
+
+- **`src/utils/publishRules.js`** es el espejo puro de `auth_server/libs/publish_rules.py` del servidor.
+  Se prueba con `tests/unit/fixtures/publish_rules_cases.json`, copia byte a byte de
+  `tests/fixtures/publish_rules_cases.json` del servidor: **cambiar los dos juntos**. Nunca `\s`, `\S`,
+  `\d` ni `trim()` ahí; «al menos 3 letras» = 3 caracteres que no son espacio.
+- **Aviso de Megan** (`publish.only_complete_findings_visible`) vía `Project.confirmIncompleteFindings`,
+  sólo en la transición privado→público.
+- **Avisos a nivel finding**: `publicationState.impactOfListChange` / `publicationImpact` /
+  `publicationImpactOfDeletingReferences`, calculados con datos releídos en el momento de la acción. El
+  front nunca despublica ni hace PATCH del proyecto a privado: decide el servidor.
+- **Instantánea (R4)**: visible = en `published_list_ids` **y** completa; ausente o `[]` = toda lista
+  completa. Las vistas públicas numeran los stubs ocultos (`hidden: true`) y luego los descartan.
 
 ## Concurrencia
 
