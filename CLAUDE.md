@@ -123,9 +123,13 @@ src/mixins/fixedRefLockMixin.js     locks de clave fija de los modales del Paso 
 
 ## Publicación
 
-Flujo: `PublishModal.vue` → `Project.validations()` (reglas compartidas) → `POST /api/project/can_publish`
-(body JSON plano, `{ noQueue: true }`, sólo miembros) → `PATCH /api/publish`. Los mensajes son claves
-i18n; un 400 `publish_requirements_not_met` con `missing_fields` marca los campos. Para todo guardado
+Flujo: `PublishModal.vue` llama a `Project.canPublish` directamente (`POST /api/project/can_publish`,
+body JSON plano, `{ noQueue: true }`, sólo miembros) y luego `PATCH /api/publish`; Propiedades va por
+`Project.update` → `Project.validations()` (reglas compartidas) → `canPublish` → `PATCH /api/publish`
+(`Project.update` admite un `beforeSave` que corre tras validar y antes del PATCH: ahí va el aviso de
+Megan). Los mensajes son claves i18n; un 400 `publish_requirements_not_met` con `missing_fields` marca
+los campos en Propiedades y también llena el mensaje del `PublishModal` (texto + botón «Ir a las
+propiedades»). Para todo guardado
 público el servidor exige `no_personal_data_confirmed: true` (400 `personal_data_confirmation_required`);
 la casilla se precarga con el valor almacenado y despublicar la borra. `PATCH /api/publish` es también
 el guardado de Propiedades.
@@ -136,9 +140,17 @@ el guardado de Propiedades.
   `\d` ni `trim()` ahí; «al menos 3 letras» = 3 caracteres que no son espacio.
 - **Aviso de Megan** (`publish.only_complete_findings_visible`) vía `Project.confirmIncompleteFindings`,
   sólo en la transición privado→público.
+- **F5**: el CERQual general exige explicación en todos los niveles, también High (en el resto de
+  dominios, «sin preocupaciones» no la exige).
+- **Licencia vacía**: despublicar guarda `license_type: ''` y el servidor no la exige; al republicar
+  (`PublishModal`, Propiedades) vale `effectiveLicense` (`CC-BY-NC-ND`).
 - **Avisos a nivel finding**: `publicationState.impactOfListChange` / `publicationImpact` /
   `publicationImpactOfDeletingReferences`, calculados con datos releídos en el momento de la acción. El
-  front nunca despublica ni hace PATCH del proyecto a privado: decide el servidor.
+  front nunca despublica para compensar un cambio en un finding; pasar a privado es siempre una
+  elección de la persona (Propiedades o el modal de vuelta a privado).
+- **Sin conexión**: esas lecturas son `networkOnly` y `writeErrorMessageKey` calla el error offline, así
+  que todo fallo de lectura de publicación usa `publicationCheckErrorKey` (`publicationState.js`), que
+  muestra `publish.check_needs_connection`; la acción se detiene o se revierte.
 - **Instantánea (R4)**: visible = en `published_list_ids` **y** completa; ausente o `[]` = toda lista
   completa. Las vistas públicas numeran los stubs ocultos (`hidden: true`) y luego los descartan.
 
