@@ -121,3 +121,34 @@ export function isFindingVisible (list, project) {
   if (!Array.isArray(ids) || ids.length === 0) return true
   return ids.includes(list.id)
 }
+
+// What a change does to the published project: 'none', 'finding_hidden' (this finding
+// stops being visible but another one stays) or 'project_private' (no visible finding
+// would remain, so the server reverts the project). `changedList` is the list after the
+// change, or null when it is deleted.
+export function publicationImpact (project, lists, listId, changedList) {
+  if (!isProjectPublic(project)) return 'none'
+  const all = Array.isArray(lists) ? lists : []
+  const before = all.find(l => isObject(l) && l.id === listId)
+  if (!before || !isFindingVisible(before, project)) return 'none'
+  if (changedList && isFindingVisible(changedList, project)) return 'none'
+  const otherVisible = all.some(l => isObject(l) && l.id !== listId && isFindingVisible(l, project))
+  return otherVisible ? 'finding_hidden' : 'project_private'
+}
+
+// Same answer as publicationImpact, for a change that touches several lists at once:
+// deleting studies removes them from every list that cites them. Judging each list on
+// its own would miss two findings that stop being visible together.
+export function publicationImpactOfDeletingReferences (project, lists, deletedIds) {
+  if (!isProjectPublic(project)) return 'none'
+  const gone = new Set(Array.isArray(deletedIds) ? deletedIds : [])
+  const all = (Array.isArray(lists) ? lists : []).filter(isObject)
+  const visibleBefore = all.filter(l => isFindingVisible(l, project))
+  if (visibleBefore.length === 0) return 'none'
+  const stillVisible = visibleBefore.filter(l => isFindingVisible(
+    { ...l, references: Array.isArray(l.references) ? l.references.filter(id => !gone.has(id)) : l.references },
+    project
+  ))
+  if (stillVisible.length === 0) return 'project_private'
+  return stillVisible.length < visibleBefore.length ? 'finding_hidden' : 'none'
+}

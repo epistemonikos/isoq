@@ -496,7 +496,8 @@
     "reference_id": "Reference ID",
     "author_year": "Author(s), Year",
     "in_use_by": "{names} is working with this study right now. If you delete it, their editor will close and they will lose anything not yet saved.",
-    "delete_all_in_use": "{count} of these studies are being worked on right now by {names}. If you delete them, their editors will close and they will lose anything not yet saved."
+    "delete_all_in_use": "{count} of these studies are being worked on right now by {names}. If you delete them, their editors will close and they will lose anything not yet saved.",
+    "delete_reverts_private": "Deleting these studies will also revert your project to \"Private\", because no review finding with a complete GRADE-CERQual assessment would remain on the iSoQ database."
   },
   "inclusion": {
     "step_title": "STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)",

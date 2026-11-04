@@ -82,10 +82,10 @@ describe('evidenceProfileForm.vue — checkValidationExplanationText()', () => {
     wrapper.destroy()
   })
 
-  it('returns false when option is "0" (no concerns — explanation not required)', () => {
+  it('returns false when a component option is "0" (no concerns — explanation not required)', () => {
     const wrapper = makeWrapper()
-    const prop = makeModalData({ cerqual: { option: '0', explanation: '', notes: '' } })
-    expect(wrapper.vm.checkValidationExplanationText('cerqual', prop)).toBe(false)
+    const prop = makeModalData({ coherence: { option: '0', explanation: '', notes: '' } })
+    expect(wrapper.vm.checkValidationExplanationText('coherence', prop)).toBe(false)
     wrapper.destroy()
   })
 
@@ -118,61 +118,6 @@ describe('evidenceProfileForm.vue — checkValidationExplanationText()', () => {
   })
 })
 
-// ─── checkIfIsTheOnlyPublished ────────────────────────────────────────────────
-
-describe('evidenceProfileForm.vue — checkIfIsTheOnlyPublished()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('returns false when publishable_lists is empty', () => {
-    const wrapper = makeWrapper({ list: makeList({ publishable_lists: [] }) })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(false)
-    wrapper.destroy()
-  })
-
-  it('returns false when publishable_lists has more than one entry', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1', 'list2'], id: 'list1' })
-    })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(false)
-    wrapper.destroy()
-  })
-
-  it('returns false when project is private', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1'], id: 'list1', project: { private: true } })
-    })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(false)
-    wrapper.destroy()
-  })
-
-  it('returns false when list.id is not in publishable_lists', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['other-list'], id: 'list1', project: { private: false } })
-    })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(false)
-    wrapper.destroy()
-  })
-
-  it('returns true when list is the only one in publishable_lists and project is public', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1'], id: 'list1', project: { private: false } })
-    })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(true)
-    wrapper.destroy()
-  })
-
-  it('falls back to cerqual_lists when publishable_lists is undefined', () => {
-    const list = {
-      id: 'list1', organization: 'org1', project_id: 'proj1',
-      references: [], project: { private: false },
-      cerqual_lists: ['list1']
-    }
-    const wrapper = makeWrapper({ list })
-    expect(wrapper.vm.checkIfIsTheOnlyPublished()).toBe(true)
-    wrapper.destroy()
-  })
-})
-
 // ─── saveEvidenceProfile ──────────────────────────────────────────────────────
 
 describe('evidenceProfileForm.vue — saveEvidenceProfile()', () => {
@@ -200,56 +145,13 @@ describe('evidenceProfileForm.vue — saveEvidenceProfile()', () => {
     wrapper.destroy()
   })
 
-  it('calls continueSavingDataModal() when validation passes and list is not the only published', () => {
+  it('calls continueSavingDataModal() when validation passes', () => {
     const wrapper = makeWrapper()
     const continueSpy = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
     wrapper.vm.selectedOptions.cerqual.option = '1'
     wrapper.vm.selectedOptions.cerqual.explanation = 'Moderate confidence because...'
     wrapper.vm.saveEvidenceProfile('cerqual', { preventDefault: jest.fn() })
     expect(continueSpy).toHaveBeenCalledWith()
-    wrapper.destroy()
-  })
-
-  it('calls continueSavingDataModal(true) when only published and option is null (will unpublish)', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1'], id: 'list1', project: { private: false } })
-    })
-    const continueSpy = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
-    wrapper.vm.selectedOptions.cerqual.option = null
-    wrapper.vm.saveEvidenceProfile('cerqual', { preventDefault: jest.fn() })
-    expect(continueSpy).toHaveBeenCalledWith(true)
-    wrapper.destroy()
-  })
-
-  it('calls continueSavingDataModal() (no unpublish) when only published and option is set', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1'], id: 'list1', project: { private: false } })
-    })
-    const continueSpy = jest.spyOn(wrapper.vm, 'continueSavingDataModal').mockImplementation(() => {})
-    wrapper.vm.selectedOptions.cerqual.option = '1'
-    wrapper.vm.selectedOptions.cerqual.explanation = 'Explanation text'
-    wrapper.vm.saveEvidenceProfile('cerqual', { preventDefault: jest.fn() })
-    expect(continueSpy).toHaveBeenCalledWith()
-    wrapper.destroy()
-  })
-})
-
-// ─── clearCerqualWarningMessage (computed) ────────────────────────────────────
-
-describe('evidenceProfileForm.vue — clearCerqualWarningMessage (computed)', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('returns revert warning key when list is the only published', () => {
-    const wrapper = makeWrapper({
-      list: makeList({ publishable_lists: ['list1'], id: 'list1', project: { private: false } })
-    })
-    expect(wrapper.vm.clearCerqualWarningMessage).toBe('worksheet.warnings.clear_cerqual_revert')
-    wrapper.destroy()
-  })
-
-  it('returns simple warning key when list is not the only published', () => {
-    const wrapper = makeWrapper({ list: makeList({ publishable_lists: [] }) })
-    expect(wrapper.vm.clearCerqualWarningMessage).toBe('worksheet.warnings.clear_cerqual_simple')
     wrapper.destroy()
   })
 })

@@ -496,7 +496,8 @@
     "reference_id": "ID de Referencia",
     "author_year": "Autor(es), Año",
     "in_use_by": "{names} está trabajando ahora con este estudio. Si lo eliminas, se le cerrará el editor y perderá lo que no haya guardado.",
-    "delete_all_in_use": "{count} de estos estudios están en uso ahora por {names}. Si los eliminas, se les cerrará el editor y perderán lo que no hayan guardado."
+    "delete_all_in_use": "{count} de estos estudios están en uso ahora por {names}. Si los eliminas, se les cerrará el editor y perderán lo que no hayan guardado.",
+    "delete_reverts_private": "Al eliminar estos estudios, tu proyecto también volverá a \"Privado\", porque no quedaría en la base de datos de iSoQ ningún hallazgo de la revisión con una evaluación GRADE-CERQual completa."
   },
   "inclusion": {
     "step_title": "PASO 2: Ingrese los <b>criterios de inclusión y exclusión</b> de estudios utilizados en la revisión (recomendado)",

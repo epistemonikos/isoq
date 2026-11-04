@@ -740,7 +740,7 @@
       <p>
         {{ $t('worksheet.warnings.changed_option') }}
       </p>
-      <p v-if="showModalWarningChangedOption">
+      <p v-if="changedOptionImpact === 'project_private'">
         {{ $t('worksheet.warnings.revert_private') }}
       </p>
       <p>
@@ -753,6 +753,26 @@
           </b-col>
           <b-col>
             <b-button block @click="updateOptions(selectedOptions.type, false)">{{ $t('common.no') }}</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
+
+    <b-modal id="modal-warning-save-incomplete" ref="modal-warning-save-incomplete" :title="$t('common.warning')"
+      :hide-footer="true">
+      <p>
+        {{ incompleteSaveWarningMessage }}
+      </p>
+      <p>
+        {{ $t('common.continue_question') }}
+      </p>
+      <b-container>
+        <b-row>
+          <b-col>
+            <b-button block @click="confirmIncompleteSave()">{{ $t('common.yes') }}</b-button>
+          </b-col>
+          <b-col>
+            <b-button block @click="cancelIncompleteSave()">{{ $t('common.no') }}</b-button>
           </b-col>
         </b-row>
       </b-container>
@@ -783,6 +803,8 @@
 <script>
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { publicationImpact } from '@/utils/publishRules'
+import { fetchPublicationState } from '@/utils/publicationState'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
@@ -887,7 +909,11 @@ export default {
         items: [],
         fields: []
       },
-      showModalWarningChangedOption: false,
+      // What the server will do to the published project for each pending warning,
+      // read when the warning opens ('none' | 'finding_hidden' | 'project_private').
+      changedOptionImpact: 'none',
+      clearCerqualImpact: 'none',
+      incompleteSaveImpact: 'none',
       pendingExplanationFocusId: null,
       pendingChangedOptionFocusId: null
     }
@@ -905,8 +931,7 @@ export default {
     'selectedOptions.methodological_limitations.option': function (val) {
       if (val !== null) {
         if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('methodological_limitations')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-ml-explanation')
@@ -916,8 +941,7 @@ export default {
     'selectedOptions.coherence.option': function (val) {
       if (val !== null) {
         if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('coherence')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-coherence-explanation')
@@ -927,8 +951,7 @@ export default {
     'selectedOptions.adequacy.option': function (val) {
       if (val !== null) {
         if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('adequacy')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-adequacy-explanation')
@@ -938,8 +961,7 @@ export default {
     'selectedOptions.relevance.option': function (val) {
       if (val !== null) {
         if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('relevance')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-relevance-explanation')
@@ -988,17 +1010,22 @@ export default {
       return null
     },
     clearCerqualWarningMessage: function () {
-      if (this.checkIfIsTheOnlyPublished()) {
-        return this.$t('worksheet.warnings.clear_cerqual_revert')
-      } else {
-        return this.$t('worksheet.warnings.clear_cerqual_simple')
-      }
+      return this.$t(this.clearCerqualImpact === 'project_private'
+        ? 'worksheet.warnings.clear_cerqual_revert'
+        : 'worksheet.warnings.clear_cerqual_simple')
+    },
+    incompleteSaveWarningMessage: function () {
+      return this.$t(this.incompleteSaveImpact === 'project_private'
+        ? 'worksheet.warnings.clear_cerqual_revert'
+        : 'worksheet.warnings.clear_cerqual_simple')
     }
   },
   methods: {
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
-      if (!d || d.option === null || parseInt(d.option) === 0) return null
+      if (!d || d.option === null) return null
+      // The overall CERQual needs an explanation at every level, High included.
+      if (domain !== 'cerqual' && parseInt(d.option) === 0) return null
       return !!(d.explanation && d.explanation.trim().length > 0)
     },
     focusExplanation: function (id) {
@@ -1211,44 +1238,68 @@ export default {
         this.pendingExplanationFocusId = null
       }
     },
-    closeWarningModalDoItLater: function () {
-      this.continueSavingDataModal()
+    // Saving without an explanation can leave the finding incomplete: when the server
+    // would hide it or revert the project, say so before saving.
+    closeWarningModalDoItLater: async function () {
       this.$refs['modal-warning-same-txt']?.hide()
+      let impact
+      try {
+        impact = await this.publicationImpactOf({
+          option: this.selectedOptions.cerqual.option,
+          explanation: this.selectedOptions.cerqual.explanation
+        })
+      } catch (error) {
+        this.onSaveError(error, 'notifications.save_error')
+        return
+      }
+      if (impact === 'none') {
+        this.continueSavingDataModal()
+        return
+      }
+      this.incompleteSaveImpact = impact
+      this.$refs['modal-warning-save-incomplete']?.show()
+    },
+    confirmIncompleteSave: function () {
+      this.$refs['modal-warning-save-incomplete']?.hide()
+      this.continueSavingDataModal()
+    },
+    cancelIncompleteSave: function () {
+      this.$refs['modal-warning-save-incomplete']?.hide()
+    },
+    // Impact on the published project of this list ending with the given `cerqual`,
+    // judged against a fresh read: other members may have completed findings meanwhile.
+    publicationImpactOf: async function (cerqual) {
+      const { project, lists } = await fetchPublicationState(this.list.project_id)
+      const current = (lists || []).find(l => l.id === this.list.id)
+      const changed = current ? { ...current, cerqual: { ...current.cerqual, ...cerqual } } : null
+      return publicationImpact(project, lists, this.list.id, changed)
+    },
+    askChangedOption: async function (domain) {
+      try {
+        this.changedOptionImpact = await this.publicationImpactOf({ option: null, explanation: '' })
+      } catch (error) {
+        // Not warning is not an option: undo the change and stop.
+        this.selectedOptions[domain].option = this.modalData[domain].option
+        this.onSaveError(error, 'notifications.save_error')
+        return
+      }
+      this.$refs['modal-warning-changed-option']?.show()
     },
     saveEvidenceProfile: function (type, e) {
       e.preventDefault()
       if (this.checkValidationExplanationText(type, this.selectedOptions)) {
         this.openWarningModalForExplanationText()
       } else {
-        if (this.checkIfIsTheOnlyPublished()) {
-          let newType = type
-          if (type === 'methodological-limitations') {
-            newType = 'methodological_limitations'
-          }
-          if (this.selectedOptions[newType].option === null) {
-            this.continueSavingDataModal(true)
-          } else {
-            this.continueSavingDataModal()
-          }
-        } else {
-          this.continueSavingDataModal()
-        }
+        this.continueSavingDataModal()
       }
-    },
-    checkIfIsTheOnlyPublished: function () {
-      // Use publishable_lists (findings with both cerqual AND references) if available
-      // Otherwise fall back to cerqual_lists for backwards compatibility
-      const publishableLists = this.list.publishable_lists || this.list.cerqual_lists || []
-      if (this.list && publishableLists && publishableLists.includes(this.list.id) && publishableLists.length === 1 && this.list.project.private === false) {
-        return true
-      }
-      return false
     },
     checkValidationExplanationText: function (type, prop) {
       if (!type) return false
       const domain = type.replace(/-/g, '_')
       const d = prop[domain]
-      if (!d || d.option === null || parseInt(d.option) === 0) return false
+      if (!d || d.option === null) return false
+      // The overall CERQual needs an explanation at every level, High included.
+      if (domain !== 'cerqual' && parseInt(d.option) === 0) return false
       return !(d.explanation && d.explanation.trim().length > 0)
     },
     /**
@@ -1304,7 +1355,7 @@ export default {
         this.pendingChangedOptionFocusId = null
       }
     },
-    continueSavingDataModal: function (status = false) {
+    continueSavingDataModal: function () {
       this.$emit('busyEvidenceProfileTable', true)
       // Writing a section without the finding's lock is a guaranteed 409, and the
       // failure is invisible (console only) with the spinner left spinning.
@@ -1343,7 +1394,6 @@ export default {
           .reduce((cadena, s) => cadena.then(() =>
             Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])),
           Promise.resolve())
-          .then(() => status ? Api.post(`/unpublish/project/${this.list.project_id}`) : null)
           .then(() => {
             this.$emit('callGetStageOneData', false)
             // The backend now seals the list's evidence_profile mirror + top-level cerqual
@@ -1445,7 +1495,7 @@ export default {
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)
     },
-    clearMySelection: function (option) {
+    clearMySelection: async function (option) {
       switch (option) {
         case 'methodological_limitations':
           this.selectedOptions.methodological_limitations.option = null
@@ -1467,6 +1517,14 @@ export default {
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
+          try {
+            this.clearCerqualImpact = await this.publicationImpactOf({ option: null, explanation: '' })
+          } catch (error) {
+            this.selectedOptions.cerqual.option = this.modalData.cerqual.option
+            this.selectedOptions.cerqual.explanation = this.modalData.cerqual.explanation
+            this.onSaveError(error, 'notifications.save_error')
+            break
+          }
           this.$refs['modal-warning-cleaning-cerqual']?.show()
           break
       }

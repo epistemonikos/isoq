@@ -412,7 +412,7 @@ describe('editListEvidenceProfile.vue — la comprobación de referencias que fa
     wrapper.vm.$refs['modal-no-references-warning'] = estandar
     await wrapper.setData({ localReferences: [], pendingSaveReferences: true })
     Api.get.mockRejectedValueOnce(Object.assign(new Error('500'), { response: { status: 500, data: { status: 'error' } } }))
-    wrapper.vm.checkOtherListsWithReferences()
+    wrapper.vm.warnBeforeRemovingAllReferences()
     await flush()
     expect(privado.show).not.toHaveBeenCalled()
     expect(estandar.show).not.toHaveBeenCalled()

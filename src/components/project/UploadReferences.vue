@@ -162,6 +162,9 @@
             <b-row>
               <b-col cols="12">
                 <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
+                <p v-if="deleteAllRevertsPrivate" class="text-danger" data-test="delete-reverts-private">
+                  {{ $t('references.delete_reverts_private') }}
+                </p>
                 <b-alert v-if="referencesInUse.count" show variant="warning" data-test="refs-in-use">
                   {{ $t('references.delete_all_in_use', { count: referencesInUse.count, names: referencesInUse.names.join(', ') }) }}
                 </b-alert>
@@ -184,7 +187,7 @@
             <b-table sort-by="authors" responsive hover bordered borderless striped
               :fields="translatedReferencesTableFields" :items="references" head-variant="light" outlined>
               <template v-slot:cell(action)="data">
-                <b-button v-if="canEdit" variant="outline-danger" @click="data.toggleDetails">
+                <b-button v-if="canEdit" variant="outline-danger" @click="toggleRemoveConfirmation(data)">
                   <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </template>
@@ -195,6 +198,9 @@
                   <b-alert v-if="holdersOf(data.item.id).length" show variant="warning" data-test="ref-in-use">
                     {{ $t('references.in_use_by', { names: holdersOf(data.item.id).join(', ') }) }}
                   </b-alert>
+                  <p v-if="revertsPrivateByRef[data.item.id]" class="text-danger" data-test="delete-reverts-private">
+                    {{ $t('references.delete_reverts_private') }}
+                  </p>
                   <p>{{ $t('references.confirm_delete') }}</p>
                   <div>
                     <b-row align-h="center">
@@ -227,6 +233,8 @@ import { writeErrorMessageKey } from '@/utils/writeErrors'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { studyHolders } from '@/utils/referenceDeleted'
+import { publicationImpactOfDeletingReferences } from '@/utils/publishRules'
+import { fetchPublicationState } from '@/utils/publicationState'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -271,6 +279,9 @@ export default {
       showDuplicates: false,
       disableBtnRemoveAllRefs: false,
       appearMsgRemoveReferences: false,
+      // Read from the server when the confirmation opens; see deletingRevertsToPrivate.
+      deleteAllRevertsPrivate: false,
+      revertsPrivateByRef: {},
       operationId: null,
       uploadProgress: '',
       showRestorePrompt: false,
@@ -707,8 +718,39 @@ export default {
         return this.$t('references.no_findings_affected')
       }
     },
-    confirmRemoveAllReferences: function (event) {
+    /**
+     * Whether deleting these studies would leave the public project without a visible
+     * finding, read from the server now: the props may be behind the rest of the team.
+     * Rejects when the read fails.
+     */
+    deletingRevertsToPrivate: async function (ids) {
+      const { project, lists } = await fetchPublicationState(this.$route.params.id)
+      return publicationImpactOfDeletingReferences(project, lists, ids) === 'project_private'
+    },
+    // Without the answer there is no honest warning, so the confirmation does not open.
+    notifyPublicationReadError: function (error) {
+      const key = writeErrorMessageKey(error, 'notifications.save_error')
+      if (key) this.$notify.error(this.$t(key))
+    },
+    toggleRemoveConfirmation: async function (data) {
+      if (!data.detailsShowing) {
+        try {
+          this.$set(this.revertsPrivateByRef, data.item.id, await this.deletingRevertsToPrivate([data.item.id]))
+        } catch (error) {
+          this.notifyPublicationReadError(error)
+          return
+        }
+      }
+      data.toggleDetails()
+    },
+    confirmRemoveAllReferences: async function (event) {
       event.preventDefault()
+      try {
+        this.deleteAllRevertsPrivate = await this.deletingRevertsToPrivate(this.references.map(r => r.id))
+      } catch (error) {
+        this.notifyPublicationReadError(error)
+        return
+      }
       this.appearMsgRemoveReferences = true
       this.disableBtnRemoveAllRefs = true
     },

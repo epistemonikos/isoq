@@ -1,9 +1,13 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { fetchPublicationState } from '@/utils/publicationState'
 import evidenceProfileForm from '@/components/list/evidenceProfileForm.vue'
 
 const localVue = createLocalVue()
 
 jest.mock('@/utils/Api')
+jest.mock('@/utils/publicationState')
+
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
 
 const makeModalData = (overrides = {}) => ({
   type: 'cerqual',
@@ -52,6 +56,10 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
     'camelot-characteristics-table': true, 'table-extracted-data': true,
     'font-awesome-icon': true
   }
+})
+
+beforeEach(() => {
+  fetchPublicationState.mockResolvedValue({ project: { public_type: 'private' }, lists: [] })
 })
 
 function setupRefs (wrapper) {
@@ -116,6 +124,7 @@ domainCases.forEach(({ domain, focusId }) => {
           [domain]: { option: '2', explanation: '', notes: '' }
         }
       })
+      await flushPromises()
       expect(wrapper.vm.$refs['modal-warning-changed-option'].show).toHaveBeenCalled()
       wrapper.destroy()
     })
@@ -318,10 +327,10 @@ describe('evidenceProfileForm.vue — clearMySelection()', () => {
     wrapper.destroy()
   })
 
-  it('shows modal-warning-cleaning-cerqual when clearing cerqual', () => {
+  it('shows modal-warning-cleaning-cerqual when clearing cerqual', async () => {
     const wrapper = makeWrapper()
     setupRefs(wrapper)
-    wrapper.vm.clearMySelection('cerqual')
+    await wrapper.vm.clearMySelection('cerqual')
     expect(wrapper.vm.$refs['modal-warning-cleaning-cerqual'].show).toHaveBeenCalled()
     wrapper.destroy()
   })

@@ -269,9 +269,10 @@ describe('evidenceProfileForm.vue - explanationStateFor', () => {
     expect(wrapper.vm.explanationStateFor('relevance')).toBe(true)
   })
 
-  it('applies the same logic to cerqual domain', () => {
+  it('applies the same logic to cerqual domain, except that High also needs an explanation', () => {
     wrapper.vm.selectedOptions.cerqual.option = '0'
-    expect(wrapper.vm.explanationStateFor('cerqual')).toBeNull()
+    wrapper.vm.selectedOptions.cerqual.explanation = ''
+    expect(wrapper.vm.explanationStateFor('cerqual')).toBe(false)
 
     wrapper.vm.selectedOptions.cerqual.option = '1'
     wrapper.vm.selectedOptions.cerqual.explanation = ''

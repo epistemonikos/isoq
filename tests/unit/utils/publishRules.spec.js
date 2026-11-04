@@ -10,6 +10,8 @@ import {
   isFindingComplete,
   effectiveLicense,
   isProjectPublic,
+  publicationImpact,
+  publicationImpactOfDeletingReferences,
   isFindingVisible
 } from '@/utils/publishRules'
 
@@ -94,6 +96,61 @@ describe('publishRules JS-side', () => {
       const incomplete = { ...F, references: [] }
       expect(isFindingVisible(incomplete, { published_list_ids: ['L1'] })).toBe(false)
       expect(isFindingVisible(incomplete, {})).toBe(false)
+    })
+  })
+  describe('publicationImpact', () => {
+    const complete = id => ({ id, name: id, cerqual: { option: 1, explanation: 'x' }, references: ['r'] })
+    const project = { public_type: 'fully', published_list_ids: ['L1', 'L2'] }
+    const L1 = complete('L1')
+    const L2 = complete('L2')
+    const incomplete = id => ({ ...complete(id), references: [] })
+
+    test('deleting a finding while another stays visible hides only that finding', () => {
+      expect(publicationImpact(project, [L1, L2], 'L1', null)).toBe('finding_hidden')
+    })
+    test('deleting the last visible finding turns the project private', () => {
+      expect(publicationImpact(project, [L1, incomplete('L2')], 'L1', null)).toBe('project_private')
+    })
+    test('a private project is never affected', () => {
+      expect(publicationImpact({ ...project, public_type: 'private' }, [L1, L2], 'L1', null)).toBe('none')
+    })
+    test('a list outside the snapshot that stops being complete changes nothing', () => {
+      const L3 = complete('L3')
+      expect(publicationImpact(project, [L1, L2, L3], 'L3', incomplete('L3'))).toBe('none')
+    })
+    test('without a snapshot the only complete list turning private is flagged', () => {
+      const noSnapshot = { public_type: 'fully' }
+      expect(publicationImpact(noSnapshot, [L1, incomplete('L2')], 'L1', incomplete('L1'))).toBe('project_private')
+    })
+    test('a change that keeps the list visible is none', () => {
+      expect(publicationImpact(project, [L1, L2], 'L1', { ...L1, name: 'renamed' })).toBe('none')
+    })
+    test('a list missing from the snapshot of lists was not visible', () => {
+      expect(publicationImpact(project, [L2], 'L1', null)).toBe('none')
+    })
+  })
+  describe('publicationImpactOfDeletingReferences', () => {
+    const cited = (id, refs) => ({ id, name: id, cerqual: { option: 1, explanation: 'x' }, references: refs })
+    const project = { public_type: 'fully' }
+
+    test('two findings that lose the same study together make the project private', () => {
+      const lists = [cited('L1', ['a']), cited('L2', ['a'])]
+      expect(publicationImpactOfDeletingReferences(project, lists, ['a'])).toBe('project_private')
+    })
+    test('one finding hidden while another stays', () => {
+      const lists = [cited('L1', ['a']), cited('L2', ['b'])]
+      expect(publicationImpactOfDeletingReferences(project, lists, ['a'])).toBe('finding_hidden')
+    })
+    test('studies nobody visible cites change nothing', () => {
+      const lists = [cited('L1', ['a']), cited('L2', ['b'])]
+      expect(publicationImpactOfDeletingReferences(project, lists, ['zzz'])).toBe('none')
+    })
+    test('a private project is never affected', () => {
+      expect(publicationImpactOfDeletingReferences({ public_type: 'private' }, [cited('L1', ['a'])], ['a'])).toBe('none')
+    })
+    test('nothing visible before means nothing to lose', () => {
+      const lists = [cited('L1', [])]
+      expect(publicationImpactOfDeletingReferences(project, lists, ['a'])).toBe('none')
     })
   })
 })

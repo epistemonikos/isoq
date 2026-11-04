@@ -321,6 +321,8 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
+import { publicationImpact } from '@/utils/publishRules'
+import { fetchPublicationState } from '@/utils/publicationState'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -949,19 +951,18 @@ export default {
           // Sin `await`: ver el comentario de `editModalFindingName`.
           this.refreshPresenceFor(findingId)
 
-          let cnt = 0
-          for (const el of this.lists) {
-            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && Commons.resolveCerqual(el).option !== null) {
-              cnt++
-            }
+          // What the server will do to the published project, read now: the lists in
+          // props may be behind what the rest of the team has completed.
+          let impact
+          try {
+            const { project, lists } = await fetchPublicationState(this.project.id)
+            impact = publicationImpact(project, lists, data.item.id, null)
+          } catch (error) {
+            this.releaseFindingLock()
+            this.notifyWriteFailure(error, 'notifications.save_error')
+            return
           }
-
-          // Only show extended warning if the project is currently public and would become private
-          if (!this.project.private && cnt === 1 && Commons.resolveCerqual(this.editFindingName).option !== null) {
-            this.ui.project.showExtendedExplanationTextForDeleting = true
-          } else {
-            this.ui.project.showExtendedExplanationTextForDeleting = false
-          }
+          this.ui.project.showExtendedExplanationTextForDeleting = impact === 'project_private'
 
           this.$refs['remove-finding'].show()
         })
@@ -1095,30 +1096,43 @@ export default {
       this.$refs['modal-references-list'].hide()
     },
     checkReferencesBeforeSaving: function (bvModalEvent) {
-      // Prevent modal from closing automatically
-      // Only show warning if there were original references and all have been removed
-      if (this.selected_references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+      // Only when every original reference is being removed can the finding stop being
+      // complete; what that does to the published project is read from the server.
+      if (this.selected_references.length === 0 && this.original_references.length > 0) {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
-
-        let findingsWithRefsCount = 0
-        for (const item of this.lists) {
-          if (item.references && item.references.length > 0) {
-            findingsWithRefsCount++
-          }
-        }
-
-        // Special case: if there's only one item in the list, removing all references will make the project private
-        if (findingsWithRefsCount <= 1) {
-          this.$refs['modal-private-project-warning'].show()
-        } else {
-          this.$refs['modal-no-references-warning'].show()
-        }
+        this.warnBeforeRemovingAllReferences()
         return
       }
 
       // If no warning is needed, proceed with saving
       this.saveReferencesList()
+    },
+
+    warnBeforeRemovingAllReferences: async function () {
+      let impact
+      try {
+        const { project, lists } = await fetchPublicationState(this.project.id)
+        const listId = this.lists[this.selected_list_index].id
+        const current = lists.find(l => l.id === listId)
+        impact = publicationImpact(project, lists, listId, current ? { ...current, references: [] } : null)
+      } catch (error) {
+        this.pendingSaveReferences = false
+        this.notifyWriteFailure(error, 'notifications.save_error')
+        return
+      }
+      if (impact === 'project_private') {
+        this.$refs['modal-private-project-warning'].show()
+      } else if (impact === 'finding_hidden') {
+        this.$refs['modal-no-references-warning'].show()
+      } else {
+        this.confirmSaveNoReferences()
+      }
+    },
+
+    notifyWriteFailure: function (error, actionKey) {
+      const key = writeErrorMessageKey(error, actionKey)
+      if (key) this.$notify.error(this.$t(key))
     },
 
     handleReferencesModalHidden: function () {

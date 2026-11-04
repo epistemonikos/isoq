@@ -680,6 +680,8 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { publicationImpact } from '@/utils/publishRules'
+import { fetchPublicationState } from '@/utils/publicationState'
 import { isLockRejection } from '@/utils/lockErrors'
 import LockService from '@/services/lockService'
 import { displayExplanation } from '../utils/commons'
@@ -866,12 +868,12 @@ export default {
     checkReferencesBeforeSaving: function (bvModalEvent) {
       // Prevenir que el modal se cierre automáticamente si no hay referencias seleccionadas
       // y había referencias originalmente
-      if (this.localReferences.length === 0 && this.list.references.length > 0 && this.project.is_public) {
+      if (this.localReferences.length === 0 && this.list.references.length > 0) {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
 
-        // Verificar si hay otros lists en el proyecto con referencias
-        this.checkOtherListsWithReferences()
+        // What this does to the published project is read from the server, not from props.
+        this.warnBeforeRemovingAllReferences()
         return
       }
 
@@ -879,32 +881,27 @@ export default {
       this.saveReferencesList()
     },
 
-    checkOtherListsWithReferences: function () {
-      // Hacer una consulta para obtener todos los lists del proyecto
-      Api.get(`/isoqf_lists`, { project_id: this.project.id })
-        .then((response) => {
-          const allLists = response.data
-          // Filtrar el list actual y verificar si hay otros con referencias
-          const otherListsWithReferences = allLists.filter(list =>
-            list.id !== this.list.id && list.references && list.references.length > 0
-          )
-
-          if (otherListsWithReferences.length === 0) {
-            // Si no hay otros lists con referencias, el proyecto se vuelve privado
-            this.$refs['modal-private-project-warning'].show()
-          } else {
-            // Si hay otros lists con referencias, solo este finding desaparece
-            this.$refs['modal-no-references-warning'].show()
-          }
-        })
-        .catch((error) => {
-          // Antes mostraba el modal estándar «por seguridad», y era lo contrario: si éste era
-          // el último finding con referencias, correspondía el de «el proyecto pasará a
-          // privado», y la persona confirmaba sin saberlo. Sin poder comprobarlo, no se sigue.
-          console.log('Error checking other lists:', error)
-          this.cancelNoReferencesWarning()
-          if (!(error && error.isOfflineError)) this.$notify.error(this.$t('notifications.references_check_error'))
-        })
+    warnBeforeRemovingAllReferences: async function () {
+      let impact
+      try {
+        const { project, lists } = await fetchPublicationState(this.project.id)
+        const current = (lists || []).find(l => l.id === this.list.id)
+        impact = publicationImpact(project, lists, this.list.id, current ? { ...current, references: [] } : null)
+      } catch (error) {
+        // Without being able to check, nothing is changed: confirming blind could revert
+        // the project without the person knowing.
+        this.cancelNoReferencesWarning()
+        const key = writeErrorMessageKey(error, 'notifications.references_check_error')
+        if (key) this.$notify.error(this.$t(key))
+        return
+      }
+      if (impact === 'project_private') {
+        this.$refs['modal-private-project-warning'].show()
+      } else if (impact === 'finding_hidden') {
+        this.$refs['modal-no-references-warning'].show()
+      } else {
+        this.confirmSaveNoReferences()
+      }
     },
 
     handleReferencesModalHidden: function () {
