@@ -101,7 +101,7 @@
 <script>
 import Api from '@/utils/Api'
 import Project from '@/utils/project'
-import { effectiveLicense } from '@/utils/publishRules'
+import { effectiveLicense, isProjectPublic } from '@/utils/publishRules'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import videoHelp from '@/components/videoHelp'
 import propertiesLockMixin from '@/mixins/propertiesLockMixin'
@@ -207,6 +207,7 @@ export default {
       // Defensa además del botón deshabilitado: el `@ok` del b-modal también llega acá.
       if (!this.propertiesLockHeld || this.missingPersonalDataConfirmation) return
       this.$emit('uiPublishShowLoader', true)
+      this.errorsResponse = { message: '', missingFields: [] }
 
       let params = {}
       params.id = this.project.id
@@ -250,7 +251,8 @@ export default {
             return
           }
           // Megan's notice: only complete findings will be visible.
-          if (!await Project.confirmIncompleteFindings(this, this.project.id)) {
+          // Only on the private -> public transition (`project` is the pre-edit state).
+          if (!isProjectPublic(this.project) && !await Project.confirmIncompleteFindings(this, this.project.id)) {
             this.$emit('uiPublishShowLoader', false)
             return
           }
@@ -290,7 +292,10 @@ export default {
       const missing = this.errorsResponse.missingFields
       this.$refs['modal-change-status'].hide()
       const query = { ...this.$route.query, tab: 'Project-Property', highlight: missing.join(',') }
-      this.$router.push({ path: this.$route.path, query })
+      const navigation = this.$router.push({ path: this.$route.path, query })
+      if (navigation && navigation.catch) {
+        navigation.catch(err => { if (err && err.name !== 'NavigationDuplicated') throw err })
+      }
     }
   }
 }
