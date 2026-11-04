@@ -39,12 +39,14 @@ const COMPLETE = {
   use_camelot: false
 }
 
-function build (formData = {}) {
+function build (formData = {}, omit = []) {
   const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+  const data = { ...COMPLETE, ...formData }
+  omit.forEach(key => { delete data[key] })
   const wrapper = mount(organizationForm, {
     localVue,
     attachTo: document.body,
-    propsData: { formData: { ...COMPLETE, ...formData }, canEdit: true },
+    propsData: { formData: data, canEdit: true },
     mocks: {
       $t: (key) => key,
       $route: { name: 'viewProject', params: { id: 'p1', org_id: 'org1' }, query: {} },
@@ -433,5 +435,33 @@ describe('organizationForm.vue — revert-to-private modal', () => {
     wrapper.vm.save()
     expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
     expect(executeSave).toHaveBeenCalled()
+  })
+
+  // The project as last loaded is what the revert-to-private modal compares against. A
+  // project that never stored the licence or the personal-data box gets those keys added
+  // by v-model ($set) when the person picks a public level: that is an edit, not a new
+  // project, and it must not become the "as loaded" state (it opened the modal on a
+  // private project being published).
+  test('adding a missing key while editing keeps the project as loaded', async () => {
+    ;({ wrapper } = build({ public_type: 'private', private: true }, ['license_type', 'no_personal_data_confirmed']))
+    wrapper.vm.formData.public_type = 'fully'
+    await wrapper.vm.$nextTick()
+    wrapper.vm.$set(wrapper.vm.formData, 'license_type', 'CC-BY-NC-ND')
+    wrapper.vm.$set(wrapper.vm.formData, 'no_personal_data_confirmed', true)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.vm.originalFormData.public_type).toBe('private')
+    const show = jest.spyOn(wrapper.vm.$bvModal, 'show').mockImplementation(() => {})
+    const executeSave = jest.spyOn(wrapper.vm, 'executeSave').mockImplementation(() => {})
+    wrapper.vm.save()
+    expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
+    expect(executeSave).toHaveBeenCalled()
+  })
+
+  test('a new project object from the parent still becomes the project as loaded', async () => {
+    ;({ wrapper } = build({ public_type: 'private', private: true }))
+    await wrapper.setProps({ formData: { ...COMPLETE, public_type: 'fully', private: false } })
+
+    expect(wrapper.vm.originalFormData.public_type).toBe('fully')
   })
 })

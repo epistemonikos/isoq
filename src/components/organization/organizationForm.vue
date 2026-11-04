@@ -724,12 +724,16 @@ export default {
       immediate: true
     },
     formData: {
-      handler (newFormData) {
+      handler (newFormData, oldFormData) {
         if (newFormData && newFormData.use_camelot === undefined) {
           this.$set(newFormData, 'use_camelot', false)
         }
-        // When formData changes externally, update the original data
-        if (JSON.stringify(this.originalFormData) !== JSON.stringify(newFormData)) {
+        // A new project object from the parent is the project as loaded. The same object
+        // also fires this watcher when v-model ADDS a key the project never stored
+        // (license_type, no_personal_data_confirmed): that is the person's unsaved edit,
+        // and taking it as "as loaded" made a private project being published look
+        // already public, which opened the revert-to-private modal.
+        if (newFormData !== oldFormData) {
           this.originalFormData = JSON.parse(JSON.stringify(newFormData))
         }
       },
