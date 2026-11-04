@@ -13,7 +13,8 @@ jest.mock('@/utils/Api', () => ({
 // The real publishRules module is used on purpose: this spec checks the form follows it.
 jest.mock('@/utils/project', () => ({
   update: jest.fn(),
-  create: jest.fn()
+  create: jest.fn(),
+  confirmIncompleteFindings: jest.fn().mockResolvedValue(true)
 }))
 
 const localVue = createLocalVue()
@@ -228,5 +229,55 @@ describe('organizationForm.vue — shared publishing rules', () => {
     await input.trigger('blur')
     expect(wrapper.vm.state.lists_authors).toBe(false)
     expect(input.classes()).toContain('is-invalid')
+  })
+})
+
+describe('organizationForm.vue — Megan notice when going public from Properties', () => {
+  let wrapper
+  afterEach(() => {
+    if (wrapper) wrapper.destroy()
+    wrapper = null
+    jest.clearAllMocks()
+    Project.confirmIncompleteFindings.mockResolvedValue(true)
+  })
+
+  test('going public from Properties asks the same confirmation', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    Project.update.mockResolvedValue({ data: { status: true } })
+    const data = { ...COMPLETE, public_type: 'fully' }
+    await wrapper.vm.executeSave(data)
+    expect(Project.confirmIncompleteFindings).toHaveBeenCalledWith(wrapper.vm, 'p1')
+    expect(Project.update).toHaveBeenCalledTimes(1)
+  })
+
+  test('cancelling the confirmation stops the save without an error', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    const { $notify } = wrapper.vm
+    Project.confirmIncompleteFindings.mockResolvedValue(false)
+    await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
+    expect(Project.update).not.toHaveBeenCalled()
+    expect($notify.error).not.toHaveBeenCalled()
+  })
+
+  test('a failing count notifies and does not save', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    Project.confirmIncompleteFindings.mockRejectedValue(new Error('boom'))
+    await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'fully' })
+    expect(Project.update).not.toHaveBeenCalled()
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.publish_error')
+  })
+
+  test('saving a project that was already public does not ask', async () => {
+    ;({ wrapper } = build())
+    Project.update.mockResolvedValue({ data: { status: true } })
+    await wrapper.vm.executeSave({ ...COMPLETE, name: 'Other title' })
+    expect(Project.confirmIncompleteFindings).not.toHaveBeenCalled()
+  })
+
+  test('saving a private project does not ask', async () => {
+    ;({ wrapper } = build({ public_type: 'private' }))
+    Project.update.mockResolvedValue({ data: { status: true } })
+    await wrapper.vm.executeSave({ ...COMPLETE, public_type: 'private' })
+    expect(Project.confirmIncompleteFindings).not.toHaveBeenCalled()
   })
 })

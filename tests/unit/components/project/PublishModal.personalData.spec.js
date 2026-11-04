@@ -10,7 +10,8 @@ jest.mock('@/services/lockService', () => ({
 jest.mock('@/utils/Api', () => ({
   __esModule: true,
   default: {
-    get: jest.fn(() => Promise.resolve({ data: { status: true, message: '' } })),
+    get: jest.fn(() => Promise.resolve({ data: [] })),
+    post: jest.fn(() => Promise.resolve({ data: { status: true, message: '', missing_fields: [] } })),
     patch: jest.fn(() => Promise.resolve({ data: {} }))
   }
 }))
@@ -105,7 +106,7 @@ describe('PublishModal.vue — confirmación de datos personales', () => {
     wrapper.vm.modalProject.public_type = 'fully'
     await save()
     await flushPromises()
-    expect(Api.get).not.toHaveBeenCalled()
+    expect(Api.post).not.toHaveBeenCalled()
     expect(Api.patch).not.toHaveBeenCalled()
   })
 
@@ -115,7 +116,7 @@ describe('PublishModal.vue — confirmación de datos personales', () => {
     wrapper.vm.$set(wrapper.vm.modalProject, FIELD, true)
     await save()
     await flushPromises()
-    expect(Api.get).toHaveBeenCalledWith('/api/project/can_publish', expect.objectContaining({ [FIELD]: true }))
+    expect(Api.post).toHaveBeenCalledWith('/api/project/can_publish', expect.objectContaining({ id: '123', [FIELD]: true }), { noQueue: true })
     expect(Api.patch).toHaveBeenCalledWith('/api/publish', { params: expect.objectContaining({ [FIELD]: true, public_type: 'fully' }) })
   })
 

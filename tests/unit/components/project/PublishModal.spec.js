@@ -10,6 +10,7 @@ jest.mock('@/services/lockService', () => ({
   default: { acquireRef: jest.fn(() => Promise.resolve({ success: true })), releaseRef: jest.fn(), fetchRefLocks: jest.fn(() => Promise.resolve([])) }
 }))
 jest.mock('@/utils/Api', () => ({
+  __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { status: true, message: '' } })),
     post: jest.fn(() => Promise.resolve({ data: {} })),
@@ -230,5 +231,121 @@ describe('PublishModal.vue', () => {
       const saveButton = wrapper.find('b-button-stub[variant="outline-success"]')
       expect(saveButton.attributes('disabled')).toBeFalsy()
     })
+  })
+})
+
+describe('PublishModal.vue — asking before publishing (#169)', () => {
+  const Api = require('@/utils/Api').default
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+  const COMPLETE_LIST = { id: 'l1', name: 'Finding', cerqual: { option: 1, explanation: 'Because' }, references: ['r1'] }
+  const INCOMPLETE_LIST = { id: 'l2', name: 'Draft' }
+  const PUBLIC = { name: 'P', public_type: 'fully', license_type: 'CC-BY', no_personal_data_confirmed: true }
+
+  function build ({ confirm = true } = {}) {
+    const msgBoxConfirm = jest.fn().mockResolvedValue(confirm)
+    const push = jest.fn().mockResolvedValue()
+    const w = require('@vue/test-utils').mount(PublishModal, {
+      localVue: createLocalVue(),
+      mocks: {
+        $store: { state: Vue.observable({ isOnline: true }), getters: {}, commit: jest.fn(), dispatch: jest.fn() },
+        $t: (key) => key,
+        $route: { path: '/p', params: { org_id: '1' }, query: { foo: 'bar' } },
+        $router: { push },
+        $notify: { success: jest.fn(), error: jest.fn() },
+        $bvModal: { msgBoxConfirm }
+      },
+      propsData: { project: { id: '123', name: 'P', public_type: 'private' }, ui: { publish: { showLoader: false } } },
+      stubs: {
+        videoHelp: true,
+        PropertiesLockAlert: true,
+        'b-modal': { template: '<div><slot></slot><slot name="modal-footer"></slot></div>' },
+        'b-alert': { template: '<div class="alert"><slot></slot></div>' },
+        'b-form-group': true, 'b-form-radio-group': true, 'b-form-checkbox': true,
+        'b-form-invalid-feedback': true, 'b-spinner': true,
+        'b-button': { template: '<button class="b" @click="$emit(\'click\')"><slot></slot></button>' }
+      }
+    })
+    w.vm.$refs['modal-change-status'] = { hide: jest.fn(), show: jest.fn() }
+    w.vm.propertiesLock = { status: 'held', lockedBy: null }
+    return { w, msgBoxConfirm, push }
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+    Api.post.mockImplementation(() => Promise.resolve({ data: { status: true, message: '', missing_fields: [] } }))
+    Api.patch.mockImplementation(() => Promise.resolve({ data: {} }))
+  })
+
+  test('missing properties show a text message and a button to the Properties tab with the fields highlighted', async () => {
+    Api.post.mockResolvedValue({ data: { status: false, missing_fields: ['author_email'], has_complete_finding: true } })
+    const { w, push } = build()
+    await w.setData({ modalProject: { ...PUBLIC } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    await w.vm.$nextTick()
+    expect(w.text()).toContain('project.notifications.publish_missing_fields')
+    const button = w.findAll('button').wrappers.find(b => b.text().includes('publish.go_to_properties'))
+    expect(button).toBeTruthy()
+    await button.trigger('click')
+    expect(push).toHaveBeenCalledTimes(1)
+    const arg = push.mock.calls[0][0]
+    expect(arg.query).toEqual({ foo: 'bar', tab: 'Project-Property', highlight: 'author_email' })
+    w.destroy()
+  })
+
+  test('with no missing fields the refusal is the finding requirement text, with no button', async () => {
+    Api.post.mockResolvedValue({ data: { status: false, missing_fields: [], has_complete_finding: false } })
+    const { w } = build()
+    await w.setData({ modalProject: { ...PUBLIC } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    await w.vm.$nextTick()
+    expect(w.text()).toContain('project.validation.publish_requirement')
+    expect(w.text()).not.toContain('publish.go_to_properties')
+    expect(Api.patch).not.toHaveBeenCalled()
+    w.destroy()
+  })
+
+  test("with incomplete findings the publish asks Megan's confirmation and only patches on OK", async () => {
+    Api.get.mockResolvedValue({ data: [COMPLETE_LIST, INCOMPLETE_LIST] })
+    const cancelled = build({ confirm: false })
+    await cancelled.w.setData({ modalProject: { ...PUBLIC } })
+    await cancelled.w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    expect(cancelled.msgBoxConfirm).toHaveBeenCalledWith('publish.only_complete_findings_visible', expect.objectContaining({ title: 'project.warning', okTitle: 'common.continue', cancelTitle: 'common.cancel' }))
+    expect(Api.patch).not.toHaveBeenCalled()
+    expect(cancelled.w.emitted('uiPublishShowLoader').pop()).toEqual([false])
+    cancelled.w.destroy()
+
+    const accepted = build({ confirm: true })
+    await accepted.w.setData({ modalProject: { ...PUBLIC } })
+    await accepted.w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    expect(Api.patch).toHaveBeenCalledTimes(1)
+    accepted.w.destroy()
+  })
+
+  test('with every finding complete there is no confirmation', async () => {
+    Api.get.mockResolvedValue({ data: [COMPLETE_LIST] })
+    const { w, msgBoxConfirm } = build()
+    await w.setData({ modalProject: { ...PUBLIC } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    expect(msgBoxConfirm).not.toHaveBeenCalled()
+    expect(Api.patch).toHaveBeenCalledTimes(1)
+    w.destroy()
+  })
+
+  test('if counting the findings fails it notifies and does not publish', async () => {
+    Api.get.mockRejectedValue(Object.assign(new Error('500'), { response: { status: 500, data: {} }, config: { url: '/isoqf_lists' } }))
+    const { w, msgBoxConfirm } = build()
+    await w.setData({ modalProject: { ...PUBLIC } })
+    await w.vm.savePublicStatus({ preventDefault () {} })
+    await flush()
+    expect(w.vm.$notify.error).toHaveBeenCalledWith('notifications.publish_error')
+    expect(msgBoxConfirm).not.toHaveBeenCalled()
+    expect(Api.patch).not.toHaveBeenCalled()
+    w.destroy()
   })
 })

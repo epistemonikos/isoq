@@ -995,6 +995,9 @@
   "publish": {
     "confirm_no_personal_data": "Confirmo que el contenido no identifica a participantes de estudios primarios ni incluye datos personales que no pueda hacer públicos",
     "confirm_no_personal_data_required": "Para publicar, debe confirmar que el contenido no identifica a participantes de estudios primarios ni incluye datos personales que no pueda hacer públicos.",
+    "go_to_properties": "Ir a las propiedades del proyecto",
+    "only_complete_findings_visible": "Sólo los hallazgos de la revisión con evaluaciones GRADE-CERQual completas serán visibles en la base de datos. Si más adelante completa las evaluaciones de otros hallazgos, deberá despublicar y volver a publicar su proyecto en la base de datos para hacerlos visibles.",
+    "requirements_not_met": "El proyecto ya no cumple los requisitos para publicarse. Revise los campos en rojo o seleccione «Privado».",
     "to_word": "a MS Word",
     "the_references": "las referencias",
     "print_pdf": "Imprimir o guardar como PDF",

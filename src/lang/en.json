@@ -995,6 +995,9 @@
   "publish": {
     "confirm_no_personal_data": "I confirm that the content does not identify participants of primary studies and does not include personal data that I am not able to make public",
     "confirm_no_personal_data_required": "To publish, you must confirm that the content does not identify participants of primary studies and does not include personal data that you are not able to make public.",
+    "go_to_properties": "Go to Project Properties",
+    "only_complete_findings_visible": "Only review findings with complete GRADE-CERQual assessments will be visible on the database. If you later complete assessments for additional review findings then you will need to unpublish and republish your project to the database to make them visible.",
+    "requirements_not_met": "The project no longer meets the requirements to be published. Check the fields in red or select “Private”.",
     "to_word": "to MS Word",
     "the_references": "the references",
     "print_pdf": "Print or save as PDF",

@@ -537,6 +537,19 @@ export default {
     executeSave: async function (data) {
       try {
         if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
+          // Megan's notice, only when this save turns a private project public.
+          if (!isProjectPublic(this.originalFormData) && isProjectPublic(data)) {
+            let confirmed
+            try {
+              confirmed = await Project.confirmIncompleteFindings(this, data.id)
+            } catch (error) {
+              const key = writeErrorMessageKey(error, 'notifications.publish_error')
+              if (key) this.$notify.error(this.$t(key))
+              return
+            }
+            // Cancelled on purpose: nothing to report, and the form stays as it is.
+            if (!confirmed) return
+          }
           const response = await Project.update(data)
           if (response.data && response.data.status === false) {
             this.state = { ...this.state, ...response.data.state }

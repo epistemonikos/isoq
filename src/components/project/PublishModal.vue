@@ -22,7 +22,15 @@
         variant="danger"
         dismissible
         @dismissed="errorsResponse.message = ''">
-        <p class="mb-0" v-html="errorsResponse.message"></p>
+        <p class="mb-0">{{ $t(errorsResponse.message) }}</p>
+        <b-button
+          v-if="errorsResponse.missingFields.length"
+          class="mt-2"
+          size="sm"
+          variant="outline-danger"
+          @click="goToProperties">
+          {{ $t('publish.go_to_properties') }}
+        </b-button>
       </b-alert>
     </template>
 
@@ -92,6 +100,8 @@
 
 <script>
 import Api from '@/utils/Api'
+import Project from '@/utils/project'
+import { effectiveLicense } from '@/utils/publishRules'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
 import videoHelp from '@/components/videoHelp'
 import propertiesLockMixin from '@/mixins/propertiesLockMixin'
@@ -150,25 +160,16 @@ export default {
       },
       errorsResponse: {
         message: '',
-        items: []
+        missingFields: []
       }
     }
-  },
-  mounted () {
-    // Listen for modal show event to attach click handler
-    this.$root.$on('bv::modal::shown', this.onModalShown)
-  },
-  beforeDestroy () {
-    // Clean up event listeners
-    this.$root.$off('bv::modal::shown', this.onModalShown)
-    this.removeErrorLinkListener()
   },
   methods: {
     openModal () {
       this.loadModalProject(this.project)
       this.errorsResponse = {
         message: '',
-        items: []
+        missingFields: []
       }
       this.$refs['modal-change-status'].show()
       if (this.project.id) this.enterPropertiesLock()
@@ -210,7 +211,6 @@ export default {
       let params = {}
       params.id = this.project.id
       params.public_type = this.modalProject.public_type
-      const isModal = this.modalProject.isModal || false
       params.private = true
       params.is_public = false
 
@@ -230,27 +230,36 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        let canPublish
         try {
-          canPublish = await Api.get('/api/project/can_publish', {
+          const answer = (await Project.canPublish({
+            ...this.modalProject,
             id: this.project.id,
-            workspace: this.$route.params.org_id,
-            isModal: isModal,
+            public_type: this.modalProject.public_type,
+            license_type: effectiveLicense(this.modalProject.license_type),
             [PERSONAL_DATA_CONFIRMED]: true
-          })
+          })).data
+          if (!answer.status) {
+            const missing = Array.isArray(answer.missing_fields) ? answer.missing_fields : []
+            const body = document.getElementById('modal-change-status___BV_modal_body_')
+            if (body) body.scrollTo({ top: 0, behavior: 'smooth' })
+            this.errorsResponse = {
+              message: missing.length ? 'project.notifications.publish_missing_fields' : 'project.validation.publish_requirement',
+              missingFields: missing
+            }
+            this.$emit('uiPublishShowLoader', false)
+            return
+          }
+          // Megan's notice: only complete findings will be visible.
+          if (!await Project.confirmIncompleteFindings(this, this.project.id)) {
+            this.$emit('uiPublishShowLoader', false)
+            return
+          }
         } catch (error) {
-          // Sin este catch el método rechazaba y el spinner quedaba girando para siempre.
+          // Without this catch the method rejected and the spinner kept turning.
           this.onPublishError(error)
           return
         }
-
-        if (canPublish.data.status) {
-          return this.patchPublicStatus(params)
-        } else {
-          document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
-          this.errorsResponse.message = canPublish.data.message
-          this.$emit('uiPublishShowLoader', false)
-        }
+        return this.patchPublicStatus(params)
       } else {
         return this.patchPublicStatus(params)
       }
@@ -276,57 +285,12 @@ export default {
       if (key) this.$notify.error(this.$t(key))
     },
 
-    onModalShown (bvEvent, modalId) {
-      // Only attach listener for our specific modal
-      if (modalId === 'modal-change-status') {
-        this.$nextTick(() => {
-          const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
-          if (modalBody) {
-            modalBody.addEventListener('click', this.handleErrorLinkClick)
-          }
-        })
-      }
-    },
-
-    handleErrorLinkClick (event) {
-      // Check if the clicked element is a link with hash
-      if (event.target.tagName === 'A' && event.target.hash) {
-        event.preventDefault()
-        const hash = event.target.hash
-
-        // Map hash to tab name
-        // viewProject.vue expects these specific tab names in the query
-        const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
-        let tabName = null
-
-        // Heuristic mapping based on hash content
-        // You might need to adjust these based on the actual hashes generated by the backend
-        if (hash.includes('project')) {
-          tabName = tabs[0] // Project-Property
-        } else if (hash.includes('reference') || hash.includes('inclusion') || hash.includes('characteristic') || hash.includes('methodological')) {
-          tabName = tabs[1] // My-Data
-        } else if (hash.includes('isoq')) {
-          tabName = tabs[2] // iSoQ
-        }
-
-        // Close the modal
-        this.$refs['modal-change-status'].hide()
-
-        // Navigate to the route with hash AND tab query to force tab switch
-        const query = { ...this.$route.query }
-        if (tabName) {
-          query.tab = tabName
-        }
-
-        this.$router.push({ path: this.$route.path, hash: hash, query: query })
-      }
-    },
-
-    removeErrorLinkListener () {
-      const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
-      if (modalBody) {
-        modalBody.removeEventListener('click', this.handleErrorLinkClick)
-      }
+    // Back to the Properties tab with the fields that stop the publication highlighted.
+    goToProperties () {
+      const missing = this.errorsResponse.missingFields
+      this.$refs['modal-change-status'].hide()
+      const query = { ...this.$route.query, tab: 'Project-Property', highlight: missing.join(',') }
+      this.$router.push({ path: this.$route.path, query })
     }
   }
 }

@@ -1,5 +1,5 @@
 import Api from './Api'
-import { R1_FIELDS, effectiveLicense, hasMinLetters, isProjectPublic, projectMissingFields, validEmail, validUrlOrDoi } from './publishRules'
+import { R1_FIELDS, effectiveLicense, hasMinLetters, isFindingComplete, isProjectPublic, projectMissingFields, validEmail, validUrlOrDoi } from './publishRules'
 import { needsPersonalDataConfirmation, PERSONAL_DATA_CONFIRMED, PERSONAL_DATA_CONFIRMATION_REASON } from './personalDataConfirmation'
 
 const CAN_PUBLISH_FIELDS = [...R1_FIELDS, 'published_status', 'license_type', 'public_type']
@@ -28,6 +28,25 @@ export default class Project {
   static validEmail = validEmail
   static validUrl = validUrlOrDoi
   static canPublish = canPublish
+
+  // How many findings of the project would stay out of the database for being incomplete.
+  // A failing request rejects: the caller shows it and does not publish.
+  static async incompleteFindingsCount (projectId) {
+    const response = await Api.get('/isoqf_lists', { project_id: projectId })
+    const lists = Array.isArray(response.data) ? response.data : []
+    return lists.filter(list => !isFindingComplete(list)).length
+  }
+
+  // Megan's notice (#169): only complete findings are visible once published. Resolves true
+  // when there is nothing to warn about or the person accepts; false when they cancel.
+  static async confirmIncompleteFindings (vm, projectId) {
+    if (await Project.incompleteFindingsCount(projectId) === 0) return true
+    return vm.$bvModal.msgBoxConfirm(vm.$t('publish.only_complete_findings_visible'), {
+      title: vm.$t('project.warning'),
+      okTitle: vm.$t('common.continue'),
+      cancelTitle: vm.$t('common.cancel')
+    })
+  }
 
   static async validations (data) {
     const state = {

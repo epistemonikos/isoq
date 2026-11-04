@@ -10,8 +10,8 @@ jest.mock('@/services/lockService', () => ({
   default: { acquireRef: jest.fn(() => Promise.resolve({ success: true })), releaseRef: jest.fn(), fetchRefLocks: jest.fn(() => Promise.resolve([])) }
 }))
 jest.mock('@/utils/Api', () => ({
-  get: jest.fn(() => Promise.resolve({ data: { status: true, message: '' } })),
-  post: jest.fn(() => Promise.resolve({ data: {} })),
+  get: jest.fn(() => Promise.resolve({ data: [] })),
+  post: jest.fn(() => Promise.resolve({ data: { status: true, message: '', missing_fields: [] } })),
   patch: jest.fn(() => Promise.resolve({ data: {} })),
   delete: jest.fn(() => Promise.resolve({ data: {} })),
   put: jest.fn(() => Promise.resolve({ data: {} }))
@@ -58,7 +58,8 @@ const lastLoader = (wrapper) => {
 describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el spinner', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    Api.get.mockImplementation(() => Promise.resolve({ data: { status: true, message: '' } }))
+    Api.get.mockImplementation(() => Promise.resolve({ data: [] }))
+    Api.post.mockImplementation(() => Promise.resolve({ data: { status: true, message: '', missing_fields: [] } }))
   })
 
   it('pasar a privado falla', async () => {
@@ -85,7 +86,7 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
     // Ese GET no tenía catch: el método rechazaba y el spinner quedaba igual de colgado.
     const { wrapper, $notify } = createWrapper()
     await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by', no_personal_data_confirmed: true } })
-    Api.get.mockRejectedValueOnce(error500())
+    Api.post.mockRejectedValueOnce(error500())
     await wrapper.vm.savePublicStatus({ preventDefault () {} })
     await flushPromises()
     expect(lastLoader(wrapper)).toBe(false)
@@ -111,5 +112,18 @@ describe('PublishModal — si no se puede cambiar el estado, lo dice y suelta el
     expect(lastLoader(wrapper)).toBe(false)
     expect(wrapper.vm.$refs['modal-change-status'].hide).toHaveBeenCalled()
     expect($notify.error).not.toHaveBeenCalled()
+  })
+
+  test('a 400 publish_requirements_not_met shows its own message', async () => {
+    const { wrapper, $notify } = createWrapper()
+    await wrapper.setData({ modalProject: { name: 'P', public_type: 'open_access', license_type: 'cc_by', no_personal_data_confirmed: true } })
+    Api.patch.mockRejectedValueOnce(Object.assign(new Error('400'), {
+      response: { status: 400, data: { reason: 'publish_requirements_not_met', missing_fields: ['author_email'] } },
+      config: { url: '/api/publish' }
+    }))
+    await wrapper.vm.savePublicStatus({ preventDefault () {} })
+    await flushPromises()
+    expect($notify.error).toHaveBeenCalledWith('publish.requirements_not_met')
+    expect($notify.error).not.toHaveBeenCalledWith('notifications.publish_error')
   })
 })
