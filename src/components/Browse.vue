@@ -57,6 +57,7 @@
         :filter="table_settings.filter"
         :sort-by.sync="table_settings.sortBy"
         :sort-desc.sync="table_settings.sortDesc"
+        :sort-compare="sortCompare"
         :busy="table_settings.isBusy">
         <template v-slot:cell(name)="data">
           <b-link :to="{ name: 'previewContentSoQf', params: { org_id: data.item.organization, isoqf_id: data.item.id, token: 'public' }}">
@@ -65,6 +66,9 @@
               style="vertical-align: text-bottom;" v-b-tooltip.hover="$t('project.uses_camelot')"
               data-test="browse-camelot-badge" />
           </b-link>
+        </template>
+        <template v-slot:cell(published_at)="data">
+          <span data-test="browse-published-at">{{ formatPublishedAt(data.item.published_at) }}</span>
         </template>
         <!-- spinner -->
         <div slot="table-busy" class="text-center text-primary my-2">
@@ -87,6 +91,17 @@
 <script>
 import Api from '@/utils/Api'
 
+const DATE_OPTIONS = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }
+
+// `published_at` arrives as a naive UTC `isoformat()` (no offset); `new Date` would read it
+// as local time. Returns epoch ms, or null when absent or unreadable.
+function publishedTime (value) {
+  if (typeof value !== 'string' || !value) return null
+  const hasZone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value)
+  const time = Date.parse(hasZone ? value : value + 'Z')
+  return Number.isNaN(time) ? null : time
+}
+
 export default {
   data () {
     return {
@@ -100,21 +115,24 @@ export default {
             sortable: true
           },
           {
+            // Only exists since 2026-10-07: older projects have none (shown as a dash).
+            key: 'published_at',
+            label: this.$t('browse.published'),
+            sortable: true
+          },
+          {
             key: 'last_update',
             label: this.$t('browse.last_modification'),
-            formatter: value => {
-              const _date = new Date(value)
-              const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }
-              return _date.toLocaleDateString(undefined, options)
-            }
+            sortable: true,
+            formatter: value => new Date(value).toLocaleDateString(undefined, DATE_OPTIONS)
           }
         ],
         per_page: 20,
         per_page_array: [20, 40, 60, 80, 100],
         current_page: 1,
         filter: null,
-        sortBy: 'name',
-        sortDesc: false,
+        sortBy: 'published_at',
+        sortDesc: true,
         isBusy: true
       }
     }
@@ -123,6 +141,22 @@ export default {
     this.getPublicTables()
   },
   methods: {
+    formatPublishedAt: function (value) {
+      const time = publishedTime(value)
+      return time === null ? '—' : new Date(time).toLocaleDateString(undefined, DATE_OPTIONS)
+    },
+    // b-table negates the whole comparison when sorting descending (so `sort-null-last`
+    // would put them first): undated projects are pre-negated to stay last both ways.
+    sortCompare: function (a, b, key, sortDesc) {
+      if (key !== 'published_at') return null
+      const ta = publishedTime(a.published_at)
+      const tb = publishedTime(b.published_at)
+      if (ta === null || tb === null) {
+        if (ta === tb) return 0
+        return (ta === null ? 1 : -1) * (sortDesc ? -1 : 1)
+      }
+      return ta - tb
+    },
     getPublicTables: function () {
       this.table_settings.isBusy = true
       Api.get('/browse')

@@ -799,6 +799,7 @@
     "tables_per_page": "Tables per pages",
     "loading": "Loading...",
     "last_modification": "Last Modification",
+    "published": "Published",
     "load_error": "The published projects could not be loaded. It is not that there are none: loading failed."
   },
   "help": {

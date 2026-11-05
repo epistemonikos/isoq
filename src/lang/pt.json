@@ -799,6 +799,7 @@
     "tables_per_page": "Tabelas por página",
     "loading": "Carregando...",
     "last_modification": "Última Modificação",
+    "published": "Publicado",
     "load_error": "Não foi possível carregar os projetos publicados. Não é que não existam: o carregamento falhou."
   },
   "help": {
