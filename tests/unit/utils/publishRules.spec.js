@@ -28,7 +28,7 @@ const table = [
 describe('publishRules shared case table', () => {
   test('every key of the table is covered', () => {
     const keys = Object.keys(cases).filter(k => k !== '_comment').sort()
-    expect(keys).toEqual(table.map(([k]) => k).sort())
+    expect(keys).toEqual([...table.map(([k]) => k), 'visible_list_ids'].sort())
   })
 
   table.forEach(([key, fn]) => {
@@ -37,6 +37,13 @@ describe('publishRules shared case table', () => {
         expect(fn(c.input)).toEqual(c.expected)
       })
     })
+  })
+})
+
+describe('publishRules shared case table: visible_list_ids', () => {
+  test.each(cases.visible_list_ids.map(c => [JSON.stringify(c.input), c]))('%s', (_label, c) => {
+    const visible = c.input.lists.filter(l => isFindingVisible(l, c.input.project)).map(l => l.id)
+    expect(visible).toEqual(c.expected)
   })
 })
 

@@ -218,7 +218,8 @@ import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import Commons from '@/utils/commons'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
-import { isFindingComplete } from '@/utils/publishRules'
+import { isFindingComplete, isFindingVisible } from '@/utils/publishRules'
+import PublicPreviewAccess from '@/utils/publicPreviewAccess'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -434,13 +435,20 @@ export default {
       }
       Api.get('/isoqf_lists', params)
         .then((response) => {
+          const onPublicRoute = PublicPreviewAccess.isBrowseToken(this.$route.params.token)
+          // The project is read here, not when the request starts: on the public route the
+          // snapshot filter needs it. If it has not arrived yet, getProject calls getLists
+          // again once it does.
+          if (onPublicRoute && !(this.project && this.project.id)) return
           this.loadErrors.lists = false
           this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
           data = Commons.sortFindings(data, this.list_categories)
           // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
           // above so the gaps stay, and dropped here: nothing below may list or fetch them.
-          data = data.filter(l => !l.hidden)
+          // The public route shows what the public sees, also to members (#169 F6): the
+          // published snapshot, not everything the member could open.
+          data = data.filter(l => !l.hidden && (!onPublicRoute || isFindingVisible(l, this.project)))
           // A reload where nothing is left must not keep the previous rows.
           this.lists_print_version = []
           this.printableItems = []

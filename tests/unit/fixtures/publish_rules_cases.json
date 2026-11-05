@@ -76,5 +76,14 @@
     {"input": {"name": "\ufeff", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": false},
     {"input": {"name": "\u001c", "cerqual": {"option": 2, "explanation": "Because"}, "references": ["r1"]}, "expected": true},
     {"input": null, "expected": false}
+  ],
+  "visible_list_ids": [
+    {"input": {"project": {}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, {"id": "l2", "name": "N"}]}, "expected": ["l1"]},
+    {"input": {"project": {"published_list_ids": []}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, {"id": "l2", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": ["l1", "l2"]},
+    {"input": {"project": {"published_list_ids": ["l1", "l2"]}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, {"id": "l2", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": ["l1"]},
+    {"input": {"project": {"published_list_ids": ["l1"]}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, {"id": "l3", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": ["l1"]},
+    {"input": {"project": {"published_list_ids": "l1"}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}, {"id": "l2", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": ["l1", "l2"]},
+    {"input": {"project": null, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": ["l1"]},
+    {"input": {"project": {"published_list_ids": ["zz"]}, "lists": [{"id": "l1", "name": "N", "cerqual": {"option": 0, "explanation": "Because"}, "references": ["r1"]}]}, "expected": []}
   ]
 }

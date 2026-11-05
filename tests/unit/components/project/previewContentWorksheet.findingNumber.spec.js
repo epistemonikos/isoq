@@ -114,7 +114,7 @@ describe('previewContentWorksheet — a hidden or missing finding', () => {
   })
 
   test('a visible worksheet does not show the not available state', async () => {
-    const wrapper = await load([{ id: 'v1', name: 'Visible', sort: 1 }], 'v1')
+    const wrapper = await load([{ id: 'v1', name: 'Visible', sort: 1, references: ['r1'], cerqual: { option: 0, explanation: 'Reason' } }], 'v1')
 
     expect(wrapper.find('[data-testid="finding-not-available"]').exists()).toBe(false)
     expect(fetchedUrls().filter(u => u.includes('isoqf_references')).length).toBe(1)

@@ -391,6 +391,17 @@ describe('previewContentSoQf — hidden stubs and incomplete lists (public views
       wrapper.destroy()
     })
 
+    test('the shared link still shows findings outside the snapshot', async () => {
+      const wrapper = await mountBundle({
+        project: { id: 'p1', public_type: 'fully', published_list_ids: ['l1'] },
+        lists: [complete('l1', 1), complete('l2', 2)]
+      })
+
+      expect(numbersOf(wrapper)).toEqual(['1', '2'])
+      expect(wrapper.vm.table_settings.totalRows).toBe(2)
+      wrapper.destroy()
+    })
+
     test('status follows the shared definition of complete', async () => {
       const noRefs = { ...complete('l2', 2), references: [] }
       const wrapper = await mountBundle({ lists: [complete('l1', 1), noRefs] })
@@ -401,9 +412,9 @@ describe('previewContentSoQf — hidden stubs and incomplete lists (public views
   })
 
   describe('public route', () => {
-    const mountPublic = async (lists, categories = []) => {
+    const mountPublic = async (lists, categories = [], project = { id: 'p1', public_type: 'fully' }) => {
       Api.get.mockImplementation((url) => {
-        if (String(url).includes('isoqf_projects')) return Promise.resolve({ data: { id: 'p1', public_type: 'fully' } })
+        if (String(url).includes('isoqf_projects')) return Promise.resolve({ data: project })
         if (String(url).includes('isoqf_list_categories')) return Promise.resolve({ data: categories })
         if (String(url).includes('isoqf_lists')) return Promise.resolve({ data: lists })
         if (String(url).includes('isoqf_references')) return Promise.resolve({ data: BUNDLE.references })
@@ -429,7 +440,42 @@ describe('previewContentSoQf — hidden stubs and incomplete lists (public views
       const wrapper = await mountPublic([{ id: 'l9', name: 'Bare finding', sort: 1, category: null }])
 
       expect(wrapper.vm.loadErrors.lists).toBe(false)
-      expect(renderedTable(wrapper)).toContain('Bare finding')
+      expect(renderedTable(wrapper)).not.toContain('Bare finding')
+      wrapper.destroy()
+    })
+
+    const snapshotLists = () => [complete('l1', 1), complete('l2', 2), { id: 'l3', name: 'Bare', sort: 3, category: null }]
+    const snapshotProject = { id: 'p1', public_type: 'fully', published_list_ids: ['l1'] }
+
+    test('a member sees only the published snapshot on the public route', async () => {
+      const wrapper = await mountPublic(snapshotLists(), [], snapshotProject)
+
+      expect(numbersOf(wrapper)).toEqual(['1'])
+      expect(wrapper.vm.table_settings.totalRows).toBe(1)
+      const findingCalls = Api.get.mock.calls.filter(c => String(c[0]).includes('isoqf_findings'))
+      expect(findingCalls.map(c => c[1].list_id)).toEqual(['l1'])
+      wrapper.destroy()
+    })
+
+    test('the project arriving after the lists still filters the snapshot', async () => {
+      let resolveProject
+      Api.get.mockImplementation((url) => {
+        if (String(url).includes('isoqf_projects')) return new Promise(resolve => { resolveProject = resolve })
+        if (String(url).includes('isoqf_list_categories')) return Promise.resolve({ data: [{ id: 'cat1', text: 'A', extra_info: '' }] })
+        if (String(url).includes('isoqf_lists')) return Promise.resolve({ data: snapshotLists() })
+        if (String(url).includes('isoqf_references')) return Promise.resolve({ data: BUNDLE.references })
+        return Promise.resolve({ data: [] })
+      })
+      const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: publicMocks })
+      await flushPromises()
+      resolveProject({ data: snapshotProject })
+      await flushPromises()
+      await flushPromises()
+
+      expect(numbersOf(wrapper)).toEqual(['1'])
+      expect(wrapper.vm.table_settings.totalRows).toBe(1)
+      const findingCalls = Api.get.mock.calls.filter(c => String(c[0]).includes('isoqf_findings'))
+      expect(findingCalls.map(c => c[1].list_id)).toEqual(['l1'])
       wrapper.destroy()
     })
 

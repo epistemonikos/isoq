@@ -93,6 +93,7 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import { isFindingVisible } from '@/utils/publishRules'
 import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByAuthors, sortByStudyLabel } from '@/utils/tableDataUtils'
@@ -429,7 +430,10 @@ export default {
             : (catResponse.data.options || [])
           const sorted = Commons.sortFindings(lists, categories)
           const foundList = sorted.find(l => l.id === listId)
-          this.findingNotAvailable = !foundList || Boolean(foundList.hidden)
+          // The public route shows what the public sees, also to members (#169 F6).
+          this.findingNotAvailable = !foundList || Boolean(foundList.hidden) ||
+            (PublicPreviewAccess.isBrowseToken(this.$route.params.token) &&
+              !isFindingVisible(foundList, this.project))
           this.list = foundList ? JSON.parse(JSON.stringify(foundList)) : {}
           if (this.findingNotAvailable) {
             // Nothing to fetch: the server answers 404 for a hidden finding's data.
