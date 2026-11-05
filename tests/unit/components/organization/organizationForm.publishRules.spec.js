@@ -116,6 +116,37 @@ describe('organizationForm.vue — shared publishing rules', () => {
     expect(show).toHaveBeenCalledWith('publish-warning-modal')
   })
 
+  test('the modal stays closed when the project was already missing information and this save removes nothing', async () => {
+    ;({ wrapper } = build({ complete_by_author: null }))
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    Project.update.mockResolvedValue({
+      data: { status: false, message: 'project.notifications.publish_missing_fields', state: { complete_by_author: false } }
+    })
+    wrapper.vm.formData.description = 'only the description changed'
+    wrapper.vm.save()
+    await flush()
+    expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
+    expect(Project.update).toHaveBeenCalledTimes(1)
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+    expect(wrapper.find('#select-project-list-completed-by-author-status').classes()).toContain('is-invalid')
+    expect(Api.patch).not.toHaveBeenCalled()
+  })
+
+  test('the modal opens when this save newly removes a field, even if another was already missing', async () => {
+    ;({ wrapper } = build({ complete_by_author: null }))
+    const show = jest.fn()
+    wrapper.vm.$bvModal.show = show
+    wrapper.vm.formData.author_email = ''
+    wrapper.vm.save()
+    await flush()
+    expect(show).toHaveBeenCalledWith('publish-warning-modal')
+    expect(Project.update).not.toHaveBeenCalled()
+    // All missing fields are marked, the old one included.
+    expect(wrapper.find('#select-project-list-completed-by-author-status').classes()).toContain('is-invalid')
+    expect(wrapper.vm.state.author_email).toBe(false)
+  })
+
   test('the revert-to-private modal stays closed when the project was private', () => {
     ;({ wrapper } = build({ public_type: 'private' }))
     const executeSave = jest.spyOn(wrapper.vm, 'executeSave').mockResolvedValue()

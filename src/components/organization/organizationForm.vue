@@ -492,11 +492,14 @@ export default {
       this.resetState()
       this.markedByModal = []
     },
-    // The project was public and, with this save, a rule that publishing needs stops holding.
-    // A person who already chose Private is not losing anything: no modal for them.
+    // The project was public and THIS save makes a rule stop holding: a field missing now
+    // that was not missing as loaded. A project that already lacked information when it
+    // loaded (legacy) gets no modal: the normal save path refuses it with the fields in red.
+    // A person who already chose Private is not losing anything either.
     checkRequiredFieldsRemoved: function (data) {
-      return isProjectPublic(this.originalFormData) && isProjectPublic(data) &&
-        projectMissingFields(data).length > 0
+      if (!isProjectPublic(this.originalFormData) || !isProjectPublic(data)) return false
+      const before = projectMissingFields(this.originalFormData)
+      return projectMissingFields(data).some(field => !before.includes(field))
     },
     markMissingFields: function (data) {
       const newState = { ...this.state }
