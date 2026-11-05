@@ -495,4 +495,18 @@ describe('organizationForm.vue — revert-to-private modal', () => {
 
     expect(wrapper.vm.originalFormData.public_type).toBe('fully')
   })
+
+  test('a public project switched to Private with a field emptied saves without the modal', async () => {
+    ;({ wrapper } = build())
+    wrapper.vm.formData.public_type = 'private'
+    wrapper.vm.formData.author_email = ''
+    await wrapper.vm.$nextTick()
+    const show = jest.spyOn(wrapper.vm.$bvModal, 'show').mockImplementation(() => {})
+    const executeSave = jest.spyOn(wrapper.vm, 'executeSave').mockImplementation(() => {})
+
+    wrapper.vm.save()
+
+    expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
+    expect(executeSave).toHaveBeenCalledTimes(1)
+  })
 })
