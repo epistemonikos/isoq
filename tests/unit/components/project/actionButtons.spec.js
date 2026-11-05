@@ -60,4 +60,25 @@ describe('actionButtons.vue', () => {
       expect(wrapper.text()).toContain('actionButtons.print_save_pdf')
     })
   })
+
+  describe('Published state follows the canonical rule, not the stored is_public', () => {
+    const publishButton = (wrapper) => wrapper.findAll('b-button').wrappers
+      .find(w => ['actionButtons.publish', 'actionButtons.published'].includes(w.text()))
+
+    it('shows Published for public_type fully even if is_public is stale false', () => {
+      const wrapper = createWrapper({
+        mode: 'edit',
+        project: { id: 'proj1', public_type: 'fully', private: true, is_public: false }
+      })
+      expect(publishButton(wrapper).text()).toBe('actionButtons.published')
+    })
+
+    it('shows Publish for public_type private even if is_public is stale true', () => {
+      const wrapper = createWrapper({
+        mode: 'edit',
+        project: { id: 'proj1', public_type: 'private', is_public: true }
+      })
+      expect(publishButton(wrapper).text()).toBe('actionButtons.publish')
+    })
+  })
 })

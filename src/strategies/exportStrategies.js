@@ -4,6 +4,7 @@ import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
 import Commons from '@/utils/commons'
+import { isProjectPublic } from '@/utils/publishRules'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils/documentHelpers'
 
@@ -348,7 +349,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
   }
 
   getLicenseText () {
-    if (this.project.is_public) {
+    if (isProjectPublic(this.project)) {
       return this.project.license_type || ''
     }
     return ''
