@@ -339,6 +339,21 @@ import { isCamelotEnabled } from '@/constants/camelot'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
+// The fields a refused save can mark, in the order the form shows them: `state` key,
+// the control's id (to move the focus) and the label key (to name it in the toast).
+const FIELDS_IN_FORM_ORDER = [
+  { key: 'name', id: 'input-project-list-name', label: 'project.title_of_review' },
+  { key: 'authors', id: 'input-project-authors', label: 'project.authors' },
+  { key: 'author', id: 'input-project-author', label: 'project.corresponding_author' },
+  { key: 'author_email', id: 'input-project-author-email', label: 'project.corresponding_author_email' },
+  { key: 'review_question', id: 'input-project-review-question', label: 'project.review_question' },
+  { key: 'url_doi', id: 'select-project-list-url-doi', label: 'project.url_doi' },
+  { key: 'complete_by_author', id: 'select-project-list-completed-by-author-status', label: 'project.completed_by_authors' },
+  { key: 'lists_authors', id: 'input-project-list-authors', label: 'project.list_authors_isoq' },
+  { key: 'license', id: 'select-project-list-license', label: 'project.choose_license' },
+  { key: 'no_personal_data_confirmed', id: 'checkbox-project-personal-data', label: 'project.personal_data_field' }
+]
+
 export default {
   name: 'organizationForm',
   components: {videoHelp},
@@ -570,6 +585,39 @@ export default {
         this.executeSave(data)
       }
     },
+    // The fields currently in red, in the order the form shows them.
+    invalidFields: function () {
+      return FIELDS_IN_FORM_ORDER.filter(field => this.state[field.key] === false)
+    },
+    missingFieldLabels: function () {
+      return this.invalidFields().map(field => field.label)
+    },
+    // A refused save must show WHERE: on a small screen the fields in red can be out of
+    // view (WCAG 3.3.1). Scroll to the first one and give it the focus, so a screen reader
+    // also announces it with its message.
+    focusFirstInvalidField: function () {
+      this.$nextTick(() => {
+        const [first] = this.invalidFields()
+        if (!first || !this.$el || !this.$el.querySelector) return
+        const control = this.$el.querySelector('#' + first.id)
+        if (!control) return
+        if (typeof control.scrollIntoView === 'function') control.scrollIntoView({ block: 'center' })
+        control.focus()
+      })
+    },
+    // One toast that names what is missing when fields are in red; otherwise the
+    // refusal's own message (e.g. no complete review finding). Then the focus.
+    reportRefusal: function (messageKey) {
+      const labels = this.missingFieldLabels()
+      if (labels.length) {
+        this.$notify.error(this.$t('project.notifications.missing_fields_list', {
+          fields: labels.map(label => this.$t(label)).join(', ')
+        }))
+      } else {
+        this.$notify.error(this.$t(messageKey))
+      }
+      this.focusFirstInvalidField()
+    },
     executeSave: async function (data) {
       try {
         if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
@@ -594,7 +642,7 @@ export default {
           if (response.data && response.data.cancelled) return
           if (response.data && response.data.status === false) {
             this.state = { ...this.state, ...response.data.state }
-            this.$notify.error(this.$t(response.data.message))
+            this.reportRefusal(response.data.message)
             return
           }
           this.$notify.success(this.$t('project.notifications.project_updated'))
@@ -614,7 +662,7 @@ export default {
           const response = await Project.create(data)
           if (response.data && response.data.status === false) {
             this.state = { ...this.state, ...response.data.state }
-            this.$notify.error(this.$t(response.data.message))
+            this.reportRefusal(response.data.message)
             return
           }
           if (response.data && response.data.id) {
@@ -651,10 +699,11 @@ export default {
               if (Object.prototype.hasOwnProperty.call(newState, key)) newState[key] = false
             })
             this.state = newState
-            this.$notify.error(this.$t('project.notifications.publish_missing_fields'))
+            this.reportRefusal('project.notifications.publish_missing_fields')
           } else if (isPersonalDataConfirmationRejection(error)) {
             this.state = { ...this.state, no_personal_data_confirmed: false }
             this.$notify.error(this.$t(writeErrorMessageKey(error)))
+            this.focusFirstInvalidField()
           } else if (errData.message) {
             let errorMsg = errData.message
             if (errorMsg === "Validation error in isoqf_projects: '' should be non-empty") {
@@ -722,6 +771,8 @@ export default {
               this.state[fieldName] = false
             }
           }
+          // Coming from the Publish modal's "Go to Project Properties": land on the first.
+          this.focusFirstInvalidField()
         }
       },
       immediate: true

@@ -128,7 +128,7 @@ describe('organizationForm.vue — shared publishing rules', () => {
     await flush()
     expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
     expect(Project.update).toHaveBeenCalledTimes(1)
-    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('project.notifications.missing_fields_list')
     expect(wrapper.find('#select-project-list-completed-by-author-status').classes()).toContain('is-invalid')
     expect(Api.patch).not.toHaveBeenCalled()
   })
@@ -207,7 +207,7 @@ describe('organizationForm.vue — shared publishing rules', () => {
     await wrapper.vm.executeSave({ ...COMPLETE })
     expect(wrapper.vm.state.authors).toBe(false)
     expect(wrapper.vm.state.license).toBe(false)
-    expect($notify.error).toHaveBeenCalledWith('project.notifications.publish_missing_fields')
+    expect($notify.error).toHaveBeenCalledWith('project.notifications.missing_fields_list')
     await flush()
     expect(wrapper.find('#input-project-authors').classes()).toContain('is-invalid')
   })
@@ -508,5 +508,59 @@ describe('organizationForm.vue — revert-to-private modal', () => {
 
     expect(show).not.toHaveBeenCalledWith('publish-warning-modal')
     expect(executeSave).toHaveBeenCalledTimes(1)
+  })
+
+  // A refused save has to show WHERE: on a small screen the fields in red can be out of
+  // view, and the toast alone read like some other error (manual test, 2026-11-05).
+  describe('a refused save points at what is missing', () => {
+    test('the first field in red, in form order, gets the focus', async () => {
+      Project.update.mockResolvedValue({ data: { status: false, message: 'project.notifications.publish_missing_fields', state: { complete_by_author: false, author_email: false } } })
+      ;({ wrapper } = build())
+      await wrapper.vm.executeSave({ ...COMPLETE })
+      await flush()
+
+      expect(document.activeElement.id).toBe('input-project-author-email')
+    })
+
+    test('the toast names the missing fields with their form labels', async () => {
+      const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+      Project.update.mockResolvedValue({ data: { status: false, message: 'project.notifications.publish_missing_fields', state: { complete_by_author: false, author_email: false } } })
+      ;({ wrapper } = build())
+      wrapper.vm.$notify.error = $notify.error
+      await wrapper.vm.executeSave({ ...COMPLETE })
+      await flush()
+
+      expect(wrapper.vm.missingFieldLabels()).toEqual(['project.corresponding_author_email', 'project.completed_by_authors'])
+      expect($notify.error).toHaveBeenCalledWith('project.notifications.missing_fields_list')
+    })
+
+    test('a refusal with nothing in red keeps its own message', async () => {
+      Project.update.mockResolvedValue({ data: { status: false, message: 'project.validation.publish_requirement', state: { can_publish: false } } })
+      let notify
+      ;({ wrapper, $notify: notify } = build())
+      await wrapper.vm.executeSave({ ...COMPLETE })
+      await flush()
+
+      expect(notify.error).toHaveBeenCalledWith('project.validation.publish_requirement')
+    })
+
+    test('a server publish_requirements_not_met focuses the first missing field', async () => {
+      Project.update.mockRejectedValue({ response: { status: 400, data: { status: false, reason: 'publish_requirements_not_met', missing_fields: ['license_type', 'authors'] } } })
+      let notify
+      ;({ wrapper, $notify: notify } = build())
+      await wrapper.vm.executeSave({ ...COMPLETE })
+      await flush()
+
+      expect(document.activeElement.id).toBe('input-project-authors')
+      expect(notify.error).toHaveBeenCalledWith('project.notifications.missing_fields_list')
+    })
+
+    test('fields highlighted from the Publish modal get the focus on the first one', async () => {
+      ;({ wrapper } = build())
+      await wrapper.setProps({ highlight: 'review_question,author_email' })
+      await flush()
+
+      expect(document.activeElement.id).toBe('input-project-author-email')
+    })
   })
 })

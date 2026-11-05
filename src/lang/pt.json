@@ -346,7 +346,8 @@
       "error_updating_methodology": "Erro ao atualizar metodologia",
       "methodology_changed_properties_not_saved": "A metodologia foi alterada, mas as propriedades do projeto não puderam ser guardadas. Verifique-as e guarde novamente.",
       "required_fields_error": "Por favor, preencha os campos obrigatórios.",
-      "publish_missing_fields": "Seu pedido de publicação na base de dados do iSoQ foi negado porque faltam informações. Por favor, preencha os campos em vermelho abaixo, ou selecione “Privado” em “Visibilidade na base de dados do iSoQ” para continuar."
+      "publish_missing_fields": "Seu pedido de publicação na base de dados do iSoQ foi negado porque faltam informações. Por favor, preencha os campos em vermelho abaixo, ou selecione “Privado” em “Visibilidade na base de dados do iSoQ” para continuar.",
+      "missing_fields_list": "Faltam informações para publicar: {fields}. Preencha os campos em vermelho ou escolha “Privado”."
     },
     "validation": {
       "title_min_length": "O projeto deve ter um título com pelo menos 3 letras",
@@ -460,7 +461,8 @@
       "finding": "o achado",
       "evidence": "o perfil de evidência",
       "extracted": "os dados extraídos"
-    }
+    },
+    "personal_data_field": "Confirmação de dados pessoais"
   },
   "references": {
     "step_title": "ETAPA 1: Envie as <b>referências</b> dos seus estudos incluídos (obrigatório)",
