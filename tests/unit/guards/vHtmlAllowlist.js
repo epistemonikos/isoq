@@ -36,7 +36,6 @@ module.exports = {
   'components/organization/organizationForm.vue::$t(\'project.camelot_modal_info.link1\')': STATIC_I18N,
   'components/organization/organizationForm.vue::$t(\'project.camelot_modal_info.link2\')': STATIC_I18N,
   'components/project/InclusionExclusionCriteria.vue::$t(\'inclusion.step_title\')': STATIC_I18N,
-  'components/project/PublishModal.vue::errorsResponse.message': 'The `message` of GET /api/project/can_publish (server checkIfCanPublish). Its messages are fixed English strings; the only one with HTML is the Project Properties link of checkBasicInformation, whose variable parts are the project and organization ids. If the server ever puts a name or a title in that message, this entry must go.',
   'components/project/UploadReferences.vue::$t(\'references.step_title\')': STATIC_I18N,
   'components/project/UploadReferences.vue::$t(\'references.references_loaded\', { count: references.length })': NUMBER_PARAM,
   'components/project/UploadReferences.vue::$t(\'references.delete_all_warning\')': STATIC_I18N,

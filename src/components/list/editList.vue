@@ -92,7 +92,7 @@
             :activeRefLocks="activeRefLocks" @lock-denied="fetchAndUpdateRefLocks"
             @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
 
-          <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
+          <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && isPublic">
             <div class="mt-5 alert alert-info" role="alert">
               <h5>{{ $t('project.license_type') }}</h5>
               <p>{{ theLicense(this.project.license_type) }}</p>
@@ -119,6 +119,7 @@ import { worksheetLockKeys, releasedKeys } from '@/utils/worksheetLockScope'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByAuthors } from '@/utils/tableDataUtils'
+import { isProjectPublic } from '@/utils/publishRules'
 // Más corto que los 15 s de las otras superficies que pintan candados
 // (`InclusionExclusionCriteria.vue`, `viewProject.vue`, `StepThree/StepFour`), y a
 // propósito: ésta es la única donde dos personas trabajan sobre el MISMO hallazgo,
@@ -346,6 +347,10 @@ export default {
     this.$_worksheetLockKeys = null
   },
   computed: {
+    // The canonical rule (public_type wins), not the stored is_public that old documents can carry stale.
+    isPublic: function () {
+      return isProjectPublic(this.project)
+    },
     // Todo documento cuyo candado afecta a lo que esta hoja PINTA: el hallazgo (de él
     // cuelgan sus cinco secciones del evidence profile y su `/identity`), sus
     // referencias (de ellas cuelgan las filas de características y de assessments), el

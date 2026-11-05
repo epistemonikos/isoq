@@ -344,17 +344,21 @@
       "project_created": "The project has been created",
       "project_updated": "The project has been updated",
       "error_updating_methodology": "Error updating methodology",
-      "required_fields_error": "Please complete the required fields."
+      "methodology_changed_properties_not_saved": "The methodology was changed, but the project properties could not be saved. Check them and save again.",
+      "required_fields_error": "Please complete the required fields.",
+      "publish_missing_fields": "Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.",
+      "missing_fields_list": "Information is missing to publish: {fields}. Complete the fields in red or choose “Private”."
     },
     "validation": {
-      "title_min_length": "The project must have a title that contain at least 3 characters",
-      "at_least_one_author": "The project must have at least one author",
-      "corresponding_author_min_length": "The project must have a corresponding author with at least 3 characters",
+      "title_min_length": "The project must have a title with at least 3 letters",
+      "at_least_one_author": "The project must have authors with at least 3 letters",
+      "corresponding_author_min_length": "The project must have a corresponding author with at least 3 letters",
       "valid_email": "The project must have a valid author email address",
-      "question_min_length": "The project must have a review question with at least 3 characters",
-      "valid_url_doi": "The project must have a valid URL or DOI",
-      "list_authors_required": "The project must have a list of authors",
+      "question_min_length": "The project must have a review question with at least 3 letters",
+      "valid_url_doi": "The project must have a valid web address (http/https) or DOI",
+      "list_authors_required": "The project must have a list of authors with at least 3 letters",
       "publish_requirement": "The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select “Private” until you are finished.",
+      "complete_by_author_required": "Say whether the review was completed by its authors",
       "license_required": "The project must have a license"
     },
     "title_of_review": "Title of review",
@@ -457,7 +461,8 @@
       "finding": "the finding",
       "evidence": "the evidence profile",
       "extracted": "the extracted data"
-    }
+    },
+    "personal_data_field": "Personal data confirmation"
   },
   "references": {
     "step_title": "STEP 1: Upload the <b>references</b> for your included studies (required)",
@@ -494,7 +499,8 @@
     "reference_id": "Reference ID",
     "author_year": "Author(s), Year",
     "in_use_by": "{names} is working with this study right now. If you delete it, their editor will close and they will lose anything not yet saved.",
-    "delete_all_in_use": "{count} of these studies are being worked on right now by {names}. If you delete them, their editors will close and they will lose anything not yet saved."
+    "delete_all_in_use": "{count} of these studies are being worked on right now by {names}. If you delete them, their editors will close and they will lose anything not yet saved.",
+    "delete_reverts_private": "Deleting these studies will also revert your project to \"Private\", because no review finding with a complete GRADE-CERQual assessment would remain on the iSoQ database."
   },
   "inclusion": {
     "step_title": "STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)",
@@ -684,6 +690,8 @@
       "revert_private": "Your project will revert to \"private\" and be removed from the iSoQ database. You can publish the project to the database once you have completed your GRADE-CERQual assessment of confidence.",
       "clear_cerqual_revert": "By clearing this assessment, this iSoQ project will revert to \"private\" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment and associated references.",
       "clear_cerqual_simple": "By clearing this assessment, this review finding will no longer appear in your published iSoQ project.",
+      "save_incomplete_hidden": "Saving this assessment without an explanation means this review finding will no longer appear in your published iSoQ project.",
+      "save_incomplete_revert": "Saving this assessment without an explanation will revert this iSoQ project to \"Private\", because no review finding with a complete GRADE-CERQual assessment would remain on the iSoQ database.",
       "review_question_missing": "The review question is missing. Add it in",
       "inclusion_missing": "The inclusion criteria are missing. Add them in",
       "exclusion_missing": "The exclusion criteria are missing. Add them in",
@@ -791,6 +799,7 @@
     "tables_per_page": "Tables per pages",
     "loading": "Loading...",
     "last_modification": "Last Modification",
+    "published": "Published",
     "load_error": "The published projects could not be loaded. It is not that there are none: loading failed."
   },
   "help": {
@@ -993,6 +1002,10 @@
   "publish": {
     "confirm_no_personal_data": "I confirm that the content does not identify participants of primary studies and does not include personal data that I am not able to make public",
     "confirm_no_personal_data_required": "To publish, you must confirm that the content does not identify participants of primary studies and does not include personal data that you are not able to make public.",
+    "go_to_properties": "Go to Project Properties",
+    "only_complete_findings_visible": "Only review findings with complete GRADE-CERQual assessments will be visible on the database. If you later complete assessments for additional review findings then you will need to unpublish and republish your project to the database to make them visible.",
+    "requirements_not_met": "The project no longer meets the requirements to be published. Check the fields in red or select “Private”.",
+    "check_needs_connection": "Checking how this change affects the publication needs an internet connection. Try again when you are back online.",
     "to_word": "to MS Word",
     "the_references": "the references",
     "print_pdf": "Print or save as PDF",
@@ -1058,6 +1071,9 @@
     "explanation": "Explanation",
     "extracted_data": "Extracted Data",
     "return_isoq": "return to ISoQ table"
+  },
+  "preview": {
+    "finding_not_available": "This review finding is not available on the iSoQ database."
   },
   "profile": {
     "title": "Profile",

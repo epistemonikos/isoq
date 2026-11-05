@@ -13,6 +13,11 @@ const conStatus = (status, { url = '/isoqf_projects/p1', data = {} } = {}) => ({
  * por otro lado; un error que el cliente no reconozca TERMINA VISIBLE.
  */
 describe('writeErrorMessageKey', () => {
+  test('publish_requirements_not_met maps to publish.requirements_not_met', () => {
+    const error = conStatus(400, { url: '/api/publish', data: { reason: 'publish_requirements_not_met', missing_fields: [] } })
+    expect(writeErrorMessageKey(error, 'notifications.publish_error')).toBe('publish.requirements_not_met')
+  })
+
   it('un error del servidor cualquiera: el texto de la acción', () => {
     expect(writeErrorMessageKey(conStatus(500), 'notifications.share_error')).toBe('notifications.share_error')
   })

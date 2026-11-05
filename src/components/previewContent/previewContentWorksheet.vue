@@ -29,7 +29,10 @@
           </b-button>
         </b-col>
       </b-row>
-      <b-row class="mt-4">
+      <b-alert v-if="findingNotAvailable" show variant="info" class="mt-4" data-testid="finding-not-available">
+        {{ $t('preview.finding_not_available') }}
+      </b-alert>
+      <b-row v-else class="mt-4">
         <b-col cols="12">
           <evidence-profile :evidenceProfile="evidence_profile" :ui="ui"
             :evidenceProfileTableSettings="evidence_profile_table_settings" :references="references" mode="view"
@@ -90,6 +93,7 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import { isFindingVisible } from '@/utils/publishRules'
 import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByAuthors, sortByStudyLabel } from '@/utils/tableDataUtils'
@@ -111,6 +115,8 @@ export default {
   data () {
     return {
       // Qué cargas fallaron: la worksheet compartida se veía incompleta y así se exportaba a Word.
+      // The finding is hidden (incomplete or outside the published snapshot) or gone.
+      findingNotAvailable: false,
       loadErrors: { finding: false, categories: false, references: false, evidence: false, extracted: false, characteristics: false, assessments: false },
       ui: {
         methodological_assessments: {
@@ -424,7 +430,16 @@ export default {
             : (catResponse.data.options || [])
           const sorted = Commons.sortFindings(lists, categories)
           const foundList = sorted.find(l => l.id === listId)
+          // The public route shows what the public sees, also to members (#169 F6).
+          this.findingNotAvailable = !foundList || Boolean(foundList.hidden) ||
+            (PublicPreviewAccess.isBrowseToken(this.$route.params.token) &&
+              !isFindingVisible(foundList, this.project))
           this.list = foundList ? JSON.parse(JSON.stringify(foundList)) : {}
+          if (this.findingNotAvailable) {
+            // Nothing to fetch: the server answers 404 for a hidden finding's data.
+            this.evidence_profile_table_settings.isBusy = false
+            return
+          }
           this.list.sources = []
           this.evidence_profile = []
           this.extracted_data = {

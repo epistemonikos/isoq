@@ -3,7 +3,7 @@ import Api from '@/utils/Api'
 
 jest.mock('@/utils/Api', () => ({
   __esModule: true,
-  default: { get: jest.fn(() => Promise.resolve({ data: { status: true } })), patch: jest.fn(() => Promise.resolve({ data: {} })) }
+  default: { post: jest.fn(() => Promise.resolve({ data: { status: true } })), patch: jest.fn(() => Promise.resolve({ data: {} })) }
 }))
 
 const complete = {
@@ -11,7 +11,7 @@ const complete = {
   name: 'Proyecto',
   public_type: 'fully',
   license_type: 'CC-BY',
-  authors: 'A',
+  authors: 'Ana Pérez',
   author: 'Autor',
   author_email: 'a@example.com',
   review_question: '¿Pregunta?',
@@ -29,13 +29,13 @@ describe('Project.validations — confirmación de datos personales', () => {
     const result = await Project.validations({ ...complete })
     expect(result.data.status).toBe(false)
     expect(result.data.state.no_personal_data_confirmed).toBe(false)
-    expect(Api.get).not.toHaveBeenCalled()
+    expect(Api.post).not.toHaveBeenCalled()
   })
 
   it('público confirmado: sigue a can_publish con la casilla', async () => {
     const result = await Project.validations({ ...complete, no_personal_data_confirmed: true })
     expect(result.data.status).toBe(true)
-    expect(Api.get).toHaveBeenCalledWith('/api/project/can_publish', expect.objectContaining({ no_personal_data_confirmed: true }))
+    expect(Api.post).toHaveBeenCalledWith('/api/project/can_publish', expect.objectContaining({ no_personal_data_confirmed: true }), { noQueue: true })
   })
 
   it('privado no la pide', async () => {

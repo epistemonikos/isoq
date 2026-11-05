@@ -137,6 +137,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { validEmail } from '@/utils/publishRules'
 import { requestFailureKey } from '@/utils/writeErrors'
 import _debounce from 'lodash.debounce'
 import { TERMS_VERSION } from '@/constants/terms'
@@ -218,8 +219,7 @@ export default {
       return d.message || d.msg || null
     },
     validEmail (email) {
-      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      this.ui.username_validation = re.test(email)
+      this.ui.username_validation = validEmail(email)
     },
     createAccount () {
       if (!this.termsReady) return

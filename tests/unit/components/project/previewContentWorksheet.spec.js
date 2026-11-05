@@ -520,6 +520,41 @@ describe('previewContentWorksheet.vue', () => {
     })
   })
 
+  describe('the published snapshot (#169)', () => {
+    const complete = (id) => ({
+      id, name: `Finding ${id}`, sort: Number(id.slice(1)), category: null, references: ['r1'],
+      cerqual: { option: 0, explanation: 'Reason' }
+    })
+    const project = { id: 'p1', public_type: 'fully', published_list_ids: ['l1'] }
+
+    const run = async (token) => {
+      Api.get.mockImplementation((url) => Promise.resolve({
+        data: String(url).includes('isoqf_projects') ? [project]
+          : String(url).includes('isoqf_lists') ? [complete('l1'), complete('l2')] : []
+      }))
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: 'l2', projectId: 'p1', token } } }
+      })
+      await new Promise(process.nextTick)
+      await new Promise(process.nextTick)
+      return wrapper
+    }
+
+    it('a finding outside the snapshot is not available on the public route, also for members', async () => {
+      const wrapper = await run('public')
+
+      expect(wrapper.vm.findingNotAvailable).toBe(true)
+      expect(Api.get.mock.calls.filter(c => String(c[0]).includes('isoqf_references'))).toEqual([])
+    })
+
+    it('the same finding is available through a shared link', async () => {
+      const wrapper = await run('abc123realtoken')
+
+      expect(wrapper.vm.findingNotAvailable).toBe(false)
+    })
+  })
+
   describe('el contador de versión de la fila', () => {
     const plainList = {
       project_id: 'p1',

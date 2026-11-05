@@ -25,9 +25,9 @@
           </b-col>
           <b-col v-if="mode === 'edit'" cols="12" lg="4">
             <b-button v-if="canWrite" class="mt-1" @click="modalChangePublicStatus"
-              :variant="(project.is_public) ? 'outline-primary' : 'primary'" block v-b-tooltip.hover
+              :variant="(isPublic) ? 'outline-primary' : 'primary'" block v-b-tooltip.hover
               :title="$t('actionButtons.publish_tooltip')">
-              <span v-if="project.is_public">{{ $t('actionButtons.published') }}</span><span v-else>{{
+              <span v-if="isPublic">{{ $t('actionButtons.published') }}</span><span v-else>{{
                 $t('actionButtons.publish') }}</span>
             </b-button>
           </b-col>
@@ -49,6 +49,7 @@
 
 <script>
 import Commons from '@/utils/commons'
+import { isProjectPublic } from '@/utils/publishRules'
 import PublishModal from '@/components/project/PublishModal'
 import { getWordExportService } from '@/services/wordExportService'
 import { getRisExportService } from '@/services/risExportService'
@@ -166,6 +167,10 @@ export default {
     }
   },
   computed: {
+    // The canonical rule (public_type wins), not the stored is_public that old documents can carry stale.
+    isPublic: function () {
+      return isProjectPublic(this.project)
+    },
     getLicense: {
       get: function () {
         if (!Object.prototype.hasOwnProperty.call(this.modalProject, 'license_type')) {

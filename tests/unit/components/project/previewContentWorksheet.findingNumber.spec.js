@@ -70,3 +70,54 @@ describe('previewContentWorksheet — el # se deriva, no se lee del isoqf_id per
     wrapper.destroy()
   })
 })
+
+describe('previewContentWorksheet — a hidden or missing finding', () => {
+  const PROJECT = '66b1ff000000000000000001'
+
+  const load = async (lists, listId) => {
+    Api.get.mockImplementation((url) => {
+      if (String(url).includes('isoqf_list_categories')) return Promise.resolve({ data: [] })
+      if (String(url).includes('isoqf_lists')) return Promise.resolve({ data: lists })
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = shallowMount(previewContentWorksheet, {
+      localVue,
+      mocks: {
+        $t: (key) => key,
+        $route: { params: { id: listId, projectId: PROJECT, token: 'public' } },
+        $router: { push: jest.fn() }
+      }
+    })
+    wrapper.vm.project = { id: PROJECT }
+    jest.clearAllMocks()
+    wrapper.vm.getList()
+    await flushPromises()
+    return wrapper
+  }
+
+  const fetchedUrls = () => Api.get.mock.calls.map(c => String(c[0]))
+
+  test('a hidden or missing worksheet shows not available and fetches nothing', async () => {
+    for (const [lists, id] of [
+      [[{ id: 'h1', project_id: PROJECT, sort: 1, category: null, hidden: true }], 'h1'],
+      [[{ id: 'other', name: 'Other', sort: 1 }], 'missing']
+    ]) {
+      const wrapper = await load(lists, id)
+
+      expect(wrapper.text()).toContain('preview.finding_not_available')
+      expect(wrapper.find('[data-testid="finding-not-available"]').exists()).toBe(true)
+      expect(fetchedUrls().filter(u => u.includes('isoqf_findings'))).toEqual([])
+      expect(fetchedUrls().filter(u => u.includes('isoqf_references'))).toEqual([])
+      expect(wrapper.find('evidence-profile-stub').exists()).toBe(false)
+      wrapper.destroy()
+    }
+  })
+
+  test('a visible worksheet does not show the not available state', async () => {
+    const wrapper = await load([{ id: 'v1', name: 'Visible', sort: 1, references: ['r1'], cerqual: { option: 0, explanation: 'Reason' } }], 'v1')
+
+    expect(wrapper.find('[data-testid="finding-not-available"]').exists()).toBe(false)
+    expect(fetchedUrls().filter(u => u.includes('isoqf_references')).length).toBe(1)
+    wrapper.destroy()
+  })
+})

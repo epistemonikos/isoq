@@ -230,20 +230,28 @@ describe('ExportStrategies', () => {
 
     describe('License Logic', () => {
       it('should return empty string for private projects', () => {
-        mockProject.is_public = false
+        mockProject.public_type = 'private'
         const strategy = new IsoQExportStrategy(mockProject, mockData)
         expect(strategy.getLicenseText()).toBe('')
       })
 
       it('should return license type for public projects', () => {
-        mockProject.is_public = true
+        mockProject.public_type = 'fully'
         mockProject.license_type = 'CC-BY-NC 4.0'
         const strategy = new IsoQExportStrategy(mockProject, mockData)
         expect(strategy.getLicenseText()).toBe('CC-BY-NC 4.0')
       })
 
+      it('decides with the canonical rule, not the stored is_public', () => {
+        mockProject.license_type = 'CC-BY-NC 4.0'
+        Object.assign(mockProject, { public_type: 'fully', private: true, is_public: false })
+        expect(new IsoQExportStrategy(mockProject, mockData).getLicenseText()).toBe('CC-BY-NC 4.0')
+        Object.assign(mockProject, { public_type: 'private', is_public: true })
+        expect(new IsoQExportStrategy(mockProject, mockData).getLicenseText()).toBe('')
+      })
+
       it('should return empty string if public but no license type', () => {
-        mockProject.is_public = true
+        mockProject.public_type = 'fully'
         mockProject.license_type = null
         const strategy = new IsoQExportStrategy(mockProject, mockData)
         expect(strategy.getLicenseText()).toBe('')

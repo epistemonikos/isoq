@@ -11,9 +11,7 @@ jest.mock('@/utils/Api', () => ({
 
 jest.mock('@/utils/project', () => ({
   update: jest.fn(),
-  create: jest.fn(),
-  validEmail: jest.fn(() => true),
-  validUrl: jest.fn(() => true)
+  create: jest.fn()
 }))
 
 const localVue = createLocalVue()

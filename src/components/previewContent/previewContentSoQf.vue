@@ -218,6 +218,8 @@ import LoadErrorAlert from '@/components/LoadErrorAlert.vue'
 import Commons from '@/utils/commons'
 import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
+import { isFindingComplete, isFindingVisible } from '@/utils/publishRules'
+import PublicPreviewAccess from '@/utils/publicPreviewAccess'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -433,27 +435,26 @@ export default {
       }
       Api.get('/isoqf_lists', params)
         .then((response) => {
+          const onPublicRoute = PublicPreviewAccess.isBrowseToken(this.$route.params.token)
+          // The project is read here, not when the request starts: on the public route the
+          // snapshot filter needs it. If it has not arrived yet, getProject calls getLists
+          // again once it does.
+          if (onPublicRoute && !(this.project && this.project.id)) return
           this.loadErrors.lists = false
           this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
           data = Commons.sortFindings(data, this.list_categories)
+          // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
+          // above so the gaps stay, and dropped here: nothing below may list or fetch them.
+          // The public route shows what the public sees, also to members (#169 F6): the
+          // published snapshot, not everything the member could open.
+          data = data.filter(l => !l.hidden && (!onPublicRoute || isFindingVisible(l, this.project)))
+          // A reload where nothing is left must not keep the previous rows.
+          this.lists_print_version = []
+          this.printableItems = []
           if (data.length) {
             for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                Commons.normalizeEvidenceProfile(list)
-                const cerqual = Commons.resolveCerqual(list)
-                if (cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
+              this.setListStatus(list)
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
@@ -475,13 +476,13 @@ export default {
                 }
               }
               list.cerqual_option = ''
-              if (list.cerqual.option != null) {
+              if (list.cerqual && list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
               // Derive the filter code from the numeric option (0-3), not the
               // translated label, so filtering keeps working in any language.
-              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual.option] || ''
-              list.cerqual_explanation = list.cerqual.explanation
+              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual && list.cerqual.option] || ''
+              list.cerqual_explanation = list.cerqual ? list.cerqual.explanation : ''
               this.setCitedReferences(list)
               this.getFinding(this.$route.params.org_id, list.id)
             }
@@ -566,6 +567,17 @@ export default {
           this.loadErrors.lists = true
           console.log(error)
         })
+    },
+    // `status` is the shared definition of complete (R2); `explanation` is what is shown.
+    setListStatus: function (list) {
+      list.status = isFindingComplete(list) ? 'completed' : 'unfinished'
+      list.explanation = 'without_explanation'
+      if (Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+        Commons.normalizeEvidenceProfile(list)
+        if (Commons.resolveCerqual(list).explanation !== '') {
+          list.explanation = 'with_explanation'
+        }
+      }
     },
     getFinding: function (orgId, listId) {
       const params = {
@@ -765,23 +777,15 @@ export default {
           const rawLists = bundle.lists || []
           let data = JSON.parse(JSON.stringify(rawLists))
           data = Commons.sortFindings(data, this.list_categories)
+          // Hidden stubs (public view of an incomplete or unpublished finding) are numbered
+          // above so the gaps stay, and dropped here: nothing below may list or fetch them.
+          data = data.filter(l => !l.hidden)
+          // A reload where nothing is left must not keep the previous rows.
+          this.lists_print_version = []
+          this.printableItems = []
           if (data.length) {
             for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                Commons.normalizeEvidenceProfile(list)
-                const cerqual = Commons.resolveCerqual(list)
-                if (cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
+              this.setListStatus(list)
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }

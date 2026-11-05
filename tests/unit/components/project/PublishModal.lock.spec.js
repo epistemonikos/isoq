@@ -12,6 +12,7 @@ jest.mock('@/utils/Api', () => ({
   __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { status: true, message: '' } })),
+    post: jest.fn(() => Promise.resolve({ data: { status: true, message: '', missing_fields: [] } })),
     patch: jest.fn(() => Promise.resolve({ data: {} }))
   }
 }))
@@ -82,7 +83,7 @@ describe('PublishModal — lock de propiedades', () => {
     await flushPromises()
     w.vm.modalProject.public_type = 'fully'
     await w.vm.savePublicStatus({ preventDefault: jest.fn() })
-    expect(Api.get).not.toHaveBeenCalled()
+    expect(Api.post).not.toHaveBeenCalled()
     expect(Api.patch).not.toHaveBeenCalled()
     w.destroy()
   })

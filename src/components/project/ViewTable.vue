@@ -11,7 +11,7 @@
     <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="displayNumber"
       :fields="(list_categories.options.length) ? fields.with_categories : fields.without_categories" :items="lists"
       :show-empty="!loadError" :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
-      @filtered="onFiltered" :filter-included-fields="table_settings.filterOn">
+      @filtered="onFiltered" :filter-function="rowMatchesFilter">
       <template v-slot:head(displayNumber)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
       </template>
@@ -266,7 +266,7 @@
     <b-modal v-if="selected_list_index >= 0" id="modal-references-list" ref="modal-references-list"
       :title="$t('soqf_table.references')" @ok="checkReferencesBeforeSaving"
       @show="noteModalShown('modal-references-list')" @hidden="handleReferencesModalHidden"
-      @cancel="cancelReferencesList" :ok-disabled="!canEdit || isFindingReadOnly || (selected_list_index === null)"
+      @cancel="cancelReferencesList" :ok-disabled="!canEdit || isFindingReadOnly || (selected_list_index === null) || referencesWarnPending"
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
@@ -321,6 +321,7 @@
 import Api from '@/utils/Api'
 import { existingReferenceIds, announceDroppedReferences } from '@/utils/referenceDeleted'
 import { writeErrorMessageKey, wasOnlyQueued } from '@/utils/writeErrors'
+import { impactOfListChange, publicationCheckErrorKey } from '@/utils/publicationState'
 import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import PresenceService from '@/services/presenceService'
@@ -436,6 +437,8 @@ export default {
       original_references: [],
       finding: {},
       pendingSaveReferences: false,
+      referencesWarnSeq: 0,
+      referencesWarnPending: false,
       findingNameDirty: false,
       // Clave del ref_lock que sostiene el modal abierto, o null. Es el id del documento
       // `isoqf_findings`: la MISMA que toma evidenceProfileForm al abrir la hoja de
@@ -882,6 +885,17 @@ export default {
     findingLockedByName: function (listId) {
       return this.findingLockNotices(listId).map(a => a.text).join(' · ')
     },
+    // The status dropdown sends an exact code and matches `status` exactly; anything else is
+    // free text over `filterOn` (status excluded, or typing «com» would match every row).
+    rowMatchesFilter: function (item, filter) {
+      if (filter === 'completed' || filter === 'unfinished') return item.status === filter
+      if (filter === null || filter === undefined || filter === '') return true
+      const needle = String(filter).toLowerCase()
+      return this.table_settings.filterOn.some(key => {
+        const value = item[key]
+        return value !== null && value !== undefined && String(value).toLowerCase().includes(needle)
+      })
+    },
     onFiltered: function (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.table_settings.totalRows = filteredItems.length
@@ -949,19 +963,17 @@ export default {
           // Sin `await`: ver el comentario de `editModalFindingName`.
           this.refreshPresenceFor(findingId)
 
-          let cnt = 0
-          for (const el of this.lists) {
-            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && Commons.resolveCerqual(el).option !== null) {
-              cnt++
-            }
+          // What the server will do to the published project, read now: the lists in
+          // props may be behind what the rest of the team has completed.
+          let impact
+          try {
+            impact = await impactOfListChange(this.project.id, data.item.id, () => null)
+          } catch (error) {
+            this.releaseFindingLock()
+            this.notifyWriteFailure(error, 'notifications.save_error', publicationCheckErrorKey)
+            return
           }
-
-          // Only show extended warning if the project is currently public and would become private
-          if (!this.project.private && cnt === 1 && Commons.resolveCerqual(this.editFindingName).option !== null) {
-            this.ui.project.showExtendedExplanationTextForDeleting = true
-          } else {
-            this.ui.project.showExtendedExplanationTextForDeleting = false
-          }
+          this.ui.project.showExtendedExplanationTextForDeleting = impact === 'project_private'
 
           this.$refs['remove-finding'].show()
         })
@@ -1092,28 +1104,19 @@ export default {
         })
     },
     cancelReferencesList: function () {
+      this.abandonReferencesWarn()
+      this.pendingSaveReferences = false
       this.$refs['modal-references-list'].hide()
     },
     checkReferencesBeforeSaving: function (bvModalEvent) {
-      // Prevent modal from closing automatically
-      // Only show warning if there were original references and all have been removed
-      if (this.selected_references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+      // Only when every original reference is being removed can the finding stop being
+      // complete; what that does to the published project is read from the server.
+      if (this.selected_references.length === 0 && this.original_references.length > 0) {
         bvModalEvent.preventDefault()
+        // A second OK while the read is pending must not start a second one.
+        if (this.referencesWarnPending) return
         this.pendingSaveReferences = true
-
-        let findingsWithRefsCount = 0
-        for (const item of this.lists) {
-          if (item.references && item.references.length > 0) {
-            findingsWithRefsCount++
-          }
-        }
-
-        // Special case: if there's only one item in the list, removing all references will make the project private
-        if (findingsWithRefsCount <= 1) {
-          this.$refs['modal-private-project-warning'].show()
-        } else {
-          this.$refs['modal-no-references-warning'].show()
-        }
+        this.warnBeforeRemovingAllReferences()
         return
       }
 
@@ -1121,7 +1124,55 @@ export default {
       this.saveReferencesList()
     },
 
+    warnBeforeRemovingAllReferences: async function () {
+      const token = ++this.referencesWarnSeq
+      this.referencesWarnPending = true
+      let impact
+      let failure = null
+      try {
+        const listId = this.lists[this.selected_list_index].id
+        impact = await impactOfListChange(this.project.id, listId, list => {
+          list.references = []
+          return list
+        })
+      } catch (error) {
+        failure = error
+      }
+      // Dismissing the modal (cancel or hidden) bumps the counter: a late answer must not
+      // warn over nothing, nor save what the person walked away from.
+      if (token !== this.referencesWarnSeq) return
+      this.referencesWarnPending = false
+      if (failure) {
+        this.pendingSaveReferences = false
+        this.notifyWriteFailure(failure, 'notifications.save_error', publicationCheckErrorKey)
+        return
+      }
+      if (impact === 'project_private') {
+        this.$refs['modal-private-project-warning'].show()
+      } else if (impact === 'finding_hidden') {
+        this.$refs['modal-no-references-warning'].show()
+      } else {
+        this.confirmSaveNoReferences()
+      }
+    },
+
+    // The read in flight (if any) no longer has anything to act on.
+    abandonReferencesWarn: function () {
+      this.referencesWarnSeq++
+      this.referencesWarnPending = false
+    },
+
+    notifyWriteFailure: function (error, actionKey, keyFn = writeErrorMessageKey) {
+      const key = keyFn(error, actionKey)
+      if (key) this.$notify.error(this.$t(key))
+    },
+
     handleReferencesModalHidden: function () {
+      // Hidden while a read is in flight (backdrop, programmatic hide): same as cancelling.
+      if (this.referencesWarnPending) {
+        this.abandonReferencesWarn()
+        this.pendingSaveReferences = false
+      }
       this.clearFreshPresence()
       this.noteModalHidden('modal-references-list')
       // Only clean up if not pending save from warning dialog
@@ -1150,48 +1201,24 @@ export default {
     },
 
     /**
-     * Quitar todas las referencias deja el proyecto sin publicar, así que antes se pasa a
-     * privado. Van EN ORDEN y no en paralelo: si pasar a privado fallaba, las referencias
-     * se borraban igual y quedaba un proyecto público sin referencias. Ahora, si falla, no
-     * se toca nada y se avisa.
+     * Confirmed the «the project reverts to private» warning. The front does not make the
+     * project private: the server does it when the references are saved. It only asks the
+     * parent to read the project again afterwards.
      */
     confirmSavePrivateProject: async function () {
-      try {
-        await this.saveProjectAsPrivate()
-      } catch (error) {
-        this.cancelPrivateProjectWarning()
-        const key = writeErrorMessageKey(error, 'notifications.make_private_error')
-        if (key) this.$notify.error(this.$t(key))
-        return
-      }
-      this.saveReferencesList()
+      const saving = this.saveReferencesList()
       this.$nextTick(() => {
         this.pendingSaveReferences = false
         this.$refs['modal-references-list'].hide()
       })
+      await saving
+      this.$emit('update-project-status')
     },
 
     cancelPrivateProjectWarning: function () {
       // User cancelled - restore original references selection
       this.selected_references = [...this.original_references]
       this.pendingSaveReferences = false
-    },
-
-    saveProjectAsPrivate: function () {
-      // Update the project to be private
-      const params = {
-        is_public: false,
-        private: true,
-        license_type: '',
-        public_type: 'private'
-      }
-      // Devuelve la promesa: `confirmSavePrivateProject` espera el resultado antes de
-      // quitar referencias.
-      return Api.patch(`/isoqf_projects/${this.project.id}`, params)
-        .then(() => {
-          // Emit an event to notify the parent component that the project status changed
-          this.$emit('update-project-status')
-        })
     },
 
     saveReferencesList: function () {

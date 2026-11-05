@@ -344,17 +344,21 @@
       "project_created": "El proyecto ha sido creado",
       "project_updated": "El proyecto ha sido actualizado",
       "error_updating_methodology": "Error al actualizar la metodología",
-      "required_fields_error": "Por favor, complete los campos requeridos."
+      "methodology_changed_properties_not_saved": "Se cambió la metodología, pero no se pudieron guardar las propiedades del proyecto. Revíselas y guarde de nuevo.",
+      "required_fields_error": "Por favor, complete los campos requeridos.",
+      "publish_missing_fields": "Su solicitud de publicación en la base de datos de iSoQ ha sido denegada porque falta información. Por favor, complete los campos en rojo a continuación, o seleccione “Privado” en “Visibilidad en la base de datos de iSoQ” para continuar.",
+      "missing_fields_list": "Falta información para publicar: {fields}. Complete los campos en rojo o elija “Privado”."
     },
     "validation": {
-      "title_min_length": "El proyecto debe tener un título con al menos 3 caracteres",
-      "at_least_one_author": "El proyecto debe tener al menos un autor",
-      "corresponding_author_min_length": "El proyecto debe tener un autor correspondiente con al menos 3 caracteres",
+      "title_min_length": "El proyecto debe tener un título con al menos 3 letras",
+      "at_least_one_author": "El proyecto debe tener autores con al menos 3 letras",
+      "corresponding_author_min_length": "El proyecto debe tener un autor correspondiente con al menos 3 letras",
       "valid_email": "El proyecto debe tener un correo electrónico de autor válido",
-      "question_min_length": "El proyecto debe tener una pregunta de revisión con al menos 3 caracteres",
-      "valid_url_doi": "El proyecto debe tener una URL o DOI válido",
-      "list_authors_required": "El proyecto debe tener una lista de autores",
+      "question_min_length": "El proyecto debe tener una pregunta de revisión con al menos 3 letras",
+      "valid_url_doi": "El proyecto debe tener una dirección web (http/https) o un DOI válido",
+      "list_authors_required": "El proyecto debe tener una lista de autores con al menos 3 letras",
       "publish_requirement": "El proyecto debe tener al menos un hallazgo de revisión con una evaluación GRADE-CERQual completa para ser publicado en la base de datos iSoQ. Seleccione 'Privado' hasta que termine.",
+      "complete_by_author_required": "Indique si la revisión fue completada por sus autores",
       "license_required": "El proyecto debe tener una licencia"
     },
     "title_of_review": "Título de la revisión",
@@ -457,7 +461,8 @@
       "finding": "el finding",
       "evidence": "el perfil de evidencia",
       "extracted": "los datos extraídos"
-    }
+    },
+    "personal_data_field": "Confirmación de datos personales"
   },
   "references": {
     "step_title": "PASO 1: Suba las <b>referencias</b> de sus estudios incluidos (requerido)",
@@ -494,7 +499,8 @@
     "reference_id": "ID de Referencia",
     "author_year": "Autor(es), Año",
     "in_use_by": "{names} está trabajando ahora con este estudio. Si lo eliminas, se le cerrará el editor y perderá lo que no haya guardado.",
-    "delete_all_in_use": "{count} de estos estudios están en uso ahora por {names}. Si los eliminas, se les cerrará el editor y perderán lo que no hayan guardado."
+    "delete_all_in_use": "{count} de estos estudios están en uso ahora por {names}. Si los eliminas, se les cerrará el editor y perderán lo que no hayan guardado.",
+    "delete_reverts_private": "Al eliminar estos estudios, tu proyecto también volverá a \"Privado\", porque no quedaría en la base de datos de iSoQ ningún hallazgo de la revisión con una evaluación GRADE-CERQual completa."
   },
   "inclusion": {
     "step_title": "PASO 2: Ingrese los <b>criterios de inclusión y exclusión</b> de estudios utilizados en la revisión (recomendado)",
@@ -684,6 +690,8 @@
       "revert_private": "Su proyecto volverá a 'privado' y se eliminará de la base de datos iSoQ. Puede publicar el proyecto en la base de datos una vez que haya completado su evaluación de confianza GRADE-CERQual.",
       "clear_cerqual_revert": "Al borrar esta evaluación, este proyecto iSoQ volverá a ser 'privado' y ya no aparecerá en la base de datos iSoQ. Puede volver a publicarlo cuando tenga al menos un hallazgo de revisión con una evaluación GRADE-CERQual completa y referencias asociadas.",
       "clear_cerqual_simple": "Al borrar esta evaluación, este hallazgo de revisión ya no aparecerá en su proyecto iSoQ publicado.",
+      "save_incomplete_hidden": "Guardar esta evaluación sin una explicación hará que este hallazgo de la revisión deje de aparecer en su proyecto iSoQ publicado.",
+      "save_incomplete_revert": "Guardar esta evaluación sin una explicación hará que este proyecto iSoQ vuelva a ser «Privado», porque no quedaría en la base de datos iSoQ ningún hallazgo de la revisión con una evaluación GRADE-CERQual completa.",
       "review_question_missing": "La pregunta de revisión falta. Agréguela en",
       "inclusion_missing": "Los criterios de inclusión faltan. Agréguelos en",
       "exclusion_missing": "Los criterios de exclusión faltan. Agréguelos en",
@@ -791,6 +799,7 @@
     "tables_per_page": "Tablas por página",
     "loading": "Cargando...",
     "last_modification": "Última modificación",
+    "published": "Publicado",
     "load_error": "No se pudieron cargar los proyectos publicados. No es que no haya: falló la carga."
   },
   "help": {
@@ -993,6 +1002,10 @@
   "publish": {
     "confirm_no_personal_data": "Confirmo que el contenido no identifica a participantes de estudios primarios ni incluye datos personales que no pueda hacer públicos",
     "confirm_no_personal_data_required": "Para publicar, debe confirmar que el contenido no identifica a participantes de estudios primarios ni incluye datos personales que no pueda hacer públicos.",
+    "go_to_properties": "Ir a las propiedades del proyecto",
+    "only_complete_findings_visible": "Sólo los hallazgos de la revisión con evaluaciones GRADE-CERQual completas serán visibles en la base de datos. Si más adelante completa las evaluaciones de otros hallazgos, deberá despublicar y volver a publicar su proyecto en la base de datos para hacerlos visibles.",
+    "requirements_not_met": "El proyecto ya no cumple los requisitos para publicarse. Revise los campos en rojo o seleccione «Privado».",
+    "check_needs_connection": "Comprobar cómo afecta este cambio a la publicación requiere conexión a internet. Inténtelo de nuevo cuando vuelva a tener conexión.",
     "to_word": "a MS Word",
     "the_references": "las referencias",
     "print_pdf": "Imprimir o guardar como PDF",
@@ -1058,6 +1071,9 @@
     "explanation": "Explicación",
     "extracted_data": "Datos Extraídos",
     "return_isoq": "volver a la tabla iSoQ"
+  },
+  "preview": {
+    "finding_not_available": "Este hallazgo de la revisión no está disponible en la base de datos de iSoQ."
   },
   "profile": {
     "title": "Perfil",

@@ -44,8 +44,8 @@
               required
               :placeholder="$t('project.title_placeholder')"
               :state="state.name"
-              @input="state.name = (formData.name !== '' && formData.name.length > 2) ? null : state.name"
-              @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
+              @input="onFieldInput('name')"
+              @blur="onFieldBlur('name')"
               v-model="formData.name"></b-form-input>
             <b-form-invalid-feedback :state="state.name">{{ $t('project.validation.title_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -58,8 +58,8 @@
               id="input-project-authors"
               :placeholder="$t('project.authors_input_placeholder')"
               :state="state.authors"
-              @input="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : state.authors : null"
-              @blur="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : false : null"
+              @input="onFieldInput('authors')"
+              @blur="onFieldBlur('authors')"
               v-model="formData.authors"></b-form-input>
             <b-form-invalid-feedback :state="state.authors">{{ $t('project.validation.at_least_one_author') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -71,8 +71,8 @@
               :disabled="!canEdit"
               id="input-project-author"
               :state="state.author"
-              @input="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : state.author : null"
-              @blur="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : false : null"
+              @input="onFieldInput('author')"
+              @blur="onFieldBlur('author')"
               v-model="formData.author"></b-form-input>
               <b-form-invalid-feedback :state="state.author">{{ $t('project.validation.corresponding_author_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -84,8 +84,8 @@
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
-              @input="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email : null"
-              @blur="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false : null"
+              @input="onFieldInput('author_email')"
+              @blur="onFieldBlur('author_email')"
               v-model="formData.author_email"></b-form-input>
               <b-form-invalid-feedback :state="state.author_email">{{ $t('project.validation.valid_email') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -99,8 +99,8 @@
               rows="6"
               max-rows="100"
               :state="state.review_question"
-              @input="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : state.review_question : null"
-              @blur="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : false : null"
+              @input="onFieldInput('review_question')"
+              @blur="onFieldBlur('review_question')"
               v-model="formData.review_question"></b-form-textarea>
             <b-form-invalid-feedback :state="state.review_question">{{ $t('project.validation.question_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -114,7 +114,7 @@
               :options="yes_or_no"></b-select>
           </b-form-group>
           <b-form-group
-            v-if="formData.published_status"
+            v-if="answerIs('published_status', true)"
             :label="$t('project.url_doi')"
             label-for="select-project-list-url-doi">
             <b-input
@@ -123,8 +123,8 @@
               type="url"
               id="select-project-list-url-doi"
               :state="state.url_doi"
-              @input="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi)) ? null : state.url_doi"
-              @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
+              @input="onFieldInput('url_doi')"
+              @blur="onFieldBlur('url_doi')"
               v-model="formData.url_doi"></b-input>
             <b-form-invalid-feedback :state="state.url_doi">{{ $t('project.validation.valid_url_doi') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -134,20 +134,23 @@
             <b-select
               :disabled="!canEdit"
               id="select-project-list-completed-by-author-status"
+              :state="state.complete_by_author"
+              @change="onFieldInput('complete_by_author')"
+              @blur.native="onFieldBlur('complete_by_author')"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
-              <!-- <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('The project must be completed by the review authors') }}</b-form-invalid-feedback> -->
+            <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('project.validation.complete_by_author_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            v-if="!formData.complete_by_author"
+            v-if="answerIs('complete_by_author', false)"
             :label="$t('project.list_authors_isoq')"
             label-for="input-project-list-authors">
             <b-form-input
               :disabled="!canEdit"
               id="input-project-list-authors"
               :state="state.lists_authors"
-              @input="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : state.lists_authors : null"
-              @blur="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : false : null"
+              @input="onFieldInput('lists_authors')"
+              @blur="onFieldBlur('lists_authors')"
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -327,10 +330,29 @@
 <script>
 import Api from '@/utils/Api'
 import Project from '@/utils/project'
-import { needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
+import {
+  asAnswer, hasMinLetters, isProjectPublic, projectMissingFields, validEmail, validUrlOrDoi
+} from '@/utils/publishRules'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { isPersonalDataConfirmationRejection, needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
 import { isCamelotEnabled } from '@/constants/camelot'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
+
+// The fields a refused save can mark, in the order the form shows them: `state` key,
+// the control's id (to move the focus) and the label key (to name it in the toast).
+const FIELDS_IN_FORM_ORDER = [
+  { key: 'name', id: 'input-project-list-name', label: 'project.title_of_review' },
+  { key: 'authors', id: 'input-project-authors', label: 'project.authors' },
+  { key: 'author', id: 'input-project-author', label: 'project.corresponding_author' },
+  { key: 'author_email', id: 'input-project-author-email', label: 'project.corresponding_author_email' },
+  { key: 'review_question', id: 'input-project-review-question', label: 'project.review_question' },
+  { key: 'url_doi', id: 'select-project-list-url-doi', label: 'project.url_doi' },
+  { key: 'complete_by_author', id: 'select-project-list-completed-by-author-status', label: 'project.completed_by_authors' },
+  { key: 'lists_authors', id: 'input-project-list-authors', label: 'project.list_authors_isoq' },
+  { key: 'license', id: 'select-project-list-license', label: 'project.choose_license' },
+  { key: 'no_personal_data_confirmed', id: 'checkbox-project-personal-data', label: 'project.personal_data_field' }
+]
 
 export default {
   name: 'organizationForm',
@@ -358,6 +380,8 @@ export default {
   },
   data: function () {
     return {
+      // Keys markMissingFields set to false (not reactive state: bookkeeping only).
+      markedByModal: [],
       state: {
         id: null,
         name: null,
@@ -394,8 +418,30 @@ export default {
         })
 
         if (response.data.status) {
+          // The server already runs the new methodology, whatever happens next: sync now so
+          // a failed properties save cannot make the next save convert (and clone) again.
+          this.originalFormData.use_camelot = data.use_camelot
+          this.formData.use_camelot = data.use_camelot
           // 3. Methodology updated, now save other project properties
-          await Project.update(data)
+          let result
+          try {
+            result = await Project.update(data)
+          } catch (updateError) {
+            console.error('Error saving properties after the methodology change', updateError)
+            this.isMigrating = false
+            this.$notify.error(this.$t('project.notifications.methodology_changed_properties_not_saved'))
+            this.$bvModal.hide('camelot-toggle-modal')
+            return
+          }
+          if (result && result.data && result.data.status === false) {
+            // Mark the fields and stay here (no redirect, no reload) so the user can fix
+            // them and save again. One toast (the methodology note); the fields say the rest.
+            this.state = { ...this.state, ...result.data.state }
+            this.isMigrating = false
+            this.$notify.error(this.$t('project.notifications.methodology_changed_properties_not_saved'))
+            this.$bvModal.hide('camelot-toggle-modal')
+            return
+          }
 
           // 4. Success, redirect to Step 3
           this.$bvModal.hide('camelot-toggle-modal')
@@ -447,41 +493,73 @@ export default {
       this.pendingData = null
     },
     handlePublishWarningCancel: function () {
-      // User wants to cancel the unpublish action
-      // Only restore the required fields that were removed, keep other valid changes
-      const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
-
-      for (const field of requiredFields) {
-        const originalValue = this.originalFormData[field]
-        const currentValue = this.formData[field]
-
-        // Only restore if the field was removed (empty or whitespace only)
-        if (originalValue && (!currentValue || currentValue.trim() === '')) {
-          this.formData[field] = originalValue
-        }
+      // Cancel restores everything: every key of formData comes back from a deep copy of
+      // the original. The prop is mutated on purpose (the parent relies on it).
+      const original = JSON.parse(JSON.stringify(this.originalFormData))
+      for (const key of Object.keys(this.formData)) {
+        if (!Object.prototype.hasOwnProperty.call(original, key)) this.$delete(this.formData, key)
       }
-
-      // Also restore the public_type if it was changed
-      this.formData.public_type = this.originalFormData.public_type
-
+      for (const key of Object.keys(original)) {
+        this.$set(this.formData, key, original[key])
+      }
       this.pendingData = null
+      // The marks were for the edit that was just undone.
+      this.resetState()
+      this.markedByModal = []
     },
+    // The project was public and THIS save makes a rule stop holding: a field missing now
+    // that was not missing as loaded. A project that already lacked information when it
+    // loaded (legacy) gets no modal: the normal save path refuses it with the fields in red.
+    // A person who already chose Private is not losing anything either.
     checkRequiredFieldsRemoved: function (data) {
-      // Check if project is currently published (not private)
-      if (this.originalFormData.public_type !== 'private') {
-        const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
-
-        // Check if any required field was removed
-        for (const field of requiredFields) {
-          const originalValue = this.originalFormData[field]
-          const newValue = data[field]
-
-          if (originalValue && (!newValue || newValue.trim() === '')) {
-            return true
-          }
+      if (!isProjectPublic(this.originalFormData) || !isProjectPublic(data)) return false
+      const before = projectMissingFields(this.originalFormData)
+      return projectMissingFields(data).some(field => !before.includes(field))
+    },
+    markMissingFields: function (data) {
+      const newState = { ...this.state }
+      // Keys marked by a previous opening that are no longer missing go back to neutral.
+      for (const key of this.markedByModal) newState[key] = null
+      const marked = []
+      for (const field of projectMissingFields(data)) {
+        const key = field === 'license_type' ? 'license' : field
+        if (Object.prototype.hasOwnProperty.call(newState, key)) {
+          newState[key] = false
+          marked.push(key)
         }
       }
-      return false
+      this.markedByModal = marked
+      this.state = newState
+    },
+    // Whether the field meets its rule now (the same functions the server mirrors).
+    fieldMeetsRule: function (field) {
+      const value = this.formData[field]
+      switch (field) {
+        case 'name': return hasMinLetters(value, isProjectPublic(this.formData) ? 3 : 1)
+        case 'author_email': return validEmail(value)
+        case 'url_doi': return validUrlOrDoi(value)
+        case 'complete_by_author': return asAnswer(value) !== null
+        default: return hasMinLetters(value)
+      }
+    },
+    // Whether the rule is demanded of this project right now: the title always (one
+    // letter when private), the rest only when public, and the DOI/URL only when the
+    // review is said to be published.
+    fieldIsRequired: function (field) {
+      if (field === 'name') return true
+      if (!isProjectPublic(this.formData)) return false
+      if (field === 'url_doi') return this.answerIs('published_status', true)
+      if (field === 'lists_authors') return this.answerIs('complete_by_author', false)
+      return true
+    },
+    onFieldInput: function (field) {
+      if (this.fieldMeetsRule(field)) this.state[field] = null
+    },
+    onFieldBlur: function (field) {
+      this.state[field] = (!this.fieldIsRequired(field) || this.fieldMeetsRule(field)) ? null : false
+    },
+    answerIs: function (field, expected) {
+      return asAnswer(this.formData[field]) === expected
     },
     save: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
@@ -498,7 +576,8 @@ export default {
 
       // Check if required fields were removed from a published project
       if (this.checkRequiredFieldsRemoved(data)) {
-        // Store the pending data and show warning modal
+        // Store the pending data and show warning modal, with what is missing marked
+        this.markMissingFields(data)
         this.pendingData = data
         this.$bvModal.show('publish-warning-modal')
       } else {
@@ -506,13 +585,64 @@ export default {
         this.executeSave(data)
       }
     },
+    // The fields currently in red, in the order the form shows them.
+    invalidFields: function () {
+      return FIELDS_IN_FORM_ORDER.filter(field => this.state[field.key] === false)
+    },
+    missingFieldLabels: function () {
+      return this.invalidFields().map(field => field.label)
+    },
+    // A refused save must show WHERE: on a small screen the fields in red can be out of
+    // view (WCAG 3.3.1). Scroll to the first one and give it the focus, so a screen reader
+    // also announces it with its message.
+    focusFirstInvalidField: function () {
+      this.$nextTick(() => {
+        const [first] = this.invalidFields()
+        if (!first || !this.$el || !this.$el.querySelector) return
+        const control = this.$el.querySelector('#' + first.id)
+        if (!control) return
+        if (typeof control.scrollIntoView === 'function') control.scrollIntoView({ block: 'center' })
+        control.focus()
+      })
+    },
+    // One toast that names what is missing when fields are in red; otherwise the
+    // refusal's own message (e.g. no complete review finding). Then the focus.
+    reportRefusal: function (messageKey) {
+      const labels = this.missingFieldLabels()
+      if (labels.length) {
+        this.$notify.error(this.$t('project.notifications.missing_fields_list', {
+          fields: labels.map(label => this.$t(label)).join(', ')
+        }))
+      } else {
+        this.$notify.error(this.$t(messageKey))
+      }
+      this.focusFirstInvalidField()
+    },
     executeSave: async function (data) {
       try {
         if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
-          const response = await Project.update(data)
+          // Megan's notice, only when this save turns a private project public. Asked once
+          // the validations passed (so a refused publish never shows it) and before the PATCH.
+          let beforeSave
+          if (!isProjectPublic(this.originalFormData) && isProjectPublic(data)) {
+            beforeSave = async () => {
+              try {
+                // Only an explicit OK proceeds: Esc or a backdrop click resolve null, and
+                // Project.update lets anything but `false` through.
+                return (await Project.confirmIncompleteFindings(this, data.id)) === true
+              } catch (error) {
+                const key = writeErrorMessageKey(error, 'notifications.publish_error')
+                if (key) this.$notify.error(this.$t(key))
+                return false
+              }
+            }
+          }
+          const response = await Project.update(data, beforeSave)
+          // Cancelled on purpose (or already reported): the form stays as it is.
+          if (response.data && response.data.cancelled) return
           if (response.data && response.data.status === false) {
             this.state = { ...this.state, ...response.data.state }
-            this.$notify.error(this.$t(response.data.message))
+            this.reportRefusal(response.data.message)
             return
           }
           this.$notify.success(this.$t('project.notifications.project_updated'))
@@ -532,7 +662,7 @@ export default {
           const response = await Project.create(data)
           if (response.data && response.data.status === false) {
             this.state = { ...this.state, ...response.data.state }
-            this.$notify.error(this.$t(response.data.message))
+            this.reportRefusal(response.data.message)
             return
           }
           if (response.data && response.data.id) {
@@ -562,15 +692,18 @@ export default {
         }
         if (error.response && error.response.data) {
           const errData = error.response.data
-          if (errData.type === 'missing_fields' && Array.isArray(errData.fields)) {
+          if (errData.reason === 'publish_requirements_not_met' && Array.isArray(errData.missing_fields)) {
             const newState = { ...this.state }
-            errData.fields.forEach(field => {
-              if (Object.prototype.hasOwnProperty.call(newState, field)) {
-                newState[field] = false
-              }
+            errData.missing_fields.forEach(field => {
+              const key = field === 'license_type' ? 'license' : field
+              if (Object.prototype.hasOwnProperty.call(newState, key)) newState[key] = false
             })
             this.state = newState
-            this.$notify.error(this.$t('project.notifications.required_fields_error'))
+            this.reportRefusal('project.notifications.publish_missing_fields')
+          } else if (isPersonalDataConfirmationRejection(error)) {
+            this.state = { ...this.state, no_personal_data_confirmed: false }
+            this.$notify.error(this.$t(writeErrorMessageKey(error)))
+            this.focusFirstInvalidField()
           } else if (errData.message) {
             let errorMsg = errData.message
             if (errorMsg === "Validation error in isoqf_projects: '' should be non-empty") {
@@ -585,12 +718,6 @@ export default {
           this.$notify.error(error.message || 'An error occurred')
         }
       }
-    },
-    validEmail: function (email) {
-      return Project.validEmail(email)
-    },
-    validUrl: function (url) {
-      return Project.validUrl(url)
     },
     setMsgUpdateProject: function (msg) {
       this.$notify.error(msg)
@@ -625,14 +752,8 @@ export default {
         { value: 'CC-BY', text: 'CC BY', explanation: this.$t('project.license_cc_by_exp') }
       ]
     },
-    isProjectPublished () {
-      // Check if the project is currently published (either original state or current selection)
-      // A project requires validation if it's not private
-      return this.formData.public_type !== 'private' ||
-             (this.originalFormData && this.originalFormData.public_type !== 'private')
-    },
     isInvalid () {
-      return !this.formData.name || this.formData.name.trim().length < 3 ||
+      return !hasMinLetters(this.formData.name, isProjectPublic(this.formData) ? 3 : 1) ||
         needsPersonalDataConfirmation(this.formData)
     }
   },
@@ -650,17 +771,23 @@ export default {
               this.state[fieldName] = false
             }
           }
+          // Coming from the Publish modal's "Go to Project Properties": land on the first.
+          this.focusFirstInvalidField()
         }
       },
       immediate: true
     },
     formData: {
-      handler (newFormData) {
+      handler (newFormData, oldFormData) {
         if (newFormData && newFormData.use_camelot === undefined) {
           this.$set(newFormData, 'use_camelot', false)
         }
-        // When formData changes externally, update the original data
-        if (JSON.stringify(this.originalFormData) !== JSON.stringify(newFormData)) {
+        // A new project object from the parent is the project as loaded. The same object
+        // also fires this watcher when v-model ADDS a key the project never stored
+        // (license_type, no_personal_data_confirmed): that is the person's unsaved edit,
+        // and taking it as "as loaded" made a private project being published look
+        // already public, which opened the revert-to-private modal.
+        if (newFormData !== oldFormData) {
           this.originalFormData = JSON.parse(JSON.stringify(newFormData))
         }
       },

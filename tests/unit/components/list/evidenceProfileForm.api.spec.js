@@ -111,22 +111,11 @@ describe('evidenceProfileForm.vue — continueSavingDataModal()', () => {
     wrapper.destroy()
   })
 
-  it('emits callGetStageOneData and hides modal on success (status=false)', async () => {
+  it('emits callGetStageOneData and hides modal on success', async () => {
     const wrapper = makeWrapper({ findings: { id: 'finding1' } })
     setupRefs(wrapper)
-    await wrapper.vm.continueSavingDataModal(false)
+    await wrapper.vm.continueSavingDataModal()
     await flushPromises()
-    expect(wrapper.emitted('callGetStageOneData')).toBeTruthy()
-    expect(wrapper.vm.$refs['modal-evidence-profile-form'].hide).toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('calls Api.post unpublish then emits and hides modal when status=true', async () => {
-    const wrapper = makeWrapper({ findings: { id: 'finding1' } })
-    setupRefs(wrapper)
-    await wrapper.vm.continueSavingDataModal(true)
-    await flushPromises()
-    expect(Api.post).toHaveBeenCalledWith('/unpublish/project/proj1')
     expect(wrapper.emitted('callGetStageOneData')).toBeTruthy()
     expect(wrapper.vm.$refs['modal-evidence-profile-form'].hide).toHaveBeenCalled()
     wrapper.destroy()

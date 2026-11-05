@@ -1,9 +1,12 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
+import Api from '@/utils/Api'
 import evidenceProfileForm from '@/components/list/evidenceProfileForm.vue'
 
 const localVue = createLocalVue()
 
 jest.mock('@/utils/Api')
+
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
 
 const makeModalData = (overrides = {}) => ({
   type: 'cerqual',
@@ -54,7 +57,14 @@ const makeWrapper = (propsData = {}) => shallowMount(evidenceProfileForm, {
   }
 })
 
+beforeEach(() => {
+  // Api.get resolves with the whole response: a private project, so nothing to warn about.
+  Api.get.mockImplementation(path => Promise.resolve({ data: path.startsWith('/isoqf_projects') ? { public_type: 'private' } : [] }))
+})
+
 function setupRefs (wrapper) {
+  // The editor is open and holds its lock: that is what lets a late read act.
+  wrapper.vm.modalOpen = true
   wrapper.vm.$refs['modal-warning-changed-option'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-cleaning-cerqual'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-same-txt'] = { show: jest.fn(), hide: jest.fn() }
@@ -116,6 +126,7 @@ domainCases.forEach(({ domain, focusId }) => {
           [domain]: { option: '2', explanation: '', notes: '' }
         }
       })
+      await flushPromises()
       expect(wrapper.vm.$refs['modal-warning-changed-option'].show).toHaveBeenCalled()
       wrapper.destroy()
     })
@@ -318,10 +329,10 @@ describe('evidenceProfileForm.vue — clearMySelection()', () => {
     wrapper.destroy()
   })
 
-  it('shows modal-warning-cleaning-cerqual when clearing cerqual', () => {
+  it('shows modal-warning-cleaning-cerqual when clearing cerqual', async () => {
     const wrapper = makeWrapper()
     setupRefs(wrapper)
-    wrapper.vm.clearMySelection('cerqual')
+    await wrapper.vm.clearMySelection('cerqual')
     expect(wrapper.vm.$refs['modal-warning-cleaning-cerqual'].show).toHaveBeenCalled()
     wrapper.destroy()
   })

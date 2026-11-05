@@ -2,7 +2,7 @@
   <div>
     <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
       dialog-class="modal-dialog-fullscreen"
-      :ok-disabled="!canEditFinding"
+      :ok-disabled="!canEditFinding || warnReadPending"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
       cancel-variant="outline-secondary" @show="onModalShow" @hidden="onModalHidden">
       <template v-slot:modal-title>
@@ -740,7 +740,7 @@
       <p>
         {{ $t('worksheet.warnings.changed_option') }}
       </p>
-      <p v-if="showModalWarningChangedOption">
+      <p v-if="changedOptionImpact === 'project_private'">
         {{ $t('worksheet.warnings.revert_private') }}
       </p>
       <p>
@@ -758,9 +758,29 @@
       </b-container>
     </b-modal>
 
-    <b-modal id="modal-warning-cleaning-cerqual" ref="modal-warning-cleaning-cerqual" :title="$t('common.warning')"
+    <b-modal id="modal-warning-save-incomplete" ref="modal-warning-save-incomplete" :title="$t('common.warning')"
       :hide-footer="true">
       <p>
+        {{ incompleteSaveWarningMessage }}
+      </p>
+      <p>
+        {{ $t('common.continue_question') }}
+      </p>
+      <b-container>
+        <b-row>
+          <b-col>
+            <b-button block @click="confirmIncompleteSave()">{{ $t('common.yes') }}</b-button>
+          </b-col>
+          <b-col>
+            <b-button block @click="cancelIncompleteSave()">{{ $t('common.no') }}</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
+
+    <b-modal id="modal-warning-cleaning-cerqual" ref="modal-warning-cleaning-cerqual" :title="$t('common.warning')"
+      :hide-footer="true">
+      <p v-if="clearCerqualWarningMessage">
         {{ clearCerqualWarningMessage }}
       </p>
       <p>
@@ -783,6 +803,7 @@
 <script>
 import Api from '@/utils/Api'
 import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { impactOfListChange, publicationCheckErrorKey } from '@/utils/publicationState'
 import Commons from '@/utils/commons'
 import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
@@ -887,7 +908,16 @@ export default {
         items: [],
         fields: []
       },
-      showModalWarningChangedOption: false,
+      // What the server will do to the published project for each pending warning,
+      // read when the warning opens ('none' | 'finding_hidden' | 'project_private').
+      // Reads of the publication state in flight; only the latest one may act (see readImpact).
+      warnSeq: 0,
+      // Bumped on every open and close: a read belongs to the session that started it.
+      warnSession: 0,
+      warnReadsPending: 0,
+      changedOptionImpact: 'none',
+      clearCerqualImpact: 'none',
+      incompleteSaveImpact: 'none',
       pendingExplanationFocusId: null,
       pendingChangedOptionFocusId: null
     }
@@ -905,8 +935,7 @@ export default {
     'selectedOptions.methodological_limitations.option': function (val) {
       if (val !== null) {
         if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('methodological_limitations')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-ml-explanation')
@@ -916,8 +945,7 @@ export default {
     'selectedOptions.coherence.option': function (val) {
       if (val !== null) {
         if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('coherence')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-coherence-explanation')
@@ -927,8 +955,7 @@ export default {
     'selectedOptions.adequacy.option': function (val) {
       if (val !== null) {
         if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('adequacy')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-adequacy-explanation')
@@ -938,8 +965,7 @@ export default {
     'selectedOptions.relevance.option': function (val) {
       if (val !== null) {
         if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
-          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option']?.show()
+          this.askChangedOption('relevance')
         // eslint-disable-next-line eqeqeq -- the radio sends '0' and a stored option may be 0
         } else if (val != 0) {
           this.focusExplanation('input-relevance-explanation')
@@ -987,18 +1013,28 @@ export default {
       }
       return null
     },
+    warnReadPending: function () {
+      return this.warnReadsPending > 0
+    },
+    // Empty when clearing changes nothing in the publication (e.g. a private project).
     clearCerqualWarningMessage: function () {
-      if (this.checkIfIsTheOnlyPublished()) {
-        return this.$t('worksheet.warnings.clear_cerqual_revert')
-      } else {
-        return this.$t('worksheet.warnings.clear_cerqual_simple')
-      }
+      if (this.clearCerqualImpact === 'none') return ''
+      return this.$t(this.clearCerqualImpact === 'project_private'
+        ? 'worksheet.warnings.clear_cerqual_revert'
+        : 'worksheet.warnings.clear_cerqual_simple')
+    },
+    incompleteSaveWarningMessage: function () {
+      return this.$t(this.incompleteSaveImpact === 'project_private'
+        ? 'worksheet.warnings.save_incomplete_revert'
+        : 'worksheet.warnings.save_incomplete_hidden')
     }
   },
   methods: {
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
-      if (!d || d.option === null || parseInt(d.option) === 0) return null
+      if (!d || d.option === null) return null
+      // The overall CERQual needs an explanation at every level, High included.
+      if (domain !== 'cerqual' && parseInt(d.option) === 0) return null
       return !!(d.explanation && d.explanation.trim().length > 0)
     },
     focusExplanation: function (id) {
@@ -1019,6 +1055,10 @@ export default {
       // still in flight and must not be taken for the closing of this one.
       this.staleHiddenPending = this.modalOpen
       this.modalOpen = true
+      // Reads of the previous session must not act here, nor keep Save disabled.
+      this.warnSeq++
+      this.warnSession++
+      this.warnReadsPending = 0
       this.acquireSectionLock()
       this.$nextTick(() => {
         if (this.$refs.camelotTable && typeof this.$refs.camelotTable.resetTableState === 'function') {
@@ -1104,6 +1144,9 @@ export default {
         return
       }
       this.modalOpen = false
+      this.warnSeq++
+      this.warnSession++
+      this.warnReadsPending = 0
       // Se limpia acá y no en el `show`: el fallback de `currentSectionKey` sólo es
       // correcto si esta variable no sobrevive a la sesión que la puso.
       this.openedSection = null
@@ -1211,44 +1254,85 @@ export default {
         this.pendingExplanationFocusId = null
       }
     },
-    closeWarningModalDoItLater: function () {
-      this.continueSavingDataModal()
+    // Saving without an explanation can leave the finding incomplete: when the server
+    // would hide it or revert the project, say so before saving.
+    closeWarningModalDoItLater: async function () {
       this.$refs['modal-warning-same-txt']?.hide()
+      const read = await this.readImpact({
+        option: this.selectedOptions.cerqual.option,
+        explanation: this.selectedOptions.cerqual.explanation
+      })
+      if (!read.current) return
+      if (read.error) {
+        this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
+        return
+      }
+      if (read.impact === 'none') {
+        this.continueSavingDataModal()
+        return
+      }
+      this.incompleteSaveImpact = read.impact
+      this.$refs['modal-warning-save-incomplete']?.show()
+    },
+    confirmIncompleteSave: function () {
+      this.$refs['modal-warning-save-incomplete']?.hide()
+      this.continueSavingDataModal()
+    },
+    cancelIncompleteSave: function () {
+      this.$refs['modal-warning-save-incomplete']?.hide()
+    },
+    // Impact on the published project of this list ending with the given `cerqual`,
+    // judged against a fresh read: other members may have completed findings meanwhile.
+    // Never throws. `current` is false when the result is no longer the editor's business:
+    // a newer read started, the editor closed, or it lost its finding lock. Acting then
+    // would open a modal over nothing and, on "Yes", take a lock nobody releases.
+    readImpact: async function (cerqual) {
+      const token = ++this.warnSeq
+      const session = this.warnSession
+      this.warnReadsPending++
+      let impact = null
+      let error = null
+      try {
+        impact = await impactOfListChange(this.list.project_id, this.list.id, list => {
+          list.cerqual = { ...list.cerqual, ...cerqual }
+          return list
+        })
+      } catch (e) {
+        error = e
+      } finally {
+        // Only its own session counts it: a close or reopen already reset the count.
+        if (session === this.warnSession) this.warnReadsPending--
+      }
+      const current = token === this.warnSeq && this.modalOpen && !this.isFindingReadOnly
+      return { current, impact, error }
+    },
+    askChangedOption: async function (domain) {
+      const read = await this.readImpact({ option: null, explanation: '' })
+      if (!read.current) return
+      if (read.error) {
+        // Not warning is not an option: undo the change and stop.
+        this.selectedOptions[domain].option = this.modalData[domain].option
+        this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
+        return
+      }
+      this.changedOptionImpact = read.impact
+      this.$refs['modal-warning-changed-option']?.show()
     },
     saveEvidenceProfile: function (type, e) {
       e.preventDefault()
       if (this.checkValidationExplanationText(type, this.selectedOptions)) {
         this.openWarningModalForExplanationText()
       } else {
-        if (this.checkIfIsTheOnlyPublished()) {
-          let newType = type
-          if (type === 'methodological-limitations') {
-            newType = 'methodological_limitations'
-          }
-          if (this.selectedOptions[newType].option === null) {
-            this.continueSavingDataModal(true)
-          } else {
-            this.continueSavingDataModal()
-          }
-        } else {
-          this.continueSavingDataModal()
-        }
+        this.continueSavingDataModal()
       }
-    },
-    checkIfIsTheOnlyPublished: function () {
-      // Use publishable_lists (findings with both cerqual AND references) if available
-      // Otherwise fall back to cerqual_lists for backwards compatibility
-      const publishableLists = this.list.publishable_lists || this.list.cerqual_lists || []
-      if (this.list && publishableLists && publishableLists.includes(this.list.id) && publishableLists.length === 1 && this.list.project.private === false) {
-        return true
-      }
-      return false
     },
     checkValidationExplanationText: function (type, prop) {
       if (!type) return false
       const domain = type.replace(/-/g, '_')
       const d = prop[domain]
-      if (!d || d.option === null || parseInt(d.option) === 0) return false
+      if (!d || d.option === null) return false
+      // The overall CERQual needs an explanation at every level, High included.
+      if (domain !== 'cerqual' && parseInt(d.option) === 0) return false
       return !(d.explanation && d.explanation.trim().length > 0)
     },
     /**
@@ -1304,7 +1388,7 @@ export default {
         this.pendingChangedOptionFocusId = null
       }
     },
-    continueSavingDataModal: function (status = false) {
+    continueSavingDataModal: function () {
       this.$emit('busyEvidenceProfileTable', true)
       // Writing a section without the finding's lock is a guaranteed 409, and the
       // failure is invisible (console only) with the spinner left spinning.
@@ -1343,7 +1427,6 @@ export default {
           .reduce((cadena, s) => cadena.then(() =>
             Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])),
           Promise.resolve())
-          .then(() => status ? Api.post(`/unpublish/project/${this.list.project_id}`) : null)
           .then(() => {
             this.$emit('callGetStageOneData', false)
             // The backend now seals the list's evidence_profile mirror + top-level cerqual
@@ -1375,10 +1458,10 @@ export default {
      * `busyEvidenceProfileTable` se prendió al empezar. El modal sigue abierto con lo
      * escrito, para reintentar.
      */
-    onSaveError: function (error, actionKey) {
+    onSaveError: function (error, actionKey, keyFn = writeErrorMessageKey) {
       this.printErrors(error)
       this.$emit('busyEvidenceProfileTable', false)
-      const key = writeErrorMessageKey(error, actionKey)
+      const key = keyFn(error, actionKey)
       if (key && this.$notify) this.$notify.error(this.$t(key))
     },
     openModalEvidenceProfie: function (section = null) {
@@ -1445,7 +1528,7 @@ export default {
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)
     },
-    clearMySelection: function (option) {
+    clearMySelection: async function (option) {
       switch (option) {
         case 'methodological_limitations':
           this.selectedOptions.methodological_limitations.option = null
@@ -1467,6 +1550,17 @@ export default {
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
+          {
+            const read = await this.readImpact({ option: null, explanation: '' })
+            if (!read.current) break
+            if (read.error) {
+              this.selectedOptions.cerqual.option = this.modalData.cerqual.option
+              this.selectedOptions.cerqual.explanation = this.modalData.cerqual.explanation
+              this.onSaveError(read.error, 'notifications.save_error', publicationCheckErrorKey)
+              break
+            }
+            this.clearCerqualImpact = read.impact
+          }
           this.$refs['modal-warning-cleaning-cerqual']?.show()
           break
       }
