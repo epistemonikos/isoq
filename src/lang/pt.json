@@ -343,6 +343,7 @@
     "notifications": {
       "project_created": "O projeto foi criado",
       "project_updated": "O projeto foi atualizado",
+      "project_unpublished_after_save": "O projeto foi salvo, mas ficou privado: nenhuma lista completa ficaria visível.",
       "error_updating_methodology": "Erro ao atualizar metodologia",
       "methodology_changed_properties_not_saved": "A metodologia foi alterada, mas as propriedades do projeto não puderam ser guardadas. Verifique-as e guarde novamente.",
       "required_fields_error": "Por favor, preencha os campos obrigatórios.",
@@ -1005,6 +1006,7 @@
     "go_to_properties": "Ir para as propriedades do projeto",
     "only_complete_findings_visible": "Somente os achados da revisão com avaliações GRADE-CERQual completas serão visíveis na base de dados. Se mais tarde você completar as avaliações de outros achados, precisará cancelar a publicação e publicar seu projeto novamente na base de dados para torná-los visíveis.",
     "requirements_not_met": "O projeto não cumpre mais os requisitos para ser publicado. Verifique os campos em vermelho ou selecione «Privado».",
+    "via_publish_endpoint": "A publicação é feita pelo botão Publicar do projeto, não pelo formulário de Propriedades.",
     "check_needs_connection": "Verificar como esta alteração afeta a publicação requer ligação à internet. Tente novamente quando voltar a estar online.",
     "to_word": "para MS Word",
     "the_references": "as referências",

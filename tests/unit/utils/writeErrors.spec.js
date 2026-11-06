@@ -18,6 +18,12 @@ describe('writeErrorMessageKey', () => {
     expect(writeErrorMessageKey(error, 'notifications.publish_error')).toBe('publish.requirements_not_met')
   })
 
+  // La genérica de isoqf_projects no publica (S3): el aviso dice dónde sí se publica.
+  test('publish_via_publish_endpoint maps to publish.via_publish_endpoint', () => {
+    const error = conStatus(400, { url: '/api/isoqf_projects/p1', data: { reason: 'publish_via_publish_endpoint' } })
+    expect(writeErrorMessageKey(error, 'notifications.save_error')).toBe('publish.via_publish_endpoint')
+  })
+
   it('un error del servidor cualquiera: el texto de la acción', () => {
     expect(writeErrorMessageKey(conStatus(500), 'notifications.share_error')).toBe('notifications.share_error')
   })

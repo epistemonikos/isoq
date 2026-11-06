@@ -36,6 +36,7 @@ export function writeErrorMessageKey (error, fallbackKey = 'notifications.save_e
   if (isPersonalDataConfirmationRejection(error)) return 'publish.confirm_no_personal_data_required'
   if (!status) return fallbackKey
   if (response.data && response.data.reason === 'publish_requirements_not_met') return 'publish.requirements_not_met'
+  if (response.data && response.data.reason === 'publish_via_publish_endpoint') return 'publish.via_publish_endpoint'
 
   const reason = rejectionReason(status)
   if (reason === 'forbidden') return 'notifications.write_forbidden'
