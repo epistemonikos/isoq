@@ -343,6 +343,7 @@
     "notifications": {
       "project_created": "The project has been created",
       "project_updated": "The project has been updated",
+      "project_unpublished_after_save": "The project was saved, but it is now private: no complete list would be visible.",
       "error_updating_methodology": "Error updating methodology",
       "methodology_changed_properties_not_saved": "The methodology was changed, but the project properties could not be saved. Check them and save again.",
       "required_fields_error": "Please complete the required fields.",
@@ -1005,6 +1006,7 @@
     "go_to_properties": "Go to Project Properties",
     "only_complete_findings_visible": "Only review findings with complete GRADE-CERQual assessments will be visible on the database. If you later complete assessments for additional review findings then you will need to unpublish and republish your project to the database to make them visible.",
     "requirements_not_met": "The project no longer meets the requirements to be published. Check the fields in red or select “Private”.",
+    "via_publish_endpoint": "Publishing is done from the project's Publish button, not from the Properties form.",
     "check_needs_connection": "Checking how this change affects the publication needs an internet connection. Try again when you are back online.",
     "to_word": "to MS Word",
     "the_references": "the references",

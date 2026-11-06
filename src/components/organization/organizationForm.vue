@@ -645,7 +645,18 @@ export default {
             this.reportRefusal(response.data.message)
             return
           }
-          this.$notify.success(this.$t('project.notifications.project_updated'))
+          // El server puede dejar el proyecto privado tras un 200 (despublicado automático, R4):
+          // mostrar lo que quedó guardado, no lo que mandamos. Sin cuerpo (cola offline), no hay nada que comparar.
+          const kept = response.data && response.data.data
+          const unpublished = Boolean(kept && typeof kept === 'object' && isProjectPublic(data) && !isProjectPublic(kept))
+          if (unpublished) {
+            data.public_type = kept.public_type
+            data.private = kept.private
+            data.is_public = kept.is_public
+            this.$notify.warning(this.$t('project.notifications.project_unpublished_after_save'))
+          } else {
+            this.$notify.success(this.$t('project.notifications.project_updated'))
+          }
           if (this.isModal) {
             this.$emit('modal-notification')
           } else {
@@ -700,6 +711,8 @@ export default {
             })
             this.state = newState
             this.reportRefusal('project.notifications.publish_missing_fields')
+          } else if (errData.reason === 'publish_via_publish_endpoint') {
+            this.$notify.error(this.$t(writeErrorMessageKey(error)))
           } else if (isPersonalDataConfirmationRejection(error)) {
             this.state = { ...this.state, no_personal_data_confirmed: false }
             this.$notify.error(this.$t(writeErrorMessageKey(error)))
