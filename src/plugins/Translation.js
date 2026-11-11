@@ -2,6 +2,8 @@ import axios from 'axios'
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '@/constants/trans'
 import { i18n } from '@/plugins/i18n'
 
+const STORAGE_KEY = 'user_language'
+
 const Trans = {
   get defaultLanguage () {
     return DEFAULT_LANGUAGE
@@ -16,10 +18,34 @@ const Trans = {
     i18n.locale = lang
   },
   /**
+   * Gets the stored language from localStorage
+   * @return {String|null}
+   */
+  getStoredLanguage () {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored && Trans.isLangSupported(stored)) {
+      return stored
+    }
+    return null
+  },
+  /**
+   * Saves the language preference to localStorage
+   * @param {String} lang
+   */
+  saveLanguagePreference (lang) {
+    localStorage.setItem(STORAGE_KEY, lang)
+  },
+  /**
    * Gets the first supported language that matches the user's
    * @return {String}
    */
   getUserSupportedLang () {
+    // First check localStorage for saved preference
+    const storedLang = Trans.getStoredLanguage()
+    if (storedLang) {
+      return storedLang
+    }
+
     const userPreferredLang = Trans.getUserLang()
 
     // Check if user preferred browser lang is supported
@@ -58,11 +84,14 @@ const Trans = {
    * @param lang
    * @return {Promise<any>}
    */
-  changeLanguage (lang) {
+  changeLanguage (lang, persist = true) {
     if (!Trans.isLangSupported(lang)) return Promise.reject(new Error('Language not supported'))
     if (i18n.locale === lang) return Promise.resolve(lang) // has been loaded prior
     return Trans.loadLanguageFile(lang).then(msgs => {
       i18n.setLocaleMessage(lang, msgs.default || msgs)
+      if (persist) {
+        Trans.saveLanguagePreference(lang)
+      }
       return Trans.setI18nLanguageInServices(lang)
     })
   },

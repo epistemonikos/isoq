@@ -1,0 +1,427 @@
+
+import { strategies } from '@/utils/OfflineStrategies'
+
+jest.mock('@/services/db', () => ({
+  saveProject: jest.fn(),
+  getProject: jest.fn(),
+  getAllProjects: jest.fn(),
+  saveWorksheet: jest.fn(),
+  getWorksheet: jest.fn(),
+  getWorksheetsByProject: jest.fn(),
+  saveFinding: jest.fn(),
+  getFinding: jest.fn(),
+  getFindingsByWorksheet: jest.fn(),
+  saveReference: jest.fn(),
+  getReferencesByProject: jest.fn(),
+  saveCharacteristic: jest.fn(),
+  getCharacteristicsByProject: jest.fn(),
+  saveAssessment: jest.fn(),
+  getAssessmentsByProject: jest.fn(),
+  saveExtractedData: jest.fn(),
+  getExtractedDataByFinding: jest.fn(),
+  saveListCategory: jest.fn(),
+  getListCategoriesByProject: jest.fn(),
+  db: {
+    extractedData: { get: jest.fn() }
+  }
+}))
+
+const db = require('@/services/db')
+
+const getStrategy = (name) => strategies.find(s => s.name === name)
+
+describe('OfflineStrategies', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  describe('list-categories', () => {
+    const strategy = () => getStrategy('list-categories')
+
+    describe('serve()', () => {
+      it('returns [] when project_id is present but cache is empty', async () => {
+        db.getListCategoriesByProject.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_list_categories', { project_id: 'proj1', organization: 'org1' })
+
+        expect(result).toEqual([])
+        expect(db.getListCategoriesByProject).toHaveBeenCalledWith('proj1')
+      })
+
+      it('returns cached data when categories exist', async () => {
+        const categories = [{ id: 'cat1', project_id: 'proj1', text: 'Category 1' }]
+        db.getListCategoriesByProject.mockResolvedValue(categories)
+
+        const result = await strategy().serve('/isoqf_list_categories', { project_id: 'proj1' })
+
+        expect(result).toEqual(categories)
+      })
+
+      it('returns null when params has no project_id', async () => {
+        const result = await strategy().serve('/isoqf_list_categories', {})
+
+        expect(result).toBeNull()
+        expect(db.getListCategoriesByProject).not.toHaveBeenCalled()
+      })
+
+      it('returns null when params is null', async () => {
+        const result = await strategy().serve('/isoqf_list_categories', null)
+
+        expect(result).toBeNull()
+      })
+    })
+  })
+
+  describe('characteristics', () => {
+    const strategy = () => getStrategy('characteristics')
+
+    describe('serve()', () => {
+      it('returns [] when project_id is present but cache is empty', async () => {
+        db.getCharacteristicsByProject.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_characteristics', { project_id: 'proj1' })
+
+        expect(result).toEqual([])
+        expect(db.getCharacteristicsByProject).toHaveBeenCalledWith('proj1')
+      })
+
+      it('returns cached data when characteristics exist', async () => {
+        const chars = [{ id: 'ch1', project_id: 'proj1', fields: [] }]
+        db.getCharacteristicsByProject.mockResolvedValue(chars)
+
+        const result = await strategy().serve('/isoqf_characteristics', { project_id: 'proj1' })
+
+        expect(result).toEqual(chars)
+      })
+
+      it('returns null when params has no project_id', async () => {
+        const result = await strategy().serve('/isoqf_characteristics', {})
+
+        expect(result).toBeNull()
+      })
+    })
+
+    describe('update()', () => {
+      it('calls saveCharacteristic with the full document', async () => {
+        const charDoc = {
+          id: 'ch1',
+          project_id: 'proj1',
+          fields: [],
+          items: [
+            { ref_id: 'ref1', authors: 'Smith 2020' },
+            { ref_id: 'ref2', authors: 'Doe 2021' }
+          ]
+        }
+
+        await strategy().update(charDoc, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).toHaveBeenCalledWith(charDoc)
+      })
+
+      it('does nothing when data is null', async () => {
+        await strategy().update(null, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).not.toHaveBeenCalled()
+      })
+
+      it('does nothing when data has no id', async () => {
+        await strategy().update({ project_id: 'proj1', fields: [] }, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('assessments', () => {
+    const strategy = () => getStrategy('assessments')
+
+    describe('serve()', () => {
+      it('returns [] when project_id is present but cache is empty', async () => {
+        db.getAssessmentsByProject.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_assessments', { project_id: 'proj1' })
+
+        expect(result).toEqual([])
+        expect(db.getAssessmentsByProject).toHaveBeenCalledWith('proj1')
+      })
+
+      it('returns cached data when assessments exist', async () => {
+        const assessments = [{ id: 'as1', project_id: 'proj1', fields: [] }]
+        db.getAssessmentsByProject.mockResolvedValue(assessments)
+
+        const result = await strategy().serve('/isoqf_assessments', { project_id: 'proj1' })
+
+        expect(result).toEqual(assessments)
+      })
+
+      it('returns null when params has no project_id', async () => {
+        const result = await strategy().serve('/isoqf_assessments', null)
+
+        expect(result).toBeNull()
+      })
+    })
+  })
+
+  describe('references', () => {
+    const strategy = () => getStrategy('references')
+
+    describe('serve()', () => {
+      it('returns [] when project_id is present but cache is empty', async () => {
+        db.getReferencesByProject.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_references', { project_id: 'proj1' })
+
+        expect(result).toEqual([])
+        expect(db.getReferencesByProject).toHaveBeenCalledWith('proj1')
+      })
+
+      it('returns extracted reference data (not raw db records) when references exist', async () => {
+        // getReferencesByProject returns raw IndexedDB records { id, projectId, data, lastSync }
+        // The strategy must extract .data to return proper reference objects to the components
+        const rawRecords = [
+          {
+            id: 'ref1',
+            projectId: 'proj1',
+            data: { id: 'ref1', project_id: 'proj1', authors: ['Smith, J'], title: 'Study 1' },
+            lastSync: '2024-01-01T00:00:00.000Z'
+          }
+        ]
+        db.getReferencesByProject.mockResolvedValue(rawRecords)
+
+        const result = await strategy().serve('/isoqf_references', { project_id: 'proj1' })
+
+        expect(result).toEqual([{ id: 'ref1', project_id: 'proj1', authors: ['Smith, J'], title: 'Study 1' }])
+        expect(result[0]).not.toHaveProperty('projectId')
+        expect(result[0]).not.toHaveProperty('lastSync')
+      })
+
+      it('returns null when params has no project_id', async () => {
+        const result = await strategy().serve('/isoqf_references', {})
+
+        expect(result).toBeNull()
+      })
+    })
+  })
+
+  describe('worksheets', () => {
+    const strategy = () => getStrategy('worksheets')
+
+    describe('serve() with project_id in params', () => {
+      it('returns [] when project_id is present but cache is empty', async () => {
+        db.getWorksheetsByProject.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_lists', { project_id: 'proj1' })
+
+        expect(result).toEqual([])
+        expect(db.getWorksheetsByProject).toHaveBeenCalledWith('proj1')
+      })
+
+      it('returns mapped data when worksheets exist', async () => {
+        const rawRecords = [
+          { id: 'ws1', projectId: 'proj1', data: { id: 'ws1', name: 'Finding 1', project_id: 'proj1' } }
+        ]
+        db.getWorksheetsByProject.mockResolvedValue(rawRecords)
+
+        const result = await strategy().serve('/isoqf_lists', { project_id: 'proj1' })
+
+        expect(result).toEqual([{ id: 'ws1', name: 'Finding 1', project_id: 'proj1' }])
+      })
+
+      it('returns null when params has no project_id', async () => {
+        db.getWorksheet.mockResolvedValue(null)
+
+        const result = await strategy().serve('/isoqf_lists', {})
+
+        expect(result).toBeNull()
+      })
+    })
+  })
+
+  describe('findings', () => {
+    const strategy = () => getStrategy('findings')
+
+    describe('serve() with list_id in params', () => {
+      it('returns [] when list_id is present but no findings in cache', async () => {
+        db.getFindingsByWorksheet.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_findings', { list_id: 'list1' })
+
+        expect(result).toEqual([])
+        expect(db.getFindingsByWorksheet).toHaveBeenCalledWith('list1')
+      })
+
+      it('returns mapped findings when list_id matches cached data', async () => {
+        const rawRecords = [
+          { id: 'f1', worksheetId: 'list1', data: { id: 'f1', name: 'Finding 1' } }
+        ]
+        db.getFindingsByWorksheet.mockResolvedValue(rawRecords)
+
+        const result = await strategy().serve('/isoqf_findings', { list_id: 'list1' })
+
+        expect(result).toEqual([{ id: 'f1', name: 'Finding 1' }])
+      })
+
+      it('returns null when params is null', async () => {
+        const result = await strategy().serve('/isoqf_findings', null)
+
+        expect(result).toBeNull()
+      })
+    })
+
+    describe('serve() with list_ids in params', () => {
+      it('returns [] when list_ids is present but no findings in cache', async () => {
+        db.getFindingsByWorksheet.mockResolvedValue([])
+
+        const result = await strategy().serve('/isoqf_findings', { list_ids: 'list1,list2' })
+
+        expect(result).toEqual([])
+      })
+
+      it('returns combined findings from multiple list_ids', async () => {
+        const record1 = { id: 'f1', worksheetId: 'list1', data: { id: 'f1', name: 'Finding 1' } }
+        const record2 = { id: 'f2', worksheetId: 'list2', data: { id: 'f2', name: 'Finding 2' } }
+        db.getFindingsByWorksheet
+          .mockResolvedValueOnce([record1])
+          .mockResolvedValueOnce([record2])
+
+        const result = await strategy().serve('/isoqf_findings', { list_ids: 'list1,list2' })
+
+        expect(result).toEqual([
+          { id: 'f1', name: 'Finding 1' },
+          { id: 'f2', name: 'Finding 2' }
+        ])
+      })
+    })
+
+    // getFinding was never imported: every write to a finding threw a ReferenceError,
+    // which Api.js swallowed, so the offline cache of findings never saw the change.
+    describe('update()', () => {
+      it('merges the write into the cached finding and saves it', async () => {
+        db.getFinding.mockResolvedValue({ id: 'f1', worksheetId: 'list1', data: { id: 'f1', name: 'Old', notes: 'n' } })
+
+        const result = await strategy().update({ id: 'f1', name: 'New' }, '/isoqf_findings/f1')
+
+        expect(db.getFinding).toHaveBeenCalledWith('f1')
+        expect(db.saveFinding).toHaveBeenCalledWith({
+          id: 'f1',
+          worksheetId: 'list1',
+          data: { id: 'f1', name: 'New', notes: 'n' }
+        })
+        expect(result).toEqual({ id: 'f1', name: 'New', notes: 'n' })
+      })
+
+      it('does nothing when the finding is not cached', async () => {
+        db.getFinding.mockResolvedValue(undefined)
+
+        expect(await strategy().update({ id: 'f1', name: 'New' }, '/isoqf_findings/f1')).toBeNull()
+        expect(db.saveFinding).not.toHaveBeenCalled()
+      })
+
+      it('does nothing when data has no id', async () => {
+        expect(await strategy().update({ name: 'New' }, '/isoqf_findings/f1')).toBeNull()
+        expect(db.getFinding).not.toHaveBeenCalled()
+      })
+    })
+
+    // /section/<name> and /identity carry the finding's id in the URL, not in the body, so
+    // update() did nothing with them and an offline reader kept the old finding. They are
+    // applied the way the server applies them (core.py), mirror to the parent list included.
+    describe('update() of /section and /identity', () => {
+      const cachedFinding = () => ({
+        id: 'f1',
+        worksheetId: 'list1',
+        data: {
+          id: 'f1',
+          list_id: 'list1',
+          name: 'Old',
+          notes: 'old notes',
+          evidence_profile: { coherence: { option: '1', explanation: 'old' }, adequacy: { option: '2' } }
+        }
+      })
+      const cachedList = () => ({
+        id: 'list1',
+        projectId: 'p1',
+        data: {
+          id: 'list1',
+          project_id: 'p1',
+          name: 'Old',
+          category: 'c1',
+          references: ['r1'],
+          cerqual: { option: '0' },
+          evidence_profile: { coherence: { option: '1', explanation: 'old' } }
+        }
+      })
+      const savedFinding = () => db.saveFinding.mock.calls[0][0]
+      const savedList = () => db.saveWorksheet.mock.calls[0][0]
+
+      beforeEach(() => {
+        db.getFinding.mockResolvedValue(cachedFinding())
+        db.getWorksheet.mockResolvedValue(cachedList())
+      })
+
+      it('replaces one evidence profile section and leaves the others', async () => {
+        const section = { option: '3', explanation: 'new' }
+        await strategy().update(section, '/isoqf_findings/f1/section/coherence')
+
+        expect(db.getFinding).toHaveBeenCalledWith('f1')
+        expect(savedFinding()).toEqual({
+          id: 'f1',
+          worksheetId: 'list1',
+          data: { ...cachedFinding().data, evidence_profile: { coherence: section, adequacy: { option: '2' } } }
+        })
+      })
+
+      it('mirrors the section to the parent list, without touching its top-level cerqual', async () => {
+        const section = { option: '3', explanation: 'new' }
+        await strategy().update(section, '/isoqf_findings/f1/section/coherence')
+
+        expect(db.getWorksheet).toHaveBeenCalledWith('list1')
+        expect(savedList()).toEqual({
+          id: 'list1',
+          projectId: 'p1',
+          data: { ...cachedList().data, evidence_profile: { coherence: section } }
+        })
+      })
+
+      it('also sets the list top-level cerqual when the section is cerqual', async () => {
+        const cerqual = { option: '2', explanation: 'moderate' }
+        await strategy().update(cerqual, '/isoqf_findings/f1/section/cerqual')
+
+        expect(savedList().data.cerqual).toEqual(cerqual)
+        expect(savedList().data.evidence_profile.cerqual).toEqual(cerqual)
+      })
+
+      it('writes name and notes on the finding, and all four identity fields on the list', async () => {
+        const identity = { name: 'New', notes: 'new notes', category: 'c2', references: ['r1', 'r2'] }
+        await strategy().update(identity, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data).toEqual({ ...cachedFinding().data, name: 'New', notes: 'new notes' })
+        expect(savedList().data).toEqual({ ...cachedList().data, ...identity })
+      })
+
+      it('writes only the fields the identity body carries', async () => {
+        await strategy().update({ category: 'c2' }, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data).toEqual(cachedFinding().data)
+        expect(savedList().data).toEqual({ ...cachedList().data, category: 'c2' })
+      })
+
+      it('does nothing when the finding is not cached', async () => {
+        db.getFinding.mockResolvedValue(undefined)
+
+        expect(await strategy().update({ option: '1' }, '/isoqf_findings/f1/section/coherence')).toBeNull()
+        expect(db.saveFinding).not.toHaveBeenCalled()
+        expect(db.saveWorksheet).not.toHaveBeenCalled()
+      })
+
+      it('still updates the finding when its list is not cached', async () => {
+        db.getWorksheet.mockResolvedValue(undefined)
+
+        await strategy().update({ name: 'New' }, '/isoqf_findings/f1/identity')
+
+        expect(savedFinding().data.name).toBe('New')
+        expect(db.saveWorksheet).not.toHaveBeenCalled()
+      })
+    })
+  })
+})

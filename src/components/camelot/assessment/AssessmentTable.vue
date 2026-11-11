@@ -12,8 +12,8 @@
               <b-tr>
                 <b-th>&nbsp;</b-th>
                 <b-th>&nbsp;</b-th>
-                <b-th colspan="4" class="text-center first-stage-header">Research design</b-th>
-                <b-th colspan="4" class="text-center second-stage-header">Research conduct</b-th>
+                <b-th colspan="4" class="text-center first-stage-header">{{ $t('camelot.assessment_table.headers.research_design') }}</b-th>
+                <b-th colspan="4" class="text-center second-stage-header">{{ $t('camelot.assessment_table.headers.research_conduct') }}</b-th>
                 <b-th>&nbsp;</b-th>
               </b-tr>
             </template>
@@ -33,9 +33,11 @@
                             v-if="option.option"
                             class="option-circle mr-2"
                             :style="{ backgroundColor: getOptionColor(option.option) }"
-                        />
-                        <p><strong>{{ getOptionText(option.option) }}</strong></p>
-                        <p>{{ option.text }}</p>
+                        ></div>
+                        <div>
+                            <p><strong>{{ getOptionText(option.option) }}</strong></p>
+                            <p>{{ option.text }}</p>
+                        </div>
                     </div>
                 </div>
                 <span v-else>&nbsp;</span>
@@ -47,7 +49,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage0.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage0.option) }}</strong></p>
                         <p>{{ data.item.firstStage0.text }}</p>
@@ -60,7 +62,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage1.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage1.option) }}</strong></p>
                         <p>{{ data.item.firstStage1.text }}</p>
@@ -73,7 +75,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage2.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage2.option) }}</strong></p>
                         <p>{{ data.item.firstStage2.text }}</p>
@@ -86,7 +88,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage3.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage3.option) }}</strong></p>
                         <p>{{ data.item.firstStage3.text }}</p>
@@ -101,7 +103,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage0.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage0.option) }}</strong></p>
                         <p>{{ data.item.secondStage0.text }}</p>
@@ -114,7 +116,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage1.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage1.option) }}</strong></p>
                         <p>{{ data.item.secondStage1.text }}</p>
@@ -127,7 +129,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage2.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage2.option) }}</strong></p>
                         <p>{{ data.item.secondStage2.text }}</p>
@@ -140,7 +142,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage3.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage3.option) }}</strong></p>
                         <p>{{ data.item.secondStage3.text }}</p>
@@ -156,9 +158,11 @@
                             v-if="option.option"
                             class="option-circle mr-2"
                             :style="{ backgroundColor: getOptionColor(option.option) }"
-                        />
-                        <p><strong>{{ getOptionText(option.option) }}</strong></p>
-                        <p>{{ option.text }}</p>
+                        ></div>
+                        <div>
+                            <p><strong>{{ getOptionText(option.option) }}</strong></p>
+                            <p>{{ option.text }}</p>
+                        </div>
                     </div>
                 </div>
                 <span v-else>&nbsp;</span>
@@ -183,30 +187,30 @@ export default {
   data () {
     return {
       fields: [
-        { key: 'authors', label: 'Authors' },
-        { key: 'lastStage', label: 'Overall assessment' },
+        { key: 'authors', label: this.$t('camelot.assessment_table.headers.authors') },
+        { key: 'lastStage', label: this.$t('camelot.assessment_table.headers.overall_assessment') },
         // Research design (firstStage) columns
-        { key: 'firstStage0', label: 'Research', thClass: 'first-stage-col' },
-        { key: 'firstStage1', label: 'Stakeholders', thClass: 'first-stage-col' },
-        { key: 'firstStage2', label: 'Researchers', thClass: 'first-stage-col' },
-        { key: 'firstStage3', label: 'Context', thClass: 'first-stage-col' },
+        { key: 'firstStage0', label: this.$t('camelot.assessment_table.headers.research'), thClass: 'first-stage-col' },
+        { key: 'firstStage1', label: this.$t('camelot.assessment_table.headers.stakeholders'), thClass: 'first-stage-col' },
+        { key: 'firstStage2', label: this.$t('camelot.assessment_table.headers.researchers'), thClass: 'first-stage-col' },
+        { key: 'firstStage3', label: this.$t('camelot.assessment_table.headers.context'), thClass: 'first-stage-col' },
         // Research conduct (secondStage) columns
-        { key: 'secondStage0', label: 'Research', thClass: 'second-stage-col' },
-        { key: 'secondStage1', label: 'Stakeholders', thClass: 'second-stage-col' },
-        { key: 'secondStage2', label: 'Researchers', thClass: 'second-stage-col' },
-        { key: 'secondStage3', label: 'Context', thClass: 'second-stage-col' },
-        { key: 'thirdStage', label: 'Researchers domain' }
+        { key: 'secondStage0', label: this.$t('camelot.assessment_table.headers.research'), thClass: 'second-stage-col' },
+        { key: 'secondStage1', label: this.$t('camelot.assessment_table.headers.stakeholders'), thClass: 'second-stage-col' },
+        { key: 'secondStage2', label: this.$t('camelot.assessment_table.headers.researchers'), thClass: 'second-stage-col' },
+        { key: 'secondStage3', label: this.$t('camelot.assessment_table.headers.context'), thClass: 'second-stage-col' },
+        { key: 'thirdStage', label: this.$t('camelot.assessment_table.headers.researchers_domain') }
       ]
     }
   },
   methods: {
     getOptionText (option) {
       const optionsMap = {
-        'A': 'No or minimal concern',
-        'B': 'Minor concerns',
-        'C': 'Moderate concerns',
-        'D': 'Serious concerns',
-        'E': 'Unclear'
+        'A': this.$t('camelot.assessment_table.options.no_minimal'),
+        'B': this.$t('camelot.assessment_table.options.minor'),
+        'C': this.$t('camelot.assessment_table.options.moderate'),
+        'D': this.$t('camelot.assessment_table.options.serious'),
+        'E': this.$t('camelot.assessment_table.options.unclear')
       }
       return optionsMap[option] || option
     },

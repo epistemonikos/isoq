@@ -3,7 +3,8 @@
 module.exports = {
   root: true,
   parserOptions: {
-    parser: 'babel-eslint'
+    // Reads .babelrc. babel-eslint 8 reported every for…of variable as unused under ESLint 7.
+    parser: '@babel/eslint-parser'
   },
   env: {
     browser: true,

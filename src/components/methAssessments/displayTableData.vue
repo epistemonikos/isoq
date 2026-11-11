@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h4 class="mt-5">Methodological Assessments Table</h4>
+    <h4 class="mt-5">{{ $t('meth_assessments.table_title') }}</h4>
     <p class="font-weight-light">
-      Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
+      {{ $t('meth_assessments.description') }}
     </p>
     <div>
       <b-table
@@ -37,7 +37,7 @@
         <template v-slot:table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
+            <strong>{{ $t('common.loading') }}</strong>
           </div>
         </template>
       </b-table>
@@ -59,7 +59,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('references.author_year') }
         ]
       },
       local_settings: {
