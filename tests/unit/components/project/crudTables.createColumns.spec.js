@@ -163,6 +163,33 @@ describe('crudTables — guardar las columnas nuevas', () => {
     expect(columnService.addColumn).toHaveBeenCalledWith('isoqf_characteristics', 'tabla-creada', 'Método')
   })
 
+  // #414: el servidor pone cada columna nueva primera (#393), así que creadas de a una
+  // quedaban al revés — «col 3, col 2, col 1». El orden del modal se manda al terminar.
+  it('deja las columnas en el orden en que se escribieron', async () => {
+    await wrapper.setData({
+      dataTableFieldsModal: { fields: ['col 1', 'col 2', 'col 3'], touched: [false, false, false], nroColumns: 3, keys: [] }
+    })
+
+    await wrapper.vm.saveDataTableFields()
+
+    const keys = columnService.addColumn.mock.results.map(r => r.value)
+    const claves = await Promise.all(keys).then(rs => rs.map(r => r.key))
+    expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
+    expect(columnService.reorderColumns).toHaveBeenCalledWith('isoqf_characteristics', 'tabla-creada', claves)
+  })
+
+  it('si el orden falla lo avisa y no cierra el modal', async () => {
+    columnService.reorderColumns.mockRejectedValueOnce(new Error('500'))
+    await wrapper.setData({
+      dataTableFieldsModal: { fields: ['col 1', 'col 2'], touched: [false, false], nroColumns: 2, keys: [] }
+    })
+
+    await wrapper.vm.saveDataTableFields()
+
+    expect(wrapper.emitted('print-errors')).toHaveLength(1)
+    expect(wrapper.vm.$refs['open-dataTable-modal'].hide).not.toHaveBeenCalled()
+  })
+
   it('ignora los títulos vacíos', async () => {
     await wrapper.setData({
       dataTableFieldsModal: { fields: ['Contexto', '  '], touched: [false, false], nroColumns: 2, keys: [] }

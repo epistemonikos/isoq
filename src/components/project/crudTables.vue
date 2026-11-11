@@ -150,17 +150,13 @@
           {{ $t('characteristics.columns_autosave_hint') }}
           <b-spinner small v-if="dataTableSettings.isBusy" class="ml-1"></b-spinner>
         </p>
-        <!-- Arriba, junto a donde aparece la columna nueva. -->
-        <b-button class="mb-2" @click="dataTableNewColumn" variant="outline-success">
-          {{ $t('characteristics.add_new_column') }}
-        </b-button>
         <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true"
           @end="onColumnsOrderChanged">
-          <!-- Por identidad y no por índice: la columna nueva entra con `unshift`, y una key
-               por índice le daría a cada campo el DOM de su vecino. `id` primero: la columna
+          <!-- Por identidad y no por índice: arrastrar reordena el arreglo, y una key por
+               índice le daría a cada campo el DOM de su vecino. `id` primero: la columna
                nueva lo conserva cuando recibe su `key`, así el input no se vuelve a montar. -->
           <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="field.id || field.key"
-            :label="$t('characteristics.column_n', { n: index })" :state="fieldState('edit', index)"
+            :label="$t('characteristics.column_n', { n: index + 1 })" :state="fieldState('edit', index)"
             :invalid-feedback="$t('common.field_required')">
             <b-input-group>
               <!-- `autofocus` y no un focus() por id: `draggable` reordena sus hijos DESPUÉS del
@@ -180,6 +176,10 @@
             </b-input-group>
           </b-form-group>
         </draggable>
+        <!-- Abajo, junto a donde aparece la columna nueva. -->
+        <b-button class="mt-2" @click="dataTableNewColumn" variant="outline-success">
+          {{ $t('characteristics.add_new_column') }}
+        </b-button>
       </b-modal>
 
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
@@ -518,7 +518,9 @@ export default {
       // porque es donde está la persona, con el archivo todavía cargado.
       importSaveError: '',
       expandedCells: {},
-      autoSaveStatus: null
+      autoSaveStatus: null,
+      // La próxima lectura sí reemplaza el borrador del editor abierto (ver handleResponseData).
+      refreshEditorDraft: false
     }
   },
   watch: {
@@ -662,22 +664,33 @@ export default {
           const _items = sortByAuthors(items.filter(item => item.ref_id && item.authors))
           this.dataTable.items = _items
 
-          this.dataTableFieldsModal.fields = []
           for (const f of filterDisplayFields(fields)) {
-            this.dataTableFieldsModal.fields.push(f.label)
             this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
           }
 
-          this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
-
-          this.dataTableFieldsModal.items = []
-          for (const item of _items) {
-            this.dataTableFieldsModal.items.push(item)
+          // Son los títulos del modal «crear tabla»: con ese modal abierto, reiniciarlos le
+          // borraba a la persona lo que estaba escribiendo (#414).
+          if (!this.columnsCreateModalOpen) {
+            this.dataTableFieldsModal.fields = filterDisplayFields(fields).map(f => f.label)
+            this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
           }
 
-          if (this.dataTableFieldsModal.editingRefId) {
-            const newIdx = _items.findIndex(it => String(it.ref_id) === String(this.dataTableFieldsModal.editingRefId))
-            if (newIdx !== -1) this.dataTableFieldsModal.selected_item_index = newIdx
+          // `dataTableFieldsModal.items` es lo que el editor de fila tiene enlazado con
+          // `v-model`. Con el editor abierto no se toca: la lectura que dispara guardar un
+          // estudio vuelve cuando la persona ya está escribiendo en el siguiente, y
+          // reemplazarlo le borraba el texto (#414). La única excepción es «Recargar» tras
+          // un conflicto de versión, que pide justamente traer la fila del servidor.
+          if (!this.rowEditorOpen || this.refreshEditorDraft) {
+            this.refreshEditorDraft = false
+            this.dataTableFieldsModal.items = []
+            for (const item of _items) {
+              this.dataTableFieldsModal.items.push(item)
+            }
+
+            if (this.dataTableFieldsModal.editingRefId) {
+              const newIdx = _items.findIndex(it => String(it.ref_id) === String(this.dataTableFieldsModal.editingRefId))
+              if (newIdx !== -1) this.dataTableFieldsModal.selected_item_index = newIdx
+            }
           }
         }
       } else {
@@ -824,6 +837,11 @@ export default {
           }
         }
         this.$set(this.dataTableFieldsModal, 'keys', keys)
+        // El servidor pone cada columna nueva primera (#393): creadas de a una quedaban al
+        // revés (#414). Se manda el orden en que se escribieron; si falla, el modal sigue
+        // abierto y volver a guardar lo reintenta (las claves ya creadas se renombran).
+        const order = keys.filter(Boolean)
+        if (order.length) await columnService.reorderColumns(this.type, docId, order)
         this.$emit('get-project')
         this.getData()
         this.$refs['open-dataTable-modal'].hide()
@@ -910,9 +928,9 @@ export default {
           // column and a second blur would create it all over again.
           this.$set(field, 'key', key)
           this.committedColumnLabels[key] = label
-          // The server already inserts the new column first (#393). This order also carries
-          // the drags made so far in the modal, so it clears the pending one: repeating it
-          // on close would be one request too many. Same as `ManageColumnsButton`.
+          // The full modal order, sent at once: the new column goes last (#414) wherever the
+          // server put it. It also carries the drags made so far in the modal, so it clears
+          // the pending one: repeating it on close would be one request too many.
           const order = this.columnsOrderFromModal()
           this.pendingColumnsOrder = false
           if (order.length) {
@@ -1080,10 +1098,11 @@ export default {
      * personas agregando a la vez, porque las dos leían el mismo máximo.
      */
     dataTableNewColumn: function () {
-      // Arriba, igual que en el Paso 3 CAMELOT: queda ahí hasta que el usuario la mueva.
-      this.dataTableFieldsModalEdit.fields.unshift({ id: `new_column_${++newColumnSeq}`, label: '' })
+      // Al final, en el orden en que se ingresan (#414). Sólo el Paso 3 CAMELOT la pone
+      // arriba (#393, `ManageColumnsButton`).
+      this.dataTableFieldsModalEdit.fields.push({ id: `new_column_${++newColumnSeq}`, label: '' })
       this.dataTableFieldsModalEdit.nroColumns = this.dataTableFieldsModalEdit.fields.length
-      this.dataTableFieldsModalEdit.touched.unshift(false)
+      this.dataTableFieldsModalEdit.touched.push(false)
     },
     getReferenceInfo: function (refId) {
       for (const ref of this.refs) {
@@ -1129,7 +1148,8 @@ export default {
     reloadAfterVersionConflict: function () {
       this.versionConflict = null
       this.isRowReadOnly = false
-      this.getData()
+      this.refreshEditorDraft = true
+      return this.getData()
     },
     // BootstrapVue emits `hide` synchronously when a close starts, and every `hidden`
     // follows a `hide` that was not cancelled. A cancelled one never gets its `hidden`.
