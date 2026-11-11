@@ -28,16 +28,16 @@
       v-if="ui.canEdit"
       class="float-right">
       <b-button
-        :disabled="ui.project.inclusion.loading || isReadOnly"
+        :disabled="saveState.loading || isReadOnly"
         variant="outline-success"
         @click="criteriaAction(local_criteria)">
         <b-spinner
-          v-if="ui.project.inclusion.loading"
+          v-if="saveState.loading"
           small
           label="Saving"
           variant="success">
         </b-spinner>
-        {{ ui.project.inclusion.loading_txt }}
+        {{ saveState.loading_txt }}
       </b-button>
     </div>
   </div>
@@ -57,6 +57,9 @@ import InactivityWarning from '@/components/common/InactivityWarning.vue'
 // caja mientras la persona sigue trabajando en ella. Es además más larga que el
 // debounce de 1,5 s del autoguardado, así que lo pendiente se persiste antes de soltar.
 const RELEASE_GRACE = 5000
+
+// Entering a box tells the other one in this tab to let go (see onOtherBoxEntered).
+const BOX_ENTERED = 'criteria-box-entered'
 
 export default {
   name: 'Criteria',
@@ -103,10 +106,21 @@ export default {
      * Es la misma comparación que hace `studyLockState` para los estudios.
      */
     polledHolder: function () {
+      // `refLocks` is read FIRST, before any early return. `LockService.refLocks` is a plain
+      // Map, not reactive: returning on it without having read the prop left the prop out
+      // of this computed's dependencies, and Vue kept that null cached for good. A tab that
+      // had held the box never saw who took it next — the 409 blocked it, each poll
+      // unblocked it, and the box flickered (#407, measured with two accounts).
+      const locks = this.refLocks
       if (!this.lockKey || LockService.refLocks.has(this.lockKey)) return null
-      const lock = this.refLocks.find(item => item.ref_id === this.lockKey)
+      const lock = locks.find(item => item.ref_id === this.lockKey)
       if (!lock || !lock.user_name) return null
-      return lock.user_name === this.currentUserName ? null : lock.user_name
+      // By `user_id`: comparing names took another account with the same name for this one,
+      // and every poll unblocked the box the acquire had just refused (#407). The name stays
+      // only as the fallback for a server that does not send the id.
+      const myId = this.$store && this.$store.state && this.$store.state.user && this.$store.state.user.id
+      const mine = (lock.user_id && myId) ? lock.user_id === myId : lock.user_name === this.currentUserName
+      return mine ? null : lock.user_name
     },
     /**
      * Quién más está editando esta caja, si alguien lo está.
@@ -115,6 +129,10 @@ export default {
      * `ref-lock-lost` llegan antes que el próximo sondeo. Pero no sobrevive a él —
      * ver el watcher de `refLocks`.
      */
+    /** The save button of THIS box: it used to read the inclusion one in both. */
+    saveState: function () {
+      return this.ui.project[this.local_criteria === 'inclusion' ? 'inclusion' : 'exclusion']
+    },
     blockedBy: function () {
       return this.lockDeniedBy || this.polledHolder
     },
@@ -133,6 +151,14 @@ export default {
     refLocks: function () {
       this.lockDenied = false
       this.lockDeniedBy = null
+    },
+    /**
+     * Someone else just let go of this box: what they wrote is on the server, and this tab
+     * only had the text it loaded. The read used to happen only on entering the box, so
+     * whoever was just looking saw it released but still with the old text (#407).
+     */
+    polledHolder: function (holder, previous) {
+      if (previous && !holder && !this.lockHeld) this.refreshFromServer()
     },
     canEdit: function (newVal) {
       this.ui.canEdit = newVal
@@ -210,14 +236,20 @@ export default {
       lockHeld: false,
       // Si el cursor está dentro de la caja AHORA. Se sigue aparte de `lockHeld` porque
       // el usuario se va mucho antes de que el servidor conteste.
-      focused: false
+      focused: false,
+      // The last blur was the window losing focus with this box held (see onWindowFocus).
+      awayWithBox: false
     }
   },
   mounted: function () {
     window.addEventListener('ref-lock-lost', this.onRefLockLost)
+    window.addEventListener('focus', this.onWindowFocus)
+    window.addEventListener(BOX_ENTERED, this.onOtherBoxEntered)
   },
   beforeDestroy: function () {
     window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    window.removeEventListener('focus', this.onWindowFocus)
+    window.removeEventListener(BOX_ENTERED, this.onOtherBoxEntered)
     // Cambiar de paso destruye este componente (el <b-tabs> de pasos es `lazy`): la
     // caja tiene que quedar libre ya, sin esperar la gracia que sirve para los clics.
     this.flushAndRelease()
@@ -231,6 +263,8 @@ export default {
       // Volver a la caja dentro de la gracia es seguir editando, no reentrar.
       this.cancelPendingRelease()
       this.focused = true
+      this.awayWithBox = false
+      window.dispatchEvent(new CustomEvent(BOX_ENTERED, { detail: { key: this.lockKey } }))
       if (!this.ui.canEdit || !this.lockKey) return
       if (!this.lockHeld) {
         const result = await LockService.acquireRef(this.$route.params.id, this.lockKey)
@@ -327,12 +361,48 @@ export default {
       // The page itself lost focus: the person went to another window, tab or app — a PDF,
       // NVivo — and is still working in this box. Releasing here handed it to somebody else,
       // whose text this tab then overwrote on coming back (#407). Coming back fires `focus`.
-      if (typeof document !== 'undefined' && document.hasFocus && !document.hasFocus()) return
+      if (typeof document !== 'undefined' && document.hasFocus && !document.hasFocus()) {
+        this.awayWithBox = true
+        return
+      }
       this.focused = false
       // Se programa siempre, aunque todavía no tengamos el lock: si llega mientras corre
       // la gracia, este mismo temporizador lo suelta. `flushAndRelease` es inocuo cuando
       // no hay nada que soltar.
       this.scheduleRelease()
+    },
+    /**
+     * The window came back after a blur that kept the box. If the cursor did not come back
+     * here — the person clicked straight into the other box, or anywhere else — this box
+     * got no further focus or blur, and nothing would release it: one person ended up
+     * holding both (#407). Same 5 s grace as leaving the box inside the page.
+     *
+     * Checked a tick later: the window's `focus` arrives before the element's.
+     */
+    onWindowFocus: function () {
+      if (!this.awayWithBox) return
+      setTimeout(() => {
+        if (!this.awayWithBox) return
+        this.awayWithBox = false
+        const box = this.$el && this.$el.querySelector('textarea')
+        if (box && document.activeElement === box) return
+        this.focused = false
+        this.scheduleRelease()
+      }, 0)
+    },
+    /**
+     * The person entered the other box: they left this one. Released now, not after the
+     * 5 s grace — that grace is for clicks around this box. With it, going from one box to
+     * the other held BOTH for 5 s, and switching back and forth kept renewing it, so the
+     * other person saw one person in both boxes (#407, measured).
+     */
+    onOtherBoxEntered: function (event) {
+      const key = event && event.detail && event.detail.key
+      if (key === this.lockKey) return
+      if (!this.lockHeld && !this.releaseTimer) return
+      this.focused = false
+      this.awayWithBox = false
+      this.flushAndRelease()
     },
     scheduleRelease: function () {
       this.cancelPendingRelease()
@@ -376,61 +446,58 @@ export default {
     printErrors: function (error) {
       console.error(error)
     },
+    /**
+     * Only the tab that holds the box writes it. One that lost it, or never got it, would be
+     * writing over whoever has it now.
+     *
+     * But a box that is enabled and has no lock here can still be typed into: the acquire on
+     * entering lost a race, the box was disabled with the cursor inside — Chrome keeps it
+     * there without a `blur` — and the next poll enabled it again, so typing fires no `focus`.
+     * That save used to stay on «Saving…» for good (#407). It asks for the lock instead.
+     */
+    ensureLockForSave: async function () {
+      const result = await LockService.acquireRef(this.$route.params.id, this.lockKey)
+      if (!result || !result.success) {
+        this.denyLock(result)
+        return false
+      }
+      this.lockHeld = true
+      this.lockDeniedBy = null
+      this.lockDenied = false
+      return true
+    },
     criteriaAction: function (type, action = '') {
-      let params = {}
-      if (type === 'inclusion') {
-        this.ui.project.inclusion.loading = true
-        this.ui.project.inclusion.loading_txt = this.$t('common.saving')
-        params.inclusion = this.local_data || ''
-        if (action === 'clean') {
-          params.inclusion = ''
-        }
-      } else {
-        this.ui.project.exclusion.loading = true
-        this.ui.project.exclusion.loading_txt = this.$t('common.saving')
-        params.exclusion = this.local_data || ''
-        if (action === 'clean') {
-          params.exclusion = ''
-        }
-      }
-      // Only the tab that holds the box writes it. One that lost it, or never got it, would
-      // be writing over whoever has it now.
-      const holdsBox = this.lockHeld || !this.lockKey
-      if (this.ui.canEdit && !this.isReadOnly && holdsBox) {
-        const sent = params[type]
-        Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
-          .then((response) => {
-            this.savedText = sent
-            if (type === 'inclusion') {
-              this.ui.project.inclusion.loading = false
-              this.ui.project.inclusion.loading_txt = this.$t('common.save')
-              this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
-              this.ui.project.type = 'inclusion'
-              // this.getProject()
-            }
-            if (type === 'exclusion') {
-              this.ui.project.exclusion.loading = false
-              this.ui.project.exclusion.loading_txt = this.$t('common.save')
-              this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
-              this.ui.project.type = 'exclusion'
-              // this.getProject()
-            }
-            this.$emit('criteria-saved', { field: type, value: this.local_data })
-          })
-          .catch((error) => {
-            if (this.isCriteriaLockRejection(error)) {
-              this.onSaveRefused(error)
-              return
-            }
-            this.printErrors(error)
-            if (type === 'inclusion') {
-              this.ui.project.inclusion.error.show = true
-            }
-            if (type === 'exclusion') {
-              this.ui.project.exclusion.error.show = true
-            }
-          })
-      }
+      if (!this.ui.canEdit || this.isReadOnly) return
+      // With the lock already here the PATCH goes out in this same tick: `flushAndRelease`
+      // flushes the pending save and releases right after, and the write must leave first.
+      if (this.lockHeld || !this.lockKey) return this.sendCriteria(type, action)
+      return this.ensureLockForSave().then(ok => (ok ? this.sendCriteria(type, action) : undefined))
+    },
+    sendCriteria: function (type, action) {
+      const state = this.ui.project[type === 'inclusion' ? 'inclusion' : 'exclusion']
+      const sent = action === 'clean' ? '' : (this.local_data || '')
+      const params = { [type === 'inclusion' ? 'inclusion' : 'exclusion']: sent }
+      state.loading = true
+      state.loading_txt = this.$t('common.saving')
+      return Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
+        .then(() => {
+          this.savedText = sent
+          state.success.dismissCountDown = state.success.dismissSecs
+          this.ui.project.type = type
+          this.$emit('criteria-saved', { field: type, value: this.local_data })
+        })
+        .catch((error) => {
+          if (this.isCriteriaLockRejection(error)) {
+            this.onSaveRefused(error)
+            return
+          }
+          this.printErrors(error)
+          state.error.show = true
+        })
+        .finally(() => {
+          state.loading = false
+          state.loading_txt = this.$t('common.save')
+        })
     }
   }
 }
