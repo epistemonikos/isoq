@@ -433,10 +433,12 @@ describe('crudTables.vue', () => {
       return { target: { files: [new File([''], filename)] } }
     }
 
-    beforeEach(() => {
+    beforeEach(async () => {
       parseXLSXData.mockReset()
       parseCSVData.mockReset()
       loadFileAsText.mockReset()
+      // La plantilla tiene que ser de las referencias del proyecto, o no se importa (#329).
+      await wrapper.setProps({ references: [{ id: '1', authors: ['Smith, J'], publication_year: '2020' }] })
     })
 
     it('routes .xlsx files to parseXLSXData and updates importDataTable', async () => {

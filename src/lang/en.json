@@ -560,7 +560,11 @@
     "ref_locks_ok": "Import anyway",
     "save_offline": "Importing needs a connection: it replaces the whole table and cannot wait in the offline queue. Your file is still loaded — save it once you are back online.",
     "save_check_failed": "We could not confirm whether this table already exists, so nothing was saved. Your file is still loaded — please try again.",
-    "save_failed": "The import could not be saved. Your file is still loaded — please try again."
+    "save_failed": "The import could not be saved. Your file is still loaded — please try again.",
+    "outdated_template": "This template does not match the references currently in Step 1, so it was not imported. It was probably downloaded before references were deleted or uploaded again (re-uploading gives them new IDs).",
+    "outdated_unknown": "Rows for studies that are no longer in the project: {studies}.",
+    "outdated_missing": "Studies in the project with no row in the template: {studies}.",
+    "outdated_download": "Download the current template"
   },
   "meth_assessments": {
     "table_title": "Methodological Assessments Table",
