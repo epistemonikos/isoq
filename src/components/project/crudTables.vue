@@ -294,6 +294,20 @@
         <p>{{ $t('import_modal.reject_info') }} <a href="#" v-b-modal='`videoHelp-450046545`'>{{
           $t('import_modal.see_help')
             }}</a></p>
+        <!-- #329: una plantilla de otras referencias no se importa; se dice por qué y se ofrece
+             la nueva. Es un estado de este modal, no un evento: b-alert y no toast. -->
+        <b-alert v-if="importMismatch" show variant="danger" data-test="import-outdated-template">
+          <p class="mb-2"><b>{{ $t('import_modal.outdated_template') }}</b></p>
+          <p v-if="importMismatch.unknown.length" class="mb-2">
+            {{ $t('import_modal.outdated_unknown', { studies: importMismatch.unknown.join('; ') }) }}
+          </p>
+          <p v-if="importMismatch.missing.length" class="mb-2">
+            {{ $t('import_modal.outdated_missing', { studies: importMismatch.missing.join('; ') }) }}
+          </p>
+          <b-button size="sm" variant="outline-danger" @click="generateTemplate">
+            {{ $t('import_modal.outdated_download') }}
+          </b-button>
+        </b-alert>
         <b-alert variant="info" :show="importDataTable.error !== null">
           {{ importDataTable.error }}
         </b-alert>
@@ -341,6 +355,7 @@ import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import referenceDeletedMixin from '@/mixins/referenceDeletedMixin'
 import { summarizeImportLocks } from '@/utils/importLockWarning'
+import { templateReferenceMismatch } from '@/utils/templateReferences'
 
 // Identidad local de una columna que todavía no tiene clave del servidor. Un contador y no
 // `Date.now()`: dos clics en el mismo milisegundo darían la misma.
@@ -520,7 +535,9 @@ export default {
       expandedCells: {},
       autoSaveStatus: null,
       // La próxima lectura sí reemplaza el borrador del editor abierto (ver handleResponseData).
-      refreshEditorDraft: false
+      refreshEditorDraft: false,
+      // La plantilla elegida no es de las referencias actuales (#329): `{ unknown, missing }`.
+      importMismatch: null
     }
   },
   watch: {
@@ -1478,11 +1495,17 @@ export default {
           ...parsed.fieldsObj
         ]
       }
-      this.importDataTable.fields = parsed.fields
-      this.importDataTable.items = parsed.items
+      // Una plantilla de referencias que ya no son las del proyecto no se importa (#329):
+      // sin filas cargadas, Guardar queda deshabilitado y no hay vista previa.
+      this.importMismatch = parsed.items.length
+        ? templateReferenceMismatch(parsed.items, this.references)
+        : null
+      this.importDataTable.fields = this.importMismatch ? [] : parsed.fields
+      this.importDataTable.items = this.importMismatch ? [] : parsed.items
     },
     cleanVars: function (isCancel = false) {
       this.importSaveError = ''
+      this.importMismatch = null
       this.importDataTable = {
         error: null,
         fields: [],

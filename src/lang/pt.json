@@ -560,7 +560,11 @@
     "ref_locks_ok": "Importar mesmo assim",
     "save_offline": "Importar exige conexão: substitui a tabela inteira e não pode ficar em espera. Seu arquivo continua carregado; salve-o quando voltar a ficar on-line.",
     "save_check_failed": "Não foi possível confirmar se esta tabela já existe, então nada foi salvo. Seu arquivo continua carregado; tente novamente.",
-    "save_failed": "Não foi possível salvar a importação. Seu arquivo continua carregado; tente novamente."
+    "save_failed": "Não foi possível salvar a importação. Seu arquivo continua carregado; tente novamente.",
+    "outdated_template": "Este modelo não corresponde às referências que estão agora no Passo 1, por isso não foi importado. Provavelmente foi baixado antes de as referências serem excluídas ou enviadas novamente (ao reenviá-las, elas recebem novos identificadores).",
+    "outdated_unknown": "Linhas de estudos que não estão mais no projeto: {studies}.",
+    "outdated_missing": "Estudos do projeto sem linha no modelo: {studies}.",
+    "outdated_download": "Baixar o modelo atual"
   },
   "meth_assessments": {
     "table_title": "Tabela de Avaliações Metodológicas",

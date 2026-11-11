@@ -560,7 +560,11 @@
     "ref_locks_ok": "Importar de todos modos",
     "save_offline": "Importar requiere conexión: reemplaza la tabla completa y no puede quedar en espera. Su archivo sigue cargado; guárdelo cuando vuelva a estar en línea.",
     "save_check_failed": "No pudimos confirmar si esta tabla ya existe, así que no se guardó nada. Su archivo sigue cargado; vuelva a intentarlo.",
-    "save_failed": "No se pudo guardar la importación. Su archivo sigue cargado; vuelva a intentarlo."
+    "save_failed": "No se pudo guardar la importación. Su archivo sigue cargado; vuelva a intentarlo.",
+    "outdated_template": "Esta plantilla no coincide con las referencias que hay ahora en el Paso 1, así que no se importó. Probablemente se descargó antes de borrar o volver a subir referencias (al subirlas de nuevo reciben otros identificadores).",
+    "outdated_unknown": "Filas de estudios que ya no están en el proyecto: {studies}.",
+    "outdated_missing": "Estudios del proyecto sin fila en la plantilla: {studies}.",
+    "outdated_download": "Descargar la plantilla actual"
   },
   "meth_assessments": {
     "table_title": "Tabla de Evaluaciones Metodológicas",
