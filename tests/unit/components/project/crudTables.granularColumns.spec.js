@@ -192,11 +192,11 @@ describe('crudTables — alta y renombrado de columna al salir del campo', () =>
   })
 })
 
-// Una columna nueva nace arriba, igual que en el Paso 3 CAMELOT. El servidor la agrega al
-// final (`$push`), así que el cliente corrige la posición con un reorden EN EL ACTO: si se
-// esperara al cierre del modal, entre medio la tabla la mostraría al fondo — y si el cierre
-// no llega a disparar el envío, también la base.
-describe('crudTables — la columna nueva nace al inicio', () => {
+// Sin CAMELOT, una columna nueva va al final: en el orden en que se ingresan (#414). En el
+// Paso 3 CAMELOT sigue naciendo arriba (#393), pero eso es `ManageColumnsButton`. El cliente
+// manda el orden completo en el acto, sin depender de dónde la inserte el servidor: si se
+// esperara al cierre del modal y el cierre no llegara a enviarlo, quedaría mal en la base.
+describe('crudTables — la columna nueva va al final', () => {
   let wrapper
 
   beforeEach(async () => {
@@ -207,50 +207,58 @@ describe('crudTables — la columna nueva nace al inicio', () => {
 
   afterEach(() => { if (wrapper) wrapper.destroy() })
 
-  it('el botón de agregar la inserta primera, con su touched alineado', () => {
+  it('el botón de agregar la pone última, con su touched alineado', () => {
     wrapper.vm.dataTableNewColumn()
 
     const { fields, touched } = wrapper.vm.dataTableFieldsModalEdit
     expect(fields).toHaveLength(3)
-    expect(fields[0].key).toBeUndefined()
-    expect(fields[0].label).toBe('')
-    expect(fields[1].key).toBe('column_0')
+    expect(fields[0].key).toBe('column_0')
+    expect(fields[2].key).toBeUndefined()
+    expect(fields[2].label).toBe('')
     expect(touched).toEqual([false, false, false])
   })
 
-  // Sin una identidad propia, el `:key` del v-for sería el índice y el `unshift` le
-  // reasignaría el DOM de otro campo al que el usuario está escribiendo.
+  // Megan veía «Column 0» en la que acababa de agregar; el modal de crear numera desde 1.
+  it('los rótulos se numeran desde 1, en el orden en que se ven', async () => {
+    wrapper.vm.dataTableNewColumn()
+    await wrapper.vm.$nextTick()
+
+    const labels = wrapper.findAll('#open-dataTable-modal-edit b-form-group-stub').wrappers
+      .map(w => w.attributes('label'))
+    expect(labels).toEqual([1, 2, 3].map(n => `characteristics.column_n ${JSON.stringify({ n })}`))
+  })
+
   it('le da una identidad local distinta a cada columna sin clave', () => {
     wrapper.vm.dataTableNewColumn()
     wrapper.vm.dataTableNewColumn()
 
-    const [a, b] = wrapper.vm.dataTableFieldsModalEdit.fields
+    const [, , a, b] = wrapper.vm.dataTableFieldsModalEdit.fields
     expect(a.id).toBeTruthy()
     expect(b.id).toBeTruthy()
     expect(a.id).not.toBe(b.id)
   })
 
-  it('al crearla manda el orden en el acto, con ella primera', async () => {
+  it('al crearla manda el orden en el acto, con ella última', async () => {
     wrapper.vm.dataTableNewColumn()
-    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+    wrapper.vm.dataTableFieldsModalEdit.fields[2].label = 'Nueva'
 
-    await wrapper.vm.onEditFieldBlur(0)
+    await wrapper.vm.onEditFieldBlur(2)
 
     expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
     expect(columnService.reorderColumns).toHaveBeenCalledWith(
-      'isoqf_characteristics', 'tabla-1', ['column_nueva', 'column_0', 'column_1']
+      'isoqf_characteristics', 'tabla-1', ['column_0', 'column_1', 'column_nueva']
     )
   })
 
   it('una columna sin título todavía no viaja en el orden', async () => {
     wrapper.vm.dataTableNewColumn()
     wrapper.vm.dataTableNewColumn()
-    wrapper.vm.dataTableFieldsModalEdit.fields[1].label = 'Nueva'
+    wrapper.vm.dataTableFieldsModalEdit.fields[2].label = 'Nueva'
 
-    await wrapper.vm.onEditFieldBlur(1)
+    await wrapper.vm.onEditFieldBlur(2)
 
     expect(columnService.reorderColumns.mock.calls[0][2])
-      .toEqual(['column_nueva', 'column_0', 'column_1'])
+      .toEqual(['column_0', 'column_1', 'column_nueva'])
   })
 
   // El envío inmediato ya lleva el orden completo del modal: repetirlo al cerrar sería un
@@ -258,8 +266,8 @@ describe('crudTables — la columna nueva nace al inicio', () => {
   it('no vuelve a mandar el orden al cerrar si no se arrastró después', async () => {
     wrapper.vm.onColumnsOrderChanged()
     wrapper.vm.dataTableNewColumn()
-    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
-    await wrapper.vm.onEditFieldBlur(0)
+    wrapper.vm.dataTableFieldsModalEdit.fields[2].label = 'Nueva'
+    await wrapper.vm.onEditFieldBlur(2)
 
     await wrapper.vm.onColumnsEditModalHidden()
 
@@ -274,28 +282,28 @@ describe('crudTables — la columna nueva nace al inicio', () => {
     expect(columnService.reorderColumns).not.toHaveBeenCalled()
   })
 
-  // La columna quedó creada al final: el cierre del modal tiene que volver a intentarlo, y
+  // La columna ya quedó creada: el cierre del modal tiene que volver a intentar el orden, y
   // el fallo tiene que verse.
   it('si el reorden falla, lo reintenta al cerrar y lo avisa', async () => {
     columnService.reorderColumns.mockRejectedValueOnce(new Error('500'))
     wrapper.vm.dataTableNewColumn()
-    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+    wrapper.vm.dataTableFieldsModalEdit.fields[2].label = 'Nueva'
 
-    await wrapper.vm.onEditFieldBlur(0)
+    await wrapper.vm.onEditFieldBlur(2)
     expect(wrapper.emitted('print-errors')).toHaveLength(1)
 
     await wrapper.vm.onColumnsEditModalHidden()
     expect(columnService.reorderColumns).toHaveBeenCalledTimes(2)
     expect(columnService.reorderColumns.mock.calls[1][2])
-      .toEqual(['column_nueva', 'column_0', 'column_1'])
+      .toEqual(['column_0', 'column_1', 'column_nueva'])
   })
 
   it('si el alta falla no reordena', async () => {
     columnService.addColumn.mockRejectedValueOnce(new Error('500'))
     wrapper.vm.dataTableNewColumn()
-    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Nueva'
+    wrapper.vm.dataTableFieldsModalEdit.fields[2].label = 'Nueva'
 
-    await wrapper.vm.onEditFieldBlur(0)
+    await wrapper.vm.onEditFieldBlur(2)
 
     expect(columnService.reorderColumns).not.toHaveBeenCalled()
   })
