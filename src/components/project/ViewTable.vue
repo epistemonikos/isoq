@@ -186,8 +186,12 @@
       </template>
       <template v-slot:empty>
         <p class="text-center my-5">
-          {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding')
-          }}</a>
+          <!-- #242: sólo quien escribe puede agregar; a quien lee el modal le prometía un permiso que no tiene -->
+          <template v-if="mode === 'edit' && canEdit">
+            {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding')
+            }}</a>
+          </template>
+          <template v-else>{{ $t('soqf_table.no_findings_readonly') }}</template>
         </p>
       </template>
       <template v-slot:table-busy>

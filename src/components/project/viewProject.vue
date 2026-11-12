@@ -1100,14 +1100,10 @@ export default {
             _project.can_read = []
           }
           this.project = _project
-          // set mode based on permissions: prefer write -> edit, otherwise read -> view
-          if (this.checkPermissions('can_write')) {
-            this.mode = 'edit'
-          } else if (this.checkPermissions('can_read')) {
-            this.mode = 'view'
-          } else {
-            this.mode = ''
-          }
+          // `mode` es PRESENTACIÓN: 'edit' = la tabla interactiva, 'view' = «Print or export».
+          // Quien sólo lee también parte en la tabla (#242: si no, no llega a las worksheets);
+          // lo que impide editar es `isEditing`, que exige can_write.
+          this.mode = this.checkPermissions(['can_read', 'can_write']) ? 'edit' : ''
 
           // No hay lock de proyecto: lo reemplazaron los ref-locks granulares, y las
           // propiedades usan su propio ref-lock (`project_properties`, propertiesLockMixin).
@@ -1139,9 +1135,9 @@ export default {
         const isWriteNow = this.checkPermissions('can_write')
 
         if (wasWrite && !isWriteNow) {
-          // Lost write access while in edit mode
+          // Lost write access while in edit mode. Se queda en la tabla (#242): isEditing
+          // pasa a false solo y la tabla deja de ofrecer los controles de edición.
           if (this.mode === 'edit') {
-            this.mode = 'view'
             announced = true
             this.$bvToast.toast(this.$t('lock.permissions_revoked'), {
               title: this.$t('notifications.error'),
@@ -2065,11 +2061,10 @@ export default {
       }
       // The iSoQ "Print or export" button toggles mode='view' (preview), but mode is
       // shared across all tabs — leaving it 'view' locks Properties/My-Data read-only.
-      // Re-derive mode from permissions on tab change so the preview stays local to iSoQ.
-      if (this.checkPermissions('can_write')) {
+      // Volver a la tabla al cambiar de tab para que la vista previa quede local al iSoQ,
+      // también para quien sólo lee (#242).
+      if (this.checkPermissions(['can_read', 'can_write'])) {
         this.mode = 'edit'
-      } else if (this.checkPermissions('can_read')) {
-        this.mode = 'view'
       }
       this.refreshPermissions()
       // Al entrar al tab es cuando la persona mira la tabla: no la hagamos esperar hasta
@@ -2208,9 +2203,8 @@ export default {
       if (this.mode === 'edit') return 'edit'
       if (this.mode === 'view') return 'view'
 
-      // If mode is empty, derive from permissions: prefer write
-      if (this.checkPermissions('can_write')) return 'edit'
-      if (this.checkPermissions('can_read')) return 'view'
+      // If mode is empty, anyone who can see the project starts on the table (#242)
+      if (this.checkPermissions(['can_read', 'can_write'])) return 'edit'
 
       // safe default: empty string when user has no read/write permissions
       return ''

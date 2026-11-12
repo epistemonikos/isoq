@@ -908,6 +908,7 @@
     "view_edit_refs": "View or edit references",
     "select_references": "Select references",
     "refs_count": "There are <b>{count}</b> references.",
+    "no_findings_readonly": "There are no findings to show.",
     "no_findings": "There are no findings to show,",
     "add_review_finding": "add review finding",
     "edit_finding": "Edit Summarised review finding",
@@ -1196,6 +1197,7 @@
     "no": "no"
   },
   "actionButtons": {
+    "back_to_table": "Back to the table",
     "export": "Export",
     "to_ms_word": "to MS Word",
     "the_references": "the references",

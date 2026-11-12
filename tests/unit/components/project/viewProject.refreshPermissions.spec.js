@@ -92,7 +92,9 @@ describe('viewProject.vue — refreshPermissions()', () => {
   })
 
   describe('downgrade: user loses can_write', () => {
-    it('drops mode from edit to view and shows a toast when currently editing', async () => {
+    // #242: perder la escritura no manda a la vista de impresión; queda en la tabla sólo
+    // para lectura (isEditing exige can_write).
+    it('stays on the table (read-only) and shows a toast when currently editing', async () => {
       const { wrapper, bvToastToast } = createWrapper()
       await wrapper.setData({
         project: { id: 'proj1', can_write: [1], can_read: [] },
@@ -102,7 +104,8 @@ describe('viewProject.vue — refreshPermissions()', () => {
 
       await wrapper.vm.refreshPermissions()
 
-      expect(wrapper.vm.mode).toBe('view')
+      expect(wrapper.vm.mode).toBe('edit')
+      expect(wrapper.vm.isEditing).toBe(false)
       expect(bvToastToast).toHaveBeenCalledWith('lock.permissions_revoked', expect.objectContaining({
         title: 'notifications.error'
       }))
@@ -250,7 +253,7 @@ describe('viewProject.vue — tab change re-derives mode (iSoQ preview must not 
     wrapper.destroy()
   })
 
-  it('keeps view mode on tab change when the user only has can_read', async () => {
+  it('returns a read-only user to the table on tab change (#242)', async () => {
     const { wrapper } = createWrapper()
     await flushPromises()
     jest.spyOn(wrapper.vm, 'refreshPermissions').mockResolvedValue()
@@ -259,7 +262,8 @@ describe('viewProject.vue — tab change re-derives mode (iSoQ preview must not 
     wrapper.vm.$options.watch['$route.query.tab'].call(wrapper.vm, 'Project-Property')
     await flushPromises()
 
-    expect(wrapper.vm.mode).toBe('view')
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(wrapper.vm.isEditing).toBe(false)
     wrapper.destroy()
   })
 })
@@ -318,9 +322,11 @@ describe('viewProject.vue — end-to-end: real actionButtons child reacts to ref
     await wrapper.vm.refreshPermissions()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.vm.mode).toBe('view')
+    // #242: sin escritura sigue en la tabla (con «Print or export»), pero sin publicar.
+    expect(wrapper.vm.mode).toBe('edit')
     expect(findButtonByText(wrapper, 'actionButtons.edit').length).toBe(0)
-    expect(findButtonByText(wrapper, 'actionButtons.print_or_export').length).toBe(0)
+    expect(findButtonByText(wrapper, 'actionButtons.print_or_export').length).toBe(1)
+    expect(findButtonByText(wrapper, 'actionButtons.publish').length).toBe(0)
     wrapper.destroy()
   })
 })

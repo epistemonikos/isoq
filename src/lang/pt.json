@@ -908,6 +908,7 @@
     "view_edit_refs": "Ver ou editar referências",
     "select_references": "Selecionar referências",
     "refs_count": "Existem <b>{count}</b> referências.",
+    "no_findings_readonly": "Não há descobertas para mostrar.",
     "no_findings": "Não há descobertas para mostrar,",
     "add_review_finding": "adicionar descoberta de revisão",
     "edit_finding": "Editar descoberta de revisão resumida",
@@ -1196,6 +1197,7 @@
     "no": "não"
   },
   "actionButtons": {
+    "back_to_table": "Voltar à tabela",
     "export": "Exportar",
     "to_ms_word": "para MS Word",
     "the_references": "as referências",

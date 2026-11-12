@@ -129,13 +129,15 @@ describe('viewProject.vue — effectiveMode (computed)', () => {
     expect(wrapper.vm.effectiveMode).toBe('edit')
   })
 
-  it('returns "view" when mode is empty and user only has can_read', async () => {
+  // #242: quien sólo lee también parte en la tabla; isEditing es lo que bloquea.
+  it('returns "edit" when mode is empty and user only has can_read', async () => {
     // use non-owner wrapper with only can_read
     wrapper.destroy()
     wrapper = createWrapper()
     await flushPromises()
     await wrapper.setData({ mode: '', project: { can_read: [42] } })
-    expect(wrapper.vm.effectiveMode).toBe('view')
+    expect(wrapper.vm.effectiveMode).toBe('edit')
+    expect(wrapper.vm.isEditing).toBe(false)
   })
 
   it('returns "" when mode is empty and user has no permissions', async () => {
