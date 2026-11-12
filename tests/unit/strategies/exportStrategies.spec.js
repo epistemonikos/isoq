@@ -228,6 +228,69 @@ describe('ExportStrategies', () => {
       })
     })
 
+    // #375: la columna del CERQual general salía sólo con el nivel; las de los cuatro
+    // componentes sí traían su explicación. Y leía `evidence_profile.cerqual`, que puede
+    // faltar o estar viejo: la copia autoritativa es la del nivel superior (resolveCerqual).
+    describe('explicación del CERQual general en el Evidence Profile (#375)', () => {
+      // Todo el texto de una celda, venga como `text` o como Paragraph/TextRun de docx.
+      const cellText = (cell) => {
+        const out = []
+        const walk = (node, depth = 0) => {
+          if (!node || depth > 12) return
+          if (typeof node === 'string') { out.push(node); return }
+          if (Array.isArray(node)) { node.forEach(n => walk(n, depth + 1)); return }
+          if (typeof node === 'object') Object.values(node).forEach(v => walk(v, depth + 1))
+        }
+        walk(cell)
+        return out.join(' ')
+      }
+      const cerqualCell = () => builderMock.addTable.mock.calls[1][0][0][6]
+
+      it('incluye la explicación del CERQual general junto al nivel', async () => {
+        const data = {
+          ...mockData,
+          findings: [{
+            ...mockData.findings[0],
+            cerqual: { option: 1, explanation: 'Moderate concerns about adequacy' },
+            evidence_profile: { ...(mockData.findings[0].evidence_profile || {}), cerqual: { option: 1, explanation: 'Moderate concerns about adequacy' } }
+          }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        expect(cellText(cerqualCell())).toContain('cerqual_options.moderate_confidence')
+        expect(cellText(cerqualCell())).toContain('Moderate concerns about adequacy')
+      })
+
+      it('lee la copia autoritativa del nivel superior aunque evidence_profile no la tenga', async () => {
+        const data = {
+          ...mockData,
+          findings: [{
+            ...mockData.findings[0],
+            cerqual: { option: 0, explanation: 'Only minor concerns' },
+            evidence_profile: { ...(mockData.findings[0].evidence_profile || {}), cerqual: undefined }
+          }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        expect(cellText(cerqualCell())).toContain('cerqual_options.high_confidence')
+        expect(cellText(cerqualCell())).toContain('Only minor concerns')
+      })
+
+      it('sin explicación, sólo el nivel', async () => {
+        const data = {
+          ...mockData,
+          findings: [{ ...mockData.findings[0], cerqual: { option: 2, explanation: '' } }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        expect(cellText(cerqualCell())).toContain('cerqual_options.low_confidence')
+        expect(cellText(cerqualCell())).not.toContain('common.explanation_colon')
+      })
+    })
+
     describe('License Logic', () => {
       it('should return empty string for private projects', () => {
         mockProject.public_type = 'private'
@@ -367,6 +430,95 @@ describe('ExportStrategies', () => {
   })
 
   describe('CamelotExportStrategy', () => {
+    // Damián, 2026-11-12: el Word de la worksheet salía en español salvo algunas cabeceras.
+    // Tres del Evidence Profile estaban escritas a mano en inglés, y las dos de Extracted
+    // data salían del `label` guardado con la tabla (en inglés desde que se creó). En
+    // pantalla la worksheet ya las rotula con i18n.
+    describe('cabeceras traducidas', () => {
+      const textOf = (node) => {
+        const out = []
+        const walk = (n, depth = 0) => {
+          if (!n || depth > 14) return
+          if (typeof n === 'string') { out.push(n); return }
+          if (Array.isArray(n)) { n.forEach(x => walk(x, depth + 1)); return }
+          if (typeof n === 'object') Object.values(n).forEach(v => walk(v, depth + 1))
+        }
+        walk(node)
+        return out.join(' | ')
+      }
+
+      it('el Evidence Profile no tiene cabeceras escritas a mano en inglés', () => {
+        const section = { option: 0, explanation: '' }
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+        strategy.evidenceProfile = [{
+          displayNumber: 1,
+          name: 'F',
+          methodological_limitations: section,
+          coherence: section,
+          adequacy: section,
+          relevance: section,
+          cerqual: section
+        }]
+
+        const text = textOf(strategy.createEvidenceProfileSection())
+
+        expect(text).not.toContain('Summarized Review Finding')
+        expect(text).not.toContain('GRADE-CERQual assessment of confidence')
+        expect(text).not.toMatch(/(^|\| )References( \||$)/)
+        expect(text).toContain('table_headers.summarised_finding')
+        expect(text).toContain('table_headers.cerqual_assessment')
+        expect(text).toContain('table_headers.references')
+      })
+
+      // Damián, 2026-11-12: en el Word de la worksheet CAMELOT la explicación del CERQual
+      // general salía sola, sin «Explicación:» como en las otras cuatro columnas.
+      it('la explicación del CERQual general lleva «Explicación:», como las demás columnas', () => {
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+
+        const text = textOf(strategy.createCerqualCell({ option: 0, explanation: 'porque sí' }))
+
+        expect(text).toContain('common.explanation_colon porque sí')
+      })
+
+      it('sin explicación, sólo el nivel (y no falla si falta el campo)', () => {
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+
+        const text = textOf(strategy.createCerqualCell({ option: 0 }))
+
+        expect(text).not.toContain('common.explanation_colon')
+      })
+
+      it('sin evidence profile, el aviso también va con i18n', () => {
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+        strategy.evidenceProfile = []
+
+        const text = textOf(strategy.createEvidenceProfileSection())
+
+        expect(text).toContain('worksheet.no_evidence_profile_data')
+        expect(text).not.toContain('No evidence profile data available')
+      })
+
+      it('Extracted data rotula sus dos columnas fijas con i18n, no con el label guardado', () => {
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+        strategy.extractedData = {
+          fields: [
+            { key: 'ref_id', label: 'ID' },
+            { key: 'authors', label: 'Author(s), Year' },
+            { key: 'column_0', label: 'Extracted data supporting the review finding' }
+          ],
+          items: [{ ref_id: 'R1', authors: 'Smith 2020', column_0: 'dato' }]
+        }
+
+        const text = textOf(strategy.createExtractedDataSection())
+
+        expect(text).not.toContain('Author(s), Year')
+        expect(text).not.toContain('Extracted data supporting the review finding')
+        expect(text).toContain('table_headers.author_year')
+        expect(text).toContain('table_headers.extracted_data')
+        expect(text).toContain('dato')
+      })
+    })
+
     it('should generate document with 4 separate landscape sections', async () => {
       const strategy = new CamelotExportStrategy(mockProject, mockData)
       const doc = await strategy.export()
@@ -591,6 +743,71 @@ describe('ExportStrategies', () => {
       expect(withoutNumberRows[0][0].text).toBe('')
       expect(withoutNumberRows[0][0].text).not.toContain('66b1ff')
       expect(withoutNumberRows[0][0].text).not.toBe('1')
+    })
+  })
+  // Damián, 2026-11-12: el Word de la worksheet sin CAMELOT salía entero en inglés —
+  // título, cabeceras, niveles y «Explanation:»— aunque la interfaz estuviera en español.
+  // Y el CERQual general se mostraba con los niveles de PREOCUPACIÓN («No/Very minor
+  // concerns») en vez de los de confianza («High confidence»).
+  describe('WorksheetExportStrategy — multi-idioma', () => {
+    const ep = {
+      displayNumber: 1,
+      name: 'F',
+      methodological_limitations: { option: 1, explanation: 'ml' },
+      coherence: { option: 0, explanation: '' },
+      adequacy: { option: 2, explanation: '' },
+      relevance: { option: 3, explanation: '' },
+      cerqual: { option: 0, explanation: 'porque sí' },
+      references: []
+    }
+
+    it('cabeceras de la tabla con i18n', () => {
+      new WorksheetExportStrategy(mockProject, { references: [] }).createEvidenceProfileTable(ep)
+
+      const headers = builderMock.addTable.mock.calls[0][1].map(h => h.text)
+      expect(headers).toEqual([
+        '#',
+        'table_headers.summarised_finding',
+        'worksheet.methodological_limitations',
+        'worksheet.coherence',
+        'worksheet.adequacy',
+        'worksheet.relevance',
+        'table_headers.cerqual_assessment',
+        'table_headers.references'
+      ])
+    })
+
+    it('niveles y «Explanation:» con i18n, y el CERQual con niveles de confianza', () => {
+      new WorksheetExportStrategy(mockProject, { references: [] }).createEvidenceProfileTable(ep)
+
+      const row = builderMock.addTable.mock.calls[0][0][0]
+      expect(row[2].text).toContain('cerqual_options.minor_concerns')
+      expect(row[2].text).toContain('common.explanation_colon')
+      expect(row[3].text).toBe('cerqual_options.no_very_minor_concerns')
+      expect(row[6].text).toContain('cerqual_options.high_confidence')
+      expect(row[6].text).toContain('porque sí')
+      expect(row[6].text).not.toContain('concerns')
+    })
+
+    it('título y tablas opcionales con i18n', async () => {
+      const table = { fields: [{ key: 'authors', label: 'Author(s), Year' }], items: [{ authors: 'A 2020' }] }
+      await new WorksheetExportStrategy({ ...mockProject, public_type: 'fully' }, {
+        references: [],
+        evidenceProfile: ep,
+        characteristicsStudies: table,
+        methodologicalAssessments: table,
+        extractedData: { fields: [{ key: 'authors', label: 'Author(s), Year' }, { key: 'column_0', label: 'Extracted data supporting the review finding' }], items: [{ authors: 'A 2020', column_0: 'x' }] }
+      }).export()
+
+      const paragraphs = builderMock.addParagraph.mock.calls.map(c => c[0])
+      expect(paragraphs).toEqual(expect.arrayContaining([
+        'worksheet.grade_cerqual_worksheet',
+        'worksheet.characteristics_of_studies',
+        'worksheet.methodological_assessments',
+        'worksheet.extracted_data'
+      ]))
+      const extractedHeaders = builderMock.addTable.mock.calls[builderMock.addTable.mock.calls.length - 1][1].map(h => h.text)
+      expect(extractedHeaders).toEqual(['table_headers.author_year', 'table_headers.extracted_data'])
     })
   })
 })

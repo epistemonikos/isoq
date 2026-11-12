@@ -732,7 +732,8 @@
     },
     "extracted_data_intro": "É aqui que você insere os dados extraídos dos estudos incluídos que apoiam este achado de revisão. Esses dados são necessários para fazer uma avaliação GRADE-CERQual.",
     "add_extracted_data_label": "Adicione os dados extraídos deste estudo que apoiam a descoberta de revisão",
-    "export_ms_word": "Exportar para MS-Word"
+    "export_ms_word": "Exportar para MS-Word",
+    "no_evidence_profile_data": "Não há dados do perfil de evidências disponíveis."
   },
   "shared": {
     "link_invalid": "O link compartilhado é inválido ou expirou",

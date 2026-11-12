@@ -732,7 +732,8 @@
     },
     "extracted_data_intro": "It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.",
     "add_extracted_data_label": "Add the extracted data from this study that supports the review finding",
-    "export_ms_word": "Export to MS-Word"
+    "export_ms_word": "Export to MS-Word",
+    "no_evidence_profile_data": "No evidence profile data available."
   },
   "shared": {
     "link_invalid": "The shared link is invalid or has expired",

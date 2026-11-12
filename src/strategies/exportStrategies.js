@@ -53,6 +53,23 @@ export class BaseExportStrategy {
       return false
     }
   }
+
+  /**
+   * Las dos columnas fijas de Extracted data se rotulan con i18n, igual que en la worksheet
+   * (`previewContentWorksheet`). El `label` guardado con la tabla quedó en el idioma en que
+   * se creó, y el Word salía en español con estas dos cabeceras en inglés.
+   */
+  withTranslatedFixedColumns (table) {
+    const copy = JSON.parse(JSON.stringify(table || {}))
+    const labels = {
+      authors: this.t('table_headers.author_year'),
+      column_0: this.t('table_headers.extracted_data')
+    }
+    if (Array.isArray(copy.fields)) {
+      copy.fields = copy.fields.map(field => (labels[field.key] ? { ...field, label: labels[field.key] } : field))
+    }
+    return copy
+  }
 }
 
 export class IsoQExportStrategy extends BaseExportStrategy {
@@ -290,10 +307,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
         this.createConcernCell('coherence', ep.coherence),
         this.createConcernCell('adequacy', ep.adequacy),
         this.createConcernCell('relevance', ep.relevance),
-        {
-          text: this.getCerqualConfidenceText(ep.cerqual?.option),
-          alignment: AlignmentType.CENTER
-        },
+        // Nivel y explicación, como las cuatro columnas anteriores (#375), leídos de la
+        // copia autoritativa: la del nivel superior de la lista, no `evidence_profile`.
+        this.createCerqualConfidenceCell(Commons.resolveCerqual(finding)),
         {
           text: refList,
           maxLength: TEXT_LIMITS.references
@@ -315,6 +331,41 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       '3': this.t('cerqual_options.very_low_confidence')
     }
     return confidenceMap[option.toString()] || ''
+  }
+
+  /**
+   * La columna del CERQual general. Sin prefijo, a diferencia de los componentes: la
+   * explicación del nivel de confianza se muestra tal como se escribió (como en la web).
+   */
+  createCerqualConfidenceCell (cerqual) {
+    const children = [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: this.getCerqualConfidenceText(cerqual.option),
+            bold: true,
+            size: 22,
+            font: { name: 'Calibri' }
+          })
+        ]
+      })
+    ]
+
+    if (cerqual.explanation) {
+      children.push(new Paragraph(''))
+      children.push(new Paragraph({
+        children: [
+          new TextRun({
+            text: `${this.t('common.explanation_colon')} ${cerqual.explanation}`,
+            size: 20,
+            font: { name: 'Calibri' }
+          })
+        ]
+      }))
+    }
+
+    return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.TOP }
   }
 
   createConcernCell (concernType, data) {
@@ -438,7 +489,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         heading: HeadingLevel.HEADING_1,
         children: [
           new TextRun({
-            text: 'GRADE-CERQual Assessment Worksheet',
+            text: this.t('worksheet.grade_cerqual_worksheet'),
             bold: true,
             size: 28,
             color: '000000'
@@ -464,7 +515,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
   createEvidenceProfileSection () {
     if (!this.evidenceProfile || this.evidenceProfile.length === 0) {
-      return [new Paragraph('No evidence profile data available.')]
+      return [new Paragraph(this.t('worksheet.no_evidence_profile_data'))]
     }
 
     const table = new Table({
@@ -477,13 +528,13 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         new TableRow({
           children: [
             this.createHeaderCell('#', 2),
-            this.createHeaderCell('Summarized Review Finding', 28),
+            this.createHeaderCell(this.t('table_headers.summarised_finding'), 28),
             this.createHeaderCell(this.t('worksheet.methodological_limitations'), 12),
             this.createHeaderCell(this.t('worksheet.coherence'), 12),
             this.createHeaderCell(this.t('worksheet.adequacy'), 12),
             this.createHeaderCell(this.t('worksheet.relevance'), 12),
-            this.createHeaderCell('GRADE-CERQual assessment of confidence', 12),
-            this.createHeaderCell('References', 10)
+            this.createHeaderCell(this.t('table_headers.cerqual_assessment'), 12),
+            this.createHeaderCell(this.t('table_headers.references'), 10)
           ]
         }),
         new TableRow({
@@ -940,7 +991,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   createExtractedDataSection () {
     return [
       createParagraph(this.t('worksheet.extracted_data'), { size: 24, bold: true }),
-      this.generateTable(JSON.parse(JSON.stringify(this.extractedData)))
+      this.generateTable(this.withTranslatedFixedColumns(this.extractedData))
     ]
   }
 
@@ -1012,29 +1063,38 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     return new TableCell({ children })
   }
 
+  /**
+   * El CERQual general con el mismo formato que las otras cuatro columnas
+   * (`createExplanationCell`): el nivel en negrita y, si hay, «Explicación: …». La
+   * explicación va sin prefijo de nivel porque el CERQual general no lo tiene.
+   */
   createCerqualCell (data) {
-    return new TableCell({
-      children: [
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: this.displayLevelConfidence(data.option),
-              bold: true,
-              size: 22
-            })
-          ]
-        }),
-        new Paragraph(''),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: (data.explanation.length) ? data.explanation : '',
-              size: 22
-            })
-          ]
-        })
-      ]
-    })
+    const cerqual = data || {}
+    const children = [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: this.displayLevelConfidence(cerqual.option),
+            bold: true,
+            size: 22
+          })
+        ]
+      })
+    ]
+
+    if (cerqual.explanation) {
+      children.push(new Paragraph(''))
+      children.push(new Paragraph({
+        children: [
+          new TextRun({
+            text: `${this.t('common.explanation_colon')} ${cerqual.explanation}`,
+            size: 22
+          })
+        ]
+      }))
+    }
+
+    return new TableCell({ children })
   }
 
   generateTable (data) {
@@ -1210,19 +1270,19 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 export class WorksheetExportStrategy extends BaseExportStrategy {
   constructor (project, data, locale = 'en') {
     super(project, data, locale)
+    // Con i18n, como el resto de las estrategias: escritos en inglés, el Word salía en
+    // inglés aunque la interfaz estuviera en español.
     this.levelConfidenceOptions = [
-      { value: 0, text: 'High confidence' },
-      { value: 1, text: 'Moderate confidence' },
-      { value: 2, text: 'Low confidence' },
-      { value: 3, text: 'Very low confidence' },
-      { value: null, text: 'Undefined' }
+      { value: 0, text: this.t('cerqual_options.high_confidence') },
+      { value: 1, text: this.t('cerqual_options.moderate_confidence') },
+      { value: 2, text: this.t('cerqual_options.low_confidence') },
+      { value: 3, text: this.t('cerqual_options.very_low_confidence') }
     ]
     this.selectOptions = [
-      { value: 0, text: 'No/Very minor concerns' },
-      { value: 1, text: 'Minor concerns' },
-      { value: 2, text: 'Moderate concerns' },
-      { value: 3, text: 'Serious concerns' },
-      { value: null, text: 'Undefined' }
+      { value: 0, text: this.t('cerqual_options.no_very_minor_concerns') },
+      { value: 1, text: this.t('cerqual_options.minor_concerns') },
+      { value: 2, text: this.t('cerqual_options.moderate_concerns') },
+      { value: 3, text: this.t('cerqual_options.serious_concerns') }
     ]
   }
 
@@ -1242,9 +1302,9 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     this.createEvidenceProfileTable(ep)
 
     if (isPublic) {
-      this.addOptionalTable('Characteristics of Studies', this.data.characteristicsStudies)
-      this.addOptionalTable('Methodological Assessments', this.data.methodologicalAssessments)
-      this.addOptionalTable('Extracted Data', this.data.extractedData)
+      this.addOptionalTable(this.t('worksheet.characteristics_of_studies'), this.data.characteristicsStudies)
+      this.addOptionalTable(this.t('worksheet.methodological_assessments'), this.data.methodologicalAssessments)
+      this.addOptionalTable(this.t('worksheet.extracted_data'), this.withTranslatedFixedColumns(this.data.extractedData))
     }
 
     this.builder.endSection()
@@ -1259,7 +1319,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
       heading: HeadingLevel.HEADING_2
     })
 
-    this.builder.addParagraph('GRADE-CERQual Assessment Worksheet', {
+    this.builder.addParagraph(this.t('worksheet.grade_cerqual_worksheet'), {
       size: 28,
       bold: true,
       heading: HeadingLevel.HEADING_1,
@@ -1273,24 +1333,28 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     const rows = []
     const headers = [
       { text: '#' },
-      { text: 'Summarized Review Finding' },
-      { text: 'Methodological limitations' },
-      { text: 'Coherence' },
-      { text: 'Adequacy' },
-      { text: 'Relevance' },
-      { text: 'GRADE-CERQual assessment' },
-      { text: 'References' }
+      { text: this.t('table_headers.summarised_finding') },
+      { text: this.t('worksheet.methodological_limitations') },
+      { text: this.t('worksheet.coherence') },
+      { text: this.t('worksheet.adequacy') },
+      { text: this.t('worksheet.relevance') },
+      { text: this.t('table_headers.cerqual_assessment') },
+      { text: this.t('table_headers.references') }
     ]
 
     if (evidenceProfile && (evidenceProfile.name || evidenceProfile.methodological_limitations || evidenceProfile.coherence)) {
+      const explanationLabel = this.t('common.explanation_colon')
+      const joinCell = (level, explanation) => {
+        if (!level && !explanation) return ''
+        if (level && !explanation) return level
+        if (level && explanation) return `${level}\n\n${explanationLabel} ${explanation}`
+        return `${explanationLabel} ${explanation}`
+      }
       const formatCell = (type, option, explanation) => {
-        const displayOpt = this.displayOption(option)
-        const formattedExp = getFormattedExplanation(type, option, explanation)
-
-        if (!displayOpt && !formattedExp) return ''
-        if (displayOpt && !formattedExp) return displayOpt
-        if (displayOpt && formattedExp) return `${displayOpt}\n\nExplanation: ${formattedExp}`
-        return `Explanation: ${formattedExp}`
+        // El CERQual general va con los niveles de CONFIANZA y su explicación sin prefijo;
+        // con `displayOption` un «High confidence» salía como «No/Very minor concerns».
+        if (type === 'cerqual') return joinCell(this.displayLevelConfidence(option), explanation || '')
+        return joinCell(this.displayOption(option), getFormattedExplanation(type, option, explanation))
       }
 
       const dataRow = [
