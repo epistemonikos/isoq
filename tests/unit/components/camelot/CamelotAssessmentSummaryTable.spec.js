@@ -197,6 +197,34 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       w.destroy()
     })
 
+    // #412: su propio Apply, para que nadie use el Save del modal para confirmar el filtro.
+    // Cierra el menú igual que un clic afuera; la selección (que ya aplicó) queda.
+    it('closes the menu with its own Apply button, keeping the selection', async () => {
+      const frame = () => new Promise(resolve => setTimeout(resolve, 30))
+      const w = mount(CamelotAssessmentSummaryTable, {
+        localVue,
+        attachTo: document.body,
+        propsData: { assessments: twoStudies(), clickableHeaders: true },
+        mocks: { $t },
+        stubs: { 'b-table': { template: '<div></div>', props: ['items', 'fields'] }, 'b-sidebar': true, 'font-awesome-icon': true }
+      })
+      const dropdown = w.findComponent({ name: 'BDropdown' })
+      dropdown.vm.show()
+      await frame()
+      await pick(w, FA(2))
+
+      const apply = w.find('[data-testid="assessment-filter-apply"]')
+      expect(apply.exists()).toBe(true)
+      expect(apply.text()).toBe('common.apply')
+      await apply.trigger('click')
+      await frame()
+
+      expect(dropdown.vm.visible).toBe(false)
+      expect(w.vm.visibleAssessments).toEqual(['0-1'])
+      expect(shown(w)).toEqual([true, true])
+      w.destroy()
+    })
+
     it('checks the matching radio and shows every study when a column header is clicked', async () => {
       const w = mountWithFilter()
       await pick(w, 1) // Hide all
