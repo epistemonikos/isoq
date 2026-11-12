@@ -17,10 +17,14 @@
               {{ $t('actionButtons.print_save_pdf') }}
             </b-button>
           </b-col>
-          <b-col v-if="mode === 'view' && !preview && canWrite" cols="12" lg="4">
-            <b-button class="mt-1" @click="changeMode" variant="primary" block>
+          <b-col v-if="mode === 'view' && !preview" cols="12" lg="4">
+            <b-button v-if="canWrite" class="mt-1" @click="changeMode" variant="primary" block>
               <font-awesome-icon icon="edit"></font-awesome-icon>
               {{ $t('actionButtons.edit') }}
+            </b-button>
+            <!-- #242: quien sólo lee también vuelve a la tabla (y de ahí a las worksheets) -->
+            <b-button v-else class="mt-1" @click="changeMode" variant="primary" block>
+              {{ $t('actionButtons.back_to_table') }}
             </b-button>
           </b-col>
           <b-col v-if="mode === 'edit'" cols="12" lg="4">

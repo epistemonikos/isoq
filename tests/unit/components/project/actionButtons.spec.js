@@ -53,6 +53,35 @@ describe('actionButtons.vue', () => {
     })
   })
 
+  // #242: quien sólo lee entra a la vista de impresión desde la tabla y tiene que poder volver.
+  describe('read-only user moves between the table and the print view', () => {
+    const byText = (wrapper, text) => wrapper.findAll('b-button').filter(w => w.text().includes(text))
+
+    it('on the table: sees «Print or export» but not Publish', () => {
+      const wrapper = createWrapper({ mode: 'edit', canWrite: false })
+      expect(byText(wrapper, 'actionButtons.print_or_export').length).toBe(1)
+      expect(byText(wrapper, 'actionButtons.publish').length).toBe(0)
+    })
+
+    it('in the print view: sees a «back to table» button instead of Edit', () => {
+      const wrapper = createWrapper({ mode: 'view', canWrite: false })
+      expect(byText(wrapper, 'actionButtons.back_to_table').length).toBe(1)
+      expect(findEditButton(wrapper).length).toBe(0)
+    })
+
+    it('the back button returns to the table', async () => {
+      const wrapper = createWrapper({ mode: 'view', canWrite: false })
+      await byText(wrapper, 'actionButtons.back_to_table').at(0).trigger('click')
+      expect(wrapper.emitted('changeMode')[0]).toEqual(['edit'])
+    })
+
+    it('a writer in the print view sees Edit, not «back to table»', () => {
+      const wrapper = createWrapper({ mode: 'view', canWrite: true })
+      expect(byText(wrapper, 'actionButtons.back_to_table').length).toBe(0)
+      expect(findEditButton(wrapper).length).toBe(1)
+    })
+  })
+
   describe('Export/Print buttons remain available to read-only users', () => {
     it('shows the export dropdown and print button when canWrite is false', () => {
       const wrapper = createWrapper({ mode: 'view', canWrite: false })

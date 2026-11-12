@@ -908,6 +908,7 @@
     "view_edit_refs": "Ver o editar referencias",
     "select_references": "Seleccionar referencias",
     "refs_count": "Hay <b>{count}</b> referencias.",
+    "no_findings_readonly": "No hay hallazgos para mostrar.",
     "no_findings": "No hay hallazgos para mostrar,",
     "add_review_finding": "agregar hallazgo de revisión",
     "edit_finding": "Editar hallazgo de revisión resumido",
@@ -1196,6 +1197,7 @@
     "no": "no"
   },
   "actionButtons": {
+    "back_to_table": "Volver a la tabla",
     "export": "Exportar",
     "to_ms_word": "a MS Word",
     "the_references": "las referencias",
