@@ -7,8 +7,8 @@
         {{ $t('camelot.assessment_table.sidebar.title') }}
       </b-button>
 
-      <b-dropdown id="dropdown-filter-assessments" variant="outline-primary" size="sm" no-caret right
-        class="assessment-filter-dropdown" v-bind="modalSafeDropdown">
+      <b-dropdown id="dropdown-filter-assessments" ref="filterDropdown" variant="outline-primary" size="sm" no-caret
+        right class="assessment-filter-dropdown" v-bind="modalSafeDropdown">
         <template #button-content>
           {{ $t('camelot.step_four.show_details_across_studies') }}
           <font-awesome-icon icon="filter" class="ml-1" />
@@ -23,6 +23,15 @@
               {{ opt.label }}
             </b-form-radio>
           </b-form-radio-group>
+
+          <!-- #412: its own Apply, so nobody reaches for the modal's Save to confirm the filter.
+               The radios apply as they change; Apply closes the menu, like a click outside. -->
+          <div class="assessment-filter__footer d-flex justify-content-end pt-2">
+            <b-button variant="primary" size="sm" data-testid="assessment-filter-apply"
+              @click="$refs.filterDropdown.hide(true)">
+              {{ $t('common.apply') }}
+            </b-button>
+          </div>
         </b-dropdown-form>
       </b-dropdown>
     </div>
@@ -450,6 +459,19 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* The menu scrolls inside itself (MODAL_SAFE_MENU_STYLE): keep Apply in view, as in TableColumnFilter. */
+.assessment-filter__footer {
+  position: sticky;
+  bottom: -1rem; /* cover the form's own bottom padding (p-3) */
+  margin-bottom: -1rem;
+  padding-bottom: 1rem;
+  background-color: #fff;
+}
+
+html[data-theme="dark"] .assessment-filter__footer {
+  background-color: #2a2a2a; /* .dropdown-menu in dark mode, main.scss */
+}
+
 .camelot-summary-table-container {
   ::v-deep .table-bordered {
     border: 1px solid #AAADB0 !important;
