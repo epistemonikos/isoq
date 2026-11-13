@@ -14,6 +14,12 @@ import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils
 // encabezado de grupo (F2F2F2).
 const ZEBRA_FILL = 'F7F7F7'
 
+// Las tablas de los Pasos 3/4 y los datos extraídos en el Word del Worksheet (CAMELOT o no):
+// desde browse o un enlace compartido, sólo si el proyecto está publicado «fully»; desde el
+// proyecto (`includeStudyTables`: exporta un miembro del equipo), siempre.
+const includesStudyTables = (project, data) =>
+  (project && project.public_type === 'fully') || (data && data.includeStudyTables === true)
+
 // Helper para generar explicaciones con prefijo
 const getFormattedExplanation = (type, option, explanation) => {
   return displayExplanation(type, option, explanation) || explanation || ''
@@ -455,43 +461,23 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   }
 
   buildDocument (landscapePage) {
-    const doc = new Document({
-      styles: documentStyles,
-      sections: [
-        // Section 1: Header + Evidence Profile
-        {
-          properties: { page: landscapePage },
-          children: [
-            ...this.createHeader(),
-            ...this.createEvidenceProfileSection()
-          ]
-        },
-        // Section 2: Characteristics of Studies
-        {
-          properties: { page: landscapePage },
-          children: [
-            ...this.createCharacteristicsSection()
-          ]
-        },
-        // Section 3: Methodological Assessments
-        {
-          properties: { page: landscapePage },
-          children: [
-            ...this.createMethodologicalSection()
-          ]
-        },
-        // Section 4: Extracted Data + License
-        {
-          properties: { page: landscapePage },
-          children: [
-            ...this.createExtractedDataSection(),
-            ...this.createLicenseSection()
-          ]
-        }
-      ]
-    })
+    const section = (children) => ({ properties: { page: landscapePage }, children })
+    const sections = [
+      // Section 1: Header + Evidence Profile
+      section([...this.createHeader(), ...this.createEvidenceProfileSection()])
+    ]
 
-    return doc
+    if (includesStudyTables(this.project, this.data)) {
+      sections.push(
+        section([...this.createCharacteristicsSection()]), // Paso 3
+        section([...this.createMethodologicalSection()]), // Paso 4
+        section([...this.createExtractedDataSection(), ...this.createLicenseSection()])
+      )
+    } else {
+      sections[0].children.push(...this.createLicenseSection())
+    }
+
+    return new Document({ styles: documentStyles, sections })
   }
 
   createHeader () {
@@ -1311,7 +1297,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
 
   async export () {
     const ep = this.data.evidenceProfile || {}
-    const isPublic = this.project?.public_type === 'fully'
+    const isPublic = includesStudyTables(this.project, this.data)
 
     this.builder.startSection({ orientation: 'landscape' })
 

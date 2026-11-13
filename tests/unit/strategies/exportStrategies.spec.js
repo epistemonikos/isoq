@@ -520,7 +520,9 @@ describe('ExportStrategies', () => {
     })
 
     it('should generate document with 4 separate landscape sections', async () => {
-      const strategy = new CamelotExportStrategy(mockProject, mockData)
+      // Las 4 secciones salen cuando corresponden las tablas de los estudios (publicado
+      // «fully» o exportado desde el proyecto): ver worksheetStudyTables.spec.js.
+      const strategy = new CamelotExportStrategy({ ...mockProject, public_type: 'fully' }, mockData)
       const doc = await strategy.export()
 
       // Access the sections from the document definition
