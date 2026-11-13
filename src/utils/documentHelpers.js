@@ -13,6 +13,7 @@ import {
   Packer
 } from 'docx'
 import { saveAs } from 'file-saver'
+import { BODY_SIZE, TITLE_SIZE } from '@/utils/wordTypography'
 
 export function generateAuthorInfo (project) {
   if (!project.author || !project.author.length) return ''
@@ -46,7 +47,7 @@ export function getNoBorders () {
 }
 
 export function createParagraph (text, options = {}) {
-  const { alignment = AlignmentType.LEFT, size = 24, bold = false, heading = null } = options
+  const { alignment = AlignmentType.LEFT, size = BODY_SIZE, bold = false, heading = null } = options
   return new Paragraph({
     alignment,
     heading,
@@ -57,15 +58,15 @@ export function createParagraph (text, options = {}) {
 export function createInfoParagraph (label, content) {
   return [
     new Paragraph({
-      children: [new TextRun({ text: label, bold: true, size: 24, font: { name: 'Calibri' } })]
+      children: [new TextRun({ text: label, bold: true, size: BODY_SIZE, font: { name: 'Calibri' } })]
     }),
     new Paragraph({
-      children: [new TextRun({ text: content || '', size: 24, font: { name: 'Calibri' } })]
+      children: [new TextRun({ text: content || '', size: BODY_SIZE, font: { name: 'Calibri' } })]
     })
   ]
 }
 
-export function createDocumentHeader (projectName, title, size = 36) {
+export function createDocumentHeader (projectName, title, size = TITLE_SIZE) {
   return [
     new Paragraph({
       heading: HeadingLevel.HEADING_2,
@@ -103,7 +104,7 @@ export function createTableCell (content, options = {}) {
   const {
     width = { size: 'auto', type: WidthType.PERCENTAGE },
     alignment = AlignmentType.LEFT,
-    size = 22,
+    size = BODY_SIZE,
     bold = false,
     verticalAlign = VerticalAlign.CENTER
   } = options
@@ -126,7 +127,7 @@ export function createTableHeader (headers, shading = { fill: '#DDDDDD' }, heigh
         children: [
           new Paragraph({
             alignment: header.alignment || AlignmentType.CENTER,
-            children: [new TextRun({ text: header.text, size: header.size || 22, bold: header.bold !== false })]
+            children: [new TextRun({ text: header.text, size: header.size || BODY_SIZE, bold: header.bold !== false })]
           })
         ]
       })
@@ -144,7 +145,7 @@ export function createTableRows (data) {
           children: cell.children || [
             new Paragraph({
               alignment: cell.alignment || AlignmentType.LEFT,
-              children: [new TextRun({ text: cell.text || '', size: cell.size || 22, bold: cell.bold || false })]
+              children: [new TextRun({ text: cell.text || '', size: cell.size || BODY_SIZE, bold: cell.bold || false })]
             })
           ]
         })
@@ -185,7 +186,7 @@ export function createReferencesSection (references, listReferences) {
     .filter(reference => listReferences.includes(reference.id))
     .map(reference =>
       new Paragraph({
-        children: [new TextRun({ text: reference.content, size: 16 })]
+        children: [new TextRun({ text: reference.content, size: BODY_SIZE })]
       })
     )
 }

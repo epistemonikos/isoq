@@ -16,6 +16,8 @@
  * const doc = builder.build()
  */
 
+import { cellWidth, tableLayout, toPercents } from '@/utils/wordTableWidths'
+import { BODY_SIZE, FONT, HEADING_SIZE, TITLE_SIZE, documentStyles } from '@/utils/wordTypography'
 import {
   Document,
   Paragraph,
@@ -29,8 +31,7 @@ import {
   VerticalAlign,
   BorderStyle,
   PageOrientation,
-  HeightRule,
-  TableLayoutType
+  HeightRule
 } from 'docx'
 import { sanitizeWithLimit, safeText, TEXT_LIMITS } from '@/utils/textSanitizer'
 
@@ -39,8 +40,8 @@ export class WordDocumentBuilder {
     this.sections = []
     this.currentSection = null
     this.options = {
-      defaultFontSize: 24,
-      defaultFont: 'Calibri',
+      defaultFontSize: BODY_SIZE,
+      defaultFont: FONT,
       margins: {
         top: 720,
         right: 720,
@@ -57,18 +58,24 @@ export class WordDocumentBuilder {
    * @returns {WordDocumentBuilder} For chaining
    */
   startSection (config = {}) {
+    const page = { ...(config.page || {}) }
+    const landscape = config.orientation === 'landscape' ||
+      page.orientation === PageOrientation.LANDSCAPE ||
+      (page.size && page.size.orientation === PageOrientation.LANDSCAPE)
+    delete page.orientation
+
+    // docx 9: la orientación va en `page.size.orientation` y los márgenes en `page.margin`.
+    // Las claves de docx 5 (`page.orientation`, `margins`) se ignoran sin error: todo salía
+    // vertical y con 1440 de margen.
     this.currentSection = {
       properties: {
-        margins: config.margins || this.options.margins,
-        page: config.page || {}
+        page: {
+          ...page,
+          size: { ...(page.size || {}), ...(landscape ? { orientation: PageOrientation.LANDSCAPE } : {}) },
+          margin: page.margin || config.margins || this.options.margins
+        }
       },
       children: []
-    }
-
-    if (config.orientation === 'landscape') {
-      this.currentSection.properties.page = {
-        orientation: PageOrientation.LANDSCAPE
-      }
     }
 
     return this
@@ -110,9 +117,9 @@ export class WordDocumentBuilder {
     }
 
     const sizes = {
-      1: 36,
-      2: 32,
-      3: 28
+      1: TITLE_SIZE,
+      2: HEADING_SIZE,
+      3: HEADING_SIZE
     }
 
     const paragraph = new Paragraph({
@@ -122,7 +129,7 @@ export class WordDocumentBuilder {
         new TextRun({
           text: finalText,
           bold: options.bold !== false,
-          size: options.size || sizes[level] || 32,
+          size: options.size || sizes[level] || HEADING_SIZE,
           font: { name: options.font || this.options.defaultFont },
           color: options.color || '000000'
         })
@@ -234,21 +241,24 @@ export class WordDocumentBuilder {
   addTable (rows, headers, options = {}) {
     const {
       borders = this.getDefaultBorders(),
-      width = { size: 5000, type: WidthType.PERCENTAGE },
-      layout = { type: TableLayoutType.FIXED },
       headerShading = { fill: '#DDDDDD' },
       rowHeight = { value: 1444, rule: HeightRule.EXACT }
     } = options
 
+    // #168: `header.width.size` es un PESO (los que suman 100 son porcentajes); la tabla
+    // ocupa el ancho útil de la página con layout fijo y una grilla que lo respeta.
+    const percents = toPercents(headers.map(h => h.width && h.width.size))
+    const sized = headers.map((h, i) => ({ ...h, width: cellWidth(percents[i]) }))
+    const page = (this.currentSection && this.currentSection.properties.page) || {}
+
     const tableRows = [
-      this.createTableHeaderRow(headers, headerShading, rowHeight),
+      this.createTableHeaderRow(sized, headerShading, rowHeight),
       ...this.createTableDataRows(rows, options)
     ]
 
     const table = new Table({
       borders,
-      width,
-      layout,
+      ...tableLayout(percents, page),
       rows: tableRows
     })
 
@@ -278,7 +288,7 @@ export class WordDocumentBuilder {
               children: [
                 new TextRun({
                   text: header.text,
-                  size: header.size || 22,
+                  size: header.size || BODY_SIZE,
                   bold: header.bold !== false
                 })
               ]
@@ -296,11 +306,28 @@ export class WordDocumentBuilder {
    * @returns {Array<TableRow>}
    */
   createTableDataRows (rows, options = {}) {
-    return rows.map(rowData =>
-      new TableRow({
-        children: rowData.map(cellData => this.createTableCell(cellData, options))
+    // Cebra (`options.zebra` = color de las filas pares). Una fila que cruza la tabla es el
+    // encabezado de un grupo: no se pinta y la cuenta parte de nuevo después de ella.
+    let position = 0
+    return rows.map(rowData => {
+      const isGroupRow = rowData.length === 1 && rowData[0] && rowData[0].columnSpan > 1
+      let cells = rowData
+      if (isGroupRow) {
+        position = 0
+      } else {
+        const striped = options.zebra && position % 2 === 1
+        position++
+        if (striped) {
+          cells = rowData.map(cell => {
+            const data = typeof cell === 'string' ? { text: cell } : cell
+            return data.shading ? data : { ...data, shading: { fill: options.zebra } }
+          })
+        }
+      }
+      return new TableRow({
+        children: cells.map(cellData => this.createTableCell(cellData, options))
       })
-    )
+    })
   }
 
   /**
@@ -328,9 +355,17 @@ export class WordDocumentBuilder {
     // CRITICAL: Ensure text is always a string, never undefined/null
     const finalText = sanitized || ''
 
+    // #168: `columnSpan` (la fila del grupo de findings) se pasa a docx; antes se perdía y la
+    // fila quedaba en la primera columna. Una celda que cruza la tabla mide la tabla entera.
+    const spanning = cellData.columnSpan > 1
+    const defaultWidth = spanning
+      ? cellWidth(100)
+      : { size: 'auto', type: WidthType.PERCENTAGE }
+
     return new TableCell({
       verticalAlign: cellData.verticalAlign || VerticalAlign.CENTER,
-      width: cellData.width || { size: 'auto', type: WidthType.PERCENTAGE },
+      width: cellData.width || defaultWidth,
+      ...(spanning ? { columnSpan: cellData.columnSpan } : {}),
       shading: cellData.shading,
       children: cellData.children || [
         new Paragraph({
@@ -338,7 +373,7 @@ export class WordDocumentBuilder {
           children: [
             new TextRun({
               text: finalText, // Always a string now
-              size: cellData.size || 22,
+              size: cellData.size || BODY_SIZE,
               bold: cellData.bold || false
             })
           ]
@@ -399,6 +434,7 @@ export class WordDocumentBuilder {
     }
 
     const doc = new Document({
+      styles: documentStyles,
       sections: this.sections.map(section => ({
         properties: section.properties,
         children: section.children

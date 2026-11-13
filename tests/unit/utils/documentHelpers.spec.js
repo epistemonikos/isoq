@@ -157,9 +157,9 @@ describe('createDocumentHeader', () => {
     expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ text: 'Summary Table', bold: true }))
   })
 
-  it('uses default size 36', () => {
+  it('uses default size 28 (14 pt, #168)', () => {
     createDocumentHeader('P', 'T')
-    expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ size: 36 }))
+    expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ size: 28 }))
   })
 
   it('accepts custom size', () => {
@@ -215,9 +215,9 @@ describe('createParagraph', () => {
     expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ bold: true }))
   })
 
-  it('uses default size 24', () => {
+  it('uses default size 20 (10 pt, #168)', () => {
     createParagraph('Text')
-    expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ size: 24 }))
+    expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({ size: 20 }))
   })
 
   it('accepts custom size', () => {
