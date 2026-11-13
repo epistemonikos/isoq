@@ -427,6 +427,16 @@ export class WordDocumentBuilder {
    * Build and return the Document
    * @returns {Document}
    */
+  /**
+   * Pie de página de todas las secciones: `footer(page)` devuelve el `Footer` de docx para
+   * la página de cada una (ver utils/wordFooter.js).
+   * @returns {WordDocumentBuilder} For chaining
+   */
+  setFooter (footer) {
+    this.footer = footer
+    return this
+  }
+
   build () {
     // Finalize current section if any
     if (this.currentSection) {
@@ -437,6 +447,8 @@ export class WordDocumentBuilder {
       styles: documentStyles,
       sections: this.sections.map(section => ({
         properties: section.properties,
+        // `footer(page)`: cada sección con el suyo (el tabulador del pie mide su página).
+        ...(this.footer ? { footers: { default: this.footer(section.properties.page) } } : {}),
         children: section.children
       }))
     })

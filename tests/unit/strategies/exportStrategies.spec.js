@@ -11,6 +11,7 @@ import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 jest.mock('@/utils/wordDocumentBuilder', () => ({
   WordDocumentBuilder: jest.fn().mockImplementation(() => ({
     startSection: jest.fn().mockReturnThis(),
+    setFooter: jest.fn().mockReturnThis(),
     endSection: jest.fn().mockReturnThis(),
     addHeader: jest.fn().mockReturnThis(),
     addParagraph: jest.fn().mockReturnThis(),
@@ -291,35 +292,8 @@ describe('ExportStrategies', () => {
       })
     })
 
-    describe('License Logic', () => {
-      it('should return empty string for private projects', () => {
-        mockProject.public_type = 'private'
-        const strategy = new IsoQExportStrategy(mockProject, mockData)
-        expect(strategy.getLicenseText()).toBe('')
-      })
-
-      it('should return license type for public projects', () => {
-        mockProject.public_type = 'fully'
-        mockProject.license_type = 'CC-BY-NC 4.0'
-        const strategy = new IsoQExportStrategy(mockProject, mockData)
-        expect(strategy.getLicenseText()).toBe('CC-BY-NC 4.0')
-      })
-
-      it('decides with the canonical rule, not the stored is_public', () => {
-        mockProject.license_type = 'CC-BY-NC 4.0'
-        Object.assign(mockProject, { public_type: 'fully', private: true, is_public: false })
-        expect(new IsoQExportStrategy(mockProject, mockData).getLicenseText()).toBe('CC-BY-NC 4.0')
-        Object.assign(mockProject, { public_type: 'private', is_public: true })
-        expect(new IsoQExportStrategy(mockProject, mockData).getLicenseText()).toBe('')
-      })
-
-      it('should return empty string if public but no license type', () => {
-        mockProject.public_type = 'fully'
-        mockProject.license_type = null
-        const strategy = new IsoQExportStrategy(mockProject, mockData)
-        expect(strategy.getLicenseText()).toBe('')
-      })
-    })
+    // La licencia ya no es un párrafo del cuerpo: va en el pie (utils/wordFooter.js,
+    // tests/unit/utils/wordFooter.spec.js y tests/unit/strategies/wordFooter.spec.js).
 
     describe('enrichFindings', () => {
       it('should preserve evidence_profile.references when originalFindings lacks them', () => {
@@ -546,7 +520,6 @@ describe('ExportStrategies', () => {
       const charsSpy = jest.spyOn(strategy, 'createCharacteristicsSection')
       const methSpy = jest.spyOn(strategy, 'createMethodologicalSection')
       const extractedSpy = jest.spyOn(strategy, 'createExtractedDataSection')
-      const licenseSpy = jest.spyOn(strategy, 'createLicenseSection')
 
       await strategy.export()
 
@@ -554,7 +527,6 @@ describe('ExportStrategies', () => {
       expect(charsSpy).toHaveBeenCalled()
       expect(methSpy).toHaveBeenCalled()
       expect(extractedSpy).toHaveBeenCalled()
-      expect(licenseSpy).toHaveBeenCalled()
     })
 
     describe('el número del finding', () => {

@@ -1239,6 +1239,11 @@
       "no": "no"
     },
     "word_export": {
+      "footer_finding": "Hallazgo",
+      "footer_license": "Licencia",
+      "footer_unpublished": "No publicado — no distribuir",
+      "footer_page": "Página",
+      "footer_of": "de",
       "filename_suffix": "Tabla de Resumen de Hallazgos Cualitativos",
       "soqf_table_title": "Tabla de Resumen de Hallazgos Cualitativos",
       "review_question": "Pregunta de revisión",
