@@ -79,11 +79,10 @@ describe('CAMELOT export: study tables', () => {
     TITLES.forEach(t => expect(xml).toContain(t))
   })
 
-  it('shared view of a project not published «fully»: left out, license kept', async () => {
-    // La licencia se escribe sólo si el proyecto trae `license_type` (createLicenseSection).
+  it('shared view of a project not published «fully»: left out', async () => {
+    // (La licencia va en el pie de página: ver wordFooter.spec.js.)
     const xml = await camelotXml({ name: 'P', public_type: 'partially', license_type: 'CC-BY-NC-ND' }, camelotData())
     TITLES.forEach(t => expect(xml).not.toContain(t))
-    expect(xml).toContain('CC-BY-NC-ND')
   })
 
   it('from the project (includeStudyTables): included even if private', async () => {

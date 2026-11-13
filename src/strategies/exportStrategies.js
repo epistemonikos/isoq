@@ -2,11 +2,11 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Tabl
 import { cellWidth, findingTablePercents, tableLayout } from '@/utils/wordTableWidths'
 import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 import { BODY_SIZE, HEADING_SIZE, TITLE_SIZE, documentStyles } from '@/utils/wordTypography'
+import { buildFooter, footerTexts } from '@/utils/wordFooter'
 import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
 import Commons from '@/utils/commons'
-import { isProjectPublic } from '@/utils/publishRules'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils/documentHelpers'
 
@@ -84,6 +84,12 @@ export class BaseExportStrategy {
   }
 }
 
+/** El pie de cada sección: proyecto (y finding), licencia o «no publicado», página. */
+function footerFor (strategy, findingNumber) {
+  const texts = footerTexts(strategy.project, (key) => strategy.t(key), findingNumber)
+  return (page) => buildFooter(texts, page, (key) => strategy.t(key))
+}
+
 export class IsoQExportStrategy extends BaseExportStrategy {
   constructor (project, data, locale = 'en') {
     super(project, data, locale)
@@ -153,7 +159,8 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     this.builder.addInfoParagraph(this.t('actionButtons.word_export.additional_information'), this.project.additional_information)
     this.builder.addSpacing()
 
-    this.builder.addParagraph(this.getLicenseText(), { size: BODY_SIZE })
+    // La licencia va en el pie de página (footerFor), no como párrafo suelto.
+    this.builder.setFooter(footerFor(this))
     this.createFindingsTable()
     this.builder.endSection()
 
@@ -417,13 +424,6 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 
     return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.CENTER }
   }
-
-  getLicenseText () {
-    if (isProjectPublic(this.project)) {
-      return this.project.license_type || ''
-    }
-    return ''
-  }
 }
 
 export class CamelotExportStrategy extends BaseExportStrategy {
@@ -461,7 +461,12 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   }
 
   buildDocument (landscapePage) {
-    const section = (children) => ({ properties: { page: landscapePage }, children })
+    const footer = footerFor(this, this.evidenceProfile[0] && this.evidenceProfile[0].displayNumber)
+    const section = (children) => ({
+      properties: { page: landscapePage },
+      footers: { default: footer(landscapePage) },
+      children
+    })
     const sections = [
       // Section 1: Header + Evidence Profile
       section([...this.createHeader(), ...this.createEvidenceProfileSection()])
@@ -471,11 +476,10 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       sections.push(
         section([...this.createCharacteristicsSection()]), // Paso 3
         section([...this.createMethodologicalSection()]), // Paso 4
-        section([...this.createExtractedDataSection(), ...this.createLicenseSection()])
+        section([...this.createExtractedDataSection()])
       )
-    } else {
-      sections[0].children.push(...this.createLicenseSection())
     }
+    // La licencia va en el pie de página de cada sección (footerFor).
 
     return new Document({ styles: documentStyles, sections })
   }
@@ -1004,22 +1008,6 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     ]
   }
 
-  createLicenseSection () {
-    return [
-      new Paragraph({
-        heading: HeadingLevel.HEADING_2,
-        children: [
-          new TextRun({
-            text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.license : '',
-            size: BODY_SIZE,
-            font: { name: 'Calibri' },
-            color: '000000'
-          })
-        ]
-      })
-    ]
-  }
-
   // Helpers
   createHeaderCell (text, widthPercent) {
     return new TableCell({
@@ -1300,6 +1288,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     const isPublic = includesStudyTables(this.project, this.data)
 
     this.builder.startSection({ orientation: 'landscape' })
+    this.builder.setFooter(footerFor(this, ep.displayNumber))
 
     this.addHeader(ep)
     this.createEvidenceProfileTable(ep)

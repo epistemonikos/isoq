@@ -1239,6 +1239,11 @@
       "no": "no"
     },
     "word_export": {
+      "footer_finding": "Finding",
+      "footer_license": "License",
+      "footer_unpublished": "Unpublished — not for distribution",
+      "footer_page": "Page",
+      "footer_of": "of",
       "filename_suffix": "Summary of Qualitative Findings Table",
       "soqf_table_title": "Summary of Qualitative Findings Table",
       "review_question": "Review question",

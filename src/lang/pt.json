@@ -1239,6 +1239,11 @@
       "no": "não"
     },
     "word_export": {
+      "footer_finding": "Achado",
+      "footer_license": "Licença",
+      "footer_unpublished": "Não publicado — não distribuir",
+      "footer_page": "Página",
+      "footer_of": "de",
       "filename_suffix": "Tabela de Resumo de Descobertas Qualitativas",
       "soqf_table_title": "Tabela de Resumo de Descobertas Qualitativas",
       "review_question": "Pergunta de revisão",
