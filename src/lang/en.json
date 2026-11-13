@@ -44,6 +44,7 @@
     "preview": "Preview",
     "import": "Import",
     "export": "Export",
+    "export_to_excel": "Export to Excel",
     "download": "Download",
     "upload": "Upload",
     "find": "Find",
@@ -518,7 +519,6 @@
     "create_table": "Create Table",
     "edit_columns": "Add or Edit column headings",
     "import_table": "Import table",
-    "export_xls": "Export to XLS file",
     "column_headers": "Column Headers",
     "column_help": "Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.",
     "no_author_year": "Do not add columns for author or year (these will be added automatically)",
@@ -1400,7 +1400,6 @@
       "camelot_field": "Camelot field",
       "reference_id": "Reference ID",
       "author_year": "Author(s), Year",
-      "export_xlsx": "Export to Excel",
       "add_edit_columns": "Add or edit columns",
       "show_hide_concerns": "Show/Hide comments",
       "columns_modal": {

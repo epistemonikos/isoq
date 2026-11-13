@@ -78,3 +78,11 @@ describe('Filters.vue — toCSV', () => {
     )
   })
 })
+
+describe('Filters.vue — export button label (#373)', () => {
+  it('shows the shared «Export to Excel» label', () => {
+    const text = createWrapper().text()
+    expect(text).toContain('common.export_to_excel')
+    expect(text).not.toContain('characteristics.export_xls')
+  })
+})

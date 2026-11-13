@@ -36,7 +36,7 @@
               <b-button
                 block
                 @click="toCSV(type)">
-                {{ $t('characteristics.export_xls') }}
+                {{ $t('common.export_to_excel') }}
               </b-button>
             </b-col>
           </b-row>
