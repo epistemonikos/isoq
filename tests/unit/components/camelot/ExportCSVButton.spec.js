@@ -64,3 +64,14 @@ describe('ExportCSVButton.vue', () => {
     expect(callArgs.excludeKeys).toEqual(['ref_id', 'id', 'actions', 'edit'])
   })
 })
+
+describe('ExportCSVButton.vue — label (#373)', () => {
+  it('uses the shared «Export to Excel» label', () => {
+    const wrapper = shallowMount(ExportCSVButton, {
+      propsData: { fields: [{ key: 'authors' }], items: [] },
+      mocks: { $t },
+      stubs: { 'font-awesome-icon': true }
+    })
+    expect(wrapper.text()).toContain('common.export_to_excel')
+  })
+})

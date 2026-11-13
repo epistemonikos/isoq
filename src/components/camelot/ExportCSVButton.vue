@@ -3,7 +3,7 @@
       variant="outline-primary"
       size="sm"
       @click="exportToXLSX">
-      {{ $t('camelot.step_three.export_xlsx') }}
+      {{ $t('common.export_to_excel') }}
       <font-awesome-icon icon="file-export" class="ml-1" />
     </b-button>
 </template>

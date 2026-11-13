@@ -481,3 +481,32 @@ describe('crudTables.vue', () => {
     })
   })
 })
+
+// #373: sin CAMELOT, el botón de exportar dice lo mismo que con CAMELOT («Export to Excel»),
+// no «Export to XLS file» (el archivo es .xlsx).
+describe('crudTables.vue — export button label (#373)', () => {
+  it('shows the shared «Export to Excel» label', async () => {
+    const wrapper = shallowMount(crudTables, {
+      localVue,
+      propsData: {
+        type: 'isoqf_characteristics',
+        prefix: 'chars',
+        canEdit: true,
+        project: { is_public: false },
+        references: [],
+        refs: [],
+        lists: [],
+        useCamelot: false
+      },
+      mocks: { $t: (msg) => msg, $route: { params: { id: 'p', org_id: 'o' } }, $bvModal: {} },
+      stubs: { 'font-awesome-icon': true, videoHelp: true, BackToTop: true, draggable: true }
+    })
+    // Que termine el getData() del montaje: si no, deja la tabla vacía DESPUÉS del setData.
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.setData({
+      dataTable: { fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'column_0' }], items: [] }
+    })
+    expect(wrapper.text()).toContain('common.export_to_excel')
+    expect(wrapper.text()).not.toContain('characteristics.export_xls')
+  })
+})

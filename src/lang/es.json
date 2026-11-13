@@ -44,6 +44,7 @@
     "preview": "Vista previa",
     "import": "Importar",
     "export": "Exportar",
+    "export_to_excel": "Exportar a Excel",
     "download": "Descargar",
     "upload": "Subir",
     "find": "Buscar",
@@ -518,7 +519,6 @@
     "create_table": "Crear Tabla",
     "edit_columns": "Agregar o Editar encabezados de columna",
     "import_table": "Importar tabla",
-    "export_xls": "Exportar a archivo XLS",
     "column_headers": "Encabezados de Columna",
     "column_help": "Los encabezados de columna describen las categorías de la información descriptiva extraída – ej. contexto, país, perspectivas, métodos, etc.",
     "no_author_year": "No agregue columnas para autor o año (se agregarán automáticamente)",
@@ -1400,7 +1400,6 @@
       "camelot_field": "Campo Camelot",
       "reference_id": "ID de Referencia",
       "author_year": "Autor(es), Año",
-      "export_xlsx": "Exportar a Excel",
       "add_edit_columns": "Agregar o editar columnas",
       "show_hide_concerns": "Mostrar/Ocultar comentarios",
       "columns_modal": {
