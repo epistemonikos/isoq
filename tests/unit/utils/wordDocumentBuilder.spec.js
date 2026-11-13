@@ -73,7 +73,9 @@ describe('WordDocumentBuilder', () => {
 
     it('should handle landscape orientation', () => {
       builder.startSection({ orientation: 'landscape' })
-      expect(builder.currentSection.properties.page.orientation).toBe('landscape')
+      // docx 9 lee la orientación en page.size; page.orientation (docx 5) se ignora.
+      expect(builder.currentSection.properties.page.size.orientation).toBe('landscape')
+      expect(builder.currentSection.properties.page.orientation).toBeUndefined()
     })
   })
 
@@ -88,7 +90,7 @@ describe('WordDocumentBuilder', () => {
       
       expect(TextRun).toHaveBeenCalledWith(expect.objectContaining({
         text: 'Test Header',
-        size: 36
+        size: 28 // 14 pt: TITLE_SIZE (#168)
       }))
     })
 

@@ -1,5 +1,7 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, PageOrientation } from 'docx'
+import { cellWidth, findingTablePercents, tableLayout } from '@/utils/wordTableWidths'
 import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
+import { BODY_SIZE, HEADING_SIZE, TITLE_SIZE, documentStyles } from '@/utils/wordTypography'
 import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
@@ -7,6 +9,10 @@ import Commons from '@/utils/commons'
 import { isProjectPublic } from '@/utils/publishRules'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils/documentHelpers'
+
+// Gris de las filas pares de las tablas de findings (#168): sutil, más claro que el
+// encabezado de grupo (F2F2F2).
+const ZEBRA_FILL = 'F7F7F7'
 
 // Helper para generar explicaciones con prefijo
 const getFormattedExplanation = (type, option, explanation) => {
@@ -141,11 +147,13 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     this.builder.addInfoParagraph(this.t('actionButtons.word_export.additional_information'), this.project.additional_information)
     this.builder.addSpacing()
 
-    this.builder.addParagraph(this.getLicenseText(), { size: 20 })
+    this.builder.addParagraph(this.getLicenseText(), { size: BODY_SIZE })
     this.createFindingsTable()
     this.builder.endSection()
 
-    this.builder.startSection()
+    // El Evidence Profile tiene más columnas y textos más largos que el SoQf: va en
+    // horizontal. Su grilla de anchos se mide con la página de esta sección.
+    this.builder.startSection({ orientation: 'landscape' })
     this.createEvidenceProfileSection()
 
     const doc = this.builder.build()
@@ -158,13 +166,15 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       return
     }
 
+    // #168: «#» angosto y el finding al doble de cada una de las demás.
+    const widths = findingTablePercents(3)
     const headers = [
-      { text: this.t('actionButtons.word_export.table_headers.number'), width: { size: 250, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.summarised_finding'), width: { size: 2000, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.cerqual_assessment'), width: { size: 800, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.cerqual_explanation'), width: { size: 1200, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.references'), width: { size: 750, type: WidthType.PERCENTAGE } }
-    ]
+      this.t('actionButtons.word_export.table_headers.number'),
+      this.t('actionButtons.word_export.table_headers.summarised_finding'),
+      this.t('actionButtons.word_export.table_headers.cerqual_assessment'),
+      this.t('actionButtons.word_export.table_headers.cerqual_explanation'),
+      this.t('actionButtons.word_export.table_headers.references')
+    ].map((text, i) => ({ text, width: { size: widths[i] } }))
 
     const rows = []
     this.data.findings.forEach((finding, index) => {
@@ -208,7 +218,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
           maxLength: TEXT_LIMITS.findingName
         },
         {
+          // En negrita, como el nivel en el Evidence Profile.
           text: cerqualOption,
+          bold: true,
           alignment: AlignmentType.CENTER
         },
         {
@@ -222,7 +234,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       ])
     })
 
-    this.builder.addTable(rows, headers)
+    this.builder.addTable(rows, headers, { zebra: ZEBRA_FILL })
   }
 
   formatReferenceList (refIds) {
@@ -258,16 +270,18 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       return
     }
 
+    // #168: misma regla que el SoQf.
+    const widths = findingTablePercents(6)
     const headers = [
-      { text: this.t('actionButtons.word_export.table_headers.number'), width: { size: 250, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.summarised_finding'), width: { size: 1500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.methodological_limitations'), width: { size: 500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.coherence'), width: { size: 500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.adequacy'), width: { size: 500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.relevance'), width: { size: 500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.cerqual_assessment'), width: { size: 500, type: WidthType.PERCENTAGE } },
-      { text: this.t('actionButtons.word_export.table_headers.references'), width: { size: 750, type: WidthType.PERCENTAGE } }
-    ]
+      this.t('actionButtons.word_export.table_headers.number'),
+      this.t('actionButtons.word_export.table_headers.summarised_finding'),
+      this.t('actionButtons.word_export.table_headers.methodological_limitations'),
+      this.t('actionButtons.word_export.table_headers.coherence'),
+      this.t('actionButtons.word_export.table_headers.adequacy'),
+      this.t('actionButtons.word_export.table_headers.relevance'),
+      this.t('actionButtons.word_export.table_headers.cerqual_assessment'),
+      this.t('actionButtons.word_export.table_headers.references')
+    ].map((text, i) => ({ text, width: { size: widths[i] } }))
 
     const rows = []
     this.data.findings.forEach((finding, index) => {
@@ -317,9 +331,8 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       ])
     })
 
-    this.builder.addTable(rows, headers, {
-      borders: this.builder.getNoBorders()
-    })
+    // Mismos bordes y cebra que el SoQf.
+    this.builder.addTable(rows, headers, { zebra: ZEBRA_FILL })
   }
 
   getCerqualConfidenceText (option) {
@@ -345,7 +358,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.getCerqualConfidenceText(cerqual.option),
             bold: true,
-            size: 22,
+            size: BODY_SIZE,
             font: { name: 'Calibri' }
           })
         ]
@@ -358,14 +371,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: `${this.t('common.explanation_colon')} ${cerqual.explanation}`,
-            size: 20,
+            size: BODY_SIZE,
             font: { name: 'Calibri' }
           })
         ]
       }))
     }
 
-    return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.TOP }
+    return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.CENTER }
   }
 
   createConcernCell (concernType, data) {
@@ -376,7 +389,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.getConcernLevelText(data?.option),
             bold: true,
-            size: 22,
+            size: BODY_SIZE,
             font: { name: 'Calibri' }
           })
         ]
@@ -389,14 +402,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: `${this.t('common.explanation_colon')} ${displayExplanation(concernType, data.option, data.explanation)}`,
-            size: 20,
+            size: BODY_SIZE,
             font: { name: 'Calibri' }
           })
         ]
       }))
     }
 
-    return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.TOP }
+    return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.CENTER }
   }
 
   getLicenseText () {
@@ -423,17 +436,27 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   }
 
   async export () {
-    const landscapePage = {
-      orientation: PageOrientation.LANDSCAPE,
-      margins: {
+    const landscapePage = this.landscapePage
+    return this.buildDocument(landscapePage)
+  }
+
+  // La página de todas las secciones; la tabla del Evidence Profile mide su grilla con ella.
+  get landscapePage () {
+    // Claves de docx 9 (ver WordDocumentBuilder.startSection).
+    return {
+      size: { orientation: PageOrientation.LANDSCAPE },
+      margin: {
         top: 720,
         right: 720,
         bottom: 720,
         left: 720
       }
     }
+  }
 
+  buildDocument (landscapePage) {
     const doc = new Document({
+      styles: documentStyles,
       sections: [
         // Section 1: Header + Evidence Profile
         {
@@ -478,7 +501,8 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: this.project.name,
-            size: 24,
+            bold: true,
+            size: HEADING_SIZE,
             font: { name: 'Calibri' },
             color: '000000'
           })
@@ -491,7 +515,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.t('worksheet.grade_cerqual_worksheet'),
             bold: true,
-            size: 28,
+            size: TITLE_SIZE,
             color: '000000'
           })
         ]
@@ -504,7 +528,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.t('worksheet.evidence_profile'),
             bold: true,
-            size: 24,
+            size: HEADING_SIZE,
             color: '000000'
           })
         ]
@@ -518,29 +542,28 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       return [new Paragraph(this.t('worksheet.no_evidence_profile_data'))]
     }
 
+    // #168: misma regla que el SoQf, sobre el ancho útil de la página de esta sección.
+    const widths = findingTablePercents(6)
     const table = new Table({
       borders: getStandardBorders(),
-      width: {
-        size: 100,
-        type: WidthType.PERCENTAGE
-      },
+      ...tableLayout(widths, this.landscapePage),
       rows: [
         new TableRow({
           children: [
-            this.createHeaderCell('#', 2),
-            this.createHeaderCell(this.t('table_headers.summarised_finding'), 28),
-            this.createHeaderCell(this.t('worksheet.methodological_limitations'), 12),
-            this.createHeaderCell(this.t('worksheet.coherence'), 12),
-            this.createHeaderCell(this.t('worksheet.adequacy'), 12),
-            this.createHeaderCell(this.t('worksheet.relevance'), 12),
-            this.createHeaderCell(this.t('table_headers.cerqual_assessment'), 12),
-            this.createHeaderCell(this.t('table_headers.references'), 10)
-          ]
+            '#',
+            this.t('table_headers.summarised_finding'),
+            this.t('worksheet.methodological_limitations'),
+            this.t('worksheet.coherence'),
+            this.t('worksheet.adequacy'),
+            this.t('worksheet.relevance'),
+            this.t('table_headers.cerqual_assessment'),
+            this.t('table_headers.references')
+          ].map((text, i) => this.createHeaderCell(text, widths[i]))
         }),
         new TableRow({
           children: [
-            this.createCell([new TextRun({ text: (this.evidenceProfile[0].displayNumber || '').toString(), size: 22 })]),
-            this.createCell([new TextRun({ text: this.evidenceProfile[0].name, size: 22 })]),
+            this.createCell([new TextRun({ text: (this.evidenceProfile[0].displayNumber || '').toString(), size: BODY_SIZE })]),
+            this.createCell([new TextRun({ text: this.evidenceProfile[0].name, size: BODY_SIZE })]),
             this.createExplanationCell('methodological-limitations', this.evidenceProfile[0].methodological_limitations),
             this.createExplanationCell('coherence', this.evidenceProfile[0].coherence),
             this.createExplanationCell('adequacy', this.evidenceProfile[0].adequacy),
@@ -559,7 +582,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
   createCharacteristicsSection () {
     return [
-      createParagraph(this.t('worksheet.characteristics_of_studies'), { size: 24, bold: true }),
+      createParagraph(this.t('worksheet.characteristics_of_studies'), { size: HEADING_SIZE, bold: true }),
       this.createCharacteristicsTable(JSON.parse(JSON.stringify(this.characteristicStudies))),
       new Paragraph('')
     ]
@@ -582,7 +605,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         rowSpan: 2,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: 'Author(s), Year', bold: true, size: 22 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: 'Author(s), Year', bold: true, size: BODY_SIZE })] })]
       })
     ]
 
@@ -591,7 +614,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       headerRow1Cells.push(new TableCell({
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: customFieldLabels[fieldKey] || fieldKey, bold: true, size: 22 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: customFieldLabels[fieldKey] || fieldKey, bold: true, size: BODY_SIZE })] })]
       }))
     })
 
@@ -601,7 +624,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         columnSpan: 2,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: category.label, bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: category.label, bold: true, size: BODY_SIZE })] })]
       }))
     })
 
@@ -611,7 +634,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       headerRow2Cells.push(new TableCell({
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.camelot_mixin.extracted_data'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.camelot_mixin.extracted_data'), bold: true, size: BODY_SIZE })] })]
       }))
     })
     camelotConfig.categories.forEach(category => {
@@ -619,7 +642,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         headerRow2Cells.push(new TableCell({
           verticalAlign: VerticalAlign.CENTER,
           shading: { fill: '#EEEEEE' },
-          children: [new Paragraph({ children: [new TextRun({ text: option.label, bold: true, size: 22 })] })]
+          children: [new Paragraph({ children: [new TextRun({ text: option.label, bold: true, size: BODY_SIZE })] })]
         }))
       })
     })
@@ -639,13 +662,13 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       const authorYearText = `${authors} ${year}`.trim()
 
       cells.push(new TableCell({
-        children: [new Paragraph({ children: [new TextRun({ text: authorYearText, size: 20 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: authorYearText, size: BODY_SIZE })] })]
       }))
 
       // Custom Fields
       customFields.forEach(fieldKey => {
         cells.push(new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: (item[fieldKey] || '').toString(), size: 20 })] })]
+          children: [new Paragraph({ children: [new TextRun({ text: (item[fieldKey] || '').toString(), size: BODY_SIZE })] })]
         }))
       })
 
@@ -653,7 +676,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       camelotConfig.categories.forEach(category => {
         category.options.forEach(option => {
           cells.push(new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: (item[option.key] || '').toString(), size: 20 })] })]
+            children: [new Paragraph({ children: [new TextRun({ text: (item[option.key] || '').toString(), size: BODY_SIZE })] })]
           }))
         })
       })
@@ -793,7 +816,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
   createMethodologicalSection () {
     return [
-      createParagraph(this.t('worksheet.methodological_assessments'), { size: 24, bold: true }),
+      createParagraph(this.t('worksheet.methodological_assessments'), { size: HEADING_SIZE, bold: true }),
       this.createMethodologicalAssessmentTable(JSON.parse(JSON.stringify(this.methodologicalAssessments))),
       new Paragraph('')
     ]
@@ -811,35 +834,35 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       new TableCell({
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.table_headers.authors'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.table_headers.authors'), bold: true, size: BODY_SIZE })] })]
       }),
       // Fit Meta Design (Colspan 4)
       new TableCell({
         columnSpan: 4,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#E9ECEF' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_design'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_design'), bold: true, size: BODY_SIZE })] })]
       }),
       // Fit Meta Conduct (Colspan 4)
       new TableCell({
         columnSpan: 4,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#E9ECEF' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_conduct'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_conduct'), bold: true, size: BODY_SIZE })] })]
       }),
       // Fit Design Conduct (Colspan 1)
       new TableCell({
         columnSpan: 1,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#E9ECEF' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_design_conduct'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_design_conduct'), bold: true, size: BODY_SIZE })] })]
       }),
       // Overall Assessment (Colspan 1)
       new TableCell({
         columnSpan: 1,
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#E2E2E2' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.overall'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.overall'), bold: true, size: BODY_SIZE })] })]
       })
     ]
 
@@ -852,7 +875,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       new TableCell({
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#D3E9FF' },
-        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.breadcrumb_sub'), bold: true, size: 22 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.breadcrumb_sub'), bold: true, size: BODY_SIZE })] })]
       })
     ]
 
@@ -861,13 +884,13 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       headerRow2Cells.push(new TableCell({
         verticalAlign: VerticalAlign.CENTER,
         shading: { fill: '#D3E9FF' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${faPrefix} ${i}`, bold: true, size: 22 })] })]
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${faPrefix} ${i}`, bold: true, size: BODY_SIZE })] })]
       }))
     }
     headerRow2Cells.push(new TableCell({
       verticalAlign: VerticalAlign.CENTER,
       shading: { fill: '#D3E9FF' },
-      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: oaLabel, bold: true, size: 22 })] })]
+      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: oaLabel, bold: true, size: BODY_SIZE })] })]
     }))
 
     const rows = [
@@ -881,7 +904,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
       // Authors (Bold)
       cells.push(new TableCell({
-        children: [new Paragraph({ children: [new TextRun({ text: item.authors || '', bold: true, size: 20 })] })]
+        children: [new Paragraph({ children: [new TextRun({ text: item.authors || '', bold: true, size: BODY_SIZE })] })]
       }))
 
       const stages = item.stages || []
@@ -947,7 +970,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
             new TextRun({
               text: optionText,
               bold: true,
-              size: 20,
+              size: BODY_SIZE,
               color: isDark ? 'FFFFFF' : '000000'
             })
           ]
@@ -957,7 +980,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
           children: [
             new TextRun({
               text: optionData.text || '',
-              size: 18,
+              size: BODY_SIZE,
               color: isDark ? 'FFFFFF' : '000000'
             })
           ]
@@ -990,7 +1013,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
   createExtractedDataSection () {
     return [
-      createParagraph(this.t('worksheet.extracted_data'), { size: 24, bold: true }),
+      createParagraph(this.t('worksheet.extracted_data'), { size: HEADING_SIZE, bold: true }),
       this.generateTable(this.withTranslatedFixedColumns(this.extractedData))
     ]
   }
@@ -1002,7 +1025,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.license : '',
-            size: 20,
+            size: BODY_SIZE,
             font: { name: 'Calibri' },
             color: '000000'
           })
@@ -1016,11 +1039,11 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     return new TableCell({
       verticalAlign: VerticalAlign.CENTER,
       shading: { fill: '#EEEEEE' },
-      width: { size: widthPercent, type: WidthType.PERCENTAGE },
+      width: cellWidth(widthPercent),
       children: [
         new Paragraph({
           children: [
-            new TextRun({ text: text, bold: true, size: 22 })
+            new TextRun({ text: text, bold: true, size: BODY_SIZE })
           ]
         })
       ]
@@ -1042,7 +1065,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.displaySelectedOption(data.option),
             bold: true,
-            size: 22
+            size: BODY_SIZE
           })
         ]
       })
@@ -1054,7 +1077,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: `${this.t('common.explanation_colon')} ${displayExplanation(type, data.option, data.explanation)}`,
-            size: 22
+            size: BODY_SIZE
           })
         ]
       }))
@@ -1076,7 +1099,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
           new TextRun({
             text: this.displayLevelConfidence(cerqual.option),
             bold: true,
-            size: 22
+            size: BODY_SIZE
           })
         ]
       })
@@ -1088,7 +1111,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: `${this.t('common.explanation_colon')} ${cerqual.explanation}`,
-            size: 22
+            size: BODY_SIZE
           })
         ]
       }))
@@ -1240,7 +1263,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         children: [
           new TextRun({
             text: epr,
-            size: 16
+            size: BODY_SIZE
           })
         ]
       })
@@ -1290,13 +1313,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     const ep = this.data.evidenceProfile || {}
     const isPublic = this.project?.public_type === 'fully'
 
-    const landscapePage = {
-      orientation: PageOrientation.LANDSCAPE
-    }
-
-    this.builder.startSection({
-      page: landscapePage
-    })
+    this.builder.startSection({ orientation: 'landscape' })
 
     this.addHeader(ep)
     this.createEvidenceProfileTable(ep)
@@ -1314,13 +1331,13 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
 
   addHeader (evidenceProfile) {
     this.builder.addParagraph((this.project && this.project.name) || '', {
-      size: 24,
+      size: HEADING_SIZE,
       bold: true,
       heading: HeadingLevel.HEADING_2
     })
 
     this.builder.addParagraph(this.t('worksheet.grade_cerqual_worksheet'), {
-      size: 28,
+      size: TITLE_SIZE,
       bold: true,
       heading: HeadingLevel.HEADING_1,
       alignment: AlignmentType.CENTER
@@ -1331,16 +1348,18 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
 
   createEvidenceProfileTable (evidenceProfile) {
     const rows = []
+    // #168: misma regla que el SoQf.
+    const widths = findingTablePercents(6)
     const headers = [
-      { text: '#' },
-      { text: this.t('table_headers.summarised_finding') },
-      { text: this.t('worksheet.methodological_limitations') },
-      { text: this.t('worksheet.coherence') },
-      { text: this.t('worksheet.adequacy') },
-      { text: this.t('worksheet.relevance') },
-      { text: this.t('table_headers.cerqual_assessment') },
-      { text: this.t('table_headers.references') }
-    ]
+      '#',
+      this.t('table_headers.summarised_finding'),
+      this.t('worksheet.methodological_limitations'),
+      this.t('worksheet.coherence'),
+      this.t('worksheet.adequacy'),
+      this.t('worksheet.relevance'),
+      this.t('table_headers.cerqual_assessment'),
+      this.t('table_headers.references')
+    ].map((text, i) => ({ text, width: { size: widths[i] } }))
 
     if (evidenceProfile && (evidenceProfile.name || evidenceProfile.methodological_limitations || evidenceProfile.coherence)) {
       const explanationLabel = this.t('common.explanation_colon')
@@ -1379,7 +1398,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     }
 
     this.builder.addSpacing()
-    this.builder.addParagraph(title, { size: 24, bold: true })
+    this.builder.addParagraph(title, { size: HEADING_SIZE, bold: true })
     this.addGenericTable(data)
   }
 
