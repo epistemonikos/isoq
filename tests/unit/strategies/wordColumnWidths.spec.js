@@ -134,7 +134,8 @@ describe('Word export page setup (docx 9)', () => {
   })
 
   it('CAMELOT: every section landscape A4 with 720 margins', async () => {
-    const doc = await new CamelotExportStrategy({ name: 'P' }, {
+    // Con las tablas de los estudios (publicado «fully»): las 4 secciones.
+    const doc = await new CamelotExportStrategy({ name: 'P', public_type: 'fully' }, {
       evidenceProfile: [ep(1)], references, list: { references: ['r1', 'r2'] }
     }).export()
     const setups = await pageSetups(doc)

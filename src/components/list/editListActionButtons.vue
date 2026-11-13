@@ -68,27 +68,40 @@ export default {
       this.$emit('changeMode')
     },
     exportToWord: async function () {
-      const data = {
-        evidenceProfile: JSON.parse(JSON.stringify(this.evidenceProfile || [])),
-        characteristicStudies: JSON.parse(JSON.stringify(this.characteristicStudies || {})),
-        methodologicalAssessments: JSON.parse(JSON.stringify(this.methodologicalAssessments || {})),
-        extractedData: JSON.parse(JSON.stringify(this.extractedData || {})),
-        selectOptions: JSON.parse(JSON.stringify(this.selectOptions || [])),
-        levelConfidence: JSON.parse(JSON.stringify(this.levelConfidence || [])),
-        references: JSON.parse(JSON.stringify(this.list.fullreferences || [])),
-        list: JSON.parse(JSON.stringify(this.list || {})),
-        findings: [
-          {
-            ...JSON.parse(JSON.stringify(this.list || {})),
-            evidence_profile: this.evidenceProfile && this.evidenceProfile.length ? this.evidenceProfile[0] : null
-          }
-        ],
-        license: this.license
+      const clone = (value, fallback) => JSON.parse(JSON.stringify(value || fallback))
+      const filename = (this.project.name || '') + ' - GRADE-CERQual Assessment Worksheet.docx'
+
+      if (this.project.use_camelot) {
+        await exportToWord(this.project, {
+          evidenceProfile: clone(this.evidenceProfile, []),
+          characteristicStudies: clone(this.characteristicStudies, {}),
+          methodologicalAssessments: clone(this.methodologicalAssessments, {}),
+          extractedData: clone(this.extractedData, {}),
+          selectOptions: clone(this.selectOptions, []),
+          levelConfidence: clone(this.levelConfidence, []),
+          references: clone(this.list.fullreferences, []),
+          list: clone(this.list, {}),
+          license: this.license,
+          // Quien exporta desde acá es del equipo: todas las tablas (ver includesStudyTables).
+          includeStudyTables: true
+        }, { filename, strategy: 'camelot' })
+        return
       }
 
-      await exportToWord(this.project, data, {
-        filename: (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.docx'
-      })
+      // Sin CAMELOT: el mismo Worksheet que la vista compartida (previewContentWorksheet),
+      // pero con las tablas de los Pasos 3/4 y los datos extraídos siempre: quien exporta
+      // desde acá es del equipo, no un lector público.
+      const evidenceProfile = this.evidenceProfile && this.evidenceProfile.length ? this.evidenceProfile[0] : {}
+      await exportToWord(this.project, {
+        evidenceProfile: clone(evidenceProfile, {}),
+        characteristicsStudies: clone(this.characteristicStudies, {}),
+        methodologicalAssessments: clone(this.methodologicalAssessments, {}),
+        extractedData: clone(this.extractedData, {}),
+        references: clone(this.list.fullreferences, []),
+        list: clone(this.list, {}),
+        findings: [{ ...clone(this.list, {}), evidence_profile: clone(evidenceProfile, {}) }],
+        includeStudyTables: true
+      }, { filename, strategy: 'worksheet' })
     },
     print: function () {
       window.print()
