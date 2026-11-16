@@ -103,7 +103,7 @@
     "project_will_be_shared": "This project will be shared with:",
     "can": "Can:",
     "users_with_access": "Users with access",
-    "unshare": "unshare",
+    "unshare": "Unshare",
     "no_users_access": "No users have access to this project",
     "pending_access": "Pending access",
     "can_view_project": "View the project",
@@ -190,10 +190,10 @@
     "password": "Password:",
     "subscribe_text": "Would you like to subscribe to the GRADE-CERQual mailing list?",
     "subscribe_link": "Yes! I want to subscribe!",
-    "forgot_password": "forgot your password?",
+    "forgot_password": "Forgot your password?",
     "et_al": " et al. ",
     "no_authors": "No author(s)",
-    "new_account": "new account",
+    "new_account": "New account",
     "password_compromised": "Your password was found in a data breach. We sent you an email to change it."
   },
   "account": {
@@ -385,7 +385,7 @@
     "my_data": "My Data",
     "isoq": "iSoQ",
     "guidance_applying": "Guidance on applying GRADE-CERQual",
-    "return_workspace": "return to My Workspace",
+    "return_workspace": "Return to My Workspace",
     "optimize_info": "To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.",
     "create_new_isoq": "Create a new Interactive Summary of Qualitative Findings Table",
     "project_options": "Project Options",
@@ -643,7 +643,7 @@
       "provide_explanation": "Provide an explanation for your assessment"
     },
     "progress_status": "Progress status",
-    "assessment_added_isoq": "Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it",
+    "assessment_added_isoq": "Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “Return to iSoQ table” above to view it",
     "questions": {
       "methodological_limitations": "Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?",
       "coherence": "Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?",
@@ -704,7 +704,7 @@
       "chars_of_studies_missing": "The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in"
     },
     "actions": {
-      "clear_selection": "clear my selection",
+      "clear_selection": "Clear my selection",
       "do_it_now": "Do it now",
       "do_it_later": "Do it later",
       "show_example": "Show example",
@@ -1078,7 +1078,7 @@
     "soqf_row": "SoQF Row",
     "explanation": "Explanation",
     "extracted_data": "Extracted Data",
-    "return_isoq": "return to ISoQ table"
+    "return_isoq": "Return to iSoQ table"
   },
   "preview": {
     "finding_not_available": "This review finding is not available on the iSoQ database."
@@ -1608,7 +1608,7 @@
       "explain_label": "Explain your assessment",
       "explanation_required": "An explanation is required.",
       "text_placeholder": "Enter your text",
-      "save_button": "save",
+      "save_button": "Save",
       "overall_assessment": "Overall assessment",
       "categories": {
         "fit_meta_design": "Fit between Meta domains and Research design domains",
