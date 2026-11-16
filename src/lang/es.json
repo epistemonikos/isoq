@@ -103,7 +103,7 @@
     "project_will_be_shared": "Este proyecto se compartirá con:",
     "can": "Puede:",
     "users_with_access": "Usuarios con acceso",
-    "unshare": "dejar de compartir",
+    "unshare": "Dejar de compartir",
     "no_users_access": "Ningún usuario tiene acceso a este proyecto",
     "pending_access": "Acceso pendiente",
     "can_view_project": "Ver el proyecto",
@@ -190,10 +190,10 @@
     "password": "Contraseña:",
     "subscribe_text": "¿Le gustaría suscribirse a la lista de correo de GRADE-CERQual?",
     "subscribe_link": "¡Sí! ¡Quiero suscribirme!",
-    "forgot_password": "¿olvidaste tu contraseña?",
+    "forgot_password": "¿Olvidaste tu contraseña?",
     "et_al": " y cols. ",
     "no_authors": "Sin autor(es)",
-    "new_account": "nueva cuenta",
+    "new_account": "Nueva cuenta",
     "password_compromised": "Tu contraseña fue encontrada en una filtración de datos. Te enviamos un email para que la cambies."
   },
   "account": {
@@ -385,7 +385,7 @@
     "my_data": "Mis Datos",
     "isoq": "iSoQ",
     "guidance_applying": "Guía para aplicar GRADE-CERQual",
-    "return_workspace": "volver a Mi Espacio de Trabajo",
+    "return_workspace": "Volver a Mi Espacio de Trabajo",
     "optimize_info": "Para optimizar la funcionalidad de iSoQ y ahorrar tiempo, agregue la siguiente información organizada en 4 pasos.",
     "create_new_isoq": "Crear una nueva Tabla de Resumen Interactivo de Hallazgos Cualitativos",
     "project_options": "Opciones del Proyecto",
@@ -643,7 +643,7 @@
       "provide_explanation": "Proporcione una explicación para su evaluación"
     },
     "progress_status": "Estado de progreso",
-    "assessment_added_isoq": "Su evaluación GRADE-CERQual ha sido agregada a iSoQ para este hallazgo. Haga clic en “volver a la tabla iSoQ” arriba para verlo",
+    "assessment_added_isoq": "Su evaluación GRADE-CERQual ha sido agregada a iSoQ para este hallazgo. Haga clic en “Volver a la tabla iSoQ” arriba para verlo",
     "questions": {
       "methodological_limitations": "¿Tiene alguna preocupación sobre la calidad metodológica de los estudios contribuyentes en su conjunto que pudiera disminuir su confianza en el hallazgo de la revisión?",
       "coherence": "¿Tiene alguna preocupación sobre la coherencia entre el hallazgo de la revisión y los datos subyacentes que pudiera disminuir su confianza en el hallazgo de la revisión?",
@@ -704,7 +704,7 @@
       "chars_of_studies_missing": "La tabla de Características de los Estudios, o algunos datos dentro de ella, faltan. Agregue la tabla/datos faltantes en"
     },
     "actions": {
-      "clear_selection": "borrar mi selección",
+      "clear_selection": "Borrar mi selección",
       "do_it_now": "Hacerlo ahora",
       "do_it_later": "Hacerlo más tarde",
       "show_example": "Mostrar ejemplo",
@@ -1078,7 +1078,7 @@
     "soqf_row": "Fila SoQF",
     "explanation": "Explicación",
     "extracted_data": "Datos Extraídos",
-    "return_isoq": "volver a la tabla iSoQ"
+    "return_isoq": "Volver a la tabla iSoQ"
   },
   "preview": {
     "finding_not_available": "Este hallazgo de la revisión no está disponible en la base de datos de iSoQ."
