@@ -1,14 +1,15 @@
 .DS_Store
 node_modules/
 /dist/
+/docs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
-# Environment variables
-config/dev.env.js
-config/prod.env.js
+# Configuración propia de cada servidor (plantilla commiteada: .env.example).
+# config/*.env.js NO va acá: es código trackeado; los valores se pisan desde .env.
+.env
 
 # Editor directories and files
 .idea
@@ -18,3 +19,6 @@ config/prod.env.js
 *.njsproj
 *.sln
 src/components/camelot/char_demo.json
+
+# Test coverage
+coverage/

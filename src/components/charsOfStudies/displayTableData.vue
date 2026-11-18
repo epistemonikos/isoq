@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h4 class="mt-5">Characteristics of Studies Table</h4>
+    <h4 class="mt-5">{{ $t('characteristics.table_title') }}</h4>
     <p class="font-weight-light">
-      Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+      {{ $t('characteristics.description') }}
     </p>
     <b-table
       sort-by="authors"
@@ -18,7 +18,7 @@
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
           <b-spinner class="align-middle"></b-spinner>
-          <strong>Loading...</strong>
+          <strong>{{ $t('common.loading') }}</strong>
         </div>
       </template>
     </b-table>
@@ -39,7 +39,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('references.author_year') }
         ]
       },
       local_settings: {
