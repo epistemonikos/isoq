@@ -36,7 +36,7 @@ function createWrapper () {
     mocks: {
       $t: (key) => key,
       $route: { params: { id: 'proj1', org_id: 'org1' }, query: {} },
-      $router: { push: jest.fn() },
+      $router: { push: jest.fn(), replace: jest.fn().mockResolvedValue() },
       $store: { state: { user: { personal_organization: 'org1', id: 1 } } },
       $notify,
       isOnline: true

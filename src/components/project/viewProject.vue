@@ -1063,7 +1063,11 @@ export default {
             }
           }
           if (this.references.length && changeTab) {
-            this.stepStage = 1
+            // Leer `?step=` acá y no sólo en el $nextTick de arriba: fijar primero el
+            // Paso 2 haría que el watcher de `stepStage` escribiera `step=2` en la URL
+            // antes de que se restaurara el paso de verdad (#370).
+            const step = parseInt(this.$route.query.step)
+            this.stepStage = step >= 1 ? step - 1 : 1
           }
           this.loadReferences = false
         })
@@ -2070,6 +2074,14 @@ export default {
       // Al entrar al tab es cuando la persona mira la tabla: no la hagamos esperar hasta
       // el próximo tick. `knownLastUpdate` ya está cebado por el sondeo de mounted.
       this.checkProjectFreshness()
+    },
+    // El paso vive en la URL para que recargar no devuelva al Paso 2 (#370). `replace` y
+    // no `push`: cambiar de paso no es una página nueva en el historial. Igual dispara
+    // `scrollBehavior` (al tope), que al cambiar de paso es lo esperable.
+    stepStage: function (val) {
+      const step = String(val + 1)
+      if (this.$route.query.step === step) return
+      this.$router.replace({ query: { ...this.$route.query, step } }).catch(() => { })
     },
     '$route.query.step': function (val) {
       if (val) {

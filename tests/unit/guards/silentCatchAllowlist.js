@@ -26,6 +26,7 @@ module.exports = {
   'components/project/crudTables.vue::releaseColumnsLock': TTL,
   'components/project/viewProject.vue::refreshPermissions': BACKGROUND + ' Lo dispara `permission-denied`, o sea un 403 que ya se avisó.',
   'components/project/viewProject.vue::clickTab': NAV,
+  'components/project/viewProject.vue::stepStage': NAV,
   'main.js::(módulo)': 'El logout forzado por términos pendientes: si falla, se navega a Login igual (`.finally`), que es lo que la persona necesita.',
   'main.js::(módulo)#2': 'Registro del Service Worker: si falla, la app funciona igual, sólo sin caché offline.',
   'services/lockService.js::releaseRef': TTL,
