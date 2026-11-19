@@ -43,6 +43,18 @@
             <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank" place="0"><u>{{ $t('about.epoc_template') }}</u></a>
           </i18n>
 
+          <h3 id="camelot">{{ $t('about.camelot') }}</h3>
+          <i18n path="about.camelot_p1" tag="p">
+            <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/cesm.12058" target="_blank" rel="noopener" place="0">CAMELOT</a>
+          </i18n>
+          <p>{{ $t('about.camelot_p2') }}</p>
+          <p class="mb-1">{{ $t('about.camelot_key') }}</p>
+          <ul data-test="camelot-key-points">
+            <li>{{ $t('about.camelot_key_1') }}</li>
+            <li>{{ $t('about.camelot_key_2') }}</li>
+            <li>{{ $t('about.camelot_key_3') }}</li>
+          </ul>
+
           <h3 id="replace-software">{{ $t('about.replace_software') }}</h3>
           <p>{{ $t('about.replace_desc') }}</p>
 
@@ -103,6 +115,7 @@ const SECTIONS = [
   { id: 'what-is-isoq', title: 'about.what_is_isoq' },
   { id: 'what-is-grade-cerqual', title: 'about.what_is_gc' },
   { id: 'when-to-use', title: 'about.when_use' },
+  { id: 'camelot', title: 'about.camelot' },
   { id: 'replace-software', title: 'about.replace_software' },
   { id: 'invite-collaborators', title: 'about.invite_collaborators' },
   { id: 'export', title: 'about.export' },
