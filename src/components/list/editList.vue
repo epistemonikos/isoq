@@ -8,8 +8,14 @@
         :references="references" :list="list" :characteristicStudies="characteristics_studies"
         :methodologicalAssessments="meth_assessments" :extractedData="extracted_data"
         :license="theLicense(this.project.license_type)" @changeMode="changeMode"></edit-list-actions-buttons>
+      <!-- Sentinela del menú pegado: cuando sale por arriba del viewport, el menú está pegado y
+           muestra el título del finding (el del encabezado ya no se ve). -->
+      <div ref="stickySentinel" aria-hidden="true"></div>
       <b-row class="sticky-top progress-worksheet" style="padding-bottom: 0.3rem" v-if="mode === 'edit'">
         <b-col class="d-print-none" cols="12">
+          <h5 v-if="navStuck" class="mt-2 mb-0 text-truncate" data-test="sticky-finding-title">
+            <span class="pre-title">{{ $t('review_finding.title') }}:</span> <span class="title-finding">{{ list.name }}</span>
+          </h5>
           <b-nav class="mt-2">
             <b-nav-item disabled>{{ $t('worksheet_nav.navigate_page') }}</b-nav-item>
             <b-nav-item href="#evidence-profile">
@@ -323,6 +329,7 @@ export default {
       references: [],
       refsWithTitle: [],
       mode: 'edit',
+      navStuck: false,
       mode_print_fieldsObj: [],
       findings: null,
       list_categories: [],
@@ -375,6 +382,7 @@ export default {
   },
   mounted () {
     this.updateTranslations()
+    this.observeStickyNav()
     this.getList()
     window.addEventListener('permission-denied', this.onPermissionDenied)
     // El sondeo no arranca acá con un fetch inmediato: en este punto todavía no
@@ -386,6 +394,7 @@ export default {
     window.addEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeleted)
   },
   beforeDestroy () {
+    if (this.$_stickyObserver) this.$_stickyObserver.disconnect()
     window.removeEventListener(REFERENCE_DELETED_EVENT, this.onReferenceDeleted)
     this.$_alive = false
     // Antes del releaseRef de abajo: ese release emite `ref-locks-changed`, y con
@@ -404,6 +413,14 @@ export default {
     window.removeEventListener('permission-denied', this.onPermissionDenied)
   },
   methods: {
+    observeStickyNav () {
+      if (typeof window.IntersectionObserver !== 'function' || !this.$refs.stickySentinel) return
+      this.$_stickyObserver = new window.IntersectionObserver(([entry]) => {
+        // Sólo cuenta como pegado si el sentinela salió por ARRIBA; por abajo es que todavía no se llegó.
+        this.navStuck = !entry.isIntersecting && entry.boundingClientRect.top < 0
+      })
+      this.$_stickyObserver.observe(this.$refs.stickySentinel)
+    },
     updateTranslations: function () {
       this.show.options = [
         { text: this.$t('worksheet.characteristics_of_studies'), value: 'cs' },
