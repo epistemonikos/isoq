@@ -11,6 +11,7 @@ const SECTIONS = [
   ['what-is-isoq', 'about.what_is_isoq'],
   ['what-is-grade-cerqual', 'about.what_is_gc'],
   ['when-to-use', 'about.when_use'],
+  ['camelot', 'about.camelot'],
   ['replace-software', 'about.replace_software'],
   ['invite-collaborators', 'about.invite_collaborators'],
   ['export', 'about.export'],
@@ -71,6 +72,17 @@ describe('About.vue', () => {
 
     const hrefs = wrapper.findAll('[data-test="about-toc"] a').wrappers.map(a => a.attributes('href'))
     expect(hrefs).toEqual(SECTIONS.map(([id]) => `#/about#${id}`))
+  })
+
+  it('explains CAMELOT with a link to the paper and the key points as a list (#418)', () => {
+    const { wrapper } = build()
+
+    const link = wrapper.find('a[href="https://onlinelibrary.wiley.com/doi/full/10.1002/cesm.12058"]')
+    expect(link.text()).toBe('CAMELOT')
+    expect(wrapper.text()).toContain(t('about.camelot_p2'))
+    expect(wrapper.text()).toContain(t('about.camelot_key'))
+    expect(wrapper.findAll('[data-test="camelot-key-points"] li').wrappers.map(li => li.text()))
+      .toEqual([t('about.camelot_key_1'), t('about.camelot_key_2'), t('about.camelot_key_3')])
   })
 
   it('scrolls to the section on click without navigating', async () => {
