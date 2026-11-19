@@ -1993,6 +1993,8 @@
     }
   },
   "organization": {
+    "camelot_banner": "O iSoQ agora inclui a opção de usar a ferramenta CAMELOT – {0}",
+    "camelot_banner_link": "saiba mais",
     "projects_load_error": "Não foi possível carregar seus projetos. Não é que você não tenha: o carregamento falhou.",
     "projects_load_error_stale": "Não foi possível atualizar seus projetos. O que você vê pode estar desatualizado."
   },
