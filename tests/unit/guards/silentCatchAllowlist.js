@@ -20,6 +20,7 @@ module.exports = {
   'components/list/editList.vue::fetchAndUpdateRefLocks': BACKGROUND + ' Es el sondeo de locks cada pocos segundos.',
   'components/list/editList.vue::refreshPermissions': BACKGROUND + ' Lo dispara `permission-denied`, o sea un 403 que ya se avisó.',
   'components/organization/organizationForm.vue::executeSave': NAV,
+  'components/organization/viewOrganization.vue::dismissCamelotBanner': 'Recordar que se cerró el banner de CAMELOT en localStorage (modo privado, storage bloqueado): el banner se cierra igual y sólo vuelve a salir en la próxima visita.',
   'components/organization/organizationForm.vue::executeSave#2': NAV,
   'components/previewContent/previewContentWorksheet.vue::bibliographicReferences': PARSE,
   'components/project/UploadReferences.vue::processPubMedRequest': 'Catch interno de un lote de PubMed, envuelto en Promise.allSettled: los rechazos reales ya los reporta el resultado del lote.',

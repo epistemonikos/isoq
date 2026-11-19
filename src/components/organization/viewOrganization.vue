@@ -6,6 +6,15 @@
       </div>
     </b-container>
     <b-container fluid>
+      <!-- #417: anuncio de CAMELOT; «learn more» lleva a su sección del About. -->
+      <b-alert v-if="showCamelotBanner" show dismissible variant="info" class="mt-4 mb-0 text-center"
+        data-test="camelot-banner" @dismissed="dismissCamelotBanner">
+        <i18n path="organization.camelot_banner" tag="span">
+          <router-link :to="{ name: 'About', hash: '#camelot' }" place="0">{{ $t('organization.camelot_banner_link') }}</router-link>
+        </i18n>
+      </b-alert>
+    </b-container>
+    <b-container fluid>
       <div class="my-4">
         <h3>{{ $t("menu.projects") }}</h3>
         <b-row class="mt-3">
@@ -159,6 +168,17 @@ import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import { deriveUserState } from '@/utils/userState'
 import { isCamelotEnabled } from '@/constants/camelot'
 
+// Recordatorio por navegador de que la persona cerró el banner de CAMELOT (#417).
+const CAMELOT_BANNER_KEY = 'isoq.camelotBannerDismissed'
+
+function camelotBannerDismissed () {
+  try {
+    return localStorage.getItem(CAMELOT_BANNER_KEY) === '1'
+  } catch (e) {
+    return false
+  }
+}
+
 export default {
   name: 'viewOrganization',
   mixins: [preserveScrollMixin],
@@ -171,6 +191,7 @@ export default {
   },
   data () {
     return {
+      showCamelotBanner: !camelotBannerDismissed(),
       // La última carga de la lista falló: lo que se ve (o su ausencia) no es el estado real.
       projectsLoadError: false,
       ui: {
@@ -276,6 +297,14 @@ export default {
     this.getProjects()
   },
   methods: {
+    dismissCamelotBanner () {
+      this.showCamelotBanner = false
+      try {
+        localStorage.setItem(CAMELOT_BANNER_KEY, '1')
+      } catch (e) {
+        // Sin storage (modo privado): se cierra igual, sólo que vuelve a salir la próxima vez.
+      }
+    },
     getProjects: function () {
       // El slot `table-busy` colapsa el `tbody` y el navegador clampea la posición.
       // Punto único: acá pasan crear, editar, borrar, duplicar y dejar un proyecto.

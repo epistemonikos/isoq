@@ -1993,6 +1993,8 @@
     }
   },
   "organization": {
+    "camelot_banner": "iSoQ now includes the option to use the CAMELOT tool – {0}",
+    "camelot_banner_link": "learn more",
     "projects_load_error": "Your projects could not be loaded. It is not that you have none: loading failed.",
     "projects_load_error_stale": "Your projects could not be updated. What you see may be out of date."
   },
