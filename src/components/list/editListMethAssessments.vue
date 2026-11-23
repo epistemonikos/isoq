@@ -24,34 +24,19 @@
       <template v-if="methAssessments.fields.length">
         <bc-filters v-if="mode === 'edit' && methAssessments.items.length && permission" class="d-print-none"
           idname="meth-assessments-filter" :tableSettings="methodological_assessments_table_settings"
-          type="meth_assessments" :fields="methAssessments.fields" :items="methAssessments.items">
+          type="meth_assessments" :fields="methAssessments.fields" :items="methAssessments.items" :shown-items="shownItems">
         </bc-filters>
+        <!-- #416: sin d-print-none: el PDF también tiene que decir que la tabla está filtrada. -->
+        <p v-if="filteredNote" class="small font-italic mb-2" data-testid="filtered-view-note">{{ filteredNote }}</p>
         <b-table class="toDoc" id="methodological" responsive head-variant="light" outlined
           :fields="methAssessments.fieldsObj" :items="methAssessments.items"
-          :filter="methodological_assessments_table_settings.filter">
+          :filter="methodological_assessments_table_settings.filter" @filtered="onTableFiltered"
+          :show-empty="searchShowEmpty" :empty-filtered-text="searchEmptyText">
           <template v-slot:cell(authors)="data">
             <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
           </template>
           <template v-slot:cell()="data">
-            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
-              {{ truncate(data.value) }}...
-              <p>
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_more') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
-              {{ data.value }}
-              <p>
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_less') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else>
-              {{ data.value }}
-            </div>
+            <truncated-cell :text="data.value" />
           </template>
         </b-table>
 
@@ -63,14 +48,16 @@
 </template>
 
 <script>
-import Commons from '@/utils/commons'
+import tableSearchViewMixin from '@/mixins/tableSearchViewMixin'
 
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 const CamelotAssessmentSummaryTable = () => import(/* webpackChunkName: "camelot" */ '../camelot/assessment/CamelotAssessmentSummaryTable.vue')
+const TruncatedCell = () => import(/* webpackChunkName: "truncated-cell" */'../common/TruncatedCell.vue')
 
 export default {
   name: 'editListMethAssessments',
+  mixins: [tableSearchViewMixin],
   props: {
     ui: Object,
     show: Object,
@@ -89,6 +76,7 @@ export default {
     }
   },
   components: {
+    'truncated-cell': TruncatedCell,
     'back-to-top': backToTop,
     'bc-filters': bCardFilters,
     'camelot-assessment-summary-table': CamelotAssessmentSummaryTable
@@ -101,30 +89,26 @@ export default {
         currentPage: 1,
         perPage: 10,
         pageOptions: [10, 50, 100]
-      },
-      expandedCells: {}
+      }
     }
   },
   methods: {
+    // tableSearchViewMixin (#416): qué tabla es, su búsqueda y cuántas filas tiene.
+    searchTableName () {
+      return 'methodological'
+    },
+    searchSettings () {
+      return this.methodological_assessments_table_settings
+    },
+    searchTotal () {
+      return (this.methAssessments.items || []).length
+    },
     getReferenceInfo: function (refId) {
       for (let ref of this.refsWithTitle) {
         if (ref.id === refId) {
           return ref.content
         }
       }
-    },
-    shouldTruncate (text) {
-      return Commons.shouldTruncate(text)
-    },
-    truncate (text) {
-      return Commons.truncate(text)
-    },
-    toggleExpand (refId, fieldKey) {
-      const key = `${refId}-${fieldKey}`
-      this.$set(this.expandedCells, key, !this.expandedCells[key])
-    },
-    isExpanded (refId, fieldKey) {
-      return !!this.expandedCells[`${refId}-${fieldKey}`]
     }
   }
 }

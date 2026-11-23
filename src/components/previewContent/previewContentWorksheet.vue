@@ -93,6 +93,7 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import printFooterMixin from '@/mixins/printFooterMixin'
 import { isFindingVisible } from '@/utils/publishRules'
 import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
@@ -102,7 +103,7 @@ const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "ca
 const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
 
 export default {
-  mixins: [camelotMixin],
+  mixins: [camelotMixin, printFooterMixin],
   components: {
     LoadErrorAlert,
     'evidence-profile': evidenceProfile,
@@ -301,6 +302,12 @@ export default {
     this.validateAndLoadProject()
   },
   methods: {
+    /** printFooterMixin: el pie del PDF, el mismo del Word (#416). */
+    printFooterSource: function () {
+      return this.project && this.project.id
+        ? { project: this.project, findingNumber: this.list && this.list.displayNumber }
+        : null
+    },
     modalData: function () {
       const data = {
         'methodological_limitations': {

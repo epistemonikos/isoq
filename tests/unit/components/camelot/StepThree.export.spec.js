@@ -88,10 +88,15 @@ function createWrapper () {
 }
 const exported = w => w.findComponent({ name: 'ExportCSVButton' }).props('fields')
 const exportedKeys = w => exported(w).map(f => f.key)
+// Como ToggleConcernsButton: enciende los comentarios y suma sus columnas a las visibles.
+const commentsOn = w => w.setData({
+  showComments: true,
+  visibleColumnKeys: [...w.vm.visibleColumnKeys, 'research_comments', 'context_comments']
+})
 
-// #394: the export followed the screen — only the filtered columns, and comments only
-// when they were toggled on. It now exports the whole table, whatever is on screen.
-describe('StepThree — the export has the whole table (#394)', () => {
+// #416 (reemplaza a #394): todo exportable es lo que la persona ve. #394 había pedido
+// exportar la tabla entera; se cambió para que Excel, Word y PDF sigan la misma regla.
+describe('StepThree — the export is what is on screen (#416)', () => {
   let wrapper
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -104,26 +109,38 @@ describe('StepThree — the export has the whole table (#394)', () => {
   })
   afterEach(() => wrapper.destroy())
 
-  it('exports the columns the filter hides', async () => {
+  it('does not export the columns the filter hides', async () => {
     await wrapper.setData({ visibleColumnKeys: ['research_extractedData'], showComments: false })
-    expect(exportedKeys(wrapper)).toEqual(expect.arrayContaining([
-      'research_extractedData', 'context_extractedData', 'column_98f669e17fe1493c5055fdf8'
-    ]))
+    expect(exportedKeys(wrapper)).toEqual(['authors', 'research_extractedData'])
   })
 
-  it('exports the comment columns even when comments are not shown', async () => {
+  it('does not export the comment columns while comments are not shown', async () => {
     await wrapper.setData({ showComments: false })
+    expect(exportedKeys(wrapper)).not.toEqual(expect.arrayContaining(['research_comments']))
+    expect(exportedKeys(wrapper)).not.toContain('context_comments')
+  })
+
+  it('exports them when they are shown', async () => {
+    await commentsOn(wrapper)
     expect(exportedKeys(wrapper)).toEqual(expect.arrayContaining(['research_comments', 'context_comments']))
   })
 
+  it('never exports the edit or actions columns', async () => {
+    await commentsOn(wrapper)
+    expect(exportedKeys(wrapper)).not.toContain('edit')
+    expect(exportedKeys(wrapper)).not.toContain('actions')
+  })
+
   it('names each comment column after its domain, since a spreadsheet has no grouped headers', async () => {
+    await commentsOn(wrapper)
     const byKey = Object.fromEntries(exported(wrapper).map(f => [f.key, f.label]))
     expect(byKey.research_comments).toBe('Comments - Research question')
     expect(byKey.context_comments).toBe('Comments - Context')
     expect(byKey.research_extractedData).toBe('Research question')
   })
 
-  it('keeps each comment column next to its extracted data', () => {
+  it('keeps each comment column next to its extracted data', async () => {
+    await commentsOn(wrapper)
     const keys = exportedKeys(wrapper)
     expect(keys.indexOf('research_comments')).toBe(keys.indexOf('research_extractedData') + 1)
   })

@@ -7,9 +7,9 @@ import {
 } from '@/strategies/exportStrategies'
 
 // Pie de página de los Word: a la izquierda el proyecto (y en el Worksheet, «Finding N»);
-// a la derecha la licencia —o «Unpublished — not for distribution» si el proyecto es
-// privado— y «Page X of Y». En TODAS las secciones (verticales y horizontales), y la
-// licencia ya no va como párrafo suelto en el cuerpo.
+// a la derecha la licencia y «Page X of Y»; debajo, el enlace a la página pública. Un
+// proyecto privado lleva sólo el número de página (#416). En TODAS las secciones
+// (verticales y horizontales), y la licencia ya no va como párrafo suelto en el cuerpo.
 jest.mock('@/plugins/i18n', () => ({ i18n: { locale: 'en', t: k => k } }))
 
 const concern = { option: 1, explanation: 'x' }
@@ -18,8 +18,9 @@ const ep = {
   methodological_limitations: concern, coherence: concern, adequacy: concern, relevance: concern, cerqual: concern
 }
 const references = [{ id: 'r1', authors: ['Smith J'], publication_year: '2020' }]
-const PUBLIC = { name: 'My review', public_type: 'fully', license_type: 'CC-BY-SA' }
-const PRIVATE = { name: 'My review', public_type: 'private', license_type: '' }
+const PUBLIC = { id: 'p1', organization: 'o1', name: 'My review', public_type: 'fully', license_type: 'CC-BY-SA' }
+const LINK = 'http://localhost/#/preview/isoq/o1/p1/public'
+const PRIVATE = { id: 'p1', organization: 'o1', name: 'My review', public_type: 'private', license_type: '' }
 
 async function parts (doc) {
   const zip = await JSZip.loadAsync(await Packer.toBuffer(doc))
@@ -27,7 +28,9 @@ async function parts (doc) {
   const rels = await zip.file('word/_rels/document.xml.rels').async('string')
   const footers = {}
   for (const name of Object.keys(zip.files).filter(n => /^word\/footer\d+\.xml$/.test(n))) {
-    footers[name.replace('word/', '')] = await zip.file(name).async('string')
+    const rel = zip.file(name.replace('word/', 'word/_rels/') + '.rels')
+    // El destino de un hipervínculo vive en los rels del pie, no en su XML.
+    footers[name.replace('word/', '')] = (await zip.file(name).async('string')) + (rel ? await rel.async('string') : '')
   }
   // Pie de cada sección, siguiendo sectPr → footerReference → rels → footerN.xml
   const sections = (document.match(/<w:sectPr.*?<\/w:sectPr>/gs) || []).map(sect => {
@@ -70,7 +73,12 @@ describe('Word footer', () => {
   ])('%s, public project: name and license in every section', async (_, build, left) => {
     const { document, sections } = await parts(await build(PUBLIC))
     expect(sections.length).toBeGreaterThan(0)
-    sections.forEach(f => expectFooter(f, { left, right: 'actionButtons.word_export.footer_license: CC BY-SA' }))
+    sections.forEach(f => {
+      expectFooter(f, { left, right: 'actionButtons.word_export.footer_license: CC BY-SA' })
+      // #416: el enlace a la página pública, como hipervínculo de verdad.
+      expect(f).toContain('<w:hyperlink')
+      expect(f).toContain(`Target="${LINK}"`)
+    })
     // La licencia ya no va como párrafo suelto en el cuerpo.
     expect(text(document)).not.toContain('CC-BY-SA')
   })
@@ -79,12 +87,14 @@ describe('Word footer', () => {
     ['iSoQ', isoq],
     ['Worksheet', worksheet],
     ['CAMELOT', camelot]
-  ])('%s, private project: «unpublished» instead of a license', async (_, build) => {
+  ])('%s, private project: only the page number, no license, notice or link (#416)', async (_, build) => {
     const { sections } = await parts(await build(PRIVATE))
     expect(sections.length).toBeGreaterThan(0)
     sections.forEach(f => {
-      expectFooter(f, { left: 'My review', right: 'actionButtons.word_export.footer_unpublished' })
+      expectFooter(f, { left: 'My review', right: 'actionButtons.word_export.footer_page' })
       expect(text(f)).not.toContain('footer_license')
+      expect(text(f)).not.toContain('footer_unpublished')
+      expect(f).not.toContain('<w:hyperlink')
     })
   })
 

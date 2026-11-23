@@ -21,8 +21,11 @@
         :tableSettings="tableSettings"
         type="extracted_data"
         :fields="modePrintFieldObject"
-        :items="localExtractedData.items">
+        :items="localExtractedData.items"
+        :shown-items="shownItems">
       </bc-filters>
+      <!-- #416: sin d-print-none: el PDF también tiene que decir que la tabla está filtrada. -->
+      <p v-if="filteredNote" class="small font-italic mb-2" data-testid="filtered-view-note">{{ filteredNote }}</p>
       <b-table
         class="toDoc extracted-data-table"
         :id="(mode==='view') ? 'extracted-view' : 'extracted'"
@@ -30,6 +33,9 @@
         head-variant="light"
         outlined
         :filter="tableSettings.filter"
+        @filtered="onTableFiltered"
+        :show-empty="searchShowEmpty"
+        :empty-filtered-text="searchEmptyText"
         :fields="(mode==='view') ? modePrintFieldObject : localExtractedData.fieldsObj"
         :items="localExtractedData.items"
         :current-page="tableSettings.currentPage">
@@ -155,6 +161,7 @@
 </template>
 
 <script>
+import tableSearchViewMixin from '@/mixins/tableSearchViewMixin'
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import { copyItemMetadata } from '@/utils/itemMetadata'
@@ -172,7 +179,7 @@ const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableAc
 export default {
   name: 'editListExtractedData',
   // `foreignRefLocks`: el sondeo de la worksheet sin los locks de esta pestaña.
-  mixins: [refLockStateMixin, referenceDeletedMixin],
+  mixins: [tableSearchViewMixin, refLockStateMixin, referenceDeletedMixin],
   props: {
     ui: Object,
     show: Object,
@@ -268,6 +275,16 @@ export default {
     }
   },
   methods: {
+    // tableSearchViewMixin (#416): qué tabla es, su búsqueda y cuántas filas tiene.
+    searchTableName () {
+      return 'extracted'
+    },
+    searchSettings () {
+      return this.tableSettings
+    },
+    searchTotal () {
+      return (this.localExtractedData.items || []).length
+    },
     isEditingRow: function (refId) {
       return this.editingRef !== null && this.editingRef === refId
     },

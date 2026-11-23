@@ -220,6 +220,7 @@ import { withDerivedRows } from '@/utils/derivedRows'
 import { sortByStudyLabel } from '@/utils/tableDataUtils'
 import { isFindingComplete, isFindingVisible } from '@/utils/publishRules'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import printFooterMixin from '@/mixins/printFooterMixin'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -233,6 +234,7 @@ const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop'
 const actionButtons = () => import(/* webpackChunkName: "actionButtonsProject" */'../project/actionButtons.vue')
 
 export default {
+  mixins: [printFooterMixin],
   components: {
     LoadErrorAlert,
     'content-guidance': contentGuidance,
@@ -371,6 +373,10 @@ export default {
     }
   },
   methods: {
+    /** printFooterMixin: el pie del PDF, el mismo del Word (#416). */
+    printFooterSource: function () {
+      return this.project && this.project.id ? { project: this.project } : null
+    },
     // El catálogo para mostrar, con «Sin grupo» delante. La regla de las categorías sin nombre
     // vive en Commons.categoryOptions: la misma que en el proyecto, para que coincidan.
     categoryOptions: function (raw) {

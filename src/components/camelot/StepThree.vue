@@ -357,12 +357,15 @@ export default {
       return this.buildTableFields({ includeComments: this.showComments })
     },
     /**
-     * The export has the whole table, whatever the filter or the comments toggle show
-     * (#394). A spreadsheet has no grouped headers, so each comment column is named
-     * after its domain, as its extracted-data column already is.
+     * Lo que se exporta es lo que se ve (#416, reemplaza a #394): las columnas de la tabla
+     * en pantalla, con los comentarios sólo si están a la vista, sin editar/acciones. Una
+     * planilla no tiene encabezados agrupados: cada columna de comentarios lleva el nombre
+     * de su dominio, como ya lo lleva su columna de datos extraídos.
      */
     exportFields () {
-      return this.buildTableFields({ includeComments: true, forExport: true })
+      const visible = new Set(this.tableFields.map(f => f.key))
+      return this.buildTableFields({ includeComments: this.showComments, forExport: true })
+        .filter(f => visible.has(f.key) && f.key !== 'edit' && f.key !== 'actions')
     },
     filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)

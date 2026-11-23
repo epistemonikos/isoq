@@ -73,6 +73,45 @@ body {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
+// #416: los colores de CAMELOT y de CERQual son fondos, y Chrome no imprime fondos salvo
+// que se marque «Gráficos de fondo». El PDF tiene que verse como la pantalla.
+@media print {
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  // La tabla se ve completa (Megan, #416): `.table-responsive` recorta y deja una barra de
+  // desplazamiento que en papel no sirve. Al imprimir no recorta, y la tabla se ajusta al
+  // ancho de la hoja repartiendo las columnas y cortando las palabras largas.
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  // CharacteristicsTable pone `.table-responsive` en la <table> misma (display: block).
+  table.table-responsive {
+    display: table !important;
+  }
+
+  .table {
+    width: 100% !important;
+    table-layout: fixed;
+  }
+
+  // Con muchas columnas (Characteristics llega a 23) el piso es el relleno de Bootstrap
+  // (0.75rem por lado): en papel se achica, igual que la letra. `!important` porque los
+  // estilos scoped de las tablas (CharacteristicsTable) ganan por especificidad.
+  .table th,
+  .table td {
+    overflow-wrap: anywhere;
+    word-break: normal;
+    padding: 0.25rem 0.3rem !important;
+    font-size: 9pt !important;
+    // Los encabezados con `nowrap` (el «Extracted data» de cada columna) se encimaban.
+    white-space: normal !important;
+  }
+}
+
 .bg-black {
   background-color: rgba(0, 0, 0, 0.5); // Add this line
 }
@@ -679,7 +718,9 @@ html[data-theme="dark"] {
     color: #ccc !important;
   }
 
-  .camelot-summary-table-container .header-second-row {
+  // OA igual que FA 1-9 también en tema oscuro (#416).
+  .camelot-summary-table-container .header-second-row,
+  .camelot-summary-table-container .header-overall-row {
     background-color: #2a2a2a !important;
     color: #ccc !important;
   }

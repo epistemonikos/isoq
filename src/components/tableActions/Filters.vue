@@ -59,6 +59,12 @@ export default {
     type: String,
     fields: Array,
     items: Array,
+    // Las filas que la tabla está mostrando con la búsqueda activa (evento `filtered` del
+    // b-table); null sin búsqueda. El Excel exporta lo que se ve (#416).
+    shownItems: {
+      type: Array,
+      default: null
+    },
     showFilters: {
       type: Boolean,
       default: true
@@ -88,7 +94,7 @@ export default {
       }
       await exportTableToXLSX({
         fields: this.local_fields,
-        items: this.local_items,
+        items: this.shownItems || this.local_items,
         filename: types[type] || 'exportable_table',
         excludeKeys: ['ref_id']
       })

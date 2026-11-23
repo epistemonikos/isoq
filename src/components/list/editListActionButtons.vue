@@ -46,9 +46,11 @@
 
 <script>
 import { exportToWord } from '../../services/wordExportService'
+import printFooterMixin from '@/mixins/printFooterMixin'
 
 export default {
   name: 'editListActionsButtons',
+  mixins: [printFooterMixin],
   props: {
     mode: String,
     permission: Boolean,
@@ -61,9 +63,18 @@ export default {
     characteristicStudies: Object,
     methodologicalAssessments: Object,
     extractedData: Object,
-    license: String
+    license: String,
+    // Lo que muestran las tablas de la worksheet (filtro de columnas, búsqueda), por tabla:
+    // `{ characteristics, methodological, extracted }`. El Word lo sigue (#416).
+    tableViews: Object
   },
   methods: {
+    /** printFooterMixin: el pie del PDF, el mismo del Word (#416). */
+    printFooterSource: function () {
+      return this.project && this.project.id
+        ? { project: this.project, findingNumber: this.evidenceProfile && this.evidenceProfile[0] && this.evidenceProfile[0].displayNumber }
+        : null
+    },
     changeMode: function () {
       this.$emit('changeMode')
     },
@@ -71,17 +82,31 @@ export default {
       const clone = (value, fallback) => JSON.parse(JSON.stringify(value || fallback))
       const filename = (this.project.name || '') + ' - GRADE-CERQual Assessment Worksheet.docx'
 
+      // #416: lo exportado es lo que se ve. Cada tabla con buscador manda sus filas visibles
+      // y su búsqueda (para la nota del documento); sin búsqueda, la tabla entera.
+      const views = this.tableViews || {}
+      const searched = (table, view) => {
+        const copy = clone(table, {})
+        const active = !!(view && view.search && Array.isArray(view.items))
+        if (active) copy.items = clone(view.items, [])
+        return [copy, active ? { search: view.search, shown: view.shown, total: view.total } : null]
+      }
+      const [extractedData, extractedView] = searched(this.extractedData, views.extracted)
+
       if (this.project.use_camelot) {
         await exportToWord(this.project, {
           evidenceProfile: clone(this.evidenceProfile, []),
           characteristicStudies: clone(this.characteristicStudies, {}),
           methodologicalAssessments: clone(this.methodologicalAssessments, {}),
-          extractedData: clone(this.extractedData, {}),
+          extractedData,
+          extractedView,
           selectOptions: clone(this.selectOptions, []),
           levelConfidence: clone(this.levelConfidence, []),
           references: clone(this.list.fullreferences, []),
           list: clone(this.list, {}),
           license: this.license,
+          // Columnas ocultas y comentarios de la tabla CAMELOT de Characteristics.
+          characteristicsView: views.characteristics || null,
           // Quien exporta desde acá es del equipo: todas las tablas (ver includesStudyTables).
           includeStudyTables: true
         }, { filename, strategy: 'camelot' })
@@ -92,11 +117,16 @@ export default {
       // pero con las tablas de los Pasos 3/4 y los datos extraídos siempre: quien exporta
       // desde acá es del equipo, no un lector público.
       const evidenceProfile = this.evidenceProfile && this.evidenceProfile.length ? this.evidenceProfile[0] : {}
+      const [characteristicsStudies, characteristicsView] = searched(this.characteristicStudies, views.characteristics)
+      const [methodologicalAssessments, methodologicalView] = searched(this.methodologicalAssessments, views.methodological)
       await exportToWord(this.project, {
         evidenceProfile: clone(evidenceProfile, {}),
-        characteristicsStudies: clone(this.characteristicStudies, {}),
-        methodologicalAssessments: clone(this.methodologicalAssessments, {}),
-        extractedData: clone(this.extractedData, {}),
+        characteristicsStudies,
+        characteristicsView,
+        methodologicalAssessments,
+        methodologicalView,
+        extractedData,
+        extractedView,
         references: clone(this.list.fullreferences, []),
         list: clone(this.list, {}),
         findings: [{ ...clone(this.list, {}), evidence_profile: clone(evidenceProfile, {}) }],

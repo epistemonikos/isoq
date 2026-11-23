@@ -20,53 +20,11 @@
         <template v-slot:cell()="data">
           <!-- Para los campos personalizados, mostramos su contenido -->
           <template v-if="isCustomField(data.field.key)">
-            <div v-if="shouldTruncate(data.item[data.field.key]) && !isExpanded(data.item.ref_id, data.field.key)">
-              {{ truncate(data.item[data.field.key]) }}...
-              <p class="mb-0">
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_more') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else-if="shouldTruncate(data.item[data.field.key]) && isExpanded(data.item.ref_id, data.field.key)">
-              {{ data.item[data.field.key] }}
-              <p class="mb-0">
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_less') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else>
-              <template v-if="data.item[data.field.key]">
-                {{ data.item[data.field.key] }}
-              </template>
-              <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
-            </div>
+            <truncated-cell :text="data.item[data.field.key]" />
           </template>
           <!-- Para campos normales, mostramos el valor predeterminado -->
           <template v-else>
-            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
-              {{ truncate(data.value) }}...
-              <p class="mb-0">
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_more') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
-              {{ data.value }}
-              <p class="mb-0">
-                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
-                  {{ $t('common.read_less') }}
-                </b-link>
-              </p>
-            </div>
-            <div v-else>
-              <template v-if="data.value">
-                {{ data.value }}
-              </template>
-              <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
-            </div>
+            <truncated-cell :text="data.value" />
           </template>
         </template>
       </b-table>
@@ -78,9 +36,13 @@
 import { camelotMixin } from '@/mixins/camelotMixin'
 import Commons from '@/utils/commons'
 import { isCustomField } from '@/utils/customFieldsHelper'
+import TruncatedCell from '@/components/common/TruncatedCell.vue'
 
 export default {
   name: 'CamelotCharacteristicsTablePreview',
+  components: {
+    'truncated-cell': TruncatedCell
+  },
   mixins: [camelotMixin],
   props: {
     charsOfStudies: {
@@ -99,7 +61,6 @@ export default {
         fields: [],
         items: []
       },
-      expandedCells: {},
       visibleColumnKeys: []
     }
   },
@@ -199,19 +160,6 @@ export default {
   methods: {
     formatAuthors (item) {
       return Commons.parseReference(item, true, false)
-    },
-    shouldTruncate (text) {
-      return Commons.shouldTruncate(text)
-    },
-    truncate (text) {
-      return Commons.truncate(text)
-    },
-    toggleExpand (refId, fieldKey) {
-      const key = `${refId}-${fieldKey}`
-      this.$set(this.expandedCells, key, !this.expandedCells[key])
-    },
-    isExpanded (refId, fieldKey) {
-      return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
     isCustomField (fieldKey) {
       return isCustomField(fieldKey)

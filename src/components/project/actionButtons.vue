@@ -57,9 +57,11 @@ import { isProjectPublic } from '@/utils/publishRules'
 import PublishModal from '@/components/project/PublishModal'
 import { getWordExportService } from '@/services/wordExportService'
 import { getRisExportService } from '@/services/risExportService'
+import printFooterMixin from '@/mixins/printFooterMixin'
 
 export default {
   name: 'actionButtons',
+  mixins: [printFooterMixin],
   props: {
     mode: {
       type: String,
@@ -94,6 +96,10 @@ export default {
     }
   },
   methods: {
+    /** printFooterMixin: el pie del PDF, el mismo del Word (#416). */
+    printFooterSource: function () {
+      return this.project && this.project.id ? { project: this.project } : null
+    },
     async ExportToWord (filename = '') {
       try {
         // Use listsPrintVersion as primary source for categories and order
