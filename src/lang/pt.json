@@ -1248,7 +1248,6 @@
     "word_export": {
       "footer_finding": "Achado",
       "footer_license": "Licença",
-      "footer_unpublished": "Não publicado — não distribuir",
       "footer_page": "Página",
       "footer_of": "de",
       "filename_suffix": "Tabela de Resumo de Descobertas Qualitativas",
@@ -2012,5 +2011,13 @@
     "text": "Por segurança, a sessão é encerrada após um período sem atividade. Faça login novamente para continuar: o que você estava editando é mantido e as alterações pendentes serão salvas ao entrar.",
     "another_account": "Usar outra conta",
     "request_failed": "Não foi possível fazer login. Verifique sua conexão e tente novamente."
+  },
+  "export": {
+    "filtered_view": {
+      "title": "Visualização filtrada",
+      "hidden_columns": "colunas ocultas: {columns}",
+      "search": "pesquisa «{term}»: {shown} de {total} estudos",
+      "no_results": "Nenhum estudo corresponde à pesquisa."
+    }
   }
 }

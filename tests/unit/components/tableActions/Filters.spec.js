@@ -86,3 +86,22 @@ describe('Filters.vue — export button label (#373)', () => {
     expect(text).not.toContain('characteristics.export_xls')
   })
 })
+
+// #416: el Excel de una tabla con la búsqueda activa lleva las filas que la tabla muestra.
+describe('Filters.vue — toCSV follows the search', () => {
+  beforeEach(() => exportTableToXLSX.mockClear())
+
+  it('with the rows on screen, exports only those', async () => {
+    const shown = [{ title: 'Item 1', ref_id: 42 }]
+    const wrapper = createWrapper({ items: [...shown, { title: 'Other', ref_id: 7 }], shownItems: shown })
+    await wrapper.vm.toCSV('chars_of_studies')
+    expect(exportTableToXLSX.mock.calls[0][0].items).toEqual(shown)
+  })
+
+  it('without them (no search), exports every row', async () => {
+    const items = [{ title: 'Item 1' }, { title: 'Other' }]
+    const wrapper = createWrapper({ items, shownItems: null })
+    await wrapper.vm.toCSV('chars_of_studies')
+    expect(exportTableToXLSX.mock.calls[0][0].items).toEqual(items)
+  })
+})

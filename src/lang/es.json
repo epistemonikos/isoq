@@ -1248,7 +1248,6 @@
     "word_export": {
       "footer_finding": "Hallazgo",
       "footer_license": "Licencia",
-      "footer_unpublished": "No publicado — no distribuir",
       "footer_page": "Página",
       "footer_of": "de",
       "filename_suffix": "Tabla de Resumen de Hallazgos Cualitativos",
@@ -2012,5 +2011,13 @@
     "text": "Por seguridad, la sesión se cierra tras un tiempo sin actividad. Vuelve a iniciar sesión para seguir: lo que estabas editando se conserva y los cambios pendientes se guardarán al entrar.",
     "another_account": "Usar otra cuenta",
     "request_failed": "No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "export": {
+    "filtered_view": {
+      "title": "Vista filtrada",
+      "hidden_columns": "columnas ocultas: {columns}",
+      "search": "búsqueda «{term}»: {shown} de {total} estudios",
+      "no_results": "Ningún estudio coincide con la búsqueda."
+    }
   }
 }

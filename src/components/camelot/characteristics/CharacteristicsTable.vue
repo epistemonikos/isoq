@@ -17,6 +17,8 @@
                 </template>
             </b-button>
         </div>
+        <!-- #416: sin d-print-none: el PDF también tiene que decir que la tabla está filtrada. -->
+        <p v-if="filteredNote" class="small font-italic mb-2" data-testid="filtered-view-note">{{ filteredNote }}</p>
         <table class="table table-bordered table-striped table-responsive">
             <!-- Primera fila de cabecera -->
             <thead>
@@ -41,19 +43,7 @@
 
                     <!-- Unified Cells -->
                     <td v-for="(cell, cellIndex) in dataCells(item)" :key="cellIndex">
-                        <div v-if="shouldTruncate(cell.value) && !isExpanded(item.ref_id, cell.key)">
-                            {{ truncate(cell.value) }}...
-                            <p class="mb-0">
-                                <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_more') }}</b-link>
-                            </p>
-                        </div>
-                        <div v-else-if="shouldTruncate(cell.value) && isExpanded(item.ref_id, cell.key)">
-                            {{ cell.value }}
-                            <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_less') }}</b-link>
-                        </div>
-                        <div v-else>
-                            {{ cell.value }}
-                        </div>
+                        <truncated-cell :text="cell.value" />
                     </td>
                 </tr>
             </tbody>
@@ -63,13 +53,16 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
-import Commons from '@/utils/commons'
 import TableColumnFilter from '@/components/common/TableColumnFilter.vue'
+import { characteristicsColumns } from '@/utils/characteristicsColumns'
+import { filteredViewNote } from '@/utils/filteredViewNote'
+import TruncatedCell from '@/components/common/TruncatedCell.vue'
 
 export default {
   name: 'CharacteristicsTable',
   mixins: [camelotMixin],
   components: {
+    'truncated-cell': TruncatedCell,
     'table-column-filter': TableColumnFilter
   },
   props: {
@@ -82,90 +75,55 @@ export default {
     return {
       showComments: false,
       // Se guardan las ocultas y no las visibles: una columna que aparece después entra visible sola.
-      hiddenColumnKeys: [],
-      expandedCells: {}
+      hiddenColumnKeys: []
     }
   },
   computed: {
-    allHeaders () {
-      const headers = []
-      if (!this.charsOfStudies.fields) return headers
-
-      for (const field of this.charsOfStudies.fields) {
-        if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
-        if (field.key.endsWith('_comments')) continue
-
-        const isCamelot = field.key.endsWith('_extractedData')
-
-        if (isCamelot) {
-          let categoryLabel = field.label
-          let options = []
-
-          if (this.camelot && this.camelot.categories) {
-            const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
-            if (categoryMatch) {
-              categoryLabel = categoryMatch.label
-              options = categoryMatch.options
-            }
-          }
-
-          if (options.length === 0) {
-            options = [
-              { key: field.key, label: field.label },
-              { key: field.key.replace('_extractedData', '_comments'), label: this.$t('camelot.step_three.concerns_label') || 'Comments' }
-            ]
-          }
-
-          headers.push({
-            type: 'camelot',
-            key: field.key,
-            label: categoryLabel,
-            options: options,
-            colspan: this.showComments ? 2 : 1
-          })
-        } else {
-          headers.push({
-            type: 'custom',
-            key: field.key,
-            label: field.label,
-            colspan: 1
-          })
+    // Una sola regla para la pantalla y los exportables (utils/characteristicsColumns).
+    columns () {
+      return characteristicsColumns({
+        fields: this.charsOfStudies.fields,
+        categories: this.camelot && this.camelot.categories,
+        view: { hiddenColumnKeys: this.hiddenColumnKeys, showComments: this.showComments },
+        labels: {
+          extractedData: this.$t('camelot.step_four.camelot_mixin.extracted_data'),
+          comments: this.$t('camelot.step_three.concerns_label') || 'Comments'
         }
-      }
-      return headers
+      })
     },
     unifiedHeaders () {
-      // Ocultar un dominio CAMELOT saca también sus comments: cuelgan de su encabezado.
-      return this.allHeaders.filter(h => !this.hiddenColumnKeys.includes(h.key))
+      return this.columns.headers
     },
     filterableColumns () {
-      return this.allHeaders.map(h => ({ key: h.key, label: h.label }))
+      return this.columns.filterable
     },
     visibleColumnKeys: {
       get () {
         return this.unifiedHeaders.map(h => h.key)
       },
       set (visibleKeys) {
-        this.hiddenColumnKeys = this.allHeaders.map(h => h.key).filter(k => !visibleKeys.includes(k))
+        this.hiddenColumnKeys = this.columns.filterable.map(h => h.key).filter(k => !visibleKeys.includes(k))
       }
-    },
-    hasVisibleCamelotFields () {
-      return this.unifiedHeaders.some(h => h.type === 'camelot')
     },
     subHeaders () {
-      const subH = []
-      for (const header of this.unifiedHeaders) {
-        if (header.type === 'camelot') {
-          for (const option of header.options) {
-            if (!this.showComments && option.key.endsWith('_comments')) continue
-            subH.push(option)
-          }
-        } else {
-          // A custom column holds extracted data too, and is labelled like a CAMELOT domain.
-          subH.push({ key: header.key, label: this.$t('camelot.step_four.camelot_mixin.extracted_data') })
-        }
-      }
-      return subH
+      return this.columns.subHeaders
+    },
+    /** Lo que la tabla está mostrando, para quien exporta. */
+    view () {
+      return { hiddenColumnKeys: [...this.hiddenColumnKeys], showComments: this.showComments }
+    },
+    hasVisibleCamelotFields () {
+      return this.columns.hasVisibleCamelot
+    },
+    filteredNote () {
+      return filteredViewNote({ hiddenLabels: this.columns.hiddenLabels }, (k, p) => this.$t(k, p))
+    }
+  },
+  watch: {
+    // #416: el Word de la worksheet sigue este filtro (el PDF ya lo sigue: imprime la pantalla).
+    view: {
+      handler (view) { this.$emit('view-change', view) },
+      immediate: true
     }
   },
   methods: {
@@ -175,31 +133,7 @@ export default {
       return (item.authors || '').trim()
     },
     dataCells (item) {
-      const cells = []
-      for (const header of this.unifiedHeaders) {
-        if (header.type === 'camelot') {
-          for (const option of header.options) {
-            if (!this.showComments && option.key.endsWith('_comments')) continue
-            cells.push({ key: option.key, value: item[option.key] || '' })
-          }
-        } else {
-          cells.push({ key: header.key, value: item[header.key] || '' })
-        }
-      }
-      return cells
-    },
-    shouldTruncate (text) {
-      return Commons.shouldTruncate(text)
-    },
-    truncate (text) {
-      return Commons.truncate(text)
-    },
-    toggleExpand (refId, fieldKey) {
-      const key = `${refId}-${fieldKey}`
-      this.$set(this.expandedCells, key, !this.expandedCells[key])
-    },
-    isExpanded (refId, fieldKey) {
-      return !!this.expandedCells[`${refId}-${fieldKey}`]
+      return this.columns.cellKeys.map(key => ({ key, value: item[key] || '' }))
     }
   }
 }

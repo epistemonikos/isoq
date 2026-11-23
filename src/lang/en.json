@@ -1248,7 +1248,6 @@
     "word_export": {
       "footer_finding": "Finding",
       "footer_license": "License",
-      "footer_unpublished": "Unpublished — not for distribution",
       "footer_page": "Page",
       "footer_of": "of",
       "filename_suffix": "Summary of Qualitative Findings Table",
@@ -2012,5 +2011,13 @@
     "text": "For security, sessions close after a period without activity. Log in again to continue: what you were editing is kept, and pending changes will be saved once you are back.",
     "another_account": "Use another account",
     "request_failed": "Could not log in. Check your connection and try again."
+  },
+  "export": {
+    "filtered_view": {
+      "title": "Filtered view",
+      "hidden_columns": "hidden columns: {columns}",
+      "search": "search \"{term}\": {shown} of {total} studies",
+      "no_results": "No studies match the search."
+    }
   }
 }

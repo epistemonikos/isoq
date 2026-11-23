@@ -515,7 +515,11 @@ html[data-theme="dark"] .assessment-filter__footer {
     }
   }
 
-  ::v-deep .header-second-row {
+  // OA igual que FA 1-9, en la web y en el PDF (#416): una sola regla para las dos clases,
+  // así no pueden volver a separarse. Antes `header-overall-row` no tenía regla en tema
+  // claro y el encabezado de OA salía transparente.
+  ::v-deep .header-second-row,
+  ::v-deep .header-overall-row {
     background-color: #D3E9FF !important;
     color: #495057 !important;
     font-weight: bold;

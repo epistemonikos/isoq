@@ -7,7 +7,8 @@
         :evidenceProfile="evidence_profile" :selectOptions="select_options" :levelConfidence="level_confidence"
         :references="references" :list="list" :characteristicStudies="characteristics_studies"
         :methodologicalAssessments="meth_assessments" :extractedData="extracted_data"
-        :license="theLicense(this.project.license_type)" @changeMode="changeMode"></edit-list-actions-buttons>
+        :license="theLicense(this.project.license_type)" :tableViews="tableViews"
+        @changeMode="changeMode"></edit-list-actions-buttons>
       <!-- Sentinela del menú pegado: cuando sale por arriba del viewport, el menú está pegado y
            muestra el título del finding (el del encabezado ya no se ve). -->
       <div ref="stickySentinel" aria-hidden="true"></div>
@@ -86,16 +87,17 @@
 
           <table-chars-of-studies :useCamelot="project.use_camelot" :ui="ui" :show="show" :mode="mode" :list="list"
             :permission="checkPermissions(list.organization)" :charsOfStudies="characteristics_studies"
-            :refsWithTitle="refsWithTitle" :showParagraph="true"></table-chars-of-studies>
+            :refsWithTitle="refsWithTitle" :showParagraph="true"
+            @table-view="setTableView"></table-chars-of-studies>
 
           <table-meth-assessments :useCamelot="project.use_camelot" :ui="ui" :show="show" :mode="mode" :list="list"
             :permission="checkPermissions(list.organization)" :methAssessments="meth_assessments"
-            :refsWithTitle="refsWithTitle" :showParagraph="true"></table-meth-assessments>
+            :refsWithTitle="refsWithTitle" :showParagraph="true" @table-view="setTableView"></table-meth-assessments>
 
           <table-extracted-data :ui="ui" :show="show" :mode="mode" :list="list"
             :permission="checkPermissions(list.organization)" :extractedData="extracted_data"
             :modePrintFieldObject="mode_print_fieldsObj" :refsWithTitle="refsWithTitle" :showParagraph="true"
-            :activeRefLocks="activeRefLocks" @lock-denied="fetchAndUpdateRefLocks"
+            :activeRefLocks="activeRefLocks" @lock-denied="fetchAndUpdateRefLocks" @table-view="setTableView"
             @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
 
           <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && isPublic">
@@ -161,6 +163,8 @@ export default {
   mixins: [camelotMixin, preserveScrollMixin, refLockStateMixin],
   data () {
     return {
+      // Lo que muestran las tablas de la worksheet (filtros, búsqueda), para el Word (#416).
+      tableViews: { characteristics: null, methodological: null, extracted: null },
       licenseUrl: require('../../assets/by-88x31.png'),
       ui: {
         methodological_assessments: {
@@ -413,6 +417,12 @@ export default {
     window.removeEventListener('permission-denied', this.onPermissionDenied)
   },
   methods: {
+    /** #416: lo que muestra cada tabla de la worksheet, para que el Word lo siga. */
+    setTableView: function (view) {
+      if (!view || !view.table) return
+      const { table, ...rest } = view
+      this.tableViews = { ...this.tableViews, [table]: rest }
+    },
     observeStickyNav () {
       if (typeof window.IntersectionObserver !== 'function' || !this.$refs.stickySentinel) return
       this.$_stickyObserver = new window.IntersectionObserver(([entry]) => {

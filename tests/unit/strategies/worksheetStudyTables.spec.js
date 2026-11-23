@@ -89,4 +89,38 @@ describe('CAMELOT export: study tables', () => {
     const xml = await camelotXml({ name: 'P', public_type: 'private' }, camelotData({ includeStudyTables: true }))
     TITLES.forEach(t => expect(xml).toContain(t))
   })
+
+  // #416: con la búsqueda activa, el documento dice que la tabla está filtrada.
+  it('a filtered Characteristics table carries the «filtered view» note', async () => {
+    const xml = await text({ name: 'P', public_type: 'private' },
+      data({ includeStudyTables: true, characteristicsView: { search: 'Chile', shown: 1, total: 3 } }))
+    expect(xml).toContain('export.filtered_view.title')
+    expect(xml).toContain('export.filtered_view.search')
+  })
+
+  it('no note without a search', async () => {
+    const xml = await text({ name: 'P', public_type: 'private' }, data({ includeStudyTables: true }))
+    expect(xml).not.toContain('filtered_view')
+  })
+
+  // #416: las tres tablas, con su búsqueda; y si no encontró nada, el documento lo dice.
+  it.each([
+    ['methodologicalView', 'methodologicalAssessments', 'worksheet.methodological_assessments'],
+    ['extractedView', 'extractedData', 'worksheet.extracted_data'],
+    ['characteristicsView', 'characteristicsStudies', 'worksheet.characteristics_of_studies']
+  ])('%s: a search with no results keeps the section and says so', async (viewKey, tableKey, title) => {
+    const empty = { ...table('X', 'NONE'), items: [] }
+    const xml = await text({ name: 'P', public_type: 'private' },
+      data({ includeStudyTables: true, [tableKey]: empty, [viewKey]: { search: 'zzz', shown: 0, total: 3 } }))
+    expect(xml).toContain(title)
+    expect(xml).toContain('export.filtered_view.search')
+    expect(xml).toContain('export.filtered_view.no_results')
+  })
+
+  it('a table that is simply empty (no search) is still left out', async () => {
+    const xml = await text({ name: 'P', public_type: 'private' },
+      data({ includeStudyTables: true, methodologicalAssessments: { ...table('X', 'NONE'), items: [] } }))
+    expect(xml).not.toContain('worksheet.methodological_assessments')
+    expect(xml).not.toContain('no_results')
+  })
 })

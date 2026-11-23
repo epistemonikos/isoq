@@ -3,6 +3,8 @@ import { cellWidth, findingTablePercents, tableLayout } from '@/utils/wordTableW
 import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 import { BODY_SIZE, HEADING_SIZE, TITLE_SIZE, documentStyles } from '@/utils/wordTypography'
 import { buildFooter, footerTexts } from '@/utils/wordFooter'
+import { characteristicsColumns, withCatalogDomains } from '@/utils/characteristicsColumns'
+import { filteredViewNote } from '@/utils/filteredViewNote'
 import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
@@ -34,10 +36,10 @@ export class BaseExportStrategy {
     this.locale = locale
   }
 
-  t (key) {
+  t (key, params) {
     const originalLocale = this.i18n.locale
     this.i18n.locale = this.locale
-    const translation = this.i18n.t(key)
+    const translation = params ? this.i18n.t(key, params) : this.i18n.t(key)
     this.i18n.locale = originalLocale
     return translation
   }
@@ -432,8 +434,13 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     // Destructure data for easier access, matching original component props
     this.evidenceProfile = data.evidenceProfile || []
     this.characteristicStudies = data.characteristicStudies || {}
+    // El filtro de «Characteristics of Studies» de la pantalla (#416): `{ hiddenColumnKeys,
+    // showComments }`. Sin él, la tabla sale entera, como siempre.
+    this.characteristicsView = data.characteristicsView || null
     this.methodologicalAssessments = data.methodologicalAssessments || {}
     this.extractedData = data.extractedData || {}
+    // La búsqueda de la tabla de datos extraídos en pantalla (#416), o null.
+    this.extractedView = data.extractedView || null
     this.selectOptions = data.selectOptions || []
     this.levelConfidence = data.levelConfidence || []
     this.references = data.references || []
@@ -571,8 +578,13 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   }
 
   createCharacteristicsSection () {
+    const note = this.characteristicsView
+      ? filteredViewNote({ hiddenLabels: this.characteristicsColumnsFor(this.characteristicStudies).hiddenLabels }, (k, p) => this.t(k, p))
+      : ''
     return [
       createParagraph(this.t('worksheet.characteristics_of_studies'), { size: HEADING_SIZE, bold: true }),
+      // #416: lo exportado es lo que se veía; si estaba filtrado, el documento lo dice.
+      ...(note ? [createParagraph(note, { size: BODY_SIZE })] : []),
       this.createCharacteristicsTable(JSON.parse(JSON.stringify(this.characteristicStudies))),
       new Paragraph('')
     ]
@@ -583,95 +595,44 @@ export class CamelotExportStrategy extends BaseExportStrategy {
       return new Paragraph('No characteristics data available.')
     }
 
-    const camelotConfig = this.getCamelotConfig()
-    const customFields = this.getSortedCustomFields(data.items[0])
-    const customFieldLabels = this.getCustomFieldLabels(data.fields)
+    // La misma regla que la tabla en pantalla (utils/characteristicsColumns): orden de
+    // `fields`, nombres del catálogo, columnas ocultas y comentarios según el filtro (#416).
+    // Sin filtro de pantalla (worksheet compartida, documento del Paso 4) sale todo, con
+    // comentarios, como siempre.
+    const columns = this.characteristicsColumnsFor(data)
 
-    // Headers
-    // Row 1: Author+Year, Custom Columns, Camelot Categories
-    const headerRow1Cells = [
-      // Authors, Year (Rowspan 2)
-      new TableCell({
-        rowSpan: 2,
-        verticalAlign: VerticalAlign.CENTER,
-        shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: 'Author(s), Year', bold: true, size: BODY_SIZE })] })]
-      })
-    ]
-
-    // Custom Fields (their "Extracted data" goes in row 2, as a Camelot category's does)
-    customFields.forEach(fieldKey => {
-      headerRow1Cells.push(new TableCell({
-        verticalAlign: VerticalAlign.CENTER,
-        shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: customFieldLabels[fieldKey] || fieldKey, bold: true, size: BODY_SIZE })] })]
-      }))
+    const headerCell = (text, props = {}) => new TableCell({
+      verticalAlign: VerticalAlign.CENTER,
+      shading: { fill: '#EEEEEE' },
+      ...props,
+      children: [new Paragraph({
+        alignment: props.columnSpan > 1 ? AlignmentType.CENTER : undefined,
+        children: [new TextRun({ text, bold: true, size: BODY_SIZE })]
+      })]
     })
-
-    // Camelot Categories (Colspan 2)
-    camelotConfig.categories.forEach(category => {
-      headerRow1Cells.push(new TableCell({
-        columnSpan: 2,
-        verticalAlign: VerticalAlign.CENTER,
-        shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: category.label, bold: true, size: BODY_SIZE })] })]
-      }))
-    })
-
-    // Row 2: "Extracted data" under each custom field, then Camelot Options
-    const headerRow2Cells = []
-    customFields.forEach(() => {
-      headerRow2Cells.push(new TableCell({
-        verticalAlign: VerticalAlign.CENTER,
-        shading: { fill: '#EEEEEE' },
-        children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.camelot_mixin.extracted_data'), bold: true, size: BODY_SIZE })] })]
-      }))
-    })
-    camelotConfig.categories.forEach(category => {
-      category.options.forEach(option => {
-        headerRow2Cells.push(new TableCell({
-          verticalAlign: VerticalAlign.CENTER,
-          shading: { fill: '#EEEEEE' },
-          children: [new Paragraph({ children: [new TextRun({ text: option.label, bold: true, size: BODY_SIZE })] })]
-        }))
-      })
+    const bodyCell = text => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text: (text || '').toString(), size: BODY_SIZE })] })]
     })
 
     const rows = [
-      new TableRow({ children: headerRow1Cells, tableHeader: true }),
-      new TableRow({ children: headerRow2Cells, tableHeader: true })
+      new TableRow({
+        tableHeader: true,
+        children: [
+          headerCell(this.t('camelot.step_three.authors_label'), { rowSpan: 2 }),
+          ...columns.headers.map(h => headerCell(h.label, { columnSpan: h.colspan }))
+        ]
+      }),
+      new TableRow({ tableHeader: true, children: columns.subHeaders.map(o => headerCell(o.label)) })
     ]
 
-    // Body Rows
     data.items.forEach(item => {
-      const cells = []
-
-      // Authors, Year
-      const authors = item.authors || ''
-      const year = item.year || ''
-      const authorYearText = `${authors} ${year}`.trim()
-
-      cells.push(new TableCell({
-        children: [new Paragraph({ children: [new TextRun({ text: authorYearText, size: BODY_SIZE })] })]
+      rows.push(new TableRow({
+        children: [
+          // `authors` ya trae el año (Commons.parseReference), como en pantalla.
+          bodyCell((item.authors || '').trim()),
+          ...columns.cellKeys.map(key => bodyCell(item[key]))
+        ]
       }))
-
-      // Custom Fields
-      customFields.forEach(fieldKey => {
-        cells.push(new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: (item[fieldKey] || '').toString(), size: BODY_SIZE })] })]
-        }))
-      })
-
-      // Camelot Options
-      camelotConfig.categories.forEach(category => {
-        category.options.forEach(option => {
-          cells.push(new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text: (item[option.key] || '').toString(), size: BODY_SIZE })] })]
-          }))
-        })
-      })
-
-      rows.push(new TableRow({ children: cells }))
     })
 
     return new Table({
@@ -681,24 +642,18 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     })
   }
 
-  getSortedCustomFields (firstItem) {
-    if (!firstItem) return []
-    const customFields = Object.keys(firstItem).filter(key => key.startsWith('column_'))
-    return customFields.sort((a, b) => {
-      const numA = parseInt(a.replace('column_', ''))
-      const numB = parseInt(b.replace('column_', ''))
-      return numA - numB
+  /** Las columnas de Characteristics según la regla compartida y el filtro de pantalla. */
+  characteristicsColumnsFor (data) {
+    const categories = this.getCamelotConfig().categories
+    return characteristicsColumns({
+      fields: withCatalogDomains(data && data.fields, categories),
+      categories,
+      view: this.characteristicsView || { hiddenColumnKeys: [], showComments: true },
+      labels: {
+        extractedData: this.t('camelot.step_four.camelot_mixin.extracted_data'),
+        comments: this.t('camelot.step_four.camelot_mixin.concerns')
+      }
     })
-  }
-
-  getCustomFieldLabels (fields) {
-    const labelMap = {}
-    if (fields) {
-      fields.forEach(field => {
-        labelMap[field.key] = field.label
-      })
-    }
-    return labelMap
   }
 
   getCamelotConfig () {
@@ -1002,9 +957,17 @@ export class CamelotExportStrategy extends BaseExportStrategy {
   }
 
   createExtractedDataSection () {
+    // #416: la búsqueda de la pantalla, dicha en el documento; sin resultados, el aviso.
+    const view = this.extractedView
+    const searched = !!(view && view.search)
+    const note = searched ? filteredViewNote(view, (k, p) => this.t(k, p)) : ''
+    const items = (this.extractedData && this.extractedData.items) || []
     return [
       createParagraph(this.t('worksheet.extracted_data'), { size: HEADING_SIZE, bold: true }),
-      this.generateTable(this.withTranslatedFixedColumns(this.extractedData))
+      ...(note ? [createParagraph(note, { size: BODY_SIZE })] : []),
+      searched && !items.length
+        ? createParagraph(this.t('export.filtered_view.no_results'), { size: BODY_SIZE })
+        : this.generateTable(this.withTranslatedFixedColumns(this.extractedData))
     ]
   }
 
@@ -1294,9 +1257,10 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     this.createEvidenceProfileTable(ep)
 
     if (isPublic) {
-      this.addOptionalTable(this.t('worksheet.characteristics_of_studies'), this.data.characteristicsStudies)
-      this.addOptionalTable(this.t('worksheet.methodological_assessments'), this.data.methodologicalAssessments)
-      this.addOptionalTable(this.t('worksheet.extracted_data'), this.withTranslatedFixedColumns(this.data.extractedData))
+      // #416: cada tabla con la búsqueda que tenía en pantalla (nota y «sin resultados»).
+      this.addOptionalTable(this.t('worksheet.characteristics_of_studies'), this.data.characteristicsStudies, this.data.characteristicsView)
+      this.addOptionalTable(this.t('worksheet.methodological_assessments'), this.data.methodologicalAssessments, this.data.methodologicalView)
+      this.addOptionalTable(this.t('worksheet.extracted_data'), this.withTranslatedFixedColumns(this.data.extractedData), this.data.extractedView)
     }
 
     this.builder.endSection()
@@ -1367,13 +1331,24 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     this.builder.addTable(rows, headers)
   }
 
-  addOptionalTable (title, data) {
-    if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
-      return
-    }
+  /**
+   * Una tabla de estudios. `view` es la búsqueda que tenía en pantalla (#416): el documento
+   * lo dice, y si no encontró nada la sección se escribe igual, con el aviso, en vez de
+   * desaparecer. Una tabla vacía sin búsqueda se omite, como siempre.
+   */
+  addOptionalTable (title, data, view = null) {
+    const items = data && Array.isArray(data.items) ? data.items : []
+    const searched = !!(view && view.search)
+    if (!items.length && !searched) return
 
     this.builder.addSpacing()
     this.builder.addParagraph(title, { size: HEADING_SIZE, bold: true })
+    const note = searched ? filteredViewNote(view, (k, p) => this.t(k, p)) : ''
+    if (note) this.builder.addParagraph(note, { size: BODY_SIZE })
+    if (!items.length) {
+      this.builder.addParagraph(this.t('export.filtered_view.no_results'), { size: BODY_SIZE })
+      return
+    }
     this.addGenericTable(data)
   }
 

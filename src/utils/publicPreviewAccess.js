@@ -1,5 +1,14 @@
 const BROWSE_TOKEN = 'public'
 
+/**
+ * Enlace absoluto a la vista pública (la de Browse) de un proyecto, o '' si faltan datos.
+ * Lo usan los exportables (#416), que salen del navegador: por eso es absoluto.
+ */
+export function publicProjectUrl (project, origin = (typeof window !== 'undefined' ? window.location.origin : '')) {
+  if (!project || !project.id || !project.organization || !origin) return ''
+  return `${origin}/#/preview/isoq/${project.organization}/${project.id}/${BROWSE_TOKEN}`
+}
+
 export default class PublicPreviewAccess {
   static BROWSE_TOKEN = BROWSE_TOKEN
 
