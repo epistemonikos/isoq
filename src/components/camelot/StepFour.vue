@@ -1547,7 +1547,7 @@ export default {
         return
       }
       this.flushBeforeLeaving()
-      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+      // Sin toast (#378): al volver la persona está de nuevo en el paso, y eso basta.
       this.$bvModal.hide('modal-1')
       // No se delega la liberación al `@hidden`. Medido en navegador: con la pestaña de
       // fondo el modal se cierra visualmente pero `hidden` no llega —depende de

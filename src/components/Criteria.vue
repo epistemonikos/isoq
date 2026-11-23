@@ -355,7 +355,7 @@ export default {
       this.flushAndRelease()
       const box = this.$el && this.$el.querySelector('textarea')
       if (box && document.activeElement === box) box.blur()
-      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+      // Sin toast (#378): encontrar la caja cerrada es todo el aviso.
     },
     onBlur: function () {
       // The page itself lost focus: the person went to another window, tab or app — a PDF,
