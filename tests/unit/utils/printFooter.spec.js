@@ -33,4 +33,15 @@ describe('printFooterCss', () => {
   it('prints landscape, like the Word', () => {
     expect(printFooterCss({ left: 'P', right: '', link: '' }, t)).toMatch(/@page\s*\{[^@]*size:\s*landscape/)
   })
+
+  // Revisión de seguridad: \r, \f y los demás caracteres de control también cierran un
+  // string CSS. Un nombre de proyecto con ellos podía inyectar reglas en la hoja de estilos.
+  it.each([['\r'], ['\f'], ['\u0000'], ['\u001b'], ['\u007f'], [' ']])(
+    'escapes control character %j so the string cannot be closed', (ch) => {
+      const css = printFooterCss({ left: `a${ch}} body { background: url(//evil) } @page { x: "`, right: '', link: '' }, t)
+      expect(css).not.toContain(ch)
+      const content = css.match(/@bottom-left\s*\{\s*content:\s*("(?:[^"\\]|\\.)*")/)[1]
+      expect(content).toContain('background: url(//evil)')
+      expect(css.match(/@bottom-left/g)).toHaveLength(1)
+    })
 })
