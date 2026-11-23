@@ -9,16 +9,18 @@ const FOOTER_STYLE = 'font-family: Arial, sans-serif; font-size: 8pt; color: #7f
 
 /**
  * Un string CSS entre comillas. El nombre del proyecto es texto del usuario y termina dentro
- * de un <style>: se escapan comillas y barras, los saltos de línea, y `<`/`>` para que un
- * `</style>` no pueda cerrar la etiqueta.
+ * de un <style>: se escapan barras y comillas, todo carácter de control (`\r`, `\f` y el
+ * resto también cierran un string CSS, no sólo `\n`) y `<`/`>` para que un `</style>` no
+ * pueda cerrar la etiqueta. Todo lo demás va como escape hexadecimal de CSS.
  */
+// eslint-disable-next-line no-control-regex -- se buscan justamente los caracteres de control, para escaparlos
+const CSS_UNSAFE = /[\u0000-\u001f\u007f\u2028\u2029<>]/g
+
 function cssString (text) {
   return '"' + String(text)
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\A ')
-    .replace(/</g, '\\3C ')
-    .replace(/>/g, '\\3E ') + '"'
+    .replace(CSS_UNSAFE, ch => `\\${ch.charCodeAt(0).toString(16).toUpperCase()} `) + '"'
 }
 
 /** El CSS del pie para `{ left, right, link }` de `footerTexts`. */
