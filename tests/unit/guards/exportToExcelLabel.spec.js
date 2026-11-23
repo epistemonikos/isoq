@@ -32,4 +32,17 @@ describe('Export to Excel label (#373)', () => {
       .filter(f => /characteristics\.export_xls\b|step_three\.export_xlsx\b/.test(fs.readFileSync(f, 'utf8')))
     expect(offenders).toEqual([])
   })
+
+  // Megan (22-11): sin CAMELOT el botón salía gris; con CAMELOT, azul. Todos iguales.
+  it('every Export to Excel button uses the outline-primary variant', () => {
+    const buttons = sources(path.join(__dirname, '../../../src'))
+      .filter(f => f.endsWith('.vue'))
+      .flatMap(f => {
+        const src = fs.readFileSync(f, 'utf8')
+        return [...src.matchAll(/<b-button\b([^>]*)>\s*\{\{\s*\$t\('common\.export_to_excel'\)/g)]
+          .map(m => ({ file: path.basename(f), variant: (m[1].match(/\bvariant="([^"]*)"/) || [])[1] }))
+      })
+    expect(buttons.length).toBe(3)
+    expect(buttons.filter(b => b.variant !== 'outline-primary')).toEqual([])
+  })
 })

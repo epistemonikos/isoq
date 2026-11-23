@@ -23,7 +23,7 @@
         </b-button>
       </b-col>
       <b-col sm="3" v-if="dataTable.fields && dataTable.fields.length > 2">
-        <b-button variant="outline-secondary" block @click="exportTableToXLSX()">
+        <b-button variant="outline-primary" block @click="exportTableToXLSX()">
           {{ $t('common.export_to_excel') }}
         </b-button>
       </b-col>
