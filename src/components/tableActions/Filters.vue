@@ -35,6 +35,7 @@
               class="pt-3">
               <b-button
                 block
+                variant="outline-primary"
                 @click="toCSV(type)">
                 {{ $t('common.export_to_excel') }}
               </b-button>
