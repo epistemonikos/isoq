@@ -93,6 +93,27 @@ body {
     display: table !important;
   }
 
+  // Navegación de la app: en papel no sirve (la barra superior y las pestañas del proyecto,
+  // «Propiedades del proyecto», «Mis datos», «iSoQ»…).
+  #main-navbar,
+  #tabsTitle {
+    display: none !important;
+  }
+
+  // Títulos con escala de documento, la misma del Word (src/utils/wordTypography.js):
+  // 14 pt el título, 12 pt las secciones, 10 pt el texto.
+  body {
+    font-size: 10pt;
+  }
+
+  h1, h2, .h1, .h2 {
+    font-size: 14pt !important;
+  }
+
+  h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
+    font-size: 12pt !important;
+  }
+
   .table {
     width: 100% !important;
     table-layout: fixed;
