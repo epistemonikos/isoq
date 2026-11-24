@@ -64,4 +64,17 @@ describe('viewOrganization.vue — banner de CAMELOT', () => {
     expect(again.find('[data-test="camelot-banner"]').exists()).toBe(false)
     again.destroy()
   })
+
+  describe('con CAMELOT apagado en la instalación (ENABLE_CAMELOT)', () => {
+    let saved
+    beforeEach(() => { saved = process.env.ENABLE_CAMELOT; process.env.ENABLE_CAMELOT = 'false' })
+    afterEach(() => { process.env.ENABLE_CAMELOT = saved })
+
+    it('no muestra el banner aunque nunca se haya cerrado', () => {
+      const wrapper = build()
+      expect(wrapper.find('[data-test="camelot-banner"]').exists()).toBe(false)
+      expect(wrapper.text()).not.toContain('CAMELOT tool')
+      wrapper.destroy()
+    })
+  })
 })

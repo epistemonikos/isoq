@@ -191,7 +191,8 @@ export default {
   },
   data () {
     return {
-      showCamelotBanner: !camelotBannerDismissed(),
+      // Sólo si la instalación ofrece CAMELOT: el banner lo anuncia y enlaza a su sección del About.
+      showCamelotBanner: isCamelotEnabled() && !camelotBannerDismissed(),
       // La última carga de la lista falló: lo que se ve (o su ausencia) no es el estado real.
       projectsLoadError: false,
       ui: {

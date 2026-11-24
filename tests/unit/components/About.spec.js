@@ -85,6 +85,22 @@ describe('About.vue', () => {
       .toEqual([t('about.camelot_key_1'), t('about.camelot_key_2'), t('about.camelot_key_3')])
   })
 
+  describe('with CAMELOT turned off in this installation (ENABLE_CAMELOT)', () => {
+    let saved
+    beforeEach(() => { saved = process.env.ENABLE_CAMELOT; process.env.ENABLE_CAMELOT = 'false' })
+    afterEach(() => { process.env.ENABLE_CAMELOT = saved })
+
+    it('hides the CAMELOT section and its table of contents entry', () => {
+      const { wrapper } = build()
+
+      expect(wrapper.find('h3#camelot').exists()).toBe(false)
+      expect(wrapper.find('[data-test="camelot-key-points"]').exists()).toBe(false)
+      expect(wrapper.text()).not.toContain(t('about.camelot_p2'))
+      const entries = wrapper.findAll('[data-test="about-toc"] a').wrappers.map(a => a.text())
+      expect(entries).toEqual(SECTIONS.filter(([id]) => id !== 'camelot').map(([, key]) => t(key)))
+    })
+  })
+
   it('scrolls to the section on click without navigating', async () => {
     // A plain href="#cite" is a route change in hash mode: the catch-all route would send the
     // reader to the home page, and any push jumps to the top (scrollBehavior).
