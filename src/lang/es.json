@@ -1408,7 +1408,7 @@
       "authors_label": "Autor(es), Año",
       "study_characteristics": "Características de los estudios",
       "camelot_fields": "Campos CAMELOT",
-      "camelot_field": "Campo Camelot",
+      "camelot_field": "Dominio CAMELOT",
       "reference_id": "ID de Referencia",
       "author_year": "Autor(es), Año",
       "add_edit_columns": "Agregar o editar columnas",
@@ -1446,7 +1446,7 @@
         "extracted_data_label": "Datos extraídos",
         "field_title_placeholder": "Nombre de la columna",
         "field_content_placeholder": "Contenido de la columna",
-        "camelot_fields_title": "Campos Camelot",
+        "camelot_fields_title": "Campos CAMELOT",
         "no_selection": "No se ha seleccionado ninguna referencia para editar",
         "save_button": "Guardar",
         "no_title": "Sin título"
@@ -1487,7 +1487,7 @@
       "not_assigned": "No asignado",
       "modal_title": "Evaluación metodológica",
       "breadcrumb_main": "Tabla de evaluaciones metodológicas",
-      "breadcrumb_sub": "Evaluaciones de ajuste Camelot",
+      "breadcrumb_sub": "Evaluaciones de ajuste CAMELOT",
       "show_details_across_studies": "Mostrar detalles de los estudios",
       "description": "CAMELOT es la herramienta de evaluación metodológica predeterminada en iSoQ. Para optar por no usar la herramienta CAMELOT regrese a las Propiedades del Proyecto.<br/><br/>Para cada estudio incluido, evalúe el ajuste entre los dominios CAMELOT (etiquetados del 1 al 9 en la tabla de abajo). Luego realice una evaluación general (etiquetada como OA en la tabla de abajo)<br/><br/>Esta tabla se utilizará más adelante para los siguientes propósitos:<ul><li>Exportar un archivo CSV Generar una tabla de evaluaciones CAMELOT para incluir en su revisión</li><li>Servir como material de referencia para realizar evaluaciones GRADE-CERQual para cada hallazgo de revisión (componente de Limitaciones Metodológicas). <a href='https://www.cerqual.org/' target='_blank'>Saber más</a></li></ul>",
       "tabs": {
