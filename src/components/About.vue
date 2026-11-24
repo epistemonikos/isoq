@@ -43,6 +43,7 @@
             <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank" place="0"><u>{{ $t('about.epoc_template') }}</u></a>
           </i18n>
 
+          <template v-if="camelotEnabled">
           <h3 id="camelot">{{ $t('about.camelot') }}</h3>
           <i18n path="about.camelot_p1" tag="p">
             <a href="https://onlinelibrary.wiley.com/doi/full/10.1002/cesm.12058" target="_blank" rel="noopener" place="0">CAMELOT</a>
@@ -54,6 +55,7 @@
             <li>{{ $t('about.camelot_key_2') }}</li>
             <li>{{ $t('about.camelot_key_3') }}</li>
           </ul>
+          </template>
 
           <h3 id="replace-software">{{ $t('about.replace_software') }}</h3>
           <p>{{ $t('about.replace_desc') }}</p>
@@ -110,6 +112,8 @@
 </template>
 
 <script>
+import { isCamelotEnabled } from '@/constants/camelot'
+
 // Same order as the headings below; the ids match the old table of contents on master.
 const SECTIONS = [
   { id: 'what-is-isoq', title: 'about.what_is_isoq' },
@@ -130,7 +134,12 @@ const SECTIONS = [
 export default {
   name: 'About',
   data () {
-    return { sections: SECTIONS }
+    // The CAMELOT section (and its entry) only when this installation offers CAMELOT.
+    const camelotEnabled = isCamelotEnabled()
+    return {
+      camelotEnabled,
+      sections: SECTIONS.filter(section => camelotEnabled || section.id !== 'camelot')
+    }
   },
   mounted () {
     const id = (this.$route.hash || '').slice(1)

@@ -107,7 +107,7 @@
                   :disabled="!canEditFinding" :state="explanationStateFor('methodological_limitations')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
-                :description="$t('worksheet.labels.notes_description')">
+                :description="notesDescription">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
@@ -185,7 +185,7 @@
                   :disabled="!canEditFinding" :state="explanationStateFor('coherence')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
-                :description="$t('worksheet.labels.notes_description')">
+                :description="notesDescription">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
@@ -254,7 +254,7 @@
                   :disabled="!canEditFinding" :state="explanationStateFor('adequacy')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
-                :description="$t('worksheet.labels.notes_description')">
+                :description="notesDescription">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
@@ -411,7 +411,7 @@
                   :state="explanationStateFor('cerqual')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
-                :description="$t('worksheet.labels.notes_description')">
+                :description="notesDescription">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
@@ -986,6 +986,12 @@ export default {
     // The extracted data table releases its row lock in its own beforeDestroy.
   },
   computed: {
+    // The Notes field is in every project; only one that uses CAMELOT speaks of CAMELOT assessments.
+    notesDescription () {
+      return this.$t(this.project && this.project.use_camelot
+        ? 'worksheet.labels.notes_description_camelot'
+        : 'worksheet.labels.notes_description')
+    },
     // Single flag for every input in the form: writing needs both the permission
     // and the finding's lock.
     canEditFinding: function () {
