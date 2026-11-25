@@ -127,7 +127,7 @@
                   <videoHelp class="d-inline-block" style="font-size: 1rem;" tag="none" urlId="1184125421"></videoHelp>
                 </h4>
                 <h4 v-else v-html="$t('steps.step_4_description')"></h4>
-                <p class="font-weight-light" v-if="project.use_camelot" v-html="$t('camelot.step_four.description')">
+                <p class="font-weight-light" v-if="project.use_camelot" v-html="$t('camelot.step_four.description', { properties_url: propertiesUrl })">
                 </p>
                 <p class="font-weight-light" v-else>
                   {{ $t('steps.step_4_long_description') }}
@@ -2098,6 +2098,15 @@ export default {
     }
   },
   computed: {
+    // Pestaña nueva (target=_blank en el texto): un push del router mandaría al tope.
+    // Va a un v-html y encodeURIComponent deja pasar la comilla: escapado para el atributo.
+    propertiesUrl: function () {
+      return this.$router.resolve({
+        name: 'viewProject',
+        params: { org_id: this.$route.params.org_id, id: this.$route.params.id },
+        query: { tab: 'Project-Property' }
+      }).href.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+    },
     /** My Data open on Step 1, by someone who can edit: the presence #399 shows. */
     onStepOne () {
       return this.tabOpened === 1 && this.stepStage === 0 && Boolean(this.isEditing)
