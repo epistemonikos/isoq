@@ -371,3 +371,80 @@ describe('evidenceProfileForm.vue - warning modal focus flow', () => {
     expect(focusSpy).not.toHaveBeenCalled()
   })
 })
+
+// #420: sin tabla creada en los Pasos 3/4, b-table inventaba las columnas desde la fila
+// derivada ({ ref_id, authors }) y mostraba «Ref Id». Sin tabla, sólo el aviso.
+describe('evidenceProfileForm.vue - tablas no-CAMELOT sin tabla creada (#420)', () => {
+  const baseProps = (type, overrides = {}) => ({
+    project: { use_camelot: false, review_question: 'Q', inclusion: 'I', exclusion: 'E' },
+    list: { organization: 'org1', project_id: 'p1' },
+    modalData: {
+      methodological_limitations: { option: null, explanation: '', notes: '' },
+      coherence: { option: null, explanation: '', notes: '' },
+      adequacy: { option: null, explanation: '', notes: '' },
+      relevance: { option: null, explanation: '', notes: '' },
+      cerqual: { option: null, explanation: '', notes: '' },
+      type,
+      title: type
+    },
+    ui: {
+      methodological_assessments: { display_warning: true, extracted_data: { display_warning: false } },
+      adequacy: { chars_of_studies: { display_warning: true }, extracted_data: { display_warning: false } },
+      relevance: { chars_of_studies: { display_warning: true } }
+    },
+    methAssessments: { fields: [], fieldsObj: [], items: [{ ref_id: 'r1', authors: 'Smith 2020' }] },
+    charsOfStudies: { fields: [], items: [{ ref_id: 'r1', authors: 'Smith 2020' }] },
+    extractedData: { items: [], fieldsObj: [] },
+    findings: {},
+    evidenceProfile: [{ methodological_limitations: { option: '0' }, coherence: { option: '0' }, adequacy: { option: '0' }, relevance: { option: '0' } }],
+    refsWithTitle: [],
+    permission: true,
+    selectOptions: [],
+    show: { selected: [] },
+    modePrintFieldObject: [],
+    ...overrides
+  })
+
+  const mountFor = async (props) => {
+    const wrapper = mount(evidenceProfileForm, {
+      localVue,
+      propsData: props,
+      mocks: { $t: (key) => key, $route: { params: { id: '1' } } },
+      stubs: {
+        'b-modal': { template: '<div><slot name="modal-title"></slot><slot></slot></div>' },
+        'b-tabs': { template: '<div><slot></slot></div>' },
+        'b-tab': { template: '<div><slot name="title"></slot><slot></slot></div>' },
+        'b-link': { template: '<a><slot></slot></a>' },
+        videoHelp: true,
+        'edit-review-finding': true,
+        'assessment-table': true,
+        'table-extracted-data': true,
+        'camelot-characteristics-table': true
+      }
+    })
+    await wrapper.setData({ selectedOptions: JSON.parse(JSON.stringify(props.modalData)) })
+    return wrapper
+  }
+
+  const cases = [
+    ['methodological-limitations', 'worksheet.warnings.meth_missing'],
+    ['adequacy', 'worksheet.warnings.chars_of_studies_missing'],
+    ['relevance', 'worksheet.warnings.chars_of_studies_missing']
+  ]
+
+  it.each(cases)('%s: sin columnas no dibuja la tabla, sólo el aviso', async (type, warning) => {
+    const wrapper = await mountFor(baseProps(type))
+    expect(wrapper.find('table').exists()).toBe(false)
+    expect(wrapper.text()).not.toMatch(/Ref Id/i)
+    expect(wrapper.text()).toContain(warning)
+  })
+
+  it.each(cases)('%s: con columnas creadas dibuja la tabla sin ref_id', async (type) => {
+    const fields = [{ key: 'ref_id', label: 'Ref' }, { key: 'authors', label: 'Author(s), Year' }, { key: 'column_0', label: 'Col' }]
+    const table = { fields, fieldsObj: fields.slice(1), items: [{ ref_id: 'r1', authors: 'Smith 2020', column_0: 'x' }] }
+    const wrapper = await mountFor(baseProps(type, { methAssessments: table, charsOfStudies: table }))
+    const headers = wrapper.findAll('th').wrappers.map(th => th.text())
+    expect(headers).toEqual(['Author(s), Year', 'Col'])
+    expect(wrapper.text()).toContain('Smith 2020')
+  })
+})

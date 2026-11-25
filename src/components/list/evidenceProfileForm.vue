@@ -448,8 +448,8 @@
                       :hideActions="false" :clickableHeaders="true" />
                   </template>
                   <template v-else>
-                    <b-table class="table-small-font" responsive head-variant="light" outlined
-                      :fields="methAssessments.fieldsObj" :items="methAssessments.items">
+                    <b-table v-if="hasDataColumns(methAssessments.fieldsObj)" class="table-small-font" responsive
+                      head-variant="light" outlined :fields="methAssessments.fieldsObj" :items="methAssessments.items">
                       <template v-slot:cell(authors)="data">
                         <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
                         }}</span>
@@ -544,8 +544,8 @@
                     <camelot-characteristics-table :charsOfStudies="charsOfStudies" />
                   </template>
                   <template v-else>
-                    <b-table class="table-small-font" responsive head-variant="light" outlined
-                      :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
+                    <b-table v-if="hasDataColumns(charsOfStudies.fieldsObj)" class="table-small-font" responsive
+                      head-variant="light" outlined :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
                       <template v-slot:cell(authors)="data">
                         <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
                         }}</span>
@@ -639,8 +639,8 @@
                     <camelot-characteristics-table :charsOfStudies="charsOfStudies" />
                   </template>
                   <template v-else>
-                    <b-table class="table-small-font" responsive head-variant="light" outlined
-                      :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
+                    <b-table v-if="hasDataColumns(charsOfStudies.fieldsObj)" class="table-small-font" responsive
+                      head-variant="light" outlined :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
                       <template v-slot:cell(authors)="data">
                         <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
                         }}</span>
@@ -815,6 +815,7 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 // una sola vez por repo (el servidor compone el mismo en libs/evidence_profile.py).
 import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
 import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
+import { hasDataColumns } from '@/utils/tableColumns'
 
 export default {
   name: 'evidenceProfileForm',
@@ -1036,6 +1037,7 @@ export default {
     }
   },
   methods: {
+    hasDataColumns,
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
       if (!d || d.option === null) return null
