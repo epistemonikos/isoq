@@ -194,7 +194,7 @@
     "et_al": " et al. ",
     "no_authors": "Sem autor(es)",
     "new_account": "Nova conta",
-    "password_compromised": "Sua senha foi encontrada em um vazamento de dados. Enviamos um e-mail para você alterá-la."
+    "password_compromised": "Para sua segurança, redefinimos sua senha: ela aparece em listas públicas de senhas expostas em vazamentos de outros sites. Isso não significa que o iSoQ tenha sido violado. Enviamos um e-mail para você escolher uma nova."
   },
   "account": {
     "create_account": "Criar uma conta",
@@ -234,7 +234,7 @@
     "start_using_now": "Você pode começar a usar o iSoQ agora mesmo e mover seu trabalho para a organização quando criada.",
     "reset_password": "Redefinir sua senha",
     "email_not_registered": "Este e-mail não está registrado",
-    "password_compromised": "Sua senha foi encontrada em um vazamento de dados. Por favor, escolha uma senha diferente.",
+    "password_compromised": "Esta senha aparece em listas públicas de senhas expostas em vazamentos de outros sites, por isso é fácil de adivinhar. Por favor, escolha outra.",
     "email_sent": "Um e-mail foi enviado com instruções para redefinir sua senha.",
     "password_mismatch": "As senhas não coincidem",
     "password_min_chars": "Digite uma senha com pelo menos 8 caracteres",
