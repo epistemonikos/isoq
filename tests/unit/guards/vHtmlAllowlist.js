@@ -45,5 +45,6 @@ module.exports = {
   'components/project/viewProject.vue::formattedCamelotDescription': 'Fixed `camelot.step_three.description` with `{icon}` replaced by an <img> of the bundled CAMELOT logo.',
   'components/project/viewProject.vue::$t(\'steps.step_4_description_camelot\')': STATIC_I18N,
   'components/project/viewProject.vue::$t(\'steps.step_4_description\')': STATIC_I18N,
-  'components/project/viewProject.vue::$t(\'camelot.step_four.description\')': STATIC_I18N
+  // properties_url sale de $router.resolve con los ids de la ruta: ningún texto de usuario.
+  'components/project/viewProject.vue::$t(\'camelot.step_four.description\', { properties_url: propertiesUrl })': STATIC_I18N
 }
