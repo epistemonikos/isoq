@@ -194,7 +194,7 @@
     "et_al": " y cols. ",
     "no_authors": "Sin autor(es)",
     "new_account": "Nueva cuenta",
-    "password_compromised": "Tu contraseña fue encontrada en una filtración de datos. Te enviamos un email para que la cambies."
+    "password_compromised": "Por tu seguridad, restablecimos tu contraseña: aparece en listas públicas de contraseñas expuestas en filtraciones de otros sitios web. Esto no significa que iSoQ haya sido vulnerado. Te enviamos un email para que elijas una nueva."
   },
   "account": {
     "create_account": "Crear una cuenta",
@@ -234,7 +234,7 @@
     "start_using_now": "Puedes comenzar a usar iSoQ ahora mismo y mover tu trabajo a la organización cuando esté creada.",
     "reset_password": "Restablecer tu contraseña",
     "email_not_registered": "Este correo no está registrado",
-    "password_compromised": "Tu contraseña fue encontrada en una filtración de datos. Por favor, elige una contraseña diferente.",
+    "password_compromised": "Esta contraseña aparece en listas públicas de contraseñas expuestas en filtraciones de otros sitios, por lo que es fácil de adivinar. Por favor, elige otra.",
     "email_sent": "Se envió un correo con instrucciones para restablecer tu contraseña.",
     "password_mismatch": "Las contraseñas no coinciden",
     "password_min_chars": "Ingresa una contraseña de al menos 8 caracteres",
