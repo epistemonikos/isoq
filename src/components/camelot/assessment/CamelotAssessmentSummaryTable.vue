@@ -16,13 +16,16 @@
         <b-dropdown-form class="p-3" :style="filterMenuStyle">
           <h6 class="dropdown-header px-0 mb-2 font-weight-bold">{{ $t('common.filter_columns') }}</h6>
 
-          <b-form-radio-group v-model="selectedAssessment" name="assessment-filter" stacked>
+          <!-- The radios mirror the checkboxes: Show all = all checked, Hide all = none. -->
+          <b-form-radio-group v-model="radioMode" name="assessment-filter" stacked>
             <b-form-radio value="all" class="mb-1 font-weight-bold">{{ $t('common.show_all') }}</b-form-radio>
             <b-form-radio value="none" class="mb-2 font-weight-bold">{{ $t('common.hide_all') }}</b-form-radio>
-            <b-form-radio v-for="opt in filterOptions" :key="opt.value" :value="opt.value" class="mb-1">
-              {{ opt.label }}
-            </b-form-radio>
           </b-form-radio-group>
+          <b-form-checkbox-group v-model="selectedAssessments" name="assessment-filter-items" stacked>
+            <b-form-checkbox v-for="opt in filterOptions" :key="opt.value" :value="opt.value" class="mb-1">
+              {{ opt.label }}
+            </b-form-checkbox>
+          </b-form-checkbox-group>
 
           <!-- #412: its own Apply, so nobody reaches for the modal's Save to confirm the filter.
                The radios apply as they change; Apply closes the menu, like a click outside. -->
@@ -271,11 +274,11 @@ export default {
         { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
       ],
-      // The one view state of the summary (#391): 'all' and 'none' show and hide
-      // the details of every study; a position key ('0-0' … '3-0') shows only that
-      // assessment, in every study. Opening or closing the menu never changes it.
-      // It starts on 'none': details appear only once the person applies a filter.
-      selectedAssessment: 'none',
+      // The one view state of the summary (#391): the position keys ('0-0' … '3-0')
+      // whose details show, in every study. Empty hides every detail; Show all is
+      // simply every key. Opening or closing the menu never changes it. It starts
+      // empty: details appear only once the person applies a filter.
+      selectedAssessments: [],
       modalSafeDropdown: MODAL_SAFE_DROPDOWN,
       filterMenuStyle: { minWidth: '320px', ...MODAL_SAFE_MENU_STYLE }
     }
@@ -310,7 +313,20 @@ export default {
 
       return fields
     },
-    // One radio per assessment (#391): the filter shows one assessment across
+    // Derived from the checkboxes: all → Show all, none → Hide all, some → neither.
+    radioMode: {
+      get () {
+        if (!this.selectedAssessments.length) return 'none'
+        const all = ASSESSMENT_POSITION_KEYS.every(key => this.selectedAssessments.includes(key))
+        return all ? 'all' : null
+      },
+      set (mode) {
+        // The group echoes back the null it gets while some boxes are checked.
+        if (mode === 'all') this.selectedAssessments = [...ASSESSMENT_POSITION_KEYS]
+        else if (mode === 'none') this.selectedAssessments = []
+      }
+    },
+    // One checkbox per assessment (#391): the filter shows one assessment across
     // studies, or all of them. Derived from the grid so it cannot drift from it.
     filterOptions () {
       return ASSESSMENT_CELLS.map(cell => ({
@@ -318,14 +334,14 @@ export default {
         value: positionKeyOf(cell.key)
       }))
     },
-    // What the row details show. With 'none' a row opened by hand shows everything.
+    // What the row details show. With nothing checked, a row opened by hand shows everything.
     visibleAssessments () {
-      return ASSESSMENT_POSITION_KEYS.includes(this.selectedAssessment)
-        ? [this.selectedAssessment]
+      return this.selectedAssessments.length
+        ? ASSESSMENT_POSITION_KEYS.filter(key => this.selectedAssessments.includes(key))
         : [...ASSESSMENT_POSITION_KEYS]
     },
     detailsShownBySelection () {
-      return this.selectedAssessment !== 'none'
+      return this.selectedAssessments.length > 0
     },
     tableItems () {
       if (!this.assessments || !this.assessments.items) return []
@@ -363,7 +379,7 @@ export default {
     }
   },
   watch: {
-    selectedAssessment () {
+    selectedAssessments () {
       this.expandAllDetails(this.detailsShownBySelection)
     },
     // Studies that arrive later (first load, reload after a save) follow the
@@ -382,7 +398,7 @@ export default {
     handleHeaderClick (assessmentKey) {
       if (!this.clickableHeaders) return
 
-      this.selectedAssessment = assessmentKey
+      this.selectedAssessments = [assessmentKey]
       // Clicking the header already selected still shows every study again.
       this.expandAllDetails(true)
     },
@@ -401,7 +417,7 @@ export default {
     },
     // Called when the modal opens: Hide all, until the person applies a filter.
     resetTableState () {
-      this.selectedAssessment = 'none'
+      this.selectedAssessments = []
       this.expandAllDetails(false)
     },
     getOptionColor (optionValue) {
