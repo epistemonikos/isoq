@@ -49,7 +49,7 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
 
   it('keeps all table columns regardless of the selected assessment', async () => {
     expect(wrapper.vm.fields.length).toBe(12)
-    await wrapper.setData({ selectedAssessment: '0-0' })
+    await wrapper.setData({ selectedAssessments: ['0-0'] })
     // The filter narrows the row details, never the columns of the main table.
     expect(wrapper.vm.fields.length).toBe(12)
     const visibleFieldKeys = wrapper.vm.fields.map(f => f.key)
@@ -58,10 +58,10 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
   })
 
   it('narrows activeStages in row-details to the selected assessment', async () => {
-    await wrapper.setData({ selectedAssessment: '0-0' })
+    await wrapper.setData({ selectedAssessments: ['0-0'] })
     expect(wrapper.vm.activeStages).toEqual([0])
-    await wrapper.setData({ selectedAssessment: '3-0' })
-    expect(wrapper.vm.activeStages).toEqual([3])
+    await wrapper.setData({ selectedAssessments: ['0-0', '3-0'] })
+    expect(wrapper.vm.activeStages).toEqual([0, 3])
   })
 
   it('hides header and actions column when hideActions prop is true', async () => {
@@ -99,23 +99,29 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       })
     }
 
+    // Show all / Hide all are radios; FA 1 … FA 9 and OA are checkboxes (several at once).
     const radios = w => w.findAll('#dropdown-filter-assessments input[type="radio"]')
-    const radioLabels = w => w.findAll('#dropdown-filter-assessments .custom-radio label')
+    const boxes = w => w.findAll('#dropdown-filter-assessments input[type="checkbox"]')
+    const optionLabels = w => w.findAll('#dropdown-filter-assessments .custom-control label')
       .wrappers.map(l => l.text())
     const shown = w => w.vm.tableItems.map(item => item._showDetails)
-    const pick = (w, index) => radios(w).at(index).setChecked()
-    // Order of the radios: Show all, Hide all, FA 1 … FA 9, OA.
-    const FA = n => n + 1
-    const OA = 11
+    const SHOW_ALL = 0
+    const HIDE_ALL = 1
+    const pickRadio = (w, index) => radios(w).at(index).setChecked()
+    // FA n → checkbox n-1; OA → 9.
+    const FA = n => n - 1
+    const OA = 9
+    const check = (w, index, value = true) => boxes(w).at(index).setChecked(value)
+    const checked = w => boxes(w).wrappers.map(b => b.element.checked)
 
-    it('offers Show all, Hide all and one radio per assessment, and no checkboxes', () => {
+    it('offers Show all and Hide all as radios and one checkbox per assessment', () => {
       const w = mountWithFilter()
-      expect(radios(w).length).toBe(12)
-      expect(w.findAll('#dropdown-filter-assessments input[type="checkbox"]').length).toBe(0)
+      expect(radios(w).length).toBe(2)
+      expect(boxes(w).length).toBe(10)
     })
 
-    it('labels the radios Show all, Hide all, FA 1 to FA 9 and OA, in that order', () => {
-      expect(radioLabels(mountWithFilter())).toEqual([
+    it('labels Show all, Hide all, FA 1 to FA 9 and OA, in that order', () => {
+      expect(optionLabels(mountWithFilter())).toEqual([
         'common.show_all',
         'common.hide_all',
         ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `camelot.step_four.filter_options.fa${n}`),
@@ -123,56 +129,78 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       ])
     })
 
-    // Details appear only once the person applies a filter; the radio says so.
     it('starts on Hide all with the details of every study hidden', async () => {
       const w = mountWithFilter()
       await w.vm.$nextTick()
-      expect(radios(w).at(1).element.checked).toBe(true)
+      expect(radios(w).at(HIDE_ALL).element.checked).toBe(true)
+      expect(checked(w).every(c => !c)).toBe(true)
       expect(shown(w)).toEqual([false, false])
     })
 
     it('shows every detail once Show all is picked', async () => {
       const w = mountWithFilter()
-      await pick(w, 0)
+      await pickRadio(w, SHOW_ALL)
       expect(shown(w)).toEqual([true, true])
       expect(w.vm.activeStages).toEqual([0, 1, 2, 3])
     })
 
-    it('shows only the chosen assessment, in every study, when a radio is picked', async () => {
+    it('shows only the checked assessment, in every study, and unchecks both radios', async () => {
       const w = mountWithFilter()
-      await pick(w, FA(3))
+      await check(w, FA(3))
       expect(w.vm.visibleAssessments).toEqual(['0-2'])
       expect(w.vm.activeStages).toEqual([0])
       expect(shown(w)).toEqual([true, true])
+      expect(radios(w).wrappers.map(r => r.element.checked)).toEqual([false, false])
     })
 
-    it('maps FA 9 and OA to their stages', async () => {
+    it('lets several assessments be checked at once', async () => {
       const w = mountWithFilter()
-      await pick(w, FA(9))
-      expect(w.vm.visibleAssessments).toEqual(['2-0'])
-      await pick(w, OA)
-      expect(w.vm.visibleAssessments).toEqual(['3-0'])
+      await check(w, FA(1))
+      await check(w, FA(9))
+      await check(w, OA)
+      expect([...w.vm.visibleAssessments].sort()).toEqual(['0-0', '2-0', '3-0'])
+      expect(w.vm.activeStages).toEqual([0, 2, 3])
+      expect(shown(w)).toEqual([true, true])
     })
 
-    it('hides the details of every study with Hide all', async () => {
+    // The radios mirror the checkboxes: all ten checked is Show all, however you got there.
+    it('turns Show all on when every checkbox is checked by hand, and off when one is unchecked', async () => {
       const w = mountWithFilter()
-      await pick(w, FA(2))
-      await pick(w, 1)
+      for (let i = 0; i < 10; i++) await check(w, i)
+      expect(radios(w).at(SHOW_ALL).element.checked).toBe(true)
+      expect(shown(w)).toEqual([true, true])
+      await check(w, OA, false)
+      expect(radios(w).wrappers.map(r => r.element.checked)).toEqual([false, false])
+    })
+
+    it('goes to Hide all when the last checked box is unchecked', async () => {
+      const w = mountWithFilter()
+      await check(w, FA(2))
+      await check(w, FA(2), false)
+      expect(radios(w).at(HIDE_ALL).element.checked).toBe(true)
       expect(shown(w)).toEqual([false, false])
     })
 
-    it('brings every detail back with Show all after Hide all', async () => {
+    it('clears the checkboxes and hides every detail with Hide all', async () => {
       const w = mountWithFilter()
-      await pick(w, 1)
-      await pick(w, 0)
+      await check(w, FA(2))
+      await check(w, FA(4))
+      await pickRadio(w, HIDE_ALL)
+      expect(checked(w).every(c => !c)).toBe(true)
+      expect(shown(w)).toEqual([false, false])
+    })
+
+    it('checks every checkbox and shows everything with Show all', async () => {
+      const w = mountWithFilter()
+      await check(w, FA(2))
+      await pickRadio(w, SHOW_ALL)
+      expect(checked(w).every(Boolean)).toBe(true)
       expect(shown(w)).toEqual([true, true])
       expect(w.vm.visibleAssessments).toEqual(w.vm.filterOptions.map(o => o.value))
     })
 
-    // The reported bug: opening the menu toggled every row, so the second opening
-    // hid FA 1 while the radio still said FA 1.
+    // The reported bug (#391): opening the menu toggled every row.
     it('keeps the selection and the details when the menu is opened and closed again', async () => {
-      // b-dropdown opens on an animation frame (a timer in jsdom) and needs the DOM.
       const frame = () => new Promise(resolve => setTimeout(resolve, 30))
       const w = mount(CamelotAssessmentSummaryTable, {
         localVue,
@@ -182,7 +210,7 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
         stubs: { 'b-table': { template: '<div></div>', props: ['items', 'fields'] }, 'b-sidebar': true, 'font-awesome-icon': true }
       })
       const dropdown = w.findComponent({ name: 'BDropdown' })
-      await pick(w, FA(1))
+      await check(w, FA(1))
       for (let i = 0; i < 2; i++) {
         dropdown.vm.show()
         await frame()
@@ -191,14 +219,13 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
         dropdown.vm.hide()
         await frame()
       }
-      expect(radios(w).at(FA(1)).element.checked).toBe(true)
+      expect(boxes(w).at(FA(1)).element.checked).toBe(true)
       expect(w.vm.visibleAssessments).toEqual(['0-0'])
       expect(shown(w)).toEqual([true, true])
       w.destroy()
     })
 
-    // #412: su propio Apply, para que nadie use el Save del modal para confirmar el filtro.
-    // Cierra el menú igual que un clic afuera; la selección (que ya aplicó) queda.
+    // #412: su propio Apply; cierra el menú y la selección queda.
     it('closes the menu with its own Apply button, keeping the selection', async () => {
       const frame = () => new Promise(resolve => setTimeout(resolve, 30))
       const w = mount(CamelotAssessmentSummaryTable, {
@@ -211,7 +238,7 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       const dropdown = w.findComponent({ name: 'BDropdown' })
       dropdown.vm.show()
       await frame()
-      await pick(w, FA(2))
+      await check(w, FA(2))
 
       const apply = w.find('[data-testid="assessment-filter-apply"]')
       expect(apply.exists()).toBe(true)
@@ -225,18 +252,18 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
       w.destroy()
     })
 
-    it('checks the matching radio and shows every study when a column header is clicked', async () => {
+    it('checks only the matching box and shows every study when a column header is clicked', async () => {
       const w = mountWithFilter()
-      await pick(w, 1) // Hide all
+      await check(w, FA(1))
       w.vm.handleHeaderClick('1-0') // FA 5
       await w.vm.$nextTick()
-      expect(radios(w).at(FA(5)).element.checked).toBe(true)
+      expect(checked(w).map((c, i) => c ? i : -1).filter(i => i >= 0)).toEqual([FA(5)])
       expect(shown(w)).toEqual([true, true])
     })
 
     it('toggles only its own row with the row button, leaving the selection alone', async () => {
       const w = mountWithFilter()
-      await pick(w, FA(2))
+      await check(w, FA(2))
       const [first, second] = w.vm.tableItems
       w.vm.handleToggleDetails({ item: first, toggleDetails: () => w.vm.$set(first, '_showDetails', !first._showDetails) })
       await w.vm.$nextTick()
@@ -247,27 +274,27 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
 
     it('shows every assessment in a row opened by hand while Hide all is selected', async () => {
       const w = mountWithFilter()
-      await pick(w, 1)
+      await pickRadio(w, HIDE_ALL)
       expect(w.vm.activeStages).toEqual([0, 1, 2, 3])
     })
 
     it('applies the current selection to studies that arrive later', async () => {
       const w = mountWithFilter()
-      await pick(w, 1) // Hide all
+      await pickRadio(w, HIDE_ALL)
       await w.setProps({ assessments: twoStudies() })
       expect(shown(w)).toEqual([false, false])
-      await pick(w, FA(1))
+      await check(w, FA(1))
       await w.setProps({ assessments: twoStudies() })
       expect(shown(w)).toEqual([true, true])
     })
 
-    // The modal calls this every time it opens.
     it('goes back to Hide all with every detail hidden when the table is reset', async () => {
       const w = mountWithFilter()
-      await pick(w, FA(4))
+      await check(w, FA(4))
       w.vm.resetTableState()
       await w.vm.$nextTick()
-      expect(radios(w).at(1).element.checked).toBe(true)
+      expect(radios(w).at(HIDE_ALL).element.checked).toBe(true)
+      expect(checked(w).every(c => !c)).toBe(true)
       expect(shown(w)).toEqual([false, false])
     })
 
