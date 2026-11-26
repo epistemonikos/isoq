@@ -36,6 +36,12 @@ describe('CamelotStepFourHeader.vue', () => {
     expect(wrapper.find('exportcsvbutton-stub').exists() || wrapper.find('export-c-s-v-button-stub').exists()).toBe(true)
   })
 
+  // #423: sin nombre propio, el Excel del Paso 4 salía como «characteristics_of_studies» (el del Paso 3).
+  it('exporta el Excel con el nombre del Paso 4', () => {
+    const btn = wrapper.find('exportcsvbutton-stub').exists() ? wrapper.find('exportcsvbutton-stub') : wrapper.find('export-c-s-v-button-stub')
+    expect(btn.attributes('filename')).toBe('CAMELOT_assessments_of_fit')
+  })
+
   it('aligns all buttons to the right with justify-content-end', () => {
     const container = wrapper.find('.d-flex')
     expect(container.classes()).toContain('justify-content-end')
