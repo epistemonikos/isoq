@@ -90,7 +90,8 @@
                 <h4 v-if="!project.use_camelot" v-html="$t('characteristics.step_title')"></h4>
                 <h4 v-else>
                   <span v-html="$t('characteristics.step_title_camelot')"></span>
-                  <videoHelp class="d-inline-block" style="font-size: 1rem;" tag="none" urlId="1184125421"></videoHelp>
+                  <!-- #422: video propio del Paso 3 CAMELOT; el Paso 4 sigue con el genérico 1184125421. -->
+                  <videoHelp class="d-inline-block" style="font-size: 1rem;" tag="none" urlId="1250351037"></videoHelp>
                 </h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="formattedCamelotDescription">
                 </p>
