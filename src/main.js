@@ -238,7 +238,7 @@ router.beforeEach((to, from, next) => {
 purgeConflictDrafts()
 
 // Esperar a que el router esté listo antes de crear la instancia de Vue
-Trans.changeLanguage(Trans.getUserSupportedLang()).then(() => {
+Trans.init().then(() => {
   new Vue({ // eslint-disable-line no-new -- mounting the app is the side effect
     el: '#app',
     router,
