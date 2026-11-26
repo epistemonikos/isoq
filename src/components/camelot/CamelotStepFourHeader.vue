@@ -44,7 +44,7 @@
         </div>
       </b-dropdown>
 
-      <export-c-s-v-button :fields="exportFields" :items="exportItems" class="ml-2" />
+      <export-c-s-v-button :fields="exportFields" :items="exportItems" filename="CAMELOT_assessments_of_fit" class="ml-2" />
     </div>
 
     <b-sidebar id="sidebar-help" :title="$t('camelot.step_four.how_to_read.title')" width="500px" shadow right backdrop>
