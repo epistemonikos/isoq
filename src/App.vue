@@ -29,6 +29,7 @@ export default {
   },
   mounted () {
     this._applyTheme(this.$store.state.theme)
+    this._applyFontSize(this.$store.state.fontSize)
     // Se imprime siempre en tema claro (#416). Con el oscuro, Chrome descarta los fondos
     // pero conserva el color de texto del tema: el PDF salía gris claro sobre blanco.
     // `beforeprint`/`afterprint` cubren el botón (window.print()) y Ctrl+P.
@@ -54,6 +55,9 @@ export default {
     }
   },
   methods: {
+    _applyFontSize (size) {
+      document.body.style.fontSize = size ? `${size}px` : ''
+    },
     _applyTheme (preference) {
       this._removeOsListener()
       if (preference === 'system') {
