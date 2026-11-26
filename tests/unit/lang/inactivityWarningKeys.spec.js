@@ -50,7 +50,6 @@ describe('claves de lock usadas por el temporizador y los avisos', () => {
       'lock.inactivity_title',
       'lock.inactivity_message',
       'lock.inactivity_keep_working',
-      'lock.inactivity_released',
       'lock.study_fields_locked_by',
       'lock.study_fields_locked_no_user'
     ]))
@@ -65,5 +64,26 @@ describe('claves de lock usadas por el temporizador y los avisos', () => {
     [en, es, pt].forEach((dict) => {
       expect(dict.lock.inactivity_message).toContain('{countdown}')
     })
+  })
+})
+
+// #378 (Megan): vencer la inactividad no se anuncia; volver a la pantalla es el aviso.
+describe('lock.inactivity_released ya no existe', () => {
+  function sources (dir) {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => {
+      const p = path.join(dir, e.name)
+      if (e.isDirectory()) return sources(p)
+      return /\.(vue|js)$/.test(e.name) ? [p] : []
+    })
+  }
+
+  it('ningún archivo de src la usa', () => {
+    const offenders = sources(path.resolve('src'))
+      .filter(f => fs.readFileSync(f, 'utf8').includes('inactivity_released'))
+    expect(offenders).toEqual([])
+  })
+
+  it.each([['en', en], ['es', es], ['pt', pt]])('%s no la define', (_lang, dict) => {
+    expect(dict.lock.inactivity_released).toBeUndefined()
   })
 })

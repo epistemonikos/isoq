@@ -280,7 +280,6 @@
     "inactivity_title": "¿Sigues ahí?",
     "inactivity_message": "Nadie más puede editar esta entrada mientras la tienes abierta. En {countdown} se guardarán tus cambios y quedará liberada.",
     "inactivity_keep_working": "Sigo trabajando",
-    "inactivity_released": "Estuviste inactivo, así que tus cambios se guardaron y la entrada quedó liberada para que otros puedan editarla.",
     "ref_conflict_title": "Cambios no guardados",
     "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
     "ref_conflict_message_live": "{user} tomó este estudio mientras lo tenías abierto. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",

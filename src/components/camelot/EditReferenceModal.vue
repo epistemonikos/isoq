@@ -396,7 +396,7 @@ export default {
       } finally {
         // A throwing flush must not keep the modal open holding the lock: that is the
         // worst possible ending for a mechanism whose only purpose is to release it.
-        if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+        // Sin toast (#378): al volver la persona está de nuevo en el paso, y eso basta.
         this.hide()
         // Igual que en StepFour: el `@hidden` puede no llegar (depende de
         // `transitionend`, que no corre con la pestaña oculta) y ahí es donde vive el

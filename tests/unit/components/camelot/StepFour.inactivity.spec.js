@@ -366,7 +366,8 @@ describe('StepFour — expiración', () => {
     wrapper.destroy()
   })
 
-  it('avisa que se guardó y se liberó', async () => {
+  // #378 (Megan): al volver la persona está de nuevo en el paso, y eso basta.
+  it('guarda y suelta sin avisar con un toast', async () => {
     const wrapper = createWrapper()
     await flushPromises()
     wrapper.vm.openModal(0, ITEM, 0)
@@ -374,7 +375,7 @@ describe('StepFour — expiración', () => {
 
     wrapper.vm.onInactivityExpired()
 
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.inactivity_released')
+    expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 })

@@ -140,13 +140,12 @@ describe('EditReferenceModal — expiración', () => {
     wrapper.destroy()
   })
 
-  it('avisa a la persona de que se guardó y se liberó', async () => {
+  // #378 (Megan): al volver la persona está de nuevo en el paso, y eso basta.
+  it('guarda y suelta sin avisar con un toast', async () => {
     const wrapper = await opened()
-    // Se espera porque el aviso vive en el `finally`, y el guardado que lo precede pasó a
-    // ser asíncrono cuando el alta de columna se fue a su propio endpoint. Lo que se
-    // verifica es lo mismo: que a la persona se le diga.
     await wrapper.vm.onInactivityExpired()
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.inactivity_released')
+    expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
+    expect(wrapper.vm.$bvModal.hide).toHaveBeenCalled()
     wrapper.destroy()
   })
 

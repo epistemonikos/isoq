@@ -165,7 +165,8 @@ describe('Criteria.vue — 30 min without activity release the box', () => {
     expect(Api.patch.mock.invocationCallOrder[0])
       .toBeLessThan(LockService.releaseRef.mock.invocationCallOrder[0])
     expect(document.activeElement).not.toBe(textarea(wrapper).element)
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.inactivity_released')
+    // #378: volver y encontrar la caja cerrada es todo el aviso; no hay toast.
+    expect(wrapper.vm.$notify.warning).not.toHaveBeenCalled()
   })
 })
 

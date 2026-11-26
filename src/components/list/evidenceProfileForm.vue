@@ -27,6 +27,8 @@
           data-testid="finding-readonly-notice">
           <font-awesome-icon icon="lock" class="mr-1"></font-awesome-icon>{{ readOnlyNotice }}
         </b-alert>
+        <InactivityWarning :visible="inactivityWarning" :seconds-left="inactivitySecondsLeft"
+          @keep-working="keepWorkingOnInactivity" />
         <b-row>
           <b-col id="left-modal-content" cols="12" sm="3">
             <div class="float-right mb-5">
@@ -816,6 +818,7 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
 import { lockDeniedNoticeKey } from '@/utils/lockLostMessage'
 import { hasDataColumns } from '@/utils/tableColumns'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 
 export default {
   name: 'evidenceProfileForm',
@@ -824,8 +827,10 @@ export default {
     'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
     'assessment-table': () => import('@/components/camelot/assessment/CamelotAssessmentSummaryTable.vue'),
     'camelot-characteristics-table': () => import('@/components/camelot/characteristics/CharacteristicsTable.vue'),
-    'table-extracted-data': () => import('./editListExtractedData.vue')
+    'table-extracted-data': () => import('./editListExtractedData.vue'),
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
+  mixins: [editorInactivityMixin],
   props: {
     modalData: Object,
     list: Object,
@@ -1105,6 +1110,10 @@ export default {
         this.findingLockedBy = null
         this.findingDeniedKey = null
         this.lockLostWhileEditing = false
+        // #378: con el lock tomado, 30 min sin actividad lo sueltan. Sin esto el latido
+        // lo renueva mientras el modal siga abierto, aunque nadie esté frente a él.
+        // `modalOpen`: el acquire es asíncrono y el modal pudo cerrarse mientras tanto.
+        if (LockService.isEnabled && this.modalOpen) this.startInactivityWatch()
       } else {
         // Sin toast: lo dice el cartel del formulario (`readOnlyNotice`) y se queda.
         this.isFindingReadOnly = true
@@ -1142,6 +1151,8 @@ export default {
         this.isFindingReadOnly = true
         this.findingLockedBy = detail.lockedBy || null
         this.lockLostWhileEditing = true
+        // Sin lock no hay nada que soltar: el reloj sólo molestaría.
+        this.stopInactivityWatch()
       }
     },
     onModalHidden: function () {
@@ -1152,6 +1163,7 @@ export default {
         return
       }
       this.modalOpen = false
+      this.stopInactivityWatch()
       this.warnSeq++
       this.warnSession++
       this.warnReadsPending = 0
@@ -1402,7 +1414,7 @@ export default {
       // failure is invisible (console only) with the spinner left spinning.
       if (this.isFindingReadOnly) {
         this.$emit('busyEvidenceProfileTable', false)
-        return
+        return Promise.resolve()
       }
 
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
@@ -1421,7 +1433,7 @@ export default {
         if (faltantes.length) {
           if (this.$notify) this.$notify.warning(this.$t('lock.ref_locked_by_no_user'))
           this.$emit('busyEvidenceProfileTable', false)
-          return
+          return Promise.resolve()
         }
 
         // Secuencial y con `cerqual` ÚLTIMO, no en paralelo: escribir cerqual dispara
@@ -1431,7 +1443,9 @@ export default {
           ...changed.filter(s => s !== 'cerqual'),
           ...changed.filter(s => s === 'cerqual')
         ]
-        ordenadas
+        // Se devuelve la cadena (nunca rechaza: el `catch` la cierra) para que el
+        // vencimiento por inactividad pueda esperar el guardado antes de cerrar.
+        return ordenadas
           .reduce((cadena, s) => cadena.then(() =>
             Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])),
           Promise.resolve())
@@ -1448,7 +1462,7 @@ export default {
       } else {
         // New finding: no id yet to target /section/, create it with the full profile.
         const { type, title, isoqf_id: legacyIsoqfId, displayNumber, ...evidenceProfileData } = this.selectedOptions
-        Api.post(`/isoqf_findings`, {
+        return Api.post(`/isoqf_findings`, {
           organization: this.list.organization,
           list_id: this.list.id,
           evidence_profile: evidenceProfileData
@@ -1459,6 +1473,63 @@ export default {
           })
           .catch((error) => this.onSaveError(error, 'notifications.create_error'))
       }
+    },
+    /**
+     * #378: 30 min sin actividad. Guarda «lo seguro», cierra y no avisa: al volver la
+     * persona está de nuevo en la worksheet, y eso basta (pedido de Megan).
+     *
+     * Este modal no autoguarda y su guardado pasa por confirmaciones que nadie va a
+     * responder, así que cada una se resuelve hacia el lado que no decide por la persona:
+     *   - «¿Borro el CERQual?» abierta → No: el nivel vuelve al guardado, el texto queda.
+     *   - Falta la explicación → «Después»: se guarda igual (no se valida acá).
+     *   - El guardado ocultaría el finding o pasaría el proyecto a privado (o no se pudo
+     *     leer) → se guardan los textos y no los niveles. Pasar a privado es siempre una
+     *     elección de la persona.
+     * Persistir y después soltar: el cierre espera al PATCH (#404), y cierra aunque falle,
+     * porque retener el lock es justo lo que este mecanismo existe para evitar.
+     */
+    onInactivityExpired: async function () {
+      if (!this.modalOpen) return
+      // Toda lectura de impacto en vuelo deja de ser de esta sesión: sin esto podría abrir
+      // un modal de confirmación sobre un editor que ya se cerró.
+      this.warnSeq++
+      const preguntaAbierta = ['modal-warning-changed-option', 'modal-warning-cleaning-cerqual']
+        .some(r => this.$refs[r] && this.$refs[r].isVisible)
+      ;['modal-warning-same-txt', 'modal-warning-changed-option', 'modal-warning-save-incomplete',
+        'modal-warning-cleaning-cerqual'].forEach(r => this.$refs[r]?.hide())
+      try {
+        if (!this.isFindingReadOnly) {
+          if (preguntaAbierta) this.restoreSavedLevels([this.openedSection || sectionOfType(this.selectedOptions.type)])
+          await this.dropLevelsIfPublicationChanges()
+          await this.continueSavingDataModal()
+        }
+      } finally {
+        this.$refs['modal-evidence-profile-form']?.hide()
+      }
+    },
+    /** Vuelve al nivel guardado en esas secciones, conservando lo escrito. */
+    restoreSavedLevels: function (sections) {
+      sections.filter(Boolean).forEach(s => {
+        if (this.selectedOptions[s] && this.modalData[s]) {
+          this.selectedOptions[s].option = this.modalData[s].option
+        }
+      })
+    },
+    /** Si el CERQual que se guardaría afecta la publicación, se guardan sólo los textos. */
+    dropLevelsIfPublicationChanges: async function () {
+      const saved = this.modalData.cerqual || {}
+      const pending = this.selectedOptions.cerqual || {}
+      if (pending.option === saved.option) return
+      let impact = null
+      try {
+        impact = await impactOfListChange(this.list.project_id, this.list.id, list => {
+          list.cerqual = { ...list.cerqual, option: pending.option, explanation: pending.explanation }
+          return list
+        })
+      } catch (e) {
+        impact = null
+      }
+      if (impact !== 'none') this.restoreSavedLevels(EVIDENCE_PROFILE_SECTIONS)
     },
     /**
      * Un guardado que no entró. Antes iba a `printErrors`, que no muestra nada: el modal
