@@ -46,27 +46,32 @@ const Trans = {
       return storedLang
     }
 
-    const userPreferredLang = Trans.getUserLang()
-
-    // Check if user preferred browser lang is supported
-    if (Trans.isLangSupported(userPreferredLang.lang)) {
-      return userPreferredLang.lang
-    }
-    // Check if user preferred lang without the ISO is supported
-    if (Trans.isLangSupported(userPreferredLang.langNoISO)) {
-      return userPreferredLang.langNoISO
+    // #203: recorrer TODOS los idiomas que acepta el navegador, en su orden, y quedarse con el
+    // primero soportado (completo, luego sin región). Ninguno → inglés.
+    for (const lang of Trans.getUserLangs()) {
+      if (Trans.isLangSupported(lang)) return lang
+      const noRegion = lang.split('-')[0]
+      if (Trans.isLangSupported(noRegion)) return noRegion
     }
     return Trans.defaultLanguage
   },
   /**
-   * Returns the users preferred language
+   * Idiomas que acepta el navegador, en orden de preferencia
+   * @return {String[]}
    */
-  getUserLang () {
-    const lang = window.navigator.language || window.navigator.userLanguage || Trans.defaultLanguage
-    return {
-      lang: lang,
-      langNoISO: lang.split('-')[0]
-    }
+  getUserLangs () {
+    const nav = window.navigator
+    if (nav.languages && nav.languages.length) return nav.languages
+    const lang = nav.language || nav.userLanguage
+    return lang ? [lang] : []
+  },
+  /**
+   * Arranque: aplica el idioma guardado o el detectado SIN guardarlo como preferencia
+   * (#203: detectar no es elegir; sólo el perfil guarda).
+   * @return {Promise<String>}
+   */
+  init () {
+    return Trans.changeLanguage(Trans.getUserSupportedLang(), false)
   },
   /**
    * Sets the language to various services (axios, the html tag etc)
