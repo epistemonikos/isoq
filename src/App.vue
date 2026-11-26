@@ -52,6 +52,9 @@ export default {
   watch: {
     '$store.state.theme' (theme) {
       this._applyTheme(theme)
+    },
+    '$store.state.fontSize' (size) {
+      this._applyFontSize(size)
     }
   },
   methods: {

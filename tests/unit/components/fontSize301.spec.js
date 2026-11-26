@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import { shallowMount } from '@vue/test-utils'
 import App from '@/App.vue'
 import Accessibility from '@/components/Accessibility.vue'
@@ -49,6 +50,18 @@ describe('#301 — font size persists', () => {
     it('on mount', () => {
       const wrapper = mountApp({ fontSize: 20 })
       expect(document.body.style.fontSize).toBe('20px')
+      wrapper.destroy()
+    })
+
+    it('when the size changes, without reloading', async () => {
+      const state = Vue.observable({ theme: 'light', fontSize: 16 })
+      const wrapper = shallowMount(App, {
+        mocks: { $store: { state }, $route: { path: '/', meta: {} }, $t: k => k },
+        stubs: ['router-view', 'router-link', 'main-menu', 'offline-indicator', 'session-expired-modal']
+      })
+      state.fontSize = 22
+      await wrapper.vm.$nextTick()
+      expect(document.body.style.fontSize).toBe('22px')
       wrapper.destroy()
     })
 
