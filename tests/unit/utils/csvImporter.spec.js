@@ -79,3 +79,87 @@ describe('parseCSVData', () => {
     expect(result.error).toBe('Format error')
   })
 })
+
+// #163: filas y columnas completamente vacías (p. ej. pegadas desde la tabla original a la
+// plantilla) no se importan. Las columnas se filtran con UNA lista de índices para todas las
+// filas: una celda vacía en medio de una fila nunca corre los datos a la columna de al lado.
+describe('parseTableRows — blank rows and columns (#163)', () => {
+  it('drops rows whose cells are all empty or whitespace', () => {
+    const rows = [
+      ['Ref ID', 'Author', 'Country'],
+      ['1', 'Smith 2020', 'Chile'],
+      ['', '', ''],
+      ['  ', '', ' '],
+      ['2', 'Jones 2021', 'Peru']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.items).toEqual([
+      { ref_id: '1', authors: 'Smith 2020', column_0: 'Chile' },
+      { ref_id: '2', authors: 'Jones 2021', column_0: 'Peru' }
+    ])
+  })
+
+  it('drops a column with no header and no data, without shifting the others', () => {
+    const rows = [
+      ['Ref ID', 'Author', 'Country', '', 'Setting'],
+      ['1', 'Smith 2020', '', '', 'Rural'],
+      ['2', 'Jones 2021', 'Peru', '', '']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.fieldsObj).toEqual([
+      { key: 'column_0', label: 'Country' },
+      { key: 'column_1', label: 'Setting' }
+    ])
+    expect(result.fields.map(f => f.label)).toEqual(['Ref ID', 'Author', 'Country', 'Setting'])
+    expect(result.items).toEqual([
+      { ref_id: '1', authors: 'Smith 2020', column_0: '', column_1: 'Rural' },
+      { ref_id: '2', authors: 'Jones 2021', column_0: 'Peru', column_1: '' }
+    ])
+  })
+
+  it('keeps a column with a header even if no row has data', () => {
+    const rows = [
+      ['Ref ID', 'Author', 'Country', 'To fill later'],
+      ['1', 'Smith 2020', 'Chile', '']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.fieldsObj.map(f => f.label)).toEqual(['Country', 'To fill later'])
+    expect(result.items[0]).toEqual({ ref_id: '1', authors: 'Smith 2020', column_0: 'Chile', column_1: '' })
+  })
+
+  it('keeps a column without header when some row has data', () => {
+    const rows = [
+      ['Ref ID', 'Author', 'Country', ''],
+      ['1', 'Smith 2020', 'Chile', 'note']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.items[0]).toEqual({ ref_id: '1', authors: 'Smith 2020', column_0: 'Chile', column_1: 'note' })
+  })
+
+  it('never drops the Ref ID and Author columns', () => {
+    const rows = [
+      ['', '', 'Country'],
+      ['', '', 'Chile']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.fields.map(f => f.key)).toEqual(['ref_id', 'authors', 'column_0'])
+    expect(result.items).toEqual([{ ref_id: '', authors: '', column_0: 'Chile' }])
+  })
+
+  it('handles ragged rows (shorter than the header)', () => {
+    const rows = [
+      ['Ref ID', 'Author', 'Country', '', 'Setting'],
+      ['1', 'Smith 2020', 'Chile']
+    ]
+    const result = parseTableRows(rows, 'Format error')
+    expect(result.fieldsObj.map(f => f.label)).toEqual(['Country', 'Setting'])
+    expect(result.items[0]).toEqual({ ref_id: '1', authors: 'Smith 2020', column_0: 'Chile' })
+  })
+})
+
+describe('parseCSVData — blank rows from Excel (#163)', () => {
+  it('drops rows made only of separators', () => {
+    const result = parseCSVData('Ref ID,Author,Country\n1,Smith 2020,Chile\n,,\n', 'Format error')
+    expect(result.items).toEqual([{ ref_id: '1', authors: 'Smith 2020', column_0: 'Chile' }])
+  })
+})

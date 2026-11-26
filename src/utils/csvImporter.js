@@ -12,42 +12,39 @@ export function parseTableRows (rows, formatErrorMessage) {
     return { fields, items, fieldsObj, error: formatErrorMessage }
   }
 
-  for (let cnt in rows) {
-    if (parseInt(cnt) === 0) {
-      let cntI = 0
-      for (let i in rows[cnt]) {
-        let obj = {}
-        if (parseInt(i) === 0) {
-          obj.key = 'ref_id'
-        }
-        if (parseInt(i) === 1) {
-          obj.key = 'authors'
-        }
-        if (parseInt(i) > 1) {
-          fieldsObj.push({ 'key': 'column_' + cntI, 'label': rows[cnt][i] })
-          obj.key = 'column_' + cntI
-          cntI++
-        }
-        obj.label = rows[cnt][i]
-        fields.push(obj)
-      }
-    } else {
-      let cntI = 0
-      let obj = {}
-      for (let i in rows[cnt]) {
-        if (parseInt(i) === 0) {
-          obj.ref_id = rows[cnt][i]
-        }
-        if (parseInt(i) === 1) {
-          obj.authors = rows[cnt][i]
-        }
-        if (parseInt(i) > 1) {
-          obj[`column_${cntI}`] = rows[cnt][i]
-          cntI++
-        }
-      }
-      items.push(obj)
+  // #163: filas y columnas completamente vacías no se importan. Las columnas a conservar se
+  // deciden UNA vez y se aplican igual al encabezado y a cada fila, para que una celda vacía en
+  // medio de una fila no corra los datos. Ref ID y autor (0 y 1) nunca se descartan; una
+  // columna se descarta sólo si no tiene ni título ni ningún dato.
+  const isBlank = cell => cell === undefined || cell === null || String(cell).trim() === ''
+  const header = rows[0]
+  const dataRows = rows.slice(1).filter(row => !row.every(isBlank))
+  const width = Math.max(header.length, ...dataRows.map(row => row.length))
+  const kept = []
+  for (let i = 0; i < width; i++) {
+    if (i < 2 || !isBlank(header[i]) || dataRows.some(row => !isBlank(row[i]))) kept.push(i)
+  }
+
+  const keyFor = {}
+  let cntI = 0
+  for (const i of kept) {
+    let key
+    if (i === 0) key = 'ref_id'
+    else if (i === 1) key = 'authors'
+    else {
+      key = 'column_' + cntI++
+      if (i < header.length) fieldsObj.push({ 'key': key, 'label': header[i] })
     }
+    keyFor[i] = key
+    if (i < header.length) fields.push({ key, label: header[i] })
+  }
+
+  for (const row of dataRows) {
+    const obj = {}
+    for (const i of kept) {
+      if (i < row.length) obj[keyFor[i]] = row[i]
+    }
+    items.push(obj)
   }
 
   return { fields, items, fieldsObj, error }
