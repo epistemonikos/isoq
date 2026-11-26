@@ -23,7 +23,9 @@ export const store = new Vuex.Store({
     token: localStorage.getItem('l_s') || null,
     user: {},
     isOnline: navigator.onLine,
-    theme: localStorage.getItem('user_theme') || 'light'
+    theme: localStorage.getItem('user_theme') || 'light',
+    // #301: tamaño de letra elegido con +A/-A (px); null = el del CSS
+    fontSize: parseInt(localStorage.getItem('user_font_size'), 10) || null
   },
   mutations: {
     SET_ONLINE (state, status) {
@@ -76,11 +78,18 @@ export const store = new Vuex.Store({
     SET_THEME (state, theme) {
       state.theme = theme
       localStorage.setItem('user_theme', theme)
+    },
+    SET_FONT_SIZE (state, size) {
+      state.fontSize = size
+      localStorage.setItem('user_font_size', String(size))
     }
   },
   actions: {
     setTheme ({ commit }, theme) {
       commit('SET_THEME', theme)
+    },
+    setFontSize ({ commit }, size) {
+      commit('SET_FONT_SIZE', size)
     },
     login ({commit}, user) {
       return new Promise((resolve, reject) => {

@@ -41,19 +41,17 @@ export default {
     }
   },
   methods: {
+    currentFontSize () {
+      return this.$store.state.fontSize ||
+        parseInt(window.getComputedStyle(document.body, null).getPropertyValue('font-size'), 10) || 16
+    },
     increaseFontSize () {
-      const currentSize = window.getComputedStyle(document.body, null).getPropertyValue('font-size')
-      const body = document.querySelector('body')
-      if (parseInt(currentSize) < 24) {
-        body.style.fontSize = `${parseInt(currentSize) + 2}px`
-      }
+      const size = this.currentFontSize()
+      if (size < 24) this.$store.dispatch('setFontSize', size + 2)
     },
     decreaseFontSize () {
-      const currentSize = window.getComputedStyle(document.body, null).getPropertyValue('font-size')
-      const body = document.querySelector('body')
-      if (parseInt(currentSize) > 16) {
-        body.style.fontSize = `${parseInt(currentSize) - 2}px`
-      }
+      const size = this.currentFontSize()
+      if (size > 16) this.$store.dispatch('setFontSize', size - 2)
     },
     toggleTheme () {
       this.$store.dispatch('setTheme', this.isDark ? 'light' : 'dark')
