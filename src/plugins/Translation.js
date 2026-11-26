@@ -2,6 +2,8 @@ import axios from 'axios'
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '@/constants/trans'
 import { i18n } from '@/plugins/i18n'
 
+const STORAGE_KEY = 'user_language'
+
 const Trans = {
   get defaultLanguage () {
     return DEFAULT_LANGUAGE
@@ -16,31 +18,60 @@ const Trans = {
     i18n.locale = lang
   },
   /**
+   * Gets the stored language from localStorage
+   * @return {String|null}
+   */
+  getStoredLanguage () {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored && Trans.isLangSupported(stored)) {
+      return stored
+    }
+    return null
+  },
+  /**
+   * Saves the language preference to localStorage
+   * @param {String} lang
+   */
+  saveLanguagePreference (lang) {
+    localStorage.setItem(STORAGE_KEY, lang)
+  },
+  /**
    * Gets the first supported language that matches the user's
    * @return {String}
    */
   getUserSupportedLang () {
-    const userPreferredLang = Trans.getUserLang()
-
-    // Check if user preferred browser lang is supported
-    if (Trans.isLangSupported(userPreferredLang.lang)) {
-      return userPreferredLang.lang
+    // First check localStorage for saved preference
+    const storedLang = Trans.getStoredLanguage()
+    if (storedLang) {
+      return storedLang
     }
-    // Check if user preferred lang without the ISO is supported
-    if (Trans.isLangSupported(userPreferredLang.langNoISO)) {
-      return userPreferredLang.langNoISO
+
+    // #203: recorrer TODOS los idiomas que acepta el navegador, en su orden, y quedarse con el
+    // primero soportado (completo, luego sin región). Ninguno → inglés.
+    for (const lang of Trans.getUserLangs()) {
+      if (Trans.isLangSupported(lang)) return lang
+      const noRegion = lang.split('-')[0]
+      if (Trans.isLangSupported(noRegion)) return noRegion
     }
     return Trans.defaultLanguage
   },
   /**
-   * Returns the users preferred language
+   * Idiomas que acepta el navegador, en orden de preferencia
+   * @return {String[]}
    */
-  getUserLang () {
-    const lang = window.navigator.language || window.navigator.userLanguage || Trans.defaultLanguage
-    return {
-      lang: lang,
-      langNoISO: lang.split('-')[0]
-    }
+  getUserLangs () {
+    const nav = window.navigator
+    if (nav.languages && nav.languages.length) return nav.languages
+    const lang = nav.language || nav.userLanguage
+    return lang ? [lang] : []
+  },
+  /**
+   * Arranque: aplica el idioma guardado o el detectado SIN guardarlo como preferencia
+   * (#203: detectar no es elegir; sólo el perfil guarda).
+   * @return {Promise<String>}
+   */
+  init () {
+    return Trans.changeLanguage(Trans.getUserSupportedLang(), false)
   },
   /**
    * Sets the language to various services (axios, the html tag etc)
@@ -58,11 +89,14 @@ const Trans = {
    * @param lang
    * @return {Promise<any>}
    */
-  changeLanguage (lang) {
+  changeLanguage (lang, persist = true) {
     if (!Trans.isLangSupported(lang)) return Promise.reject(new Error('Language not supported'))
     if (i18n.locale === lang) return Promise.resolve(lang) // has been loaded prior
     return Trans.loadLanguageFile(lang).then(msgs => {
       i18n.setLocaleMessage(lang, msgs.default || msgs)
+      if (persist) {
+        Trans.saveLanguagePreference(lang)
+      }
       return Trans.setI18nLanguageInServices(lang)
     })
   },

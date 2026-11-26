@@ -1,46 +1,42 @@
 <template>
-  <div
-    class="mt-5 mb-5"
-    v-if="show && show.selected && show.selected.includes('ma')">
+  <div class="mt-5 mb-5" v-if="show.selected.includes('ma')">
     <a name="methodological-assessments"></a>
     <h3 class="toDoc">
-      {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
-      <span
-        v-if="ui && ui.methodological_assessments && ui.methodological_assessments.display_warning"
-        class="text-danger d-print-none"
-        v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
+      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none"
+        v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.meth_tooltip')">*</small>
+      <span v-if="ui.methodological_assessments.display_warning" class="text-danger d-print-none" v-b-tooltip.hover
+        :title="$t('worksheet.warnings.meth_missing')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">My Data</b-link> section of iSoQ</p>
+    <p v-if="showParagraph && (!useCamelot || ui.methodological_assessments.display_warning)"
+      class="d-print-none font-weight-light">
+      {{ $t('help.instructions.add_data_link_pre') }}<b-link
+        :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">{{ $t('common.my_data')
+        }}</b-link>{{ $t('help.instructions.add_data_link_post') }}
+    </p>
+
     <template v-if="useCamelot">
-      <assessment-table
-        :assessments="methAssessments"
-        :references="list.references" />
+      <camelot-assessment-summary-table :assessments="methAssessments" :references="list.references"
+        :hideActions="true" />
     </template>
     <template v-else>
-      <template v-if="methAssessments && methAssessments.fields && methAssessments.fields.length">
-        <bc-filters
-          v-if="mode==='edit' && methAssessments.items && methAssessments.items.length && permission"
-          class="d-print-none"
-          idname="meth-assessments-filter"
-          :tableSettings="methodological_assessments_table_settings"
-          type="meth_assessments"
-          :fields="methAssessments.fields"
-          :items="methAssessments.items">
+      <template v-if="methAssessments.fields.length">
+        <bc-filters v-if="mode === 'edit' && methAssessments.items.length && permission" class="d-print-none"
+          idname="meth-assessments-filter" :tableSettings="methodological_assessments_table_settings"
+          type="meth_assessments" :fields="methAssessments.fields" :items="methAssessments.items" :shown-items="shownItems">
         </bc-filters>
-        <b-table
-          class="toDoc"
-          id="methodological"
-          responsive
-          head-variant="light"
-          outlined
-          :fields="methAssessments.fieldsObj || []"
-          :items="methAssessments.items || []"
-          :filter="methodological_assessments_table_settings.filter">
-          <template
-            v-slot:cell(authors)="data">
-            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+        <!-- #416: sin d-print-none: el PDF también tiene que decir que la tabla está filtrada. -->
+        <p v-if="filteredNote" class="small font-italic mb-2" data-testid="filtered-view-note">{{ filteredNote }}</p>
+        <b-table class="toDoc" id="methodological" responsive head-variant="light" outlined
+          :fields="methAssessments.fieldsObj" :items="methAssessments.items"
+          :filter="methodological_assessments_table_settings.filter" @filtered="onTableFiltered"
+          :show-empty="searchShowEmpty" :empty-filtered-text="searchEmptyText">
+          <template v-slot:cell(authors)="data">
+            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+          </template>
+          <template v-slot:cell()="data">
+            <truncated-cell :text="data.value" />
           </template>
         </b-table>
 
@@ -52,51 +48,24 @@
 </template>
 
 <script>
-import AssessmentTable from '../camelot/assessment/AssessmentTable.vue'
+import tableSearchViewMixin from '@/mixins/tableSearchViewMixin'
 
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
+const CamelotAssessmentSummaryTable = () => import(/* webpackChunkName: "camelot" */ '../camelot/assessment/CamelotAssessmentSummaryTable.vue')
+const TruncatedCell = () => import(/* webpackChunkName: "truncated-cell" */'../common/TruncatedCell.vue')
+
 export default {
   name: 'editListMethAssessments',
+  mixins: [tableSearchViewMixin],
   props: {
-    ui: {
-      type: Object,
-      default: () => ({
-        methodological_assessments: {
-          display_warning: false
-        }
-      })
-    },
-    show: {
-      type: Object,
-      default: () => ({
-        selected: []
-      })
-    },
-    mode: {
-      type: String,
-      default: 'edit'
-    },
-    list: {
-      type: Object,
-      required: true
-    },
-    permission: {
-      type: Boolean,
-      default: false
-    },
-    methAssessments: {
-      type: Object,
-      default: () => ({
-        fields: [],
-        items: [],
-        fieldsObj: []
-      })
-    },
-    refsWithTitle: {
-      type: Array,
-      default: () => []
-    },
+    ui: Object,
+    show: Object,
+    mode: String,
+    list: Object,
+    permission: Boolean,
+    methAssessments: Object,
+    refsWithTitle: Array,
     showParagraph: {
       type: Boolean,
       default: false
@@ -107,9 +76,10 @@ export default {
     }
   },
   components: {
+    'truncated-cell': TruncatedCell,
     'back-to-top': backToTop,
     'bc-filters': bCardFilters,
-    'assessment-table': AssessmentTable
+    'camelot-assessment-summary-table': CamelotAssessmentSummaryTable
   },
   data () {
     return {
@@ -123,22 +93,25 @@ export default {
     }
   },
   methods: {
+    // tableSearchViewMixin (#416): qué tabla es, su búsqueda y cuántas filas tiene.
+    searchTableName () {
+      return 'methodological'
+    },
+    searchSettings () {
+      return this.methodological_assessments_table_settings
+    },
+    searchTotal () {
+      return (this.methAssessments.items || []).length
+    },
     getReferenceInfo: function (refId) {
-      if (!this.refsWithTitle || !Array.isArray(this.refsWithTitle)) {
-        return ''
-      }
-
       for (let ref of this.refsWithTitle) {
-        if (ref && ref.id === refId) {
-          return ref.content || ''
+        if (ref.id === refId) {
+          return ref.content
         }
       }
-      return ''
     }
   }
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

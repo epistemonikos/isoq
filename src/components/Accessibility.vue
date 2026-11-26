@@ -1,8 +1,11 @@
 <template>
   <div :class="{'navbar-nav ml-auto': isMenu}">
     <template v-if="isMenu">
-      <b-nav-item @click="increaseFontSize">+A</b-nav-item>
-      <b-nav-item @click="decreaseFontSize">-A</b-nav-item>
+      <b-nav-item @click="increaseFontSize">{{ $t('accessibility.increase_font') }}</b-nav-item>
+      <b-nav-item @click="decreaseFontSize">{{ $t('accessibility.decrease_font') }}</b-nav-item>
+      <b-nav-item @click="toggleTheme" :title="$t('accessibility.toggle_theme')">
+        <font-awesome-icon :icon="isDark ? 'sun' : 'moon'" />
+      </b-nav-item>
     </template>
     <template v-else>
       <b-container fluid class="float-right">
@@ -10,8 +13,11 @@
           <b-col cols="1" class="mt-2">
             <ul class="list-inline text-center accessibility">
               <!-- <li class="list-inline-item">Font size</li> -->
-              <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">+A</li>
-              <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">-A</li>
+              <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">{{ $t('accessibility.increase_font') }}</li>
+              <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">{{ $t('accessibility.decrease_font') }}</li>
+              <li class="list-inline-item" style="cursor: pointer" :title="$t('accessibility.toggle_theme')" @click="toggleTheme">
+                <font-awesome-icon :icon="isDark ? 'sun' : 'moon'" />
+              </li>
             </ul>
           </b-col>
         </b-row>
@@ -29,20 +35,26 @@ export default {
       default: false
     }
   },
+  computed: {
+    isDark () {
+      return this.$store.state.theme === 'dark'
+    }
+  },
   methods: {
+    currentFontSize () {
+      return this.$store.state.fontSize ||
+        parseInt(window.getComputedStyle(document.body, null).getPropertyValue('font-size'), 10) || 16
+    },
     increaseFontSize () {
-      const currentSize = window.getComputedStyle(document.body, null).getPropertyValue('font-size')
-      const body = document.querySelector('body')
-      if (parseInt(currentSize) < 24) {
-        body.style.fontSize = `${parseInt(currentSize) + 2}px`
-      }
+      const size = this.currentFontSize()
+      if (size < 24) this.$store.dispatch('setFontSize', size + 2)
     },
     decreaseFontSize () {
-      const currentSize = window.getComputedStyle(document.body, null).getPropertyValue('font-size')
-      const body = document.querySelector('body')
-      if (parseInt(currentSize) > 16) {
-        body.style.fontSize = `${parseInt(currentSize) - 2}px`
-      }
+      const size = this.currentFontSize()
+      if (size > 16) this.$store.dispatch('setFontSize', size - 2)
+    },
+    toggleTheme () {
+      this.$store.dispatch('setTheme', this.isDark ? 'light' : 'dark')
     }
   }
 }

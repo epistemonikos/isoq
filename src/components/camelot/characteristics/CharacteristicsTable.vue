@@ -1,18 +1,39 @@
 <template>
     <div>
+        <div class="d-flex justify-content-end mb-3 d-print-none" data-testid="chars-toolbar">
+            <table-column-filter :all-columns="filterableColumns" v-model="visibleColumnKeys" />
+            <b-button
+                class="ml-2"
+                size="sm"
+                variant="outline-info"
+                data-testid="toggle-comments"
+                :disabled="!hasVisibleCamelotFields"
+                @click="showComments = !showComments">
+                <template v-if="showComments">
+                    {{ $t('worksheet.actions.hide_concerns') }}
+                </template>
+                <template v-else>
+                    {{ $t('worksheet.actions.show_concerns') }}
+                </template>
+            </b-button>
+        </div>
+        <!-- #416: sin d-print-none: el PDF también tiene que decir que la tabla está filtrada. -->
+        <p v-if="filteredNote" class="small font-italic mb-2" data-testid="filtered-view-note">{{ filteredNote }}</p>
         <table class="table table-bordered table-striped table-responsive">
             <!-- Primera fila de cabecera -->
             <thead>
                 <tr>
-                    <th rowspan="2">Author(s), Year</th>
-                    <!-- Campos personalizados -->
-                    <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customField }}</th>
-                    <!-- Categorías CAMELOT -->
-                    <th v-for="category in camelot.categories" :key="category.key" :colspan="2">{{ category.label }}</th>
+                    <th rowspan="2">{{ $t('camelot.step_three.authors_label') }}</th>
+                    <th
+                        v-for="header in unifiedHeaders"
+                        :key="header.key"
+                        :colspan="header.colspan">
+                        {{ header.label }}
+                    </th>
                 </tr>
-                <!-- Segunda fila de cabecera - solo para opciones CAMELOT -->
-                <tr>
-                    <th v-for="option in allCamelotOptions" :key="option.key">{{ option.label }}</th>
+                <!-- Second header row: CAMELOT options, and "Extracted data" under each custom column -->
+                <tr v-if="subHeaders.length > 0">
+                    <th v-for="subHeader in subHeaders" :key="subHeader.key" class="text-nowrap">{{ subHeader.label }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -20,11 +41,10 @@
                     <!-- Authors, Year -->
                     <td>{{ formatAuthorsYear(item) }}</td>
 
-                    <!-- Campos personalizados -->
-                    <td v-for="customField in sortedCustomFields" :key="customField">{{ item[customField] || '' }}</td>
-
-                    <!-- Valores CAMELOT -->
-                    <td v-for="option in allCamelotOptions" :key="option.key">{{ item[option.key] || '' }}</td>
+                    <!-- Unified Cells -->
+                    <td v-for="(cell, cellIndex) in dataCells(item)" :key="cellIndex">
+                        <truncated-cell :text="cell.value" />
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -33,46 +53,89 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import TableColumnFilter from '@/components/common/TableColumnFilter.vue'
+import { characteristicsColumns } from '@/utils/characteristicsColumns'
+import { filteredViewNote } from '@/utils/filteredViewNote'
+import TruncatedCell from '@/components/common/TruncatedCell.vue'
 
 export default {
-    name: 'CharacteristicsTable',
-    mixins: [camelotMixin],
-    props: {
-        charsOfStudies: {
-            type: Object,
-            required: true
-        }
-    },
-    computed: {
-        sortedCustomFields() {
-            if (!this.charsOfStudies.items || this.charsOfStudies.items.length === 0) {
-                return []
-            }
-
-            // Obtener todas las claves que empiezan con "column_"
-            const customFields = Object.keys(this.charsOfStudies.items[0]).filter(key =>
-                key.startsWith('column_')
-            )
-
-            // Ordenar numéricamente
-            return customFields.sort((a, b) => {
-                const numA = parseInt(a.replace('column_', ''))
-                const numB = parseInt(b.replace('column_', ''))
-                return numA - numB
-            })
-        },
-        allCamelotOptions() {
-            // Aplanar todas las opciones de todas las categorías
-            return this.camelot.categories.flatMap(category => category.options)
-        }
-    },
-    methods: {
-        formatAuthorsYear(item) {
-            const authors = item.authors || ''
-            const year = item.year || ''
-            return `${authors} ${year}`.trim()
-        }
+  name: 'CharacteristicsTable',
+  mixins: [camelotMixin],
+  components: {
+    'truncated-cell': TruncatedCell,
+    'table-column-filter': TableColumnFilter
+  },
+  props: {
+    charsOfStudies: {
+      type: Object,
+      required: true
     }
+  },
+  data () {
+    return {
+      showComments: false,
+      // Se guardan las ocultas y no las visibles: una columna que aparece después entra visible sola.
+      hiddenColumnKeys: []
+    }
+  },
+  computed: {
+    // Una sola regla para la pantalla y los exportables (utils/characteristicsColumns).
+    columns () {
+      return characteristicsColumns({
+        fields: this.charsOfStudies.fields,
+        categories: this.camelot && this.camelot.categories,
+        view: { hiddenColumnKeys: this.hiddenColumnKeys, showComments: this.showComments },
+        labels: {
+          extractedData: this.$t('camelot.step_four.camelot_mixin.extracted_data'),
+          comments: this.$t('camelot.step_three.concerns_label') || 'Comments'
+        }
+      })
+    },
+    unifiedHeaders () {
+      return this.columns.headers
+    },
+    filterableColumns () {
+      return this.columns.filterable
+    },
+    visibleColumnKeys: {
+      get () {
+        return this.unifiedHeaders.map(h => h.key)
+      },
+      set (visibleKeys) {
+        this.hiddenColumnKeys = this.columns.filterable.map(h => h.key).filter(k => !visibleKeys.includes(k))
+      }
+    },
+    subHeaders () {
+      return this.columns.subHeaders
+    },
+    /** Lo que la tabla está mostrando, para quien exporta. */
+    view () {
+      return { hiddenColumnKeys: [...this.hiddenColumnKeys], showComments: this.showComments }
+    },
+    hasVisibleCamelotFields () {
+      return this.columns.hasVisibleCamelot
+    },
+    filteredNote () {
+      return filteredViewNote({ hiddenLabels: this.columns.hiddenLabels }, (k, p) => this.$t(k, p))
+    }
+  },
+  watch: {
+    // #416: el Word de la worksheet sigue este filtro (el PDF ya lo sigue: imprime la pantalla).
+    view: {
+      handler (view) { this.$emit('view-change', view) },
+      immediate: true
+    }
+  },
+  methods: {
+    formatAuthorsYear (item) {
+      // `authors` already embeds the publication year (Commons.parseReference appends it),
+      // so appending item.year here would duplicate it, e.g. "Chen 2021; 2021".
+      return (item.authors || '').trim()
+    },
+    dataCells (item) {
+      return this.columns.cellKeys.map(key => ({ key, value: item[key] || '' }))
+    }
+  }
 }
 </script>
 

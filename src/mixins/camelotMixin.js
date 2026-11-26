@@ -1,128 +1,128 @@
 export const camelotMixin = {
-  data () {
-    return {
-      camelot: {
+  computed: {
+    camelot () {
+      return {
         fields: [
-          { key: 'research_extractedData', label: 'Extracted data' },
-          { key: 'research_concerns', label: 'Concerns' },
-          { key: 'stakeholders_extractedData', label: 'Extracted data' },
-          { key: 'stakeholders_concerns', label: 'Concerns' },
-          { key: 'researchers_extractedData', label: 'Extracted data' },
-          { key: 'researchers_concerns', label: 'Concerns' },
-          { key: 'context_extractedData', label: 'Extracted data' },
-          { key: 'context_concerns', label: 'Concerns' },
-          { key: 'strategy_extractedData', label: 'Extracted data' },
-          { key: 'strategy_concerns', label: 'Concerns' },
-          { key: 'theory_extractedData', label: 'Extracted data' },
-          { key: 'theory_concerns', label: 'Concerns' },
-          { key: 'ethical_extractedData', label: 'Extracted data' },
-          { key: 'ethical_concerns', label: 'Concerns' },
-          { key: 'equity_extractedData', label: 'Extracted data' },
-          { key: 'equity_concerns', label: 'Concerns' },
-          { key: 'participant_extractedData', label: 'Extracted data' },
-          { key: 'participant_concerns', label: 'Concerns' },
-          { key: 'data_extractedData', label: 'Extracted data' },
-          { key: 'data_concerns', label: 'Concerns' },
-          { key: 'analysis_extractedData', label: 'Extracted data' },
-          { key: 'analysis_concerns', label: 'Concerns' },
-          { key: 'presentation_extractedData', label: 'Extracted data' },
-          { key: 'presentation_concerns', label: 'Concerns' }
+          { key: 'research_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'research_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'stakeholders_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'stakeholders_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'researchers_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'researchers_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'context_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'context_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'strategy_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'strategy_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'theory_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'theory_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'ethical_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'ethical_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'equity_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'equity_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'participant_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'participant_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'data_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'data_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'analysis_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'analysis_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') },
+          { key: 'presentation_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+          { key: 'presentation_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
         ],
         categories: [
           {
             key: 'research',
-            label: 'Meta domain 1 - Research',
+            label: this.$t('camelot.step_four.camelot_mixin.meta_domain_1'),
             options: [
-              { key: 'research_extractedData', label: 'Extracted data' },
-              { key: 'research_concerns', label: 'Concerns' }
+              { key: 'research_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'research_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'stakeholders',
-            label: 'Meta domain 2 - Stakeholders',
+            label: this.$t('camelot.step_four.camelot_mixin.meta_domain_2'),
             options: [
-              { key: 'stakeholders_extractedData', label: 'Extracted data' },
-              { key: 'stakeholders_concerns', label: 'Concerns' }
+              { key: 'stakeholders_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'stakeholders_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'researchers',
-            label: 'Meta domain 3 - Researchers',
+            label: this.$t('camelot.step_four.camelot_mixin.meta_domain_3'),
             options: [
-              { key: 'researchers_extractedData', label: 'Extracted data' },
-              { key: 'researchers_concerns', label: 'Concerns' }
+              { key: 'researchers_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'researchers_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'context',
-            label: 'Meta domain 4 - Context',
+            label: this.$t('camelot.step_four.camelot_mixin.meta_domain_4'),
             options: [
-              { key: 'context_extractedData', label: 'Extracted data' },
-              { key: 'context_concerns', label: 'Concerns' }
+              { key: 'context_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'context_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'strategy',
-            label: 'Research design 1 - Research strategy',
+            label: this.$t('camelot.step_four.camelot_mixin.research_design_1'),
             options: [
-              { key: 'strategy_extractedData', label: 'Extracted data' },
-              { key: 'strategy_concerns', label: 'Concerns' }
+              { key: 'strategy_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'strategy_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'theory',
-            label: 'Research design 2 - Theory',
+            label: this.$t('camelot.step_four.camelot_mixin.research_design_2'),
             options: [
-              { key: 'theory_extractedData', label: 'Extracted data' },
-              { key: 'theory_concerns', label: 'Concerns' }
+              { key: 'theory_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'theory_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'ethical',
-            label: 'Research design 3 - Ethical considerations',
+            label: this.$t('camelot.step_four.camelot_mixin.research_design_3'),
             options: [
-              { key: 'ethical_extractedData', label: 'Extracted data' },
-              { key: 'ethical_concerns', label: 'Concerns' }
+              { key: 'ethical_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'ethical_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'equity',
-            label: 'Research design 4 - Equity, diversity & inclusion considerations',
+            label: this.$t('camelot.step_four.camelot_mixin.research_design_4'),
             options: [
-              { key: 'equity_extractedData', label: 'Extracted data' },
-              { key: 'equity_concerns', label: 'Concerns' }
+              { key: 'equity_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'equity_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'participant',
-            label: 'Research conduct 1 - Participant recruitment & selection',
+            label: this.$t('camelot.step_four.camelot_mixin.research_conduct_1'),
             options: [
-              { key: 'participant_extractedData', label: 'Extracted data' },
-              { key: 'participant_concerns', label: 'Concerns' }
+              { key: 'participant_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'participant_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'data',
-            label: 'Research conduct 2 - Data collection',
+            label: this.$t('camelot.step_four.camelot_mixin.research_conduct_2'),
             options: [
-              { key: 'data_extractedData', label: 'Extracted data' },
-              { key: 'data_concerns', label: 'Concerns' }
+              { key: 'data_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'data_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'analysis',
-            label: 'Research conduct 3 - Analysis & interpretation',
+            label: this.$t('camelot.step_four.camelot_mixin.research_conduct_3'),
             options: [
-              { key: 'analysis_extractedData', label: 'Extracted data' },
-              { key: 'analysis_concerns', label: 'Concerns' }
+              { key: 'analysis_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'analysis_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           },
           {
             key: 'presentation',
-            label: 'Research conduct 4 - Presentation of findings',
+            label: this.$t('camelot.step_four.camelot_mixin.research_conduct_4'),
             options: [
-              { key: 'presentation_extractedData', label: 'Extracted data' },
-              { key: 'presentation_concerns', label: 'Concerns' }
+              { key: 'presentation_extractedData', label: this.$t('camelot.step_four.camelot_mixin.extracted_data') },
+              { key: 'presentation_comments', label: this.$t('camelot.step_four.camelot_mixin.concerns') }
             ]
           }
         ],
@@ -130,29 +130,29 @@ export const camelotMixin = {
           'ref_id',
           'authors',
           'research_extractedData',
-          'research_concerns',
+          'research_comments',
           'stakeholders_extractedData',
-          'stakeholders_concerns',
+          'stakeholders_comments',
           'researchers_extractedData',
-          'researchers_concerns',
+          'researchers_comments',
           'context_extractedData',
-          'context_concerns',
+          'context_comments',
           'strategy_extractedData',
-          'strategy_concerns',
+          'strategy_comments',
           'theory_extractedData',
-          'theory_concerns',
+          'theory_comments',
           'ethical_extractedData',
-          'ethical_concerns',
+          'ethical_comments',
           'equity_extractedData',
-          'equity_concerns',
+          'equity_comments',
           'participant_extractedData',
-          'participant_concerns',
+          'participant_comments',
           'data_extractedData',
-          'data_concerns',
+          'data_comments',
           'analysis_extractedData',
-          'analysis_concerns',
+          'analysis_comments',
           'presentation_extractedData',
-          'presentation_concerns',
+          'presentation_comments',
           'actions'
         ]
       }

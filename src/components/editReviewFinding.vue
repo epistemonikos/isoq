@@ -1,16 +1,16 @@
 <template>
   <div class="mb-3">
     <template v-if="!ui.editMode">
-      <h4>Review Finding</h4>
+      <h4>{{ $t('review_finding.title') }}</h4>
       <p>{{ list.name }}</p>
       <b-button
         v-if="permissions"
         variant="outline-primary"
-        @click="ui.editMode=true">Edit</b-button>
+        @click="ui.editMode=true">{{ $t('common.edit') }}</b-button>
     </template>
     <template v-if="ui.editMode">
       <div>
-        <h4>Edit Review Finding</h4>
+        <h4>{{ $t('review_finding.edit_title') }}</h4>
         <b-form>
           <b-form-textarea
             rows="3"
@@ -22,11 +22,11 @@
             class="mt-2"
             :disabled="!reviewContent.trim().length"
             variant="outline-primary"
-            @click="updateReview">Update</b-button>
+            @click="updateReview">{{ $t('common.update') }}</b-button>
           <b-button
             class="mt-2"
             variant="outline-secondary"
-            @click="ui.editMode=false">Cancel</b-button>
+            @click="ui.editMode=false">{{ $t('common.cancel') }}</b-button>
         </template>
       </div>
     </template>
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   name: 'editReviewFinding',
@@ -63,14 +63,14 @@ export default {
       paramsFindings.name = this.reviewContent
       paramsFindings.evidence_profile.name = this.reviewContent
 
-      let queryLists = axios.patch(`/api/isoqf_lists/${this.list.id}`, paramsList)
-      let queryFindings = axios.patch(`/api/isoqf_findings/${this.finding.id}`, paramsFindings)
+      let queryLists = Api.patch(`/isoqf_lists/${this.list.id}`, paramsList)
+      let queryFindings = Api.patch(`/isoqf_findings/${this.finding.id}`, paramsFindings)
 
-      axios.all([queryLists, queryFindings])
-        .then(axios.spread((responseList, responseFInding) => {
+      Promise.all([queryLists, queryFindings])
+        .then(([responseList, responseFInding]) => {
           this.$emit('update-list-data')
           this.ui.editMode = false
-        }))
+        })
     }
   }
 }

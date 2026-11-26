@@ -1,238 +1,250 @@
 <template>
   <div>
-    <template v-if="!canWrite">
+    <template v-if="!canEdit">
       <b-row>
         <b-col
           cols="12">
-            <p><b>{{ $t('Title of review') }}</b></p>
+            <p><b>{{ $t('project.title_of_review') }}</b></p>
             <p>{{ formData.name }}</p>
-            <p><b>{{ $t('Authors') }}</b></p>
+            <p><b>{{ $t('project.authors') }}</b></p>
             <p>{{ formData.authors }}</p>
-            <p><b>{{ $t('Corresponding author') }}</b></p>
+            <p><b>{{ $t('project.corresponding_author') }}</b></p>
             <p>{{ formData.author }}</p>
-            <p><b>{{ $t('Corresponding author\'s email address') }}</b></p>
+            <p><b>{{ $t('project.corresponding_author_email') }}</b></p>
             <p>{{ formData.author_email }}</p>
-            <p><b>{{ $t('Review question') }}</b></p>
+            <p><b>{{ $t('project.review_question') }}</b></p>
             <p>{{ formData.review_question }}</p>
-            <p><b>{{ $t('Has this review been published?') }}</b></p>
-            <p>{{ formData.published_status ? 'Yes' : 'No' }}</p>
-            <p v-if="formData.published_status"><b>{{ $t('URL or DOI') }}</b></p>
+            <p><b>{{ $t('project.published_status') }}</b></p>
+            <p>{{ formData.published_status ? $t('common.yes') : $t('common.no') }}</p>
+            <p v-if="formData.published_status"><b>{{ $t('project.url_doi') }}</b></p>
             <p v-if="formData.published_status">{{ formData.url_doi }}</p>
-            <p><b>{{ $t('Is the iSoQ being completed by the review authors?') }}</b></p>
-            <p>{{ formData.complete_by_author ? 'Yes' : 'No' }}</p>
-            <p v-if="!formData.complete_by_author"><b>{{ $t('Please list the authors of this iSoQ') }}</b></p>
+            <p><b>{{ $t('project.completed_by_authors') }}</b></p>
+            <p>{{ formData.complete_by_author ? $t('common.yes') : $t('common.no') }}</p>
+            <p v-if="!formData.complete_by_author"><b>{{ $t('project.list_authors_isoq') }}</b></p>
             <p v-if="!formData.complete_by_author">{{ formData.lists_authors }}</p>
-            <p><b>{{ $t('License') }}</b></p>
+            <p><b>{{ $t('project.license_label') }}</b></p>
             <p>{{ formData.license_type }}</p>
-            <p><b>{{ $t('Additional information') }}</b></p>
+            <p><b>{{ $t('project.additional_info') }}</b></p>
             <p>{{ formData.description }}</p>
         </b-col>
       </b-row>
     </template>
-    <template v-if="canWrite">
-      <b-row>
-        <b-col>
-          <b-alert
-            :show="msgUpdateProject !== null && msgUpdateProject.length"
-            dismissible
-            :variant="variant"
-            @dismissed="dismissAlertProject">
-            {{ msgUpdateProject }}
-          </b-alert>
-        </b-col>
-      </b-row>
+    <template v-if="canEdit">
       <b-row>
         <b-col
           cols="12">
           <b-form-group
-            :label="$t('Title of review')"
+            :label="$t('project.title_of_review')"
             label-for="input-project-list-name"
-            description="Insert the title that you plan to use for this report or paper.">
+            :description="$t('project.insert_title_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-name"
               type="text"
               required
-              :placeholder="$t('Title of review')"
+              :placeholder="$t('project.title_placeholder')"
               :state="state.name"
-              @input="state.name = (formData.name !== '' && formData.name.length > 2) ? null : state.name"
-              @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
+              @input="onFieldInput('name')"
+              @blur="onFieldBlur('name')"
               v-model="formData.name"></b-form-input>
-            <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.name">{{ $t('project.validation.title_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Authors')"
+            :label="$t('project.authors')"
             label-for="input-project-authors"
-            description="First then last name of all authors separated by commas">
+            :description="$t('project.authors_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-authors"
-              :placeholder="$t('Authors of review')"
+              :placeholder="$t('project.authors_input_placeholder')"
               :state="state.authors"
-              @input="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : state.authors : null"
-              @blur="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : false : null"
+              @input="onFieldInput('authors')"
+              @blur="onFieldBlur('authors')"
               v-model="formData.authors"></b-form-input>
-            <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.authors">{{ $t('project.validation.at_least_one_author') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            label="Corresponding author"
+            :label="$t('project.corresponding_author')"
             label-for="input-project-author"
-            description="First then last name">
+            :description="$t('project.author_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-author"
               :state="state.author"
-              @input="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : state.author : null"
-              @blur="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : false : null"
+              @input="onFieldInput('author')"
+              @blur="onFieldBlur('author')"
               v-model="formData.author"></b-form-input>
-              <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author with at least 3 characters') }}</b-form-invalid-feedback>
+              <b-form-invalid-feedback :state="state.author">{{ $t('project.validation.corresponding_author_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            label="Corresponding author's email address"
+            :label="$t('project.corresponding_author_email')"
             label-for="input-project-author-email">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
-              @input="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email : null"
-              @blur="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false : null"
+              @input="onFieldInput('author_email')"
+              @blur="onFieldBlur('author_email')"
               v-model="formData.author_email"></b-form-input>
-              <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
+              <b-form-invalid-feedback :state="state.author_email">{{ $t('project.validation.valid_email') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Review question')"
+            :label="$t('project.review_question')"
             label-for="input-project-review-question">
             <b-form-textarea
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-review-question"
-              :placeholder="$t('Insert main question that the review addresses')"
+              :placeholder="$t('project.insert_question_placeholder')"
               rows="6"
               max-rows="100"
               :state="state.review_question"
-              @input="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : state.review_question : null"
-              @blur="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : false : null"
+              @input="onFieldInput('review_question')"
+              @blur="onFieldBlur('review_question')"
               v-model="formData.review_question"></b-form-textarea>
-            <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 3 characters') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.review_question">{{ $t('project.validation.question_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Has this review been published?')"
+            :label="$t('project.published_status')"
             label-for="select-project-list-published-status">
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-published-status"
               v-model="formData.published_status"
               :options="yes_or_no"></b-select>
           </b-form-group>
           <b-form-group
-            v-if="formData.published_status"
-            :label="$t('URL or DOI')"
+            v-if="answerIs('published_status', true)"
+            :label="$t('project.url_doi')"
             label-for="select-project-list-url-doi">
             <b-input
-              :disabled="!canWrite"
-              placeholder="https://doi.org/10.1109/5.771073"
+              :disabled="!canEdit"
+              :placeholder="$t('project.url_placeholder')"
               type="url"
               id="select-project-list-url-doi"
               :state="state.url_doi"
-              @input="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi)) ? null : state.url_doi"
-              @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
+              @input="onFieldInput('url_doi')"
+              @blur="onFieldBlur('url_doi')"
               v-model="formData.url_doi"></b-input>
-            <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.url_doi">{{ $t('project.validation.valid_url_doi') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Is the iSoQ being completed by the review authors?')"
+            :label="$t('project.completed_by_authors')"
             label-for="select-project-list-completed-by-author-status">
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-completed-by-author-status"
+              :state="state.complete_by_author"
+              @change="onFieldInput('complete_by_author')"
+              @blur.native="onFieldBlur('complete_by_author')"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
-              <!-- <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('The project must be completed by the review authors') }}</b-form-invalid-feedback> -->
+            <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('project.validation.complete_by_author_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            v-if="!formData.complete_by_author"
-            label="Please list the authors of this iSoQ"
+            v-if="answerIs('complete_by_author', false)"
+            :label="$t('project.list_authors_isoq')"
             label-for="input-project-list-authors">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-authors"
               :state="state.lists_authors"
-              @input="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : state.lists_authors : null"
-              @blur="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : false : null"
+              @input="onFieldInput('lists_authors')"
+              @blur="onFieldBlur('lists_authors')"
               v-model="formData.lists_authors"></b-form-input>
-            <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
-
           <b-form-group
-            label="Would you like to use CAMELOT for this project?"
+            v-if="camelotEnabled"
             label-for="input-project-use-camelot"
-            description="CAMELOT provides additional tools for quality assessment and data extraction.">
+            :description="!formData.id ? $t('project.use_camelot_desc') : ''">
+            <template v-slot:label>
+              <i18n path="project.use_camelot_label" tag="span">
+                <template v-slot:logo>
+                  <a href="javascript:void(0)" @click="$bvModal.show('camelot-info-modal')" class="mx-1">
+                    <img src="@/assets/camelot-logo.svg" style="height: 20px; vertical-align: text-bottom;" />
+                  </a>
+                </template>
+              </i18n>
+              <videoHelp class="d-inline-block" tag="none" urlId="1184125421"></videoHelp>
+            </template>
             <b-form-radio-group
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-use-camelot"
               v-model="formData.use_camelot"
               :options="[
-                { text: 'Yes, use CAMELOT (recommended)', value: true, checked: true },
-                { text: 'No, do not use CAMELOT', value: false }
+                { text: $t('project.use_camelot_yes'), value: true },
+                { text: $t('project.use_camelot_no'), value: false }
               ]"
               buttons
               button-variant="outline-primary"
               size="md"
               name="use-camelot-buttons"></b-form-radio-group>
           </b-form-group>
-
           <b-form-group
             label-for="select-project-list-status"
-            description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it private. You can change these settings at any time.">
+            :description="$t('project.publish_desc_private')">
             <template v-slot:description v-if="formData.id === null">
-              When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. These options become available once you have entered the required project properties and have at least one review finding with a complete GRADE-CERQual assessment.
+              {{ $t('project.publish_desc_public') }}
             </template>
             <template v-slot:label>
-              <videoHelp txt="Visibility on the iSoQ database" tag="none" urlId="504176899"></videoHelp>
+              <videoHelp :txt="$t('project.visibility_video_txt')" tag="none" urlId="504176899"></videoHelp>
             </template>
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-status"
               v-model="formData.public_type"
               @change="resetState()"
               :options="global_status"></b-select>
-            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select Private until you are finished.') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.can_publish">{{ $t('project.validation.publish_requirement') }}</b-form-invalid-feedback>
           </b-form-group>
           <template v-if="formData.public_type !== 'private'">
             <b-form-group
               label-for="select-project-list-license">
               <template v-slot:label>
-                Choose a license
+                {{ $t('project.choose_license') }}
               </template>
               <b-select
-                :disabled="!canWrite"
+                :disabled="!canEdit"
                 :state="state.license"
                 @change="state.license = (formData.license_type !== '' && formData.license_type !== null) ? null : false"
                 id="select-project-list-license"
                 v-model="formData.license_type"
                 :options="global_licenses"></b-select>
             </b-form-group>
-            <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a license') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.license">{{ $t('project.validation.license_required') }}</b-form-invalid-feedback>
             <p v-for="license of global_licenses" :key="license.value">
               <span v-if="license.value === formData.license_type">
-                <b>Explanation:</b> {{ license.explanation }}
+                <b>{{ $t('project.explanation') }}</b> {{ license.explanation }}
               </span>
             </p>
+            <b-form-group>
+              <b-form-checkbox
+                :disabled="!canEdit"
+                :state="state.no_personal_data_confirmed"
+                @change="state.no_personal_data_confirmed = null"
+                id="checkbox-project-personal-data"
+                v-model="formData.no_personal_data_confirmed"
+                name="checkbox-project-personal-data">
+                {{ $t('publish.confirm_no_personal_data') }}
+              </b-form-checkbox>
+              <b-form-invalid-feedback :state="state.no_personal_data_confirmed">{{ $t('publish.confirm_no_personal_data_required') }}</b-form-invalid-feedback>
+            </b-form-group>
           </template>
           <b-form-group
-            label="Additional information"
+            :label="$t('project.additional_info')"
             label-for="input-project-list-description">
             <b-form-textarea
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-description"
-              placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organization or government"
+              :placeholder="$t('project.additional_info_placeholder')"
               v-model="formData.description"
               rows="6"
               max-rows="100"></b-form-textarea>
           </b-form-group>
         </b-col>
       </b-row>
-      <b-row align-h="end" v-if="canWrite && !isModal">
+      <b-row align-h="end" v-if="canEdit && !isModal">
         <b-col
           cols="12"
           sm="6"
@@ -242,8 +254,9 @@
           <b-button
             block
             variant="outline-success"
+            :disabled="isInvalid"
             @click="save">
-            Save
+            {{ $t('common.save') }}
           </b-button>
         </b-col>
       </b-row>
@@ -251,22 +264,95 @@
       <!-- Warning modal for reverting to private -->
       <b-modal
         id="publish-warning-modal"
-        title="Warning!"
-        ok-title="Continue"
-        cancel-title="Cancel"
+        :title="$t('project.warning')"
+        :ok-title="$t('common.continue')"
+        :cancel-title="$t('common.cancel')"
         @ok="handlePublishWarningContinue"
         @cancel="handlePublishWarningCancel">
-        <p>By removing this content your project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+        <p>{{ $t('project.revert_private_warning') }}</p>
+      </b-modal>
+
+      <!-- Methodology Conversion Modal -->
+      <b-modal
+        id="camelot-toggle-modal"
+        :title="$t('project.toggle_camelot.title')"
+        @ok.prevent="confirmCamelotToggle"
+        :ok-title="isMigrating ? $t('project.toggle_camelot.migrating') : $t('project.toggle_camelot.confirm_button')"
+        :cancel-title="$t('common.cancel')"
+        ok-variant="danger"
+        :busy="isMigrating"
+        no-close-on-backdrop
+        no-close-on-esc>
+        <div class="p-3">
+          <div v-if="formData.use_camelot" class="mt-3">
+            <h6 class="font-weight-bold">{{ $t('project.toggle_camelot.new_modal_title') }}</h6>
+            <p>{{ $t('project.toggle_camelot.to_camelot_body') }}</p>
+            <p class="font-weight-bold mt-3">{{ $t('common.continue_question') }}</p>
+          </div>
+          <div v-else class="mt-3">
+            <h6 class="font-weight-bold">{{ $t('project.toggle_camelot.new_modal_title') }}</h6>
+            <p>{{ $t('project.toggle_camelot.from_camelot_body') }}</p>
+            <p class="font-weight-bold mt-3">{{ $t('common.continue_question') }}</p>
+          </div>
+
+          <div v-if="isMigrating" class="text-center mt-3">
+            <b-spinner variant="danger" label="Spinning"></b-spinner>
+            <p class="mt-2">{{ $t('project.toggle_camelot.migrating') }}</p>
+          </div>
+        </div>
+      </b-modal>
+
+      <!-- CAMELOT Info Modal -->
+      <b-modal
+        id="camelot-info-modal"
+        :title="$t('project.camelot_modal_info.title')"
+        ok-only
+        :ok-title="$t('common.close')"
+        size="lg">
+        <div>
+          <p>{{ $t('project.camelot_modal_info.p1') }}</p>
+          <h6 class="font-weight-bold mt-4">{{ $t('project.camelot_modal_info.p2') }}</h6>
+          <p>{{ $t('project.camelot_modal_info.p3') }}</p>
+          <ul>
+            <li>{{ $t('project.camelot_modal_info.li1') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li2') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li3') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li4') }}</li>
+          </ul>
+          <p class="mt-4" v-html="$t('project.camelot_modal_info.link1')"></p>
+          <p v-html="$t('project.camelot_modal_info.link2')"></p>
+        </div>
       </b-modal>
     </template>
   </div>
 </template>
 
 <script>
+import Api from '@/utils/Api'
 import Project from '@/utils/project'
-import Commons from '@/utils/commons.js'
+import {
+  asAnswer, hasMinLetters, isProjectPublic, projectMissingFields, validEmail, validUrlOrDoi
+} from '@/utils/publishRules'
+import { writeErrorMessageKey } from '@/utils/writeErrors'
+import { isPersonalDataConfirmationRejection, needsPersonalDataConfirmation } from '@/utils/personalDataConfirmation'
+import { isCamelotEnabled } from '@/constants/camelot'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
+
+// The fields a refused save can mark, in the order the form shows them: `state` key,
+// the control's id (to move the focus) and the label key (to name it in the toast).
+const FIELDS_IN_FORM_ORDER = [
+  { key: 'name', id: 'input-project-list-name', label: 'project.title_of_review' },
+  { key: 'authors', id: 'input-project-authors', label: 'project.authors' },
+  { key: 'author', id: 'input-project-author', label: 'project.corresponding_author' },
+  { key: 'author_email', id: 'input-project-author-email', label: 'project.corresponding_author_email' },
+  { key: 'review_question', id: 'input-project-review-question', label: 'project.review_question' },
+  { key: 'url_doi', id: 'select-project-list-url-doi', label: 'project.url_doi' },
+  { key: 'complete_by_author', id: 'select-project-list-completed-by-author-status', label: 'project.completed_by_authors' },
+  { key: 'lists_authors', id: 'input-project-list-authors', label: 'project.list_authors_isoq' },
+  { key: 'license', id: 'select-project-list-license', label: 'project.choose_license' },
+  { key: 'no_personal_data_confirmed', id: 'checkbox-project-personal-data', label: 'project.personal_data_field' }
+]
 
 export default {
   name: 'organizationForm',
@@ -275,10 +361,10 @@ export default {
     formData: {
       type: Object,
       default: () => ({
-        use_camelot: true // Inicializar CAMELOT como habilitado por defecto
+        use_camelot: isCamelotEnabled()
       })
     },
-    canWrite: Boolean,
+    canEdit: Boolean,
     isModal: {
       type: Boolean,
       default: false
@@ -294,26 +380,8 @@ export default {
   },
   data: function () {
     return {
-      variant: 'info',
-      msgUpdateProject: null,
-      global_status: [
-        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database', disabled: false },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database', disabled: true },
-        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database', disabled: true },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database', disabled: true }
-      ],
-      yes_or_no: [
-        { value: false, text: 'no' },
-        { value: true, text: 'yes' }
-      ],
-      global_licenses: [
-        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND', explanation: 'This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-ND', text: 'CC BY-ND', explanation: 'This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY-NC', text: 'CC BY-NC', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-SA', text: 'CC BY-SA', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ],
+      // Keys markMissingFields set to false (not reactive state: bookkeeping only).
+      markedByModal: [],
       state: {
         id: null,
         name: null,
@@ -326,13 +394,75 @@ export default {
         complete_by_author: null,
         lists_authors: null,
         license: null,
-        can_publish: null
+        can_publish: null,
+        no_personal_data_confirmed: null
       },
       originalFormData: null,
-      pendingData: null
+      pendingData: null,
+      backupBeforeToggle: false,
+      isMigrating: false
     }
   },
   methods: {
+    confirmCamelotToggle: async function () {
+      this.isMigrating = true
+      const data = this.pendingData
+
+      try {
+        // 1. Create backup
+        await Api.get(`/api/clone/project/${data.id}/org/${data.organization}`)
+
+        // 2. Call conversion endpoint
+        const response = await Api.post(`/api/project/${data.id}/toggle_camelot`, {
+          use_camelot: data.use_camelot
+        })
+
+        if (response.data.status) {
+          // The server already runs the new methodology, whatever happens next: sync now so
+          // a failed properties save cannot make the next save convert (and clone) again.
+          this.originalFormData.use_camelot = data.use_camelot
+          this.formData.use_camelot = data.use_camelot
+          // 3. Methodology updated, now save other project properties
+          let result
+          try {
+            result = await Project.update(data)
+          } catch (updateError) {
+            console.error('Error saving properties after the methodology change', updateError)
+            this.isMigrating = false
+            this.$notify.error(this.$t('project.notifications.methodology_changed_properties_not_saved'))
+            this.$bvModal.hide('camelot-toggle-modal')
+            return
+          }
+          if (result && result.data && result.data.status === false) {
+            // Mark the fields and stay here (no redirect, no reload) so the user can fix
+            // them and save again. One toast (the methodology note); the fields say the rest.
+            this.state = { ...this.state, ...result.data.state }
+            this.isMigrating = false
+            this.$notify.error(this.$t('project.notifications.methodology_changed_properties_not_saved'))
+            this.$bvModal.hide('camelot-toggle-modal')
+            return
+          }
+
+          // 4. Success, redirect to Step 3
+          this.$bvModal.hide('camelot-toggle-modal')
+          this.isMigrating = false
+          this.$router.push({ name: 'viewProject', params: { org_id: data.organization, id: data.id }, query: { step: 3 } })
+          // If we are already in viewProject, we might need to refresh
+          if (this.$route.name === 'viewProject') {
+            location.reload()
+          }
+        } else {
+          this.isMigrating = false
+          this.$notify.error(response.data.message)
+          this.$bvModal.hide('camelot-toggle-modal')
+        }
+      } catch (error) {
+        console.error('Error updating methodology', error)
+        this.isMigrating = false
+        this.$notify.error(this.$t('project.notifications.error_updating_methodology'))
+        this.$bvModal.hide('camelot-toggle-modal')
+      }
+    },
     resetState: function () {
       this.state = {
         name: null,
@@ -345,11 +475,9 @@ export default {
         complete_by_author: null,
         lists_authors: null,
         license: null,
-        can_publish: null
+        can_publish: null,
+        no_personal_data_confirmed: null
       }
-    },
-    dismissAlertProject: function () {
-      this.msgUpdateProject = null
     },
     handlePublishWarningContinue: function () {
       // User confirmed they want to make the project private
@@ -365,49 +493,91 @@ export default {
       this.pendingData = null
     },
     handlePublishWarningCancel: function () {
-      // User wants to cancel the unpublish action
-      // Only restore the required fields that were removed, keep other valid changes
-      const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
-
-      for (const field of requiredFields) {
-        const originalValue = this.originalFormData[field]
-        const currentValue = this.formData[field]
-
-        // Only restore if the field was removed (empty or whitespace only)
-        if (originalValue && (!currentValue || currentValue.trim() === '')) {
-          this.formData[field] = originalValue
-        }
+      // Cancel restores everything: every key of formData comes back from a deep copy of
+      // the original. The prop is mutated on purpose (the parent relies on it).
+      const original = JSON.parse(JSON.stringify(this.originalFormData))
+      for (const key of Object.keys(this.formData)) {
+        if (!Object.prototype.hasOwnProperty.call(original, key)) this.$delete(this.formData, key)
       }
-
-      // Also restore the public_type if it was changed
-      this.formData.public_type = this.originalFormData.public_type
-
+      for (const key of Object.keys(original)) {
+        this.$set(this.formData, key, original[key])
+      }
       this.pendingData = null
+      // The marks were for the edit that was just undone.
+      this.resetState()
+      this.markedByModal = []
     },
+    // The project was public and THIS save makes a rule stop holding: a field missing now
+    // that was not missing as loaded. A project that already lacked information when it
+    // loaded (legacy) gets no modal: the normal save path refuses it with the fields in red.
+    // A person who already chose Private is not losing anything either.
     checkRequiredFieldsRemoved: function (data) {
-      // Check if project is currently published (not private)
-      if (this.originalFormData.public_type !== 'private') {
-        const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
-
-        // Check if any required field was removed
-        for (const field of requiredFields) {
-          const originalValue = this.originalFormData[field]
-          const newValue = data[field]
-
-          if (originalValue && (!newValue || newValue.trim() === '')) {
-            return true
-          }
+      if (!isProjectPublic(this.originalFormData) || !isProjectPublic(data)) return false
+      const before = projectMissingFields(this.originalFormData)
+      return projectMissingFields(data).some(field => !before.includes(field))
+    },
+    markMissingFields: function (data) {
+      const newState = { ...this.state }
+      // Keys marked by a previous opening that are no longer missing go back to neutral.
+      for (const key of this.markedByModal) newState[key] = null
+      const marked = []
+      for (const field of projectMissingFields(data)) {
+        const key = field === 'license_type' ? 'license' : field
+        if (Object.prototype.hasOwnProperty.call(newState, key)) {
+          newState[key] = false
+          marked.push(key)
         }
       }
-      return false
+      this.markedByModal = marked
+      this.state = newState
+    },
+    // Whether the field meets its rule now (the same functions the server mirrors).
+    fieldMeetsRule: function (field) {
+      const value = this.formData[field]
+      switch (field) {
+        case 'name': return hasMinLetters(value, isProjectPublic(this.formData) ? 3 : 1)
+        case 'author_email': return validEmail(value)
+        case 'url_doi': return validUrlOrDoi(value)
+        case 'complete_by_author': return asAnswer(value) !== null
+        default: return hasMinLetters(value)
+      }
+    },
+    // Whether the rule is demanded of this project right now: the title always (one
+    // letter when private), the rest only when public, and the DOI/URL only when the
+    // review is said to be published.
+    fieldIsRequired: function (field) {
+      if (field === 'name') return true
+      if (!isProjectPublic(this.formData)) return false
+      if (field === 'url_doi') return this.answerIs('published_status', true)
+      if (field === 'lists_authors') return this.answerIs('complete_by_author', false)
+      return true
+    },
+    onFieldInput: function (field) {
+      if (this.fieldMeetsRule(field)) this.state[field] = null
+    },
+    onFieldBlur: function (field) {
+      this.state[field] = (!this.fieldIsRequired(field) || this.fieldMeetsRule(field)) ? null : false
+    },
+    answerIs: function (field, expected) {
+      return asAnswer(this.formData[field]) === expected
     },
     save: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
-      data.organization = this.$store.state.user.personal_organization
+      if (!data.id) {
+        data.organization = this.$store.state.user.personal_organization
+      }
+
+      // Check for Camelot methodology change in existing project
+      if (data.id && data.use_camelot !== this.originalFormData.use_camelot) {
+        this.pendingData = data
+        this.$bvModal.show('camelot-toggle-modal')
+        return
+      }
 
       // Check if required fields were removed from a published project
       if (this.checkRequiredFieldsRemoved(data)) {
-        // Store the pending data and show warning modal
+        // Store the pending data and show warning modal, with what is missing marked
+        this.markMissingFields(data)
         this.pendingData = data
         this.$bvModal.show('publish-warning-modal')
       } else {
@@ -415,17 +585,81 @@ export default {
         this.executeSave(data)
       }
     },
+    // The fields currently in red, in the order the form shows them.
+    invalidFields: function () {
+      return FIELDS_IN_FORM_ORDER.filter(field => this.state[field.key] === false)
+    },
+    missingFieldLabels: function () {
+      return this.invalidFields().map(field => field.label)
+    },
+    // A refused save must show WHERE: on a small screen the fields in red can be out of
+    // view (WCAG 3.3.1). Scroll to the first one and give it the focus, so a screen reader
+    // also announces it with its message.
+    focusFirstInvalidField: function () {
+      this.$nextTick(() => {
+        const [first] = this.invalidFields()
+        if (!first || !this.$el || !this.$el.querySelector) return
+        const control = this.$el.querySelector('#' + first.id)
+        if (!control) return
+        if (typeof control.scrollIntoView === 'function') control.scrollIntoView({ block: 'center' })
+        control.focus()
+      })
+    },
+    // One toast that names what is missing when fields are in red; otherwise the
+    // refusal's own message (e.g. no complete review finding). Then the focus.
+    reportRefusal: function (messageKey) {
+      const labels = this.missingFieldLabels()
+      if (labels.length) {
+        this.$notify.error(this.$t('project.notifications.missing_fields_list', {
+          fields: labels.map(label => this.$t(label)).join(', ')
+        }))
+      } else {
+        this.$notify.error(this.$t(messageKey))
+      }
+      this.focusFirstInvalidField()
+    },
     executeSave: async function (data) {
-      if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
-        const response = await Project.update(data)
-        if (response.data.status) {
-          this.variant = 'success'
-          this.msgUpdateProject = 'The project has been updated'
+      try {
+        if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
+          // Megan's notice, only when this save turns a private project public. Asked once
+          // the validations passed (so a refused publish never shows it) and before the PATCH.
+          let beforeSave
+          if (!isProjectPublic(this.originalFormData) && isProjectPublic(data)) {
+            beforeSave = async () => {
+              try {
+                // Only an explicit OK proceeds: Esc or a backdrop click resolve null, and
+                // Project.update lets anything but `false` through.
+                return (await Project.confirmIncompleteFindings(this, data.id)) === true
+              } catch (error) {
+                const key = writeErrorMessageKey(error, 'notifications.publish_error')
+                if (key) this.$notify.error(this.$t(key))
+                return false
+              }
+            }
+          }
+          const response = await Project.update(data, beforeSave)
+          // Cancelled on purpose (or already reported): the form stays as it is.
+          if (response.data && response.data.cancelled) return
+          if (response.data && response.data.status === false) {
+            this.state = { ...this.state, ...response.data.state }
+            this.reportRefusal(response.data.message)
+            return
+          }
+          // El server puede dejar el proyecto privado tras un 200 (despublicado automático, R4):
+          // mostrar lo que quedó guardado, no lo que mandamos. Sin cuerpo (cola offline), no hay nada que comparar.
+          const kept = response.data && response.data.data
+          const unpublished = Boolean(kept && typeof kept === 'object' && isProjectPublic(data) && !isProjectPublic(kept))
+          if (unpublished) {
+            data.public_type = kept.public_type
+            data.private = kept.private
+            data.is_public = kept.is_public
+            this.$notify.warning(this.$t('project.notifications.project_unpublished_after_save'))
+          } else {
+            this.$notify.success(this.$t('project.notifications.project_updated'))
+          }
           if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('modal-notification')
           } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('update-form-data', data)
           }
           // Update the original form data to reflect the new state
@@ -436,58 +670,104 @@ export default {
             this.$router.push({ query }).catch(() => {})
           }
         } else {
-          this.variant = 'danger'
-          this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = response.data.message
-          if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
+          const response = await Project.create(data)
+          if (response.data && response.data.status === false) {
+            this.state = { ...this.state, ...response.data.state }
+            this.reportRefusal(response.data.message)
+            return
+          }
+          if (response.data && response.data.id) {
+            this.$notify.success(this.$t('project.notifications.project_created'))
+            this.$emit('modal-notification', response)
+            // Update the original form data to reflect the new state
+            this.originalFormData = JSON.parse(JSON.stringify(data))
+            if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
+              const query = { ...this.$route.query }
+              delete query.highlight
+              this.$router.push({ query }).catch(() => {})
+            }
           }
         }
-      } else {
-        const response = await Project.create(data)
-        if (response.data.id) {
-          this.variant = 'success'
-          this.msgUpdateProject = 'The project has been created'
-          this.$emit('modal-notification', response)
-          // Update the original form data to reflect the new state
-          this.originalFormData = JSON.parse(JSON.stringify(data))
-          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
-            const query = { ...this.$route.query }
-            delete query.highlight
-            this.$router.push({ query }).catch(() => {})
+      } catch (error) {
+        // Sin conexión: lo avisa OfflineIndicator (`offline-write-blocked`). El
+        // `data.message` de este error es un texto interno de Api.js, no para mostrar.
+        if (error && error.isOfflineError) return
+        if (error.response && error.response.status === 403) {
+          // Distinguish "you no longer have can_write" from any other save
+          // error — the generic messages below don't tell the user why nothing
+          // was saved. Dentro del proyecto lo avisa viewProject (reclamó
+          // `permission-denied` y el error viene marcado); en el modal de la
+          // organización no hay dueño montado, y el aviso es de acá.
+          if (!error.permissionDeniedAnnounced) this.$notify.error(this.$t('lock.permissions_revoked'))
+          return
+        }
+        if (error.response && error.response.data) {
+          const errData = error.response.data
+          if (errData.reason === 'publish_requirements_not_met' && Array.isArray(errData.missing_fields)) {
+            const newState = { ...this.state }
+            errData.missing_fields.forEach(field => {
+              const key = field === 'license_type' ? 'license' : field
+              if (Object.prototype.hasOwnProperty.call(newState, key)) newState[key] = false
+            })
+            this.state = newState
+            this.reportRefusal('project.notifications.publish_missing_fields')
+          } else if (errData.reason === 'publish_via_publish_endpoint') {
+            this.$notify.error(this.$t(writeErrorMessageKey(error)))
+          } else if (isPersonalDataConfirmationRejection(error)) {
+            this.state = { ...this.state, no_personal_data_confirmed: false }
+            this.$notify.error(this.$t(writeErrorMessageKey(error)))
+            this.focusFirstInvalidField()
+          } else if (errData.message) {
+            let errorMsg = errData.message
+            if (errorMsg === "Validation error in isoqf_projects: '' should be non-empty") {
+              errorMsg = this.$t('project.validation.title_min_length')
+            }
+            this.$notify.error(errorMsg)
+          } else {
+            this.$notify.error(this.$t('common.error') || 'Error saving project')
           }
         } else {
-          this.variant = 'danger'
-          this.msgUpdateProject = response.data.message
-          this.state = { ...this.state, ...response.data.state }
-          if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+          console.error(error)
+          this.$notify.error(error.message || 'An error occurred')
         }
       }
     },
-    validEmail: function (email) {
-      return Commons.validEmail(email)
-    },
-    validUrl: function (url) {
-      return Commons.validUrl(url)
-    },
     setMsgUpdateProject: function (msg) {
-      this.msgUpdateProject = msg
-      this.variant = 'danger'
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.$notify.error(msg)
     }
   },
   computed: {
-    isProjectPublished () {
-      // Check if the project is currently published (either original state or current selection)
-      // A project requires validation if it's not private
-      return this.formData.public_type !== 'private' ||
-             (this.originalFormData && this.originalFormData.public_type !== 'private')
+    camelotEnabled () {
+      return isCamelotEnabled()
+    },
+    yes_or_no () {
+      return [
+        { value: false, text: this.$t('common.no') },
+        { value: true, text: this.$t('common.yes') }
+      ]
+    },
+    global_status () {
+      const disabled = !this.formData.id
+      return [
+        { value: 'private', text: this.$t('project.status_private_text'), disabled: false },
+        { value: 'fully', text: this.$t('project.status_fully_text'), disabled },
+        { value: 'partially', text: this.$t('project.status_partially_text'), disabled },
+        { value: 'minimally', text: this.$t('project.status_minimally_text'), disabled }
+      ]
+    },
+    global_licenses () {
+      return [
+        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND', explanation: this.$t('project.license_cc_by_nc_nd_exp') },
+        { value: 'CC-BY-ND', text: 'CC BY-ND', explanation: this.$t('project.license_cc_by_nd_exp') },
+        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA', explanation: this.$t('project.license_cc_by_nc_sa_exp') },
+        { value: 'CC-BY-NC', text: 'CC BY-NC', explanation: this.$t('project.license_cc_by_nc_exp') },
+        { value: 'CC-BY-SA', text: 'CC BY-SA', explanation: this.$t('project.license_cc_by_sa_exp') },
+        { value: 'CC-BY', text: 'CC BY', explanation: this.$t('project.license_cc_by_exp') }
+      ]
+    },
+    isInvalid () {
+      return !hasMinLetters(this.formData.name, isProjectPublic(this.formData) ? 3 : 1) ||
+        needsPersonalDataConfirmation(this.formData)
     }
   },
   watch: {
@@ -504,21 +784,23 @@ export default {
               this.state[fieldName] = false
             }
           }
+          // Coming from the Publish modal's "Go to Project Properties": land on the first.
+          this.focusFirstInvalidField()
         }
       },
       immediate: true
     },
     formData: {
-      handler (newFormData) {
-        if (newFormData.id) {
-          this.global_status = this.global_status.map(item => ({
-            ...item,
-            disabled: false
-          }))
+      handler (newFormData, oldFormData) {
+        if (newFormData && newFormData.use_camelot === undefined) {
+          this.$set(newFormData, 'use_camelot', false)
         }
-
-        // When formData changes externally, update the original data
-        if (JSON.stringify(this.originalFormData) !== JSON.stringify(newFormData)) {
+        // A new project object from the parent is the project as loaded. The same object
+        // also fires this watcher when v-model ADDS a key the project never stored
+        // (license_type, no_personal_data_confirmed): that is the person's unsaved edit,
+        // and taking it as "as loaded" made a private project being published look
+        // already public, which opened the revert-to-private modal.
+        if (newFormData !== oldFormData) {
           this.originalFormData = JSON.parse(JSON.stringify(newFormData))
         }
       },
