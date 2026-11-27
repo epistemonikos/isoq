@@ -68,21 +68,15 @@ function mountForm (project) {
   })
 }
 
-// The Notes field is in every project; only a CAMELOT project may speak of CAMELOT assessments.
-describe('evidenceProfileForm — help text of the Notes field', () => {
-  it('does not mention CAMELOT in a project that does not use it', async () => {
-    const wrapper = await build({ use_camelot: false })
+// #425: the evidence profile is the GRADE-CERQual assessment in every project, CAMELOT or not.
+// The CAMELOT wording belongs only to the Step 4 assessment form.
+describe('evidenceProfileForm — help text of the Notes field (#425)', () => {
+  it.each([false, true])('speaks of GRADE-CERQual assessments, never CAMELOT (use_camelot: %s)', async (useCamelot) => {
+    const wrapper = await build({ use_camelot: useCamelot })
     const texts = wrapper.findAll('.form-text').wrappers.map(w => w.text())
     expect(texts).toContain(en.worksheet.labels.notes_description)
-    expect(wrapper.text()).not.toContain('CAMELOT')
-    wrapper.destroy()
-  })
-
-  it('mentions CAMELOT assessments in a CAMELOT project', async () => {
-    const wrapper = await build({ use_camelot: true })
-    const texts = wrapper.findAll('.form-text').wrappers.map(w => w.text())
-    expect(texts).toContain(en.worksheet.labels.notes_description_camelot)
-    expect(texts).not.toContain(en.worksheet.labels.notes_description)
+    expect(en.worksheet.labels.notes_description).toContain('GRADE-CERQual')
+    expect(texts.join(' ')).not.toContain('CAMELOT')
     wrapper.destroy()
   })
 })
