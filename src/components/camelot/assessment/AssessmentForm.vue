@@ -69,7 +69,7 @@
           <b-form-group label="" label-for="textarea-notes">
             <b-form-textarea id="textarea-notes" v-model="notes" rows="3"
               :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
-            <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+            <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description_camelot') }}</p>
           </b-form-group>
         </div>
       </fieldset>
