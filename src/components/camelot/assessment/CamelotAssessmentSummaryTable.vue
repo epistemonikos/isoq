@@ -3,7 +3,7 @@
     <div v-if="!hideActions" class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="h5 mr-auto mb-0 font-weight-bold text-secondary">{{ $t('camelot.step_four.breadcrumb_sub') }}</h4>
 
-      <b-button variant="link" class="text-secondary" v-b-toggle.sidebar-right>
+      <b-button variant="link" class="text-secondary" v-b-toggle="sidebarId">
         {{ $t('camelot.assessment_table.sidebar.title') }}
       </b-button>
 
@@ -201,7 +201,7 @@
       </template>
     </b-table>
 
-    <b-sidebar id="sidebar-right" :title="$t('camelot.assessment_table.sidebar.title')" right backdrop shadow>
+    <b-sidebar :id="sidebarId" :title="$t('camelot.assessment_table.sidebar.title')" right backdrop shadow>
       <div class="px-3 py-2 sidebar-instructions">
         <p>
           {{ $t('camelot.assessment_table.sidebar.intro') }}
@@ -284,6 +284,11 @@ export default {
     }
   },
   computed: {
+    // #424: the table is mounted twice at once (Step 2 tab + evidence profile modal);
+    // a fixed id made v-b-toggle open both sidebars, stacked.
+    sidebarId () {
+      return `camelot-summary-help-${this._uid}`
+    },
     fields () {
       const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
