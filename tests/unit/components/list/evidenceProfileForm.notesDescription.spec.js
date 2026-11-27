@@ -18,7 +18,7 @@ const modalData = () => ({
 // Renders the description where the person reads it, like BootstrapVue's form-text.
 const FormGroup = {
   props: ['description'],
-  template: '<div><slot name="label" /><slot /><small class="form-text">{{ description }}</small></div>'
+  template: '<div><slot name="label" /><slot /><small class="form-text"><slot name="description">{{ description }}</slot></small></div>'
 }
 
 // Coherence with a choice made: the step where the Notes field shows.
@@ -77,6 +77,19 @@ describe('evidenceProfileForm — help text of the Notes field (#425)', () => {
     expect(texts).toContain(en.worksheet.labels.notes_description)
     expect(en.worksheet.labels.notes_description).toContain('GRADE-CERQual')
     expect(texts.join(' ')).not.toContain('CAMELOT')
+    wrapper.destroy()
+  })
+})
+
+// #427: Relevance's Notes field carried a stray "Click here to see an example" link.
+describe('evidenceProfileForm — Relevance Notes field (#427)', () => {
+  it('shows only the Notes help text, with no example link', async () => {
+    const wrapper = mountForm({ use_camelot: false })
+    await wrapper.setData({ selectedOptions: { ...modalData(), type: 'relevance', relevance: { option: '1', explanation: '', notes: '' } } })
+    const notes = wrapper.find('#input-ml-notes').element.parentElement
+    expect(notes.textContent).toContain(en.worksheet.labels.notes_description)
+    expect(notes.textContent).not.toContain(en.worksheet.labels.click_here_example)
+    expect(notes.querySelector('a')).toBeNull()
     wrapper.destroy()
   })
 })

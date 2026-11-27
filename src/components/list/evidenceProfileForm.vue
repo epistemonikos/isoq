@@ -322,17 +322,10 @@
                   :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100"
                   :disabled="!canEditFinding" :state="explanationStateFor('relevance')"></b-form-textarea>
               </b-form-group>
-              <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes">
+              <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
+                :description="$t('worksheet.labels.notes_description')">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
-                </template>
-                <template slot="description">
-                  {{ $t('worksheet.labels.notes_description') }}. {{ $t('common.click') }}
-                  <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
-                    target="_blank">
-                    <u>{{ $t('common.here') }}</u>
-                  </a>
-                  {{ $t('worksheet.labels.click_here_example') }}.
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6" max-rows="100"
                   :disabled="!canEditFinding"></b-form-textarea>
