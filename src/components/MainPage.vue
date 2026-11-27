@@ -8,7 +8,10 @@
       <b-container fluid class="mb-auto">
         <b-row>
           <b-col cols="12" md="3" class="pt-5">
-            <h2>iSoQ <span>{{ $t('home.version') }}</span></h2>
+            <h2>iSoQ <span>{{ camelotEnabled ? $t('home.version_camelot') : $t('home.version') }}</span></h2>
+            <p v-if="camelotEnabled" data-test="home-camelot" class="now-with">
+              <i18n path="home.now_with_camelot"><span place="0" class="camelot-mark"><img :src="camelotLogo" width="22" height="22" alt="" class="camelot-icon" />CAMELOT</span></i18n>
+            </p>
             <i18n path="home.slogan" tag="p" class="slogan"><a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a></i18n>
           </b-col>
           <b-col cols="12">
@@ -16,6 +19,7 @@
               <li><b-link :to="{ name: 'About' }">{{ $t('home.learn_more') }}</b-link></li>
               <li><b-link :to="{ name: 'Browse' }">{{ $t('menu.browse') }}</b-link></li>
               <li><b-link href="https://vimeo.com/687899560" target="_blank">{{ $t('home.watch_video') }}</b-link></li>
+              <li v-if="camelotEnabled"><b-link :to="{ name: 'About', hash: '#camelot' }">{{ $t('home.learn_more_camelot') }}</b-link></li>
             </ul>
           </b-col>
         </b-row>
@@ -55,10 +59,14 @@
 </template>
 
 <script>
+import { isCamelotEnabled } from '@/constants/camelot'
+
 export default {
   name: 'MainPage',
   data () {
     return {
+      camelotEnabled: isCamelotEnabled(),
+      camelotLogo: require('@/assets/camelot-logo.svg'),
       ui: {
         error: null
       }
@@ -78,14 +86,35 @@ export default {
     h2>span {
       font-size: 1rem;
     }
+  .now-with {
+    font-size: 1.5rem;
+  }
+  /* inline-flex centra el ícono con el texto; vertical-align lo deja colgando. */
+  .camelot-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: 0.25rem;
+    font-weight: 700;
+  }
+  /* El SVG es de color: brightness(0) lo pasa a negro e invert(1) a blanco. */
+  .camelot-icon {
+    filter: brightness(0) invert(1);
+  }
     .slogan {
       font-style: italic;
       font-weight: 200;
       font-size: 26px;
     }
-    .slogan a {
+    /* `>>>`: el <a> lo dibuja el <i18n> (funcional) y no lleva el data-v del scoped. */
+    #mainContainer >>> .slogan a {
       color: #FFF;
       text-decoration: underline;
+    }
+    #main-page-nav a,
+    #main-page-nav a:hover,
+    #main-page-nav a:focus {
+      color: #FFF;
     }
     .uea {
       font-size: 12px;

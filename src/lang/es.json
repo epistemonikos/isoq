@@ -182,7 +182,10 @@
     "niph_alt": "NIPH",
     "epistemonikos_alt": "Fundación Epistemonikos",
     "nust_alt": "NTNU",
-    "hvl_alt": "HVL"
+    "hvl_alt": "HVL",
+    "version_camelot": "Versión 2.0",
+    "now_with_camelot": "Ahora con {0}",
+    "learn_more_camelot": "Más información sobre CAMELOT en iSoQ"
   },
   "auth": {
     "login_error": "El usuario o la contraseña son incorrectos o no existen. Inténtalo de nuevo.",
