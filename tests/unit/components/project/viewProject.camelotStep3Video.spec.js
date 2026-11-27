@@ -3,7 +3,7 @@ import viewProject from '@/components/project/viewProject.vue'
 import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
 
-// #422: el ícono del Paso 3 CAMELOT abre su propio video; My Data y el Paso 4 no cambian.
+// #422 / #426: los íconos de los Pasos 3 y 4 CAMELOT abren cada uno su propio video; My Data no cambia.
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -55,10 +55,10 @@ const addDataVideoId = wrapper => wrapper.find('videohelp-stub[txt="modals.add_d
 // Íconos de los títulos de los pasos (h4 > videohelp), en orden: Paso 3, Paso 4.
 const stepVideoIds = wrapper => wrapper.findAll('h4 > videohelp-stub').wrappers.map(w => w.attributes('urlid'))
 
-describe('viewProject.vue — video de ayuda del Paso 3 CAMELOT (#422)', () => {
-  it('con CAMELOT, el Paso 3 abre el video nuevo y el Paso 4 conserva el genérico', async () => {
+describe('viewProject.vue — videos de ayuda de los Pasos 3 y 4 CAMELOT (#422, #426)', () => {
+  it('con CAMELOT, el Paso 3 y el Paso 4 abren cada uno su video (#426)', async () => {
     const wrapper = await mountWith(true)
-    expect(stepVideoIds(wrapper)).toEqual(['1250351037', '1184125421'])
+    expect(stepVideoIds(wrapper)).toEqual(['1250351037', '1250454397'])
     wrapper.destroy()
   })
 
@@ -70,9 +70,11 @@ describe('viewProject.vue — video de ayuda del Paso 3 CAMELOT (#422)', () => {
     }
   })
 
-  it('sin CAMELOT, el video nuevo no aparece', async () => {
+  it('sin CAMELOT, los videos de CAMELOT no aparecen', async () => {
     const wrapper = await mountWith(false)
-    expect(wrapper.findAll('videohelp-stub').wrappers.map(w => w.attributes('urlid'))).not.toContain('1250351037')
+    const ids = wrapper.findAll('videohelp-stub').wrappers.map(w => w.attributes('urlid'))
+    expect(ids).not.toContain('1250351037')
+    expect(ids).not.toContain('1250454397')
     wrapper.destroy()
   })
 })
